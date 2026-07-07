@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{LANG}}">
+<html lang="{{LANG}}"> <!-- localized -->
 <head>
 <meta charset="UTF-8">
 <title>Cover Letter — {{NAME}}</title>
@@ -117,7 +117,7 @@
   /* === Turkish (tr) — LTR, no font override === */
   /* Turkish uses standard Latin characters. Helvetica/Arial covers ç ğ ı İ ö ş ü.
      No direction or font-family override needed. */
-  html[lang="tr"] { /* Turkish placeholder */ }
+  html[lang="tr"] { /* Turkish localization placeholder */ }
 </style>
 </head>
 <body>
@@ -126,7 +126,7 @@
   {{CREDENTIALS_BLOCK}}
   <hr class="divider">
 
-  <!-- NOTE: COVER_LETTER_LABEL should NOT include trailing punctuation or space.
+  <!-- Note: COVER_LETTER_LABEL must NOT include trailing punctuation or space.
        The separator is provided explicitly here. -->
   <div class="role-title">{{COVER_LETTER_LABEL}}: {{ROLE_TITLE}}</div>
   <div class="dateline">{{DATELINE}}</div>

@@ -45,7 +45,7 @@ function normalizeStatus(raw) {
 
   // Rechazada / Rechazado / Reddedildi → Rejected
   if (/^rechazada?$/i.test(s)) return { status: 'Rejected' };
-  if (/^reddedildi$/i.test(s)) return { status: 'Rejected' };
+  if (/^reddedildi$/i.test(s)) return { status: 'Rejected' }; // TR
   if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rejected' };
   if (/^reddedildi\s+\d{4}/i.test(s)) return { status: 'Rejected' };
 
@@ -77,7 +77,7 @@ function normalizeStatus(raw) {
     if (lower === c.toLowerCase()) return { status: c };
   }
 
-  // Spanish & Turkish aliases → English canonicals
+  // Spanish & Turkish status aliases → English canonicals
   if (['evaluada', 'değerlendirildi', 'degerlendirildi'].includes(lower)) return { status: 'Evaluated' };
   if (['aplicado', 'enviada', 'aplicada', 'sent', 'başvuruldu', 'basvuruldu'].includes(lower)) return { status: 'Applied' };
   if (['respondido', 'yanıt verildi', 'yanit verildi'].includes(lower)) return { status: 'Responded' };

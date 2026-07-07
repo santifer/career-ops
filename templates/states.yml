@@ -9,25 +9,25 @@
 states:
   - id: evaluated
     label: Evaluated
-    aliases: ['evaluada', 'değerlendirildi', 'degerlendirildi']
+    aliases: [ 'evaluada', 'değerlendirildi', 'degerlendirildi' ]
     description: Offer evaluated with report, pending decision
     dashboard_group: evaluated
 
   - id: applied
     label: Applied
-    aliases: ['aplicado', 'enviada', 'aplicada', 'sent', 'başvuruldu', 'basvuruldu']
+    aliases: [ 'aplicado', 'enviada', 'aplicada', 'sent', 'başvuruldu', 'basvuruldu' ]
     description: Application submitted
     dashboard_group: applied
 
   - id: responded
     label: Responded
-    aliases: ['respondido', 'yanıt verildi', 'yanit verildi']
+    aliases: [ 'respondido', 'yanıt verildi', 'yanit verildi' ]
     description: Company has responded (not yet interview)
     dashboard_group: responded
 
   - id: interview
     label: Interview
-    aliases: ['entrevista', 'mülakat', 'mulakat']
+    aliases: [ 'entrevista', 'mülakat', 'mulakat' ]
     description: Active interview process
     dashboard_group: interview
 
@@ -51,7 +51,7 @@ states:
 
   - id: skip
     label: SKIP
-    aliases: ['no_aplicar', 'no aplicar', 'skip', 'monitor', 'uygun değil', 'uygun degil']
+    aliases: [ 'no_aplicar', 'no aplicar', 'skip', 'monitor', 'uygun değil', 'uygun degil' ]
     description: Doesn't fit, don't apply
     dashboard_group: skip
 
