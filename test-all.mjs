@@ -1245,6 +1245,49 @@ if (
   fail('pipeline mode missing batch liveness sweep for unconfirmed entries');
 }
 
+// --- salary tracking mode wiring (#1656 PR-2) ---
+const trackerModeDoc = readFile('modes/tracker.md');
+const patternsModeDoc = readFile('modes/patterns.md');
+const batchPromptDoc = readFile('batch/batch-prompt.md');
+
+if (
+  ofertaMode.includes('Advertised (JD)') &&
+  ofertaMode.includes('salary-observations.tsv') &&
+  ofertaMode.includes('advertised_comp')
+) {
+  pass('oferta pins the verbatim advertised figure (Block D first row + advertised_comp) and gates desired observations on an explicit user ask');
+} else {
+  fail('oferta missing Advertised (JD) row, salary-observations.tsv append rule, or advertised_comp requirement');
+}
+
+if (
+  trackerModeDoc.includes('salary-observations.tsv') &&
+  trackerModeDoc.includes('recruiter-verbal') &&
+  trackerModeDoc.includes('salary-gap.mjs')
+) {
+  pass('tracker appends confirmed actual observations with source tiers and surfaces salary-gap');
+} else {
+  fail('tracker missing salary observation append (source tiers) or salary-gap mention');
+}
+
+if (/## Step 3[\s\S]*?salary-observations\.tsv[\s\S]*?## Step 4/.test(offerPrepMode)) {
+  pass('offer-prep Step 3 records the contract/offer-letter actual into the observation log');
+} else {
+  fail('offer-prep Step 3 missing the salary-observations.tsv append');
+}
+
+if (patternsModeDoc.includes('salary-gap.mjs')) {
+  pass('patterns mode offers salary-gap as an additional lens');
+} else {
+  fail('patterns mode missing salary-gap lens mention');
+}
+
+if ((batchPromptDoc.match(/advertised_comp/g) || []).length >= 2) {
+  pass('batch prompt carries advertised_comp in both Machine Summary fences');
+} else {
+  fail('batch prompt missing advertised_comp in one or both Machine Summary fences');
+}
+
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
 
 console.log('\n9. Local parser contract');
