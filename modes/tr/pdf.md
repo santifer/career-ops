@@ -162,7 +162,7 @@ c. **Metin değişiminden sonra düzeni (layout) yeniden akıt (Reflow):**
    1. Güncellenmiş öğe pozisyonlarını ve boyutlarını `perform-editing-operations` yanıtından (response) oku
    2. Her iş deneyimi bölümü için (yukarıdan aşağıya), maddeler (bullets) metin kutusunun nerede bittiğini hesapla: `end_y = top + height`
    3. Bir sonraki bölümün başlığı `end_y + consistent_gap` noktasından başlamalıdır (şablondaki orijinal boşluğu, tipik olarak ~30px, kullan)
-   4. Eşit boşluğu (even spacing) korumak adına sonraki bölümün tarihini, şirket adını, rol başlığını ve madde öğelerini taşımak için `position_element` kullan
+   4. Eşit boşluğu (even spacing) korumak amacıyla sonraki bölümün tarihini, şirket adını, rol başlığını ve madde öğelerini taşımak için `position_element` kullan
    5. Tüm iş deneyimi bölümleri için bunu tekrar et
 d. **Kaydetmeden (commit) önce düzeni (layout) doğrula:**
    - transaction_id ve page_index=1 kullanarak `get-design-thumbnail` al

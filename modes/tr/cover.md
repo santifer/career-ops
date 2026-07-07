@@ -123,7 +123,7 @@ Eksik veya yanlış bir şey var mı? Taslağı hazırlarken bu listeyi kullanac
 
 ## Adım 5 — Boşluk (gap) tespiti ve diyalog
 
-Adayın profili ile rol arasındaki olası boşluklar (gaps) için JD'yi analiz et. Tespit edilen her boşluk için doğrudan sor — herhangi bir standart dili otomatik olarak (auto-insert) EKLEME:
+Adayın profili ve pozisyon arasındaki olası boşluklar (gaps) için JD'yi analiz et. Tespit edilen her boşluk için doğrudan sor — herhangi bir standart dili otomatik olarak (auto-insert) EKLEME:
 
 ```text
 Profiliniz ile bu JD arasında olası boşluklar (gaps) tespit ettim:
