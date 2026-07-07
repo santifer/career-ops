@@ -4,7 +4,13 @@
  * generate-pdf.mjs — HTML → PDF via Playwright
  *
  * Usage:
- *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN]
+ *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--margins=default|din5008] [--page-numbers] [--report=NNN]
+ *
+ * --margins selects a margin preset. "din5008" uses DIN 5008 margins (2.5cm
+ * left, 2.0cm right) for the German/DACH market. Default is 0.6in all around.
+ *
+ * --page-numbers adds "Seite X von Y" to the PDF footer (German convention
+ * for multi-page Lebensläufe).
  *
  * --report links the generated PDF to its tracker/report number and records
  * the linkage in data/pdf-index.tsv so downstream tools (e.g. the TUI
@@ -93,6 +99,11 @@ function normalizeTextForATS(html) {
     return t;
   }
 }
+
+const MARGIN_PRESETS = {
+  default: { top: '0.6in', right: '0.6in', bottom: '0.6in', left: '0.6in' },
+  din5008: { top: '0.59in', right: '0.79in', bottom: '0.59in', left: '0.98in' },
+};
 
 const SECTION_ALIASES = new Map([
   ['summary', 'summary'],
@@ -244,13 +255,17 @@ async function generatePDF() {
   const args = process.argv.slice(2);
 
   // Parse arguments
-  let inputPath, outputPath, format = 'a4', reportNum = '';
+  let inputPath, outputPath, format = 'a4', reportNum = '', margins = 'default', pageNumbers = false;
 
   for (const arg of args) {
     if (arg.startsWith('--format=')) {
       format = arg.split('=')[1].toLowerCase();
     } else if (arg.startsWith('--report=')) {
       reportNum = arg.split('=')[1].trim();
+    } else if (arg.startsWith('--margins=')) {
+      margins = arg.split('=')[1].toLowerCase();
+    } else if (arg === '--page-numbers') {
+      pageNumbers = true;
     } else if (!inputPath) {
       inputPath = arg;
     } else if (!outputPath) {
@@ -259,7 +274,7 @@ async function generatePDF() {
   }
 
   if (!inputPath || !outputPath) {
-    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN]');
+    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--margins=default|din5008] [--page-numbers] [--report=NNN]');
     process.exit(1);
   }
 
@@ -289,9 +304,16 @@ async function generatePDF() {
     process.exit(1);
   }
 
+  if (!MARGIN_PRESETS[margins]) {
+    console.error(`Invalid margins "${margins}". Use: ${Object.keys(MARGIN_PRESETS).join(', ')}`);
+    process.exit(1);
+  }
+
   console.log(`📄 Input:  ${inputPath}`);
   console.log(`📁 Output: ${outputPath}`);
   console.log(`📏 Format: ${format.toUpperCase()}`);
+  if (margins !== 'default') console.log(`📐 Margins: ${margins}`);
+  if (pageNumbers) console.log(`🔢 Page numbers: enabled`);
 
   let html = await readFile(inputPath, 'utf-8');
   let cvMarkdown = '';
@@ -311,7 +333,7 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath), reportNum, inputPath });
+  return renderHtmlToPdf(html, outputPath, { format, margins, pageNumbers, baseDir: dirname(inputPath), reportNum, inputPath });
 }
 
 /**
@@ -372,9 +394,12 @@ export async function inlineLocalFonts(html) {
  */
 export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const format = opts.format || 'a4';
+  const marginsKey = opts.margins || 'default';
+  const pageNumbers = opts.pageNumbers || false;
   const baseDir = opts.baseDir || process.cwd();
   const reportNum = opts.reportNum || '';
   const inputPath = opts.inputPath || '';
+  const marginValues = MARGIN_PRESETS[marginsKey] || MARGIN_PRESETS.default;
 
   mkdirSync(dirname(outputPath), { recursive: true });
 
@@ -399,17 +424,26 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     await page.evaluate(() => document.fonts.ready);
 
     // Generate PDF
-    const pdfBuffer = await page.pdf({
+    const pdfOpts = {
       format: format,
       printBackground: true,
-      margin: {
-        top: '0.6in',
-        right: '0.6in',
-        bottom: '0.6in',
-        left: '0.6in',
-      },
+      margin: pageNumbers
+        ? { ...marginValues, bottom: '0.79in' }
+        : marginValues,
       preferCSSPageSize: false,
-    });
+    };
+
+    if (pageNumbers) {
+      pdfOpts.displayHeaderFooter = true;
+      pdfOpts.headerTemplate = '<span></span>';
+      pdfOpts.footerTemplate = [
+        '<div style="width:100%;text-align:center;font-size:9px;color:#999;font-family:Arial,sans-serif;">',
+        'Seite <span class="pageNumber"></span> von <span class="totalPages"></span>',
+        '</div>',
+      ].join('');
+    }
+
+    const pdfBuffer = await page.pdf(pdfOpts);
 
     // Write PDF
     await writeFile(outputPath, pdfBuffer);

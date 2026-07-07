@@ -17,6 +17,12 @@ candidate:
   # Switzerland) where a professional photo is expected. Use a local file path or
   # a data: URL — the PDF renderer inlines local images.
   photo: ""
+  # Optional scanned signature for German CVs (Lebenslauf). A handwritten
+  # signature at the end is a strong convention in DACH markets — it signals
+  # formal diligence and attests to the accuracy of all stated facts. Use a
+  # path to a transparent PNG/SVG of your signature, or leave empty to show
+  # only the typed name line. Blue ink scans on white paper are the standard.
+  signature: ""
 
 target_roles:
   # Your North Star roles — what you're optimizing for

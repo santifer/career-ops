@@ -188,6 +188,25 @@ In deutschen Stellenanzeigen und Vertragsverhandlungen tauchen Begriffe auf, die
 9. **Tracker-Einträge als TSV** — `applications.md` NIEMALS direkt für neue Einträge editieren. TSV in `batch/tracker-additions/` schreiben, `merge-tracker.mjs` übernimmt das Mergen
 10. **`**URL:**` in jedem Report-Header** — zwischen Score und PDF
 
+### Deutscher Lebenslauf — Formatierungs-Standards
+
+Für PDF-Erzeugung im DACH-Markt gelten besondere Regeln — **vollständige Anweisungen in `modes/de/pdf.md`**. Die wichtigsten Punkte:
+
+| Aspekt | Standard |
+|--------|----------|
+| **Papierformat** | A4, immer |
+| **Seitenränder** | DIN 5008: links 2,5 cm, rechts 2,0 cm (`--margins=din5008`) |
+| **Seitenzahl** | 1 Seite (Einsteiger), 1–2 (Professionals), 2–3 (Führungskräfte) |
+| **Datumsformat** | MM/YYYY – MM/YYYY |
+| **Telefon** | +49 176 12345678 (DIN 5008) |
+| **Kurzprofil** | 3–5 Sätze als erster Block, keyword-optimiert |
+| **Foto** | Standard im DACH-Markt, opt-in via `candidate.photo` |
+| **Unterschrift** | Ort + Datum + Name am Ende des Lebenslaufs |
+| **Seitennummerierung** | "Seite X von Y" bei mehrseitigen CVs (`--page-numbers`) |
+| **Layout** | Einspaltig, ATS-kompatibel, serifenlose Schrift 11–12pt |
+
+**Ergebnisorientierte Bullets** statt Aufgabenlisten. Aktive Verben + messbare Resultate. Natürliches Tech-Deutsch, keine zwanghafte Eindeutschung.
+
 ### Tools
 
 | Tool | Einsatz |

@@ -446,6 +446,52 @@
       'Yu Gothic', 'YuGothic', 'Noto Sans CJK JP', 'Noto Sans JP',
       Meiryo, 'MS PGothic', sans-serif;
   }
+
+  /* === German (DACH) market: DIN 5008 and Lebenslauf conventions ===
+     German CVs follow DIN 5008 typographic standards and expect a signature
+     block at the end. Photo support uses the existing .cv-photo rule (opt-in
+     via candidate.photo in profile.yml). Font sizes nudge up to meet the
+     DIN 5008 recommendation of 11-12pt body text. */
+
+  /* Signature block — placed at the bottom of the last page.
+     Renders only when {{SIGNATURE}} emits the markup; empty slot = no output. */
+  .signature-block {
+    margin-top: 28px;
+    padding-top: 10px;
+  }
+
+  .signature-location-date {
+    font-size: 10.5px;
+    color: #555;
+    margin-bottom: 24px;
+  }
+
+  .signature-image {
+    display: block;
+    max-width: 140px;
+    max-height: 50px;
+    margin-bottom: 4px;
+  }
+
+  .signature-line {
+    width: 180px;
+    border-bottom: 1px solid #999;
+    margin-bottom: 4px;
+  }
+
+  .signature-name {
+    font-size: 10.5px;
+    color: #333;
+    font-weight: 500;
+  }
+
+  html[lang="de"] .job li {
+    font-size: 11px;
+  }
+
+  html[lang="de"] .summary-text {
+    font-size: 11px;
+  }
 </style>
 </head>
 <body>
@@ -512,6 +558,8 @@
     <div class="section-title">{{SECTION_SKILLS}}</div>
     {{SKILLS}}
   </div>
+
+  {{SIGNATURE}}
 
 </div>
 </body>

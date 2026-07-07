@@ -102,6 +102,7 @@ Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with 
 | `{{CERTIFICATIONS}}` | Certifications HTML |
 | `{{SECTION_SKILLS}}` | Skills |
 | `{{SKILLS}}` | Skills HTML |
+| `{{SIGNATURE}}` | Opt-in signature block (DACH/German market). When generating a German CV, replace with the signature HTML: location + date + optional scanned signature image + candidate name. Otherwise **remove the whole `{{SIGNATURE}}` line** so no markup is emitted. See `modes/de/pdf.md` for the full template. |
 
 ### Profile photo (opt-in, market-specific)
 
