@@ -275,8 +275,9 @@ report, add it to that section first, then draft.
   characterize the contract.
 - `voice-dna.md` may inform tone if present (style only — it never
   introduces factual claims).
-- Source-of-truth boundary applies: content comes exclusively from the prep
-  report, in-scope user files, and the current conversation.
+- Source-of-truth boundary (tighter for this step): content comes
+  exclusively from the prep report and the current conversation — no other
+  files. `voice-dna.md` above is a style channel, never a content source.
 
 Write `data/offers/{company-slug}/reply-draft-{YYYY-MM-DD}.md`:
 
