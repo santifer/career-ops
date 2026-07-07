@@ -210,7 +210,7 @@ export function CvIngest({ onSaved }: { onSaved?: () => void }) {
               type="button"
               disabled={!paste.trim()}
               onClick={() => ingestText(paste.trim())}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-50 max-sm:min-h-[44px]"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground shadow-sm transition hover:brightness-110 disabled:opacity-50 max-sm:min-h-[44px]"
             >
               Read my CV <ArrowRight className="size-4" />
             </button>
@@ -291,7 +291,7 @@ export function CvIngest({ onSaved }: { onSaved?: () => void }) {
           type="button"
           onClick={save}
           disabled={phase === "saving"}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm transition hover:brightness-110 disabled:opacity-60"
         >
           {phase === "saving" ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
           Save &amp; find my matches

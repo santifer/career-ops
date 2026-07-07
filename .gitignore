@@ -5,6 +5,7 @@ data/applications.db
 data/follow-ups.md
 data/pipeline.md
 data/scan-history.tsv
+data/scan-runs.tsv
 data/pdf-index.tsv
 data/agent-inbox.md
 data/parser-output/**/*.json
