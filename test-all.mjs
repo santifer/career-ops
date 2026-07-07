@@ -1503,6 +1503,17 @@ if (
   fail('scan.md missing local_parser_ok skip rules for agent scan');
 }
 
+// Guard against scan.md's manual-parse conventions drifting from what providers/*.mjs
+// emit and scan.mjs's filters consume (location/salary/description). We assert the two
+// most specific, consumed-field tokens: Ashby `secondaryLocations` (location_filter) and
+// Lever `descriptionPlain` (content_filter + #1597 cross-listing dedup). Raw API
+// identifiers → language-neutral, low-brittleness.
+if (scanMode.includes('secondaryLocations') && scanMode.includes('descriptionPlain')) {
+  pass('scan.md parse conventions document consumed provider fields (ashby secondaryLocations, lever descriptionPlain)');
+} else {
+  fail('scan.md parse conventions drifted from providers/*.mjs — missing secondaryLocations (ashby) or descriptionPlain (lever) that scan.mjs filters consume');
+}
+
 if (!fileExists('scripts/parsers/cohere_jobs.py')) {
   pass('Cohere parser example is not bundled as a runtime script');
 } else {
