@@ -110,6 +110,11 @@ cover_letter:
   # Plain English, e.g. "digital media", "fintech", "healthcare IT".
   primary_domain: "your current domain"
 
+  # Salary expectation as gross annual salary (Brutto-Jahresgehalt) for
+  # German cover letters. Only included when the JD explicitly requests it.
+  # Use a precise odd number (e.g. 52300) to signal researched market value.
+  # salary_expectation: 52300
+
   # Languages you are actively learning. Each entry MAY produce a closing
   # sentence in that language IF the JD location matches one of the listed
   # countries AND the user confirms inclusion during the cover letter flow.

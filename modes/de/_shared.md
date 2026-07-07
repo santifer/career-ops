@@ -174,7 +174,7 @@ In deutschen Stellenanzeigen und Vertragsverhandlungen tauchen Begriffe auf, die
 
 ### IMMER
 
-0. **Anschreiben:** Wenn das Formular die Möglichkeit bietet, ein Anschreiben anzuhängen oder zu schreiben, IMMER eines mitliefern. PDF im selben visuellen Design wie der Lebenslauf erzeugen. Inhalt: Zitate aus der Stellenanzeige, gemappt auf Proof Points, Links zu relevanten Case Studies. Maximal 1 Seite.
+0. **Anschreiben:** Wenn das Formular die Möglichkeit bietet, ein Anschreiben anzuhängen oder zu schreiben, IMMER eines mitliefern. **Vollständige Anweisungen in `modes/de/cover.md`**. DIN-5008-konformes Layout (Form B), evidenzbasiertes Storytelling, keine Floskeln. Immer als `locale: "de"` Payload an `generate-cover-letter.mjs` übergeben. Maximal 1 Seite.
 1. `cv.md` und `article-digest.md` (falls vorhanden) lesen, bevor irgendeine Stellenanzeige bewertet wird
 1b. **Bei der ersten Bewertung jeder Session:** `node cv-sync-check.mjs` per Bash ausführen. Bei Warnungen den Kandidaten informieren, bevor weitergearbeitet wird
 2. Den Rollen-Archetyp erkennen und das Framing anpassen
@@ -206,6 +206,60 @@ Für PDF-Erzeugung im DACH-Markt gelten besondere Regeln — **vollständige Anw
 | **Layout** | Einspaltig, ATS-kompatibel, serifenlose Schrift 11–12pt |
 
 **Ergebnisorientierte Bullets** statt Aufgabenlisten. Aktive Verben + messbare Resultate. Natürliches Tech-Deutsch, keine zwanghafte Eindeutschung.
+
+### Deutsches Anschreiben — Standards (DIN 5008, Arbeitsmarkt 2026)
+
+Für die Anschreiben-Erzeugung im DACH-Markt gelten besondere Regeln — **vollständige Anweisungen in `modes/de/cover.md`**. Die wichtigsten Punkte:
+
+| Aspekt | Standard |
+|--------|----------|
+| **Format** | DIN 5008 Form B, A4, textbasiertes PDF |
+| **Seitenränder** | Links 2,5 cm, rechts 2,0 cm, oben 4,5 cm (inkl. Absender), unten 2,0–2,5 cm |
+| **Schrift** | Serifenlos (Arial, Calibri, Helvetica, Verdana), 11–12 pt Fließtext |
+| **Zeilenabstand** | 1,15- bis 1,2-fach |
+| **Ausrichtung** | Linksbündiger Flattersatz (kein Blocksatz ohne Silbentrennung) |
+| **Struktur** | Absender → Empfänger-Anschriftfeld → Datum (rechtsbündig) → Betreff (fett) → Anrede → Absätze (je 5–8 Zeilen) → Grußformel → Unterschrift → Anlagen → opt. PS |
+| **Grußformel** | "Mit freundlichen Grüßen" OHNE nachfolgendes Komma |
+| **Unterschrift** | 3 Leerzeilen Platz, eingescannte Unterschrift bei digitaler Bewerbung Standard |
+| **Anlagen** | "Anlagen" fett, OHNE Doppelpunkt, Dokumente stichpunktartig |
+| **Dateinamen** | `Nachname_Vorname_Anschreiben.pdf` — keine Umlaute im Dateinamen |
+| **Umfang** | 350–450 Wörter, maximal 1 DIN-A4-Seite |
+| **Template** | `templates/cover-letter-de-template.html`, Payload mit `locale: "de"` |
+
+**Verbotene Formulierungen (Ausschlussgrund):**
+
+| Verboten | Alternative |
+|----------|-------------|
+| "Mit großem Interesse habe ich Ihre Anzeige gelesen" | Direkter Einstieg über Unternehmens-Herausforderung |
+| "Hiermit bewerbe ich mich als..." | Stellentitel gehört in die Betreffzeile |
+| "Ich bin teamfähig, flexibel, belastbar" | Konkretes Beispiel mit Zahlen |
+| "Ich bin hochmotiviert" | Ergebnis zeigen, das Motivation belegt |
+| "Ich würde mich freuen, von Ihnen zu hören" | "Gerne erläutere ich Ihnen im Gespräch, wie..." |
+| "z. Hd." im Anschriftfeld | Name direkt: "Frau Dr. Müller" |
+| "den" im Datum ("München, den 20.01.2026") | "München, 20.01.2026" |
+| Passiv ("wurde mir übertragen") | Aktiv: "Ich habe eigenverantwortlich gesteuert" |
+
+**Evidenz-Prinzip:** Jede angeführte Stärke MUSS durch ein quantifizierbares Ergebnis, ein konkretes Projektbeispiel oder eine spezifische Situation belegt werden. Unbelegte Behauptungen sind verboten.
+
+**Gehaltsvorstellung im Anschreiben:**
+- NUR wenn die Stellenanzeige explizit danach fragt
+- Immer als Brutto-Jahresgehalt
+- Präzise krumme Zahl (48.750 EUR statt 50.000 EUR) — signalisiert fundierte Recherche
+- Keine geldwerten Vorteile (VWL, bAV, Weihnachtsgeld) — gehören in die Vertragsverhandlung
+
+**Eintrittstermin:**
+- Immer konkret formulieren, nie "nach Absprache"
+- "Unter Berücksichtigung meiner vertraglichen Kündigungsfrist von {X} Monaten stehe ich Ihnen ab dem {Datum} zur Verfügung."
+
+**Branchenspezifische Relevanz:**
+
+| Sektor | Stellenwert | Anpassung |
+|--------|-------------|-----------|
+| Kaufmännisch & Admin | Sehr hoch | Strenge DIN 5008, formale Präzision |
+| IT & Tech | Gering-mittel | Kurz, technisch, Projektreferenzen |
+| Gesundheit & Soziales | Mittel | Empathie + Belastbarkeit belegen |
+| Handwerk | Sehr gering | Nur wenn explizit gefordert |
+| Kreativ & Marketing | Mittel | Storytelling, Kampagnenerfolge |
 
 ### Tools
 

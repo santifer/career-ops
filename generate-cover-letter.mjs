@@ -6,11 +6,16 @@
  *   node generate-cover-letter.mjs --payload payload.json
  *   node generate-cover-letter.mjs --payload payload.json --out output/slug-cover.pdf
  *
- * Fills templates/cover-letter-template.html with the payload, then renders
- * it to PDF via the same Playwright pipeline used for CVs (generate-pdf.mjs).
+ * Fills templates/cover-letter-template.html (EN) or
+ * templates/cover-letter-de-template.html (DE, DIN 5008) with the payload,
+ * then renders it to PDF via the same Playwright pipeline used for CVs.
  *
- * `buildHtml` is exported as a pure function so the template can be tested
- * without loading Playwright (renderHtmlToPdf is imported lazily inside main).
+ * Template selection: set `payload.locale` to "de" for the German template.
+ * Any other value (or absent) falls back to the English template.
+ *
+ * `buildHtml` and `buildHtmlDe` are exported as pure functions so templates
+ * can be tested without loading Playwright (renderHtmlToPdf is imported
+ * lazily inside main).
  */
 
 import { readFileSync, existsSync, mkdirSync } from "fs";
@@ -21,7 +26,6 @@ import { parseArgs } from "util";
 const OUTPUT_ROOT = resolve("output");
 
 function safeOutputPath(raw) {
-  // Derive a sanitized filename from raw string (strip path separators and dots)
   const filename = basename(raw).replace(/[^a-zA-Z0-9._-]/g, "-").replace(/\.{2,}/g, "-");
   return join(OUTPUT_ROOT, filename);
 }
@@ -103,19 +107,114 @@ function buildFootnotesBlock(footnotes) {
   return `<div class="footnotes">\n${lines}\n  </div>`;
 }
 
+// ── German (DIN 5008) template helpers ──
+
+function buildSenderAddressBlock(candidate) {
+  const lines = [];
+  if (candidate.street) lines.push(escapeHtml(candidate.street));
+  if (candidate.zip_city) lines.push(escapeHtml(candidate.zip_city));
+  return lines.map(l => `<div>${l}</div>`).join("\n    ");
+}
+
+function buildSenderContactBlock(candidate) {
+  const lines = [];
+  if (candidate.phone) lines.push(`Tel.: ${escapeHtml(candidate.phone)}`);
+  if (candidate.email) {
+    const email = escapeHtml(candidate.email);
+    lines.push(`<a href="mailto:${email}">${email}</a>`);
+  }
+  if (candidate.linkedin) {
+    lines.push(`<a href="${escapeHtml(asUrl(candidate.linkedin))}">LinkedIn</a>`);
+  }
+  return lines.map(l => `<div>${l}</div>`).join("\n    ");
+}
+
+function buildRecipientBlock(recipient) {
+  if (!recipient) return "";
+  const lines = [];
+  if (recipient.company) lines.push(escapeHtml(recipient.company));
+  if (recipient.department) lines.push(escapeHtml(recipient.department));
+  if (recipient.salutation_name) lines.push(escapeHtml(recipient.salutation_name));
+  if (recipient.street) lines.push(escapeHtml(recipient.street));
+  if (recipient.zip_city) lines.push(escapeHtml(recipient.zip_city));
+  return lines.map(l => `<div>${l}</div>`).join("\n    ");
+}
+
+function buildAnlagenBlock(anlagen) {
+  if (!anlagen || !anlagen.length) return "";
+  const items = anlagen.map(a => `      <li>${escapeHtml(a)}</li>`).join("\n");
+  return `  <div class="anlagen">\n    <div class="anlagen-title">Anlagen</div>\n    <ul class="anlagen-list">\n${items}\n    </ul>\n  </div>`;
+}
+
+function buildSignatureImageBlock(candidate) {
+  if (!candidate.signature) return "";
+  const src = escapeHtml(candidate.signature);
+  return `<img class="signature-image" src="${src}" alt="Unterschrift">`;
+}
+
+function buildPostskriptumBlock(ps) {
+  if (!ps) return "";
+  return `  <div class="postskriptum">PS: ${escapeHtml(ps)}</div>`;
+}
+
+/**
+ * Build HTML from the German DIN-5008 cover letter template.
+ * Payload shape documented in modes/de/cover.md Step 11.
+ */
+export function buildHtmlDe(payload) {
+  _require(payload, ["candidate", "letter"], "payload");
+  const candidate = payload.candidate;
+  const letter = payload.letter;
+  _require(candidate, ["name"], "candidate");
+  _require(letter, ["opening"], "letter");
+
+  const scriptDir = dirname(fileURLToPath(import.meta.url));
+  const templatePath = resolve(scriptDir, "templates", "cover-letter-de-template.html");
+  let html = readFileSync(templatePath, "utf-8");
+
+  const dateLine = [letter.city, letter.date].filter(Boolean).map(escapeHtml).join(", ");
+
+  const replacements = {
+    "{{NAME}}": escapeHtml(candidate.name),
+    "{{SENDER_ADDRESS_BLOCK}}": buildSenderAddressBlock(candidate),
+    "{{SENDER_CONTACT_BLOCK}}": buildSenderContactBlock(candidate),
+    "{{RECIPIENT_BLOCK}}": buildRecipientBlock(payload.recipient),
+    "{{DATE_LINE}}": dateLine,
+    "{{BETREFF}}": escapeHtml(letter.betreff || `Bewerbung als ${letter.role_title || ""}`),
+    "{{ANREDE}}": escapeHtml(letter.anrede || "Sehr geehrte Damen und Herren,"),
+    "{{OPENING}}": escapeHtml(letter.opening),
+    "{{QUALIFICATIONS}}": escapeHtml(letter.qualifications || ""),
+    "{{VALUE_PROPOSITION}}": escapeHtml(letter.value_proposition || ""),
+    "{{ADMINISTRATIVE_CLOSE}}": escapeHtml(letter.administrative_close || ""),
+    "{{GRUSSFORMEL}}": escapeHtml(letter.grussformel || "Mit freundlichen Grüßen"),
+    "{{SIGNATURE_IMAGE_BLOCK}}": buildSignatureImageBlock(candidate),
+    "{{PRINTED_NAME}}": escapeHtml(letter.printed_name || candidate.name),
+    "{{ANLAGEN_BLOCK}}": buildAnlagenBlock(letter.anlagen),
+    "{{POSTSKRIPTUM_BLOCK}}": buildPostskriptumBlock(letter.postskriptum),
+    "{{FOOTNOTES_BLOCK}}": buildFootnotesBlock(letter.footnotes),
+  };
+
+  return html.replace(/\{\{[A-Z_]+\}\}/g, (token) => replacements[token] ?? token);
+}
+
+/**
+ * Build HTML from the English cover letter template (original behavior).
+ */
 export function buildHtml(payload) {
   _require(payload, ["candidate", "letter"], "payload");
+
+  if (payload.locale === "de") return buildHtmlDe(payload);
+
   const candidate = payload.candidate;
   const letter = payload.letter;
   _require(candidate, ["name"], "candidate");
   _require(letter, ["role_title", "opening", "profile_intro"], "letter");
 
   const scriptDir = dirname(fileURLToPath(import.meta.url));
+
   const templatePath = resolve(scriptDir, "templates", "cover-letter-template.html");
   let html = readFileSync(templatePath, "utf-8");
 
-  // Optional salutation (e.g. "Dear Jane Smith,"). Omitted -> no salutation,
-  // preserving the original behavior for payloads that don't set it.
   const greetingBlock = letter.greeting ? `<p class="greeting">${escapeHtml(letter.greeting)}</p>` : "";
   const closingBlock = letter.closing ? `<p>${escapeHtml(letter.closing)}</p>` : "";
   const languageClosingBlock = letter.language_closing
@@ -139,11 +238,6 @@ export function buildHtml(payload) {
     "{{FOOTNOTES_BLOCK}}": buildFootnotesBlock(letter.footnotes),
   };
 
-  // Single-pass substitution: each {{TOKEN}} is replaced exactly once against
-  // the original template. A single regex pass (rather than iterative
-  // split/join) ensures a substituted value that itself contains a {{TOKEN}}
-  // sequence is left literal instead of being re-interpreted as a placeholder.
-  // Tokens with no entry in the map are left untouched.
   return html.replace(/\{\{[A-Z_]+\}\}/g, (token) => replacements[token] ?? token);
 }
 

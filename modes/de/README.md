@@ -52,6 +52,7 @@ Diese erste Iteration deckt die vier Modi mit dem höchsten Hebel ab:
 | `_shared.md` | `modes/_shared.md` (EN) | Geteilter Kontext, Archetypen, globale Regeln, DACH-Markt-Spezifika |
 | `angebot.md` | `modes/oferta.md` (ES) | Vollständige Bewertung einer einzelnen Stellenanzeige (Blöcke A-F) |
 | `bewerben.md` | `modes/apply.md` (EN) | Live-Assistent fürs Bewerbungsformular |
+| `cover.md` | `modes/cover.md` (EN) | Anschreiben-Generator nach DIN 5008 für den deutschen Arbeitsmarkt 2026 |
 | `pdf.md` | `modes/pdf.md` (EN) | ATS-optimierte PDF-Erzeugung nach DIN 5008 und DACH-Markt-Konventionen |
 | `pipeline.md` | `modes/pipeline.md` (ES) | URL-Inbox / Second Brain für gesammelte Stellenanzeigen |
 
