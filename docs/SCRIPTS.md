@@ -180,7 +180,7 @@ node salary-gap.mjs --self-test
 
 Observation line format (TSV, one per line, `#`-prefixed lines are comments):
 
-```
+```text
 {tracker#}\t{YYYY-MM-DD}\t{desired|advertised|actual}\t{amount}\t{currency}\t{source}\t{note}
 ```
 
