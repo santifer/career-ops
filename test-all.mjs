@@ -6066,10 +6066,10 @@ try {
   }
 
   if (
-    titlesMode.includes('exact YAML diff') &&
-    titlesMode.includes('Never write to `portals.yml` without explicit user confirmation') &&
+    titlesFlat.includes('exact YAML diff') &&
+    titlesFlat.includes('Never write to `portals.yml` without explicit user confirmation') &&
     titlesFlat.includes('the only file this mode writes by default') &&
-    titlesMode.includes('keywords, not raw titles')
+    titlesFlat.includes('keywords, not raw titles')
   ) {
     pass('titles mode confirm gate: exact YAML diff, explicit confirmation, portals.yml default-only, keywords not raw titles');
   } else {
