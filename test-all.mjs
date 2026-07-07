@@ -128,10 +128,12 @@ const scripts = [
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
+  { name: 'salary-gap.mjs --self-test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'agent-inbox-tests.mjs', expectExit: 0 },
   { name: 'followup-seed-tests.mjs', expectExit: 0 },
+  { name: 'set-status-tests.mjs', expectExit: 0 },
   // Root-level standalone suites shipped in SYSTEM_PATHS but previously never
   // executed by CI (issue #1624). All are fast (<0.5s each), so they run in
   // both quick and full mode like their siblings above.
@@ -641,8 +643,9 @@ const leakPatterns = [
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
-  'README.md', 'README.ar.md', 'README.da.md', 'README.de.md', 'README.es.md', 'README.fr.md', 'README.ja.md',
-  'README.ko-KR.md', 'README.pl.md', 'README.pt-BR.md', 'README.ru.md', 'README.cn.md', 'README.ua.md', 'README.zh-TW.md',
+  'README.md', 'README.ar.md', 'README.da.md', 'README.de.md', 'README.es.md', 'README.fr.md', 'README.hi.md',
+  'README.ja.md', 'README.ko-KR.md', 'README.pl.md', 'README.pt-BR.md', 'README.ru.md', 'README.cn.md',
+  'README.ua.md', 'README.zh-TW.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
   'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'AGENTS.md', 'go.mod', 'test-all.mjs',
@@ -760,6 +763,49 @@ if (generatePdfScript.includes('opts.reportNum') && generatePdfScript.includes('
   pass('renderHtmlToPdf reads manifest metadata from opts');
 } else {
   fail('renderHtmlToPdf does not read manifest metadata from opts');
+}
+
+if (generatePdfScript.includes('--allow-reorder')) {
+  pass('generate-pdf documents --allow-reorder in its usage strings');
+} else {
+  fail('generate-pdf is missing --allow-reorder from its usage strings');
+}
+
+try {
+  const { validateCvSectionOrder } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const cvMarkdown = '# Education\ntext\n# Work Experience\ntext\n# Projects\ntext';
+  const reorderedHtml = '<div class="section-title">Projects</div><div class="section-title">Education</div>';
+
+  let threw = false;
+  try {
+    validateCvSectionOrder(reorderedHtml, cvMarkdown);
+  } catch {
+    threw = true;
+  }
+  if (threw) {
+    pass('validateCvSectionOrder throws on a reordered CV by default (--allow-reorder unset)');
+  } else {
+    fail('validateCvSectionOrder should throw by default when section order diverges from cv.md');
+  }
+
+  const originalWarn = console.warn;
+  let warned = false;
+  console.warn = () => { warned = true; };
+  let threwWithFlag = false;
+  try {
+    validateCvSectionOrder(reorderedHtml, cvMarkdown, { allowReorder: true });
+  } catch {
+    threwWithFlag = true;
+  } finally {
+    console.warn = originalWarn;
+  }
+  if (!threwWithFlag && warned) {
+    pass('validateCvSectionOrder({ allowReorder: true }) warns instead of throwing on a reordered CV');
+  } else {
+    fail('validateCvSectionOrder({ allowReorder: true }) should warn, not throw, and should not silently do neither');
+  }
+} catch (e) {
+  fail(`validateCvSectionOrder allowReorder tests crashed: ${e.message}`);
 }
 try {
   const { repoRelativeManifestPath, injectPrintPageCss } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
@@ -902,7 +948,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md', 'email.md', 'add.md',
+  'interview.md', 'latex.md', 'email.md', 'add.md', 'titles.md',
   'regional/eu-swe.md',
 ];
 
@@ -1137,6 +1183,121 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+// --- offer-prep mode: contract reading companion (describes, never judges) ---
+const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
+if (
+  offerPrepMode.includes('prepares the candidate for a decision; it does not make one') &&
+  offerPrepMode.includes('never outputs "safe to sign"') &&
+  offerPrepMode.includes('not legal advice') &&
+  !offerPrepMode.includes('🔴') && !offerPrepMode.includes('🟡') && !offerPrepMode.includes('🟢')
+) {
+  pass('offer-prep mode carries describe-not-judge posture, no verdicts, no traffic-light symbols');
+} else {
+  fail('offer-prep mode missing posture/no-verdict rules or contains severity symbols');
+}
+
+if (
+  offerPrepMode.includes('must not call WebSearch, WebFetch') &&
+  offerPrepMode.includes('Never state law from memory') &&
+  offerPrepMode.includes('assert what any law requires') &&
+  offerPrepMode.includes('must not run in batch/headless mode') &&
+  offerPrepMode.includes('data, never instructions')
+) {
+  pass('offer-prep mode enforces no-research, no-law-assertion, no-headless, and untrusted-input guards');
+} else {
+  fail('offer-prep mode missing no-research / no-law-assertion / no-headless / untrusted-input guards');
+}
+
+if (
+  offerPrepMode.includes('quote it verbatim') &&
+  offerPrepMode.includes('[commonly negotiated]') &&
+  offerPrepMode.includes('[ask your lawyer]') &&
+  offerPrepMode.includes('[differs from what you were told]') &&
+  offerPrepMode.includes('Restrictive covenants') &&
+  offerPrepMode.includes('Integration clause')
+) {
+  pass('offer-prep mode walks clauses verbatim with neutral tags against the taxonomy');
+} else {
+  fail('offer-prep mode missing verbatim rule, neutral tags, or taxonomy categories');
+}
+
+if (
+  offerPrepMode.includes('section headings and the first clause') &&
+  offerPrepMode.includes('if the contract is not in English, stop') &&
+  offerPrepMode.includes('data/offers/') &&
+  offerPrepMode.includes('notes.md') &&
+  offerPrepMode.includes('Notable absences') &&
+  offerPrepMode.includes('incorporates by reference') &&
+  offerPrepMode.includes('Questions for your lawyer') &&
+  offerPrepMode.includes('This is an AI-generated reading companion') &&
+  offerPrepMode.includes('Apache-2.0')
+) {
+  pass('offer-prep mode has extraction/language gates, promises file, absences + referenced-docs handling, lawyer list, fixed disclaimer, attribution');
+} else {
+  fail('offer-prep mode missing gates, promises file, absences/referenced-docs handling, lawyer list, fixed disclaimer, or attribution');
+}
+
+// --- offer-prep reply-draft step (#1663): opt-in, prep-gated, draft-only ---
+const replyDraftStep = offerPrepMode.includes('Step 8 — Reply draft')
+  ? offerPrepMode.slice(offerPrepMode.indexOf('Step 8 — Reply draft'), offerPrepMode.indexOf('## Error handling'))
+  : '';
+if (
+  offerPrepMode.includes('Step 8 — Reply draft (optional, on request)') &&
+  offerPrepMode.includes('Never auto-generate') &&
+  offerPrepMode.includes('no prep report, no reply draft') &&
+  offerPrepMode.includes('data/offers/{company-slug}/reply-draft-{YYYY-MM-DD}.md') &&
+  offerPrepMode.includes('trace back to a line in the prep report') &&
+  offerPrepMode.includes('Never submit. Never send email. Never click send.') &&
+  offerPrepMode.includes('never demands') &&
+  offerPrepMode.includes('No legal claims and no cited law in the reply') &&
+  offerPrepMode.includes('Before you send') &&
+  replyDraftStep.includes('exclusively from the prep report and the current conversation') &&
+  !replyDraftStep.includes('in-scope user files')
+) {
+  pass('offer-prep reply-draft step is opt-in, prep-report-gated, traceable, questions-not-demands, draft-only, law-free, and sourced from prep report + conversation only (#1663)');
+} else {
+  fail('offer-prep reply-draft step missing (or lost its prep-report gate, reply-draft path, traceability rule, never-send guard, questions-not-demands framing, no-legal-claims rule, checklist, or prep-report+conversation-only source boundary) (#1663)');
+}
+
+const routerSkill = readFile('.agents/skills/career-ops/SKILL.md');
+if (
+  /argument-hint:.*offer-prep/.test(routerSkill) &&
+  routerSkill.includes('| `offer-prep` | `offer-prep` |') &&
+  routerSkill.includes('/career-ops offer-prep') &&
+  /Applies to:.*`offer-prep`/.test(routerSkill) &&
+  !/Modes delegated to subagent[\s\S]*offer-prep/.test(routerSkill)
+) {
+  pass('router skill registers offer-prep (argument-hint, routing table, menu, standalone list; never subagent-delegated)');
+} else {
+  fail('router skill missing offer-prep registration (or offer-prep leaked into the subagent-delegated section)');
+}
+
+const claudeMdDoc = readFile('CLAUDE.md');
+const agentsMdDoc = readFile('AGENTS.md');
+if (
+  claudeMdDoc.includes('`offer-prep`') &&
+  agentsMdDoc.includes('`offer-prep`')
+) {
+  pass('CLAUDE.md and AGENTS.md document the offer-prep mode');
+} else {
+  fail('agent docs missing offer-prep mode row');
+}
+
+const dataContractDoc = readFile('DATA_CONTRACT.md');
+const gitignoreDoc = readFile('.gitignore');
+const updaterSrc = readFile('update-system.mjs');
+if (
+  dataContractDoc.includes('data/offers/') &&
+  dataContractDoc.includes('modes/offer-prep.md') &&
+  gitignoreDoc.includes('data/offers/*') &&
+  gitignoreDoc.includes('!data/offers/.gitkeep') &&
+  updaterSrc.includes("'modes/offer-prep.md'")
+) {
+  pass('offer-prep registered in data contract, gitignore, and updater manifest');
+} else {
+  fail('offer-prep missing from data contract / gitignore / SYSTEM_PATHS');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
@@ -1148,6 +1309,49 @@ if (
   pass('pipeline mode sweeps unconfirmed entries for liveness before processing');
 } else {
   fail('pipeline mode missing batch liveness sweep for unconfirmed entries');
+}
+
+// --- salary tracking mode wiring (#1656 PR-2) ---
+const trackerModeDoc = readFile('modes/tracker.md');
+const patternsModeDoc = readFile('modes/patterns.md');
+const batchPromptDoc = readFile('batch/batch-prompt.md');
+
+if (
+  ofertaMode.includes('Advertised (JD)') &&
+  ofertaMode.includes('salary-observations.tsv') &&
+  ofertaMode.includes('advertised_comp')
+) {
+  pass('oferta pins the verbatim advertised figure (Block D first row + advertised_comp) and gates desired observations on an explicit user ask');
+} else {
+  fail('oferta missing Advertised (JD) row, salary-observations.tsv append rule, or advertised_comp requirement');
+}
+
+if (
+  trackerModeDoc.includes('salary-observations.tsv') &&
+  trackerModeDoc.includes('recruiter-verbal') &&
+  trackerModeDoc.includes('salary-gap.mjs')
+) {
+  pass('tracker appends confirmed actual observations with source tiers and surfaces salary-gap');
+} else {
+  fail('tracker missing salary observation append (source tiers) or salary-gap mention');
+}
+
+if (/## Step 3[\s\S]*?salary-observations\.tsv[\s\S]*?## Step 4/.test(offerPrepMode)) {
+  pass('offer-prep Step 3 records the contract/offer-letter actual into the observation log');
+} else {
+  fail('offer-prep Step 3 missing the salary-observations.tsv append');
+}
+
+if (patternsModeDoc.includes('salary-gap.mjs')) {
+  pass('patterns mode offers salary-gap as an additional lens');
+} else {
+  fail('patterns mode missing salary-gap lens mention');
+}
+
+if ((batchPromptDoc.match(/advertised_comp/g) || []).length >= 2) {
+  pass('batch prompt carries advertised_comp in both Machine Summary fences');
+} else {
+  fail('batch prompt missing advertised_comp in one or both Machine Summary fences');
 }
 
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
@@ -1601,6 +1805,7 @@ try {
   const emptyKeywordPath = join(tmp, 'empty-keyword.yml');
   const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
   const badContentFilterPath = join(tmp, 'bad-content-filter.yml');
+  const deadByTitleKeywordPath = join(tmp, 'dead-by-title-keyword.yml');
 
   writeFileSync(validPath, `
 title_filter:
@@ -1650,6 +1855,21 @@ tracked_companies:
     careers_url: "https://jobs.lever.co/acme"
 `, 'utf-8');
 
+  // by_title_keyword.<kw> that doesn't match any title_filter.positive entry
+  // (typo, or a keyword later removed from title_filter) is dead config — it
+  // will never fire. Should warn, not error (#1636 CodeRabbit follow-up).
+  writeFileSync(deadByTitleKeywordPath, `
+title_filter:
+  positive: ["AI Engineer"]
+content_filter:
+  by_title_keyword:
+    "AI Enginer":
+      positive: ["gpt"]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
   const validResult = run(NODE, ['validate-portals.mjs', '--file', validPath]);
   if (validResult !== null && validResult.includes('0 errors')) {
     pass('validate-portals accepts a minimal valid portals file');
@@ -1690,6 +1910,13 @@ tracked_companies:
     pass('validate-portals rejects empty content_filter keywords');
   } else {
     fail('validate-portals should reject empty content_filter keywords');
+  }
+
+  const deadByTitleKeywordResult = run(NODE, ['validate-portals.mjs', '--file', deadByTitleKeywordPath]);
+  if (deadByTitleKeywordResult !== null && deadByTitleKeywordResult.includes('1 warning')) {
+    pass('validate-portals warns on a by_title_keyword entry with no matching title_filter.positive keyword');
+  } else {
+    fail('validate-portals should warn (not error) on a dead by_title_keyword entry');
   }
 
   rmSync(tmp, { recursive: true, force: true });
@@ -2644,6 +2871,75 @@ try {
     pass('content_filter matches case-insensitively');
   } else {
     fail('content_filter should be case-insensitive');
+  }
+
+  // ── content_filter.by_title_keyword (#1636) ──
+  const { matchedTitleKeywords } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // matchedTitleKeywords returns the raw positive keywords that matched a title.
+  const tf = { positive: ['AI Engineer', 'Instructional Designer'] };
+  if (
+    JSON.stringify(matchedTitleKeywords('Senior AI Engineer', tf)) === JSON.stringify(['AI Engineer']) &&
+    matchedTitleKeywords('Instructional Designer II', tf).length === 1 &&
+    matchedTitleKeywords('HR Coordinator', tf).length === 0
+  ) {
+    pass('matchedTitleKeywords returns the title_filter.positive keyword(s) that matched');
+  } else {
+    fail('matchedTitleKeywords did not return expected matches');
+  }
+
+  const scopedCf = buildContentFilter({
+    by_title_keyword: {
+      'AI Engineer': { positive: ['gpt', 'llm', 'claude'] },
+    },
+  });
+
+  // A job matched via "AI Engineer" is held to the stricter override — no
+  // AI-tool mention in the description → rejected, even with no global positive set.
+  if (
+    scopedCf('Build internal tools, no ML involved', ['AI Engineer']) === false &&
+    scopedCf('Fine-tune LLM pipelines with GPT-4', ['AI Engineer']) === true
+  ) {
+    pass('content_filter.by_title_keyword applies its stricter rule only to jobs matched via that keyword');
+  } else {
+    fail('content_filter.by_title_keyword override did not gate AI Engineer jobs correctly');
+  }
+
+  // A job matched via a keyword with NO override (e.g. Instructional Designer)
+  // must NOT inherit the AI Engineer override — falls back to the global rule
+  // (absent here, so it passes).
+  if (scopedCf('Designs onboarding curricula', ['Instructional Designer']) === true) {
+    pass('content_filter.by_title_keyword does not leak onto unrelated title keywords');
+  } else {
+    fail('content_filter.by_title_keyword leaked its override onto an unrelated keyword');
+  }
+
+  // Global negative still applies as a backstop even when overrides exist,
+  // for jobs whose matched keyword has no override entry.
+  const scopedCfWithGlobal = buildContentFilter({
+    negative: ['wordpress'],
+    by_title_keyword: { 'AI Engineer': { positive: ['gpt'] } },
+  });
+  if (scopedCfWithGlobal('WordPress plugin maintenance', ['Instructional Designer']) === false) {
+    pass('content_filter global negative still applies to jobs without a matching override');
+  } else {
+    fail('content_filter global negative should still gate jobs with no by_title_keyword override');
+  }
+
+  // A malformed by_title_keyword (an array instead of an object) must not be
+  // silently iterated via Object.entries as if it were a keyed map — it
+  // should be treated as absent (no overrides), same as the validator rejects it.
+  const arrayGuardCf = buildContentFilter({
+    positive: ['rust'],
+    by_title_keyword: ['not', 'an', 'object'],
+  });
+  if (
+    arrayGuardCf('We write everything in Rust', ['AI Engineer']) === true &&
+    arrayGuardCf('A Python and Go team', ['AI Engineer']) === false
+  ) {
+    pass('content_filter.by_title_keyword as an array is ignored (falls back to global rule), not silently iterated');
+  } else {
+    fail('content_filter.by_title_keyword array should be ignored, not treated as a keyed override map');
   }
 
 } catch (e) {
@@ -3758,6 +4054,61 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker fuzzy dedup tests crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER CROSS-CHANNEL VIA GUARD: NON-LATIN AGENCIES (#1603) ─────
+// normalizeCompany() strips [^a-z0-9], so two different non-Latin agency
+// names both collapse to '' and the #1596 cross-channel guard treated them
+// as the same channel — silently merging two real submissions. The via
+// comparison must use a Unicode-aware key.
+console.log('\n🧪 Testing merge-tracker via guard with non-Latin agencies (#1603)...');
+try {
+  const viaTmp = mkdtempSync(join(tmpdir(), 'career-ops-via-'));
+  try {
+    mkdirSync(join(viaTmp, 'data'));
+    mkdirSync(join(viaTmp, 'reports'));
+    const additionsDir = join(viaTmp, 'additions');
+    mkdirSync(additionsDir);
+    const tracker = join(viaTmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|-----|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-04 | ? | リクルート | Backend Engineer, Payments Platform | 4.0/5 | Evaluated | ❌ | [1](../reports/001-unknown-2026-01-04.md) | agency listing |\n');
+    for (const n of ['001-unknown-2026-01-04', '002-unknown-2026-01-05', '003-unknown-2026-01-06']) {
+      writeFileSync(join(viaTmp, 'reports', `${n}.md`), '# fixture\n');
+    }
+    // Same role, unknown employer, DIFFERENT non-Latin agency → a real second
+    // submission that must be ADDED as its own row. (Role carries a
+    // discriminating token — roleFuzzyMatch rejects baseline-only titles.)
+    writeFileSync(join(additionsDir, '002-unknown.tsv'),
+      '2\t2026-01-05\t?\tBackend Engineer, Payments Platform\tEvaluated\t4.1/5\t❌\t[2](reports/002-unknown-2026-01-05.md)\tsecond agency\tvia=パーソル\n');
+    // Same role, SAME agency re-blasting the listing → duplicate, update in place.
+    writeFileSync(join(additionsDir, '003-unknown.tsv'),
+      '3\t2026-01-06\t?\tBackend Engineer, Payments Platform\tEvaluated\t4.2/5\t❌\t[3](reports/003-unknown-2026-01-06.md)\tre-blast\tvia=リクルート\n');
+
+    const viaResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir } });
+    if (viaResult === null) {
+      fail('merge-tracker.mjs crashed during non-Latin via guard test (#1603)');
+    } else {
+      const merged = readFileSync(tracker, 'utf-8');
+      if (merged.includes('パーソル') && merged.includes('リクルート')) {
+        pass('distinct non-Latin agencies kept as separate rows (#1603)');
+      } else {
+        fail('distinct non-Latin agencies were merged — via key collapsed to the same empty string (#1603)');
+      }
+      const recruitRows = merged.split('\n').filter(l => l.includes('リクルート'));
+      if (recruitRows.length === 1 && recruitRows[0].includes('4.2/5')) {
+        pass('same-agency re-blast still updates the existing row in place (#1603)');
+      } else {
+        fail(`same-agency re-blast handling broken: ${recruitRows.length} リクルート rows, expected 1 updated to 4.2/5`);
+      }
+    }
+  } finally {
+    rmSync(viaTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`non-Latin via guard tests crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER TSV COLUMN-ORDER TOLERANCE (#1427) ─────────────
@@ -5915,6 +6266,48 @@ try {
   fail(`core↔web contract freeze section crashed: ${e.message}`);
 }
 
+// ── 55b. OFFER-PREP POSTURE FREEZE (#1634) ──────────────────────
+// offer-prep's value AND its legal safety rest on describe-never-judge.
+// This freezes that posture: if the mode text ever gains verdict language
+// or drops a hard guard, CI fails loudly instead of the drift shipping.
+console.log('\n55b. offer-prep posture freeze (#1634)');
+try {
+  const prepSrc = readFileSync(join(ROOT, 'modes', 'offer-prep.md'), 'utf-8');
+  // Hard guards that must remain present (as written rules, not promises)
+  const REQUIRED_GUARDS = [
+    'never outputs "safe to sign"',
+    'No online research',
+    'Never state law from memory',
+    'Never headless',
+    'Untrusted input',
+  ];
+  const missingGuards = REQUIRED_GUARDS.filter((g) => !prepSrc.includes(g));
+  if (missingGuards.length === 0) {
+    pass('offer-prep keeps all five hard guards in the mode text');
+  } else {
+    fail(`offer-prep lost hard guard(s): ${missingGuards.join(' · ')} — the describe-never-judge posture is the mode's contract`);
+  }
+  // Verdict vocabulary must not appear as INSTRUCTION (outside the guard
+  // sentences that ban it). Cheap heuristic: these phrases may only appear
+  // on lines that also contain "never"/"not"/"NOT" (i.e. the prohibitions).
+  const VERDICT_PHRASES = ['safe to sign', 'risky clause', 'red flag rating', 'severity score'];
+  const offending = [];
+  for (const line of prepSrc.split('\n')) {
+    for (const p of VERDICT_PHRASES) {
+      if (line.toLowerCase().includes(p) && !/never|not\b|no\b|prohibit|ban/i.test(line)) {
+        offending.push(`"${p}" outside a prohibition: ${line.trim().slice(0, 70)}`);
+      }
+    }
+  }
+  if (offending.length === 0) {
+    pass('offer-prep contains no verdict vocabulary outside prohibitions');
+  } else {
+    fail(`offer-prep verdict-drift: ${offending[0]}`);
+  }
+} catch (e) {
+  fail(`offer-prep posture freeze crashed: ${e.message}`);
+}
+
 console.log('\n56. Fingerprint core — JD cross-listing detection (#1597)');
 try {
   const { fingerprintText, similarity, findCrossListings, normalizeJdText, FINGERPRINT_MIN_TEXT } =
@@ -6029,6 +6422,184 @@ try {
   }
 } catch (e) {
   fail(`scan-history fingerprint tests crashed: ${e.message}`);
+}
+
+// ── 58. TITLES MODE (#1632) ─────────────────────────────────────
+// CV → adjacent job-title suggestions → confirm-gated portals.yml writes.
+// The mode is judgment-only (no script), so these checks pin the behavioral
+// contract: evidence-required suggestions, the confirm gate, user-layer-only
+// writes, and dedup that mirrors the scan.mjs matcher.
+
+console.log('\n58. Titles mode (#1632)');
+
+try {
+  const titlesMode = readFile('modes/titles.md');
+  // Whitespace-normalized view so pinned phrases survive markdown re-wrapping.
+  const titlesFlat = titlesMode.replace(/\s+/g, ' ');
+
+  if (
+    titlesMode.includes('**Lateral**') &&
+    titlesMode.includes('**Stretch**') &&
+    titlesMode.includes('**Pivot**')
+  ) {
+    pass('titles mode defines the Lateral / Stretch / Pivot axes');
+  } else {
+    fail('titles mode missing one of the Lateral / Stretch / Pivot axis definitions');
+  }
+
+  if (
+    titlesMode.includes('quoted verbatim') &&
+    titlesMode.includes('gap note') &&
+    titlesMode.includes('Market-reality note') &&
+    titlesMode.includes('Never invent experience')
+  ) {
+    pass('titles mode requires verbatim CV evidence, gap + market-reality notes, and forbids invention');
+  } else {
+    fail('titles mode missing the evidence-required output contract (verbatim quotes / gap note / market-reality note / never invent)');
+  }
+
+  if (
+    titlesFlat.includes('exact YAML diff') &&
+    titlesFlat.includes('Never write to `portals.yml` without explicit user confirmation') &&
+    titlesFlat.includes('the only file this mode writes by default') &&
+    titlesFlat.includes('keywords, not raw titles')
+  ) {
+    pass('titles mode confirm gate: exact YAML diff, explicit confirmation, portals.yml default-only, keywords not raw titles');
+  } else {
+    fail('titles mode missing the confirm-gate contract (diff preview / explicit confirmation / portals.yml default-only / keywords)');
+  }
+
+  if (
+    titlesMode.includes('breadth warning') &&
+    titlesMode.includes('"Solutions Architect", never bare "Architect"')
+  ) {
+    pass('titles mode warns about substring-dangerous keywords (Solutions Architect vs bare Architect)');
+  } else {
+    fail('titles mode missing the substring-breadth warning for proposed keywords');
+  }
+
+  if (
+    titlesMode.includes('scan.mjs') &&
+    titlesMode.includes('case-insensitive substring') &&
+    titlesMode.includes('deal-breakers') &&
+    titlesMode.includes('modes/_profile.md')
+  ) {
+    pass('titles mode dedups against existing keywords via scan.mjs semantics and filters by _profile.md deal-breakers');
+  } else {
+    fail('titles mode missing the scan.mjs-mirroring dedup rule or the deal-breaker filter');
+  }
+
+  if (
+    titlesMode.includes('cv.md') &&
+    titlesMode.includes('config/profile.yml') &&
+    titlesMode.includes('title_filter.positive')
+  ) {
+    pass('titles mode reads cv.md, profile archetypes, and the current title_filter.positive');
+  } else {
+    fail('titles mode missing required inputs (cv.md / config/profile.yml / title_filter.positive)');
+  }
+
+  if (
+    titlesMode.includes('fit: adjacent') &&
+    titlesMode.includes('only if the user asks')
+  ) {
+    pass('titles mode offers fit: adjacent archetypes only on explicit user request (no default profile write)');
+  } else {
+    fail('titles mode missing the ask-first rule for fit: adjacent archetype writes');
+  }
+
+  if (
+    titlesFlat.includes('Separately-confirmed exception') &&
+    titlesFlat.includes('own YAML diff and its own separate confirmation') &&
+    titlesFlat.includes('never bundle the `portals.yml` and `config/profile.yml` writes into one confirmation')
+  ) {
+    pass('titles mode gates config/profile.yml archetype writes behind a separate diff + confirmation (never bundled)');
+  } else {
+    fail('titles mode missing the separately-confirmed exception for config/profile.yml archetype writes');
+  }
+
+  if (
+    titlesFlat.includes('`config/profile.yml` or `modes/_profile.md` missing → **hard stop**: do not generate suggestions') &&
+    titlesFlat.includes('can propose exactly what the user excluded')
+  ) {
+    pass('titles mode hard-stops on missing config/profile.yml or modes/_profile.md (deal-breakers unavailable)');
+  } else {
+    fail('titles mode should hard stop (not best-effort from cv.md) when config/profile.yml or modes/_profile.md is missing');
+  }
+
+  if (titlesMode.includes('#1353')) {
+    pass('titles mode defers negative-keyword precision guards to #1353');
+  } else {
+    fail('titles mode should state it proposes no negative keywords (deferred to #1353)');
+  }
+
+  if (
+    titlesMode.includes('/career-ops scan') &&
+    titlesMode.includes('upskill')
+  ) {
+    pass('titles mode suggests scan after the filter grows and upskill against a stretch title');
+  } else {
+    fail('titles mode missing follow-up suggestions (scan / upskill)');
+  }
+
+  if (
+    titlesMode.includes('onboarding') &&
+    titlesMode.includes('templates/portals.example.yml')
+  ) {
+    pass('titles mode handles missing cv.md (onboarding) and missing portals.yml (create from template)');
+  } else {
+    fail('titles mode missing error handling for absent cv.md / portals.yml');
+  }
+} catch (e) {
+  fail(`modes/titles.md missing or unreadable: ${e.message}`);
+}
+
+for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+  if (!fileExists(skillPath)) continue; // existence already checked in section 8
+  const skill = readFile(skillPath);
+  if (
+    /argument-hint:[^\n]*titles/.test(skill) &&
+    skill.includes('| `titles` | `titles` |') &&
+    skill.includes('/career-ops titles') &&
+    /Standalone modes[\s\S]*Applies to:[^\n]*`titles`/.test(skill)
+  ) {
+    pass(`${skillPath} exposes /career-ops titles in argument-hint, routing, discovery, and standalone loading`);
+  } else {
+    fail(`${skillPath} does not fully expose /career-ops titles`);
+  }
+}
+
+try {
+  const claudeMdDoc = readFile('CLAUDE.md');
+  const agentsMdDoc = readFile('AGENTS.md');
+  const titlesRow = '| Wants to broaden the search with adjacent job titles suggested from the CV | `titles` |';
+  if (claudeMdDoc.includes('* `titles` —') && claudeMdDoc.includes(titlesRow)) {
+    pass('CLAUDE.md registers the titles subcommand and Skill Modes row');
+  } else {
+    fail('CLAUDE.md missing the titles subcommand bullet or Skill Modes row');
+  }
+  if (agentsMdDoc.includes(titlesRow)) {
+    pass('AGENTS.md registers the titles Skill Modes row');
+  } else {
+    fail('AGENTS.md missing the titles Skill Modes row');
+  }
+
+  const updaterSrc = readFile('update-system.mjs');
+  const titlesSysBlock = (updaterSrc.match(/SYSTEM_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  if (titlesSysBlock.includes("'modes/titles.md'")) {
+    pass('modes/titles.md is in update-system.mjs SYSTEM_PATHS (shipped + updatable)');
+  } else {
+    fail('modes/titles.md is NOT in SYSTEM_PATHS — updates would never deliver it');
+  }
+
+  const dataContract = readFile('DATA_CONTRACT.md');
+  if (dataContract.includes('modes/titles.md')) {
+    pass('DATA_CONTRACT.md lists modes/titles.md as a system-layer file');
+  } else {
+    fail('DATA_CONTRACT.md missing the modes/titles.md system-layer row');
+  }
+} catch (e) {
+  fail(`titles mode registration checks crashed: ${e.message}`);
 }
 
 console.log('\nTest layout guard (provider tests live in tests/providers/)');
