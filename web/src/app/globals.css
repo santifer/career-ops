@@ -8,7 +8,10 @@
 @theme {
   --color-brand: hsl(26 73% 51%);
   --color-brand-200: hsl(33 100% 60%); /* hover / lighter */
-  --color-brand-foreground: #ffffff;
+  /* Near-black on the brand orange: 5.2:1 on brand, 8.3:1 on brand-200 hover
+     (white was 3.14:1, an AA fail in BOTH themes since the button is the same).
+     The brand orange itself is untouched — only what sits on top of it. */
+  --color-brand-foreground: hsl(24 30% 12%);
   --color-brand-soft: hsl(26 73% 51% / 0.12);
   --color-brand-secondary: #fc7744;
 
@@ -28,6 +31,11 @@
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-landing: var(--landing); /* editorial olive (light) / cream (dark) — docs landing-foreground */
+  /* Brand as SMALL TEXT: the raw orange only passes AA in dark (4.95); in light
+     it's 2.6-3.1 on cream/white. brand-text darkens it for light and keeps the
+     raw brand in dark. Use for small text/badges; brand stays for accents,
+     surfaces, icons and large headings (≥24px passes at 3:1). */
+  --color-brand-text: var(--brand-text);
 }
 
 :root {
@@ -39,6 +47,7 @@
   --muted: hsl(35 9% 34%); /* darker than before for readable body text */
   --faint: hsl(35 7% 42%); /* AA: ~4.6:1 on #fff (was 50% ≈ 3.9:1, failed small text) */
   --landing: #59592a; /* olive editorial headline */
+  --brand-text: hsl(26 80% 36%); /* darkened brand for small text: 5.5 white / 5.1 cream / 4.7 surface-hover */
   --dot: 40 8% 42% / 0.09;
   --pre-bg: #f2f1ed;
   color-scheme: light;
@@ -53,6 +62,7 @@
   --muted: #a1a1aa;
   --faint: #8b8b95; /* AA: ~4.6:1 on #161616 (was #71717a ≈ 3.7:1, failed small text) */
   --landing: #e4e2d0; /* cream editorial headline */
+  --brand-text: hsl(26 73% 51%); /* raw brand already passes in dark (≥4.95 on bg/surface) */
   --dot: 240 5% 65% / 0.10;
   --pre-bg: #111111;
   color-scheme: dark;
@@ -189,3 +199,13 @@ html {
 }
 .report-prose tbody tr:hover { background: color-mix(in srgb, var(--fg) 3%, transparent); }
 .report-prose img { border-radius: 0.5rem; }
+
+/* CostBadge (co-located → global): cost color-semantics, see cost-badge.tsx */
+.co-cost{display:inline-flex;align-items:center;gap:.28rem;border-radius:999px;font-weight:600;line-height:1;white-space:nowrap;border:1px solid transparent}
+.co-cost[data-size="xs"]{font-size:10.5px;padding:.16rem .4rem;letter-spacing:.04em;text-transform:uppercase}
+.co-cost[data-size="sm"]{font-size:11px;padding:.24rem .5rem}
+.co-cost[data-tone="free"]{color:hsl(162 91% 24%);background:hsl(160 64% 46% / .12);border-color:hsl(160 64% 46% / .28)}
+html.dark .co-cost[data-tone="free"]{color:hsl(158 64% 60%);background:hsl(158 64% 52% / .13);border-color:hsl(158 64% 52% / .26)}
+.co-cost[data-tone="spend"]{color:hsl(35 9% 34%);background:hsl(35 8% 46% / .12);border-color:hsl(35 8% 46% / .26)}
+html.dark .co-cost[data-tone="spend"]{color:hsl(35 8% 70%);background:hsl(35 6% 60% / .12);border-color:hsl(35 6% 60% / .24)}
+.co-cost svg{width:.85em;height:.85em}

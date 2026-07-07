@@ -133,6 +133,15 @@ const scripts = [
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'agent-inbox-tests.mjs', expectExit: 0 },
   { name: 'followup-seed-tests.mjs', expectExit: 0 },
+  // Root-level standalone suites shipped in SYSTEM_PATHS but previously never
+  // executed by CI (issue #1624). All are fast (<0.5s each), so they run in
+  // both quick and full mode like their siblings above.
+  { name: 'test-trust-validator.mjs', expectExit: 0 },
+  { name: 'test-salary-filter.mjs', expectExit: 0 },
+  { name: 'detect-reposts.test.mjs', expectExit: 0 },
+  { name: 'followup-cadence.test.mjs', expectExit: 0 },
+  { name: 'process-quality.test.mjs', expectExit: 0 },
+  { name: 'reply-matcher.test.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs', expectExit: 0 },
@@ -2578,7 +2587,7 @@ try {
   const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
   const historyColumns = historyRow.split('\t');
   if (
-    historyColumns.length === 7 &&
+    historyColumns.length === 8 && // 7 metadata columns + fingerprint (#1597)
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
@@ -5907,6 +5916,122 @@ try {
   fail(`core↔web contract freeze section crashed: ${e.message}`);
 }
 
+console.log('\n56. Fingerprint core — JD cross-listing detection (#1597)');
+try {
+  const { fingerprintText, similarity, findCrossListings, normalizeJdText, FINGERPRINT_MIN_TEXT } =
+    await import(pathToFileURL(join(ROOT, 'fingerprint-core.mjs')).href);
+
+  // A realistic-length JD body (well past FINGERPRINT_MIN_TEXT).
+  const baseJd = Array.from({ length: 40 }, (_, i) =>
+    `requirement ${i}: build and operate distributed ingestion pipelines with strong ownership of reliability and observability`
+  ).join('. ');
+
+  const fp = fingerprintText(baseJd);
+  if (/^[0-9a-f]{16}$/.test(fp)) pass('fingerprintText returns 16 hex chars for a real JD body');
+  else fail(`fingerprintText returned ${JSON.stringify(fp)}`);
+  if (fingerprintText(baseJd) === fp) pass('fingerprintText is deterministic');
+  else fail('fingerprintText should be deterministic');
+
+  if (fingerprintText('too short to mean anything') === '') {
+    pass(`fingerprintText returns '' under ${FINGERPRINT_MIN_TEXT} normalized chars (no body → no signal)`);
+  } else {
+    fail('fingerprintText should refuse short texts');
+  }
+
+  // Degenerate case: passes the min-length gate but normalizes to <3 tokens
+  // (e.g. an unspaced CJK body — one giant token), so no shingle is ever
+  // hashed. Must return '' like other unfingerprintable inputs, not an
+  // all-zero hash that would score 1.0 against every other degenerate body.
+  const unspacedCjkJd = '当社は分散システムの構築と運用を担うシニアデータエンジニアを募集しています信頼性と可観測性に強いオーナーシップを持ちインジェストパイプラインを設計実装運用できる方を歓迎します'.repeat(3);
+  const unrelatedBlob = 'x'.repeat(FINGERPRINT_MIN_TEXT + 50);
+  if (fingerprintText(unspacedCjkJd) === '' && fingerprintText(unrelatedBlob) === '') {
+    pass("fingerprintText returns '' when normalized text has <3 tokens (no shingles → no signal)");
+  } else {
+    fail(`fingerprintText emitted a fingerprint with <3 tokens: ${JSON.stringify(fingerprintText(unspacedCjkJd))}`);
+  }
+  if (similarity(fingerprintText(unspacedCjkJd), fingerprintText(unrelatedBlob)) < 0.92) {
+    pass('two degenerate <3-token bodies never score as cross-listings');
+  } else {
+    fail('degenerate <3-token bodies matched each other at similarity ≥ 0.92');
+  }
+
+  // Agency re-post: same body, minor cosmetic edits (intro swapped, HTML added).
+  const agencyJd = '<p>Our client, a market leader, is hiring!</p>' + baseJd.replace('requirement 3', 'requirement three');
+  const simNear = similarity(fp, fingerprintText(agencyJd));
+  if (simNear >= 0.92) pass(`near-verbatim re-post scores ≥ 0.92 (got ${simNear.toFixed(3)})`);
+  else fail(`near-verbatim re-post scored ${simNear.toFixed(3)}, expected ≥ 0.92`);
+
+  const otherJd = Array.from({ length: 40 }, (_, i) =>
+    `duty ${i}: design compensation frameworks and partner with regional HR leadership on annual review cycles`
+  ).join('. ');
+  const simFar = similarity(fp, fingerprintText(otherJd));
+  if (simFar < 0.85) pass(`unrelated JD scores below threshold (got ${simFar.toFixed(3)})`);
+  else fail(`unrelated JD scored ${simFar.toFixed(3)}, expected < 0.85`);
+
+  if (similarity(fp, '') === 0 && similarity('', '') === 0 && similarity(fp, 'zzzz') === 0) {
+    pass('similarity treats empty/malformed fingerprints as non-matching');
+  } else {
+    fail('similarity should return 0 for empty/malformed fingerprints');
+  }
+
+  if (normalizeJdText('<b>Senior&nbsp;Engineer</b> https://x.co — (m/f/d)!') === 'senior engineer m f d') {
+    pass('normalizeJdText strips tags, entities, URLs, punctuation');
+  } else {
+    fail(`normalizeJdText wrong: ${JSON.stringify(normalizeJdText('<b>Senior&nbsp;Engineer</b> https://x.co — (m/f/d)!'))}`);
+  }
+
+  // findCrossListings: different company within window matches; same company
+  // (re-post, detect-reposts territory) and stale rows do not.
+  const offers = [{ url: 'https://agency.example/j/1', company: 'Hays', title: 'Data Engineer', fingerprint: fp }];
+  const history = [
+    { url: 'https://acme.example/careers/9', dateStr: '2026-06-20', company: 'Acme', title: 'Data Engineer', fingerprint: fingerprintText(agencyJd) },
+    { url: 'https://hays.example/j/0', dateStr: '2026-06-25', company: 'Hays', title: 'Data Engineer', fingerprint: fp },
+    { url: 'https://old.example/j/2', dateStr: '2025-01-01', company: 'Globex', title: 'Data Engineer', fingerprint: fp },
+    { url: 'https://nofp.example/j/3', dateStr: '2026-06-25', company: 'Initech', title: 'Data Engineer', fingerprint: '' },
+  ];
+  const found = findCrossListings(offers, history, { today: '2026-07-06' });
+  if (found.length === 1 && found[0].row.company === 'Acme' && found[0].score >= 0.92) {
+    pass('findCrossListings flags a different-company near-duplicate within the window');
+  } else {
+    fail(`findCrossListings returned ${JSON.stringify(found.map(m => ({ c: m.row.company, s: m.score })))}`);
+  }
+  if (findCrossListings([{ url: 'x', company: 'Hays', title: 't', fingerprint: '' }], history, { today: '2026-07-06' }).length === 0) {
+    pass('findCrossListings skips offers without a fingerprint');
+  } else {
+    fail('findCrossListings should skip fingerprint-less offers');
+  }
+} catch (e) {
+  fail(`fingerprint core tests crashed: ${e.message}`);
+}
+
+console.log('\n57. Scan history — fingerprint column (#1597)');
+try {
+  const { formatScanHistoryRow } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const longJd = Array.from({ length: 40 }, (_, i) => `requirement ${i}: build reliable pipelines with observability`).join('. ');
+  const withBody = formatScanHistoryRow(
+    { url: 'https://x.example/j/1', source: 'lever', title: 'Data Engineer', company: 'Acme', location: 'Remote', description: longJd },
+    '2026-07-06',
+  );
+  const cols = withBody.split('\t');
+  if (cols.length === 8 && /^[0-9a-f]{16}$/.test(cols[7])) {
+    pass('formatScanHistoryRow appends a fingerprint column for described offers');
+  } else {
+    fail(`formatScanHistoryRow columns: ${cols.length}, last=${JSON.stringify(cols[7])}`);
+  }
+  const withoutBody = formatScanHistoryRow(
+    { url: 'https://x.example/j/2', source: 'greenhouse', title: 'Data Engineer', company: 'Acme', location: '' },
+    '2026-07-06',
+  );
+  const cols2 = withoutBody.split('\t');
+  if (cols2.length === 8 && cols2[7] === '') {
+    pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
+  } else {
+    fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);
+  }
+} catch (e) {
+  fail(`scan-history fingerprint tests crashed: ${e.message}`);
+}
+
 console.log('\nTest layout guard (provider tests live in tests/providers/)');
 try {
   const src = readFileSync(join(ROOT, 'test-all.mjs'), 'utf-8');
@@ -5917,6 +6042,53 @@ try {
     pass('no provider sections re-added to test-all.mjs');
   } else {
     fail('provider test section found in test-all.mjs — add a tests/providers/{name}.test.mjs file instead (auto-discovered, no registration)');
+  }
+
+  // Scan-run persistence (#1604 PR-2): appender writes header once, one row per run.
+  const { appendScanRunSummary, SCAN_RUNS_HEADER } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const runsTmp = mkdtempSync(join(tmpdir(), 'scanruns-'));
+  const runsFile = join(runsTmp, 'scan-runs.tsv');
+  const counters = {
+    timestamp: '2026-07-03T14:02:11Z', status: 'completed', companies: 45, boards: 3, found: 120,
+    filteredTitle: 40, filteredTier: 5, filteredLocation: 20, filteredSalary: 2,
+    filteredContent: 6, filteredCooldown: 1, dupes: 38, newAdded: 8, errors: 0,
+  };
+  appendScanRunSummary(counters, runsFile);
+  appendScanRunSummary({ ...counters, timestamp: '2026-07-04T09:00:00Z' }, runsFile);
+  const runRows = readFileSync(runsFile, 'utf-8').trim().split('\n');
+  if (runRows[0] === SCAN_RUNS_HEADER.trim() && runRows.length === 3
+      && runRows[1].startsWith('2026-07-03T14:02:11Z\tcompleted\t45\t3\t120\t')
+      && runRows[2].startsWith('2026-07-04T09:00:00Z\t')) {
+    pass('appendScanRunSummary writes the header once, appends one row per run');
+  } else {
+    fail(`appendScanRunSummary wrong file contents: ${JSON.stringify(runRows)}`);
+  }
+  rmSync(runsTmp, { recursive: true, force: true });
+
+  // computeRunStats: header-name parsing, torn rows skipped, failed runs
+  // excluded from averages.
+  const stats = await import(pathToFileURL(join(ROOT, 'stats.mjs')).href);
+  const runsTsv = [
+    'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors',
+    '2026-07-01T08:00:00Z\tcompleted\t45\t3\t100\t30\t5\t20\t2\t6\t1\t30\t6\t0',
+    '2026-07-03T08:00:00Z\tcompleted\t45\t3\t140\t50\t5\t20\t2\t6\t1\t46\t10\t1',
+    '2026-07-03T09:00:00Z\tfailed\t45\t3\t0\t0\t0\t0\t0\t0\t0\t0\t0\t1',
+    '2026-07-03T10:0', // torn row from a crashed append — must be skipped, not crash
+  ].join('\r\n');
+  const r = stats.computeRunStats(runsTsv);
+  // filtered row1 = 30+5+20+2+6+1 = 64; row2 = 50+5+20+2+6+1 = 84; sum 148
+  // found sum (completed only) = 240 → filterRemovalPct = 148/240 = 61.7
+  // avgFound = 240/2 = 120; avgNew = (6+10)/2 = 8; failed run excluded from averages
+  if (r.totalRuns === 3 && r.failedRuns === 1 && r.lastRunDate === '2026-07-03'
+      && r.avgFoundPerRun === 120 && r.avgNewPerRun === 8 && r.filterRemovalPct === 61.7) {
+    pass('computeRunStats aggregates scan-runs.tsv by header name, skips torn rows (CRLF input)');
+  } else {
+    fail(`computeRunStats wrong output: ${JSON.stringify(r)}`);
+  }
+  if (stats.computeRunStats('timestamp\tstatus\n') === null && stats.computeRunStats('') === null) {
+    pass('computeRunStats returns null for empty/unknown-schema files');
+  } else {
+    fail('computeRunStats should return null for empty/unknown-schema input');
   }
 } catch (e) {
   fail(`test layout guard: ${e.message}`);
