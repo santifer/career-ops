@@ -22,6 +22,7 @@ are shared helpers and are not loaded as providers.
 | Jobstreet / SEEK | API | Uses the public SEEK chalice-search JSON API for Jobstreet and SEEK sites. Configure explicitly with `provider: jobstreet`. |
 | Landing.jobs | API | Reads the board-wide `https://landing.jobs/api/v1/jobs` JSON feed (tech, Europe). Configure with `provider: landingjobs`; company is derived from the posting URL slug. |
 | Lever | API | Auto-detects `https://jobs.lever.co/<slug>` boards and uses Lever's public postings endpoint. |
+| LinkedIn | HTML | Queries LinkedIn's public guest job-search endpoint (`/jobs-guest/jobs/api/seeMoreJobPostings/search`). No auth required. Configure with `provider: linkedin` and a `linkedin:` block specifying `keywords`, `geoId`, time/type filters, and `max_pages`. Paginates with 3s inter-page delay to respect rate limits. |
 | Local parser | Parser | Runs an in-repo parser command from `portals.yml`. Use this for stable SSR or HTML pages that need a custom extractor. |
 | NoDesk | RSS | Reads the public `https://nodesk.co/remote-jobs/index.xml` feed and parses it in-process. Configure with `provider: nodesk`. |
 | Personio | RSS | Auto-detects `<slug>.jobs.personio.de` or `.com` hosts and parses the public XML jobs feed. |

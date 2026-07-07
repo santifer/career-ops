@@ -1183,3 +1183,34 @@ job_boards:
     provider: themuse
     enabled: true
     notes: "Global job board with company profiles. Title + location filters gate."
+
+  # ── LinkedIn (public guest API, no auth) ──
+  - name: LinkedIn — Data Scientist Germany
+    provider: linkedin
+    linkedin:
+      keywords: "Data Scientist OR Datenanalyst"
+      geoId: "101282230"
+      f_TPR: "r604800"
+      f_JT: "F"
+      max_pages: 10
+    enabled: true
+
+  - name: LinkedIn — Data Engineer Germany
+    provider: linkedin
+    linkedin:
+      keywords: "Data Engineer OR Dateningenieur OR Analytics Engineer"
+      geoId: "101282230"
+      f_TPR: "r604800"
+      f_JT: "F"
+      max_pages: 10
+    enabled: true
+
+  - name: LinkedIn — AI/ML Engineer Germany
+    provider: linkedin
+    linkedin:
+      keywords: "Machine Learning Engineer OR AI Engineer OR MLOps"
+      geoId: "101282230"
+      f_TPR: "r604800"
+      f_JT: "F"
+      max_pages: 10
+    enabled: true
