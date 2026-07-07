@@ -153,7 +153,7 @@ function digestIndexMap() {
     return new Map((d.jobs || []).map(j => [j.url, j.index]));
   } catch { return new Map(); }
 }
-async function telegramAlert(scored, autoApplied = []) {
+async function telegramAlert(scored, autoApplied = [], quotaNote = '') {
   const cfg = loadTelegramConfig(join(ROOT, '.env'));
   if (!cfg.token || !cfg.chatId) { console.log('(no telegram config — skipping alert)'); return; }
   const idx = digestIndexMap();
@@ -170,6 +170,7 @@ async function telegramAlert(scored, autoApplied = []) {
   }
   else msg += `\nNothing ≥4.0 today.`;
   if (capped.length) msg += `\n\n⛔ ${capped.length} policy-capped (location/comp): ${capped.map(s => escapeHtml(s.company)).join(', ')}`;
+  if (quotaNote) msg += `\n\n${quotaNote}`;
   try { await sendMessage(cfg, cfg.chatId, msg); console.log('📨 Telegram alert sent'); }
   catch (e) { console.error('telegram failed:', e.message); }
 }
@@ -205,10 +206,20 @@ if (!survivors.length) { console.log('\nNo survivors to evaluate.\n'); process.e
 
 console.log(`\n── Evaluating ${survivors.length} survivors via OpenRouter (${DEFAULT_MODEL}) ──\n`);
 const scored = [];
+let quotaHit = false;
+let unevaluated = 0;
 for (const s of survivors) {
+  if (quotaHit) { unevaluated++; continue; }
   let result, text;
   try { ({ result, text } = await evaluateJD({ jdText: jobToJdText(s.job), company: s.company, url: s.url, locVerdict: s.loc })); }
-  catch (e) { console.log(`  ❌ ${s.company} — ${s.title}: ${e.message}`); continue; }
+  catch (e) {
+    console.log(`  ❌ ${s.company} — ${s.title}: ${e.message}`);
+    // OpenRouter weekly key limit: every further call fails identically (2026-07-07: 46
+    // survivors burned through as 403s). Abort the loop; unevaluated roles aren't written
+    // to triage-history, so they retry automatically once the key has budget again.
+    if (/Key limit exceeded|402|credit/i.test(e.message)) { quotaHit = true; unevaluated++; }
+    continue;
+  }
   recordEvaluated(s.url, s.date, result.score, result.status || 'Evaluated');
   scored.push({ ...s, ...result, text });
   if (result.policy_reason) {
@@ -286,5 +297,10 @@ const apply = scored.filter(s => parseFloat(s.score) >= 4.0);
 console.log(`\n🎯 ${apply.length} role(s) ≥ 4.0:`);
 for (const s of apply) console.log(`   ${s.score}  ${s.company} — ${s.role}  ${s.url}`);
 
-if (doWrite) await telegramAlert(scored, autoApplied);
+const quotaNote = quotaHit
+  ? `🚫 <b>OpenRouter key limit exhausted</b> — ${unevaluated} survivor(s) NOT evaluated (auto-retry next run). Raise the weekly limit at openrouter.ai → Keys.`
+  : '';
+if (quotaHit) console.log(`\n🚫 OpenRouter key limit — aborted with ${unevaluated} survivors unevaluated (will retry next run).`);
+
+if (doWrite) await telegramAlert(scored, autoApplied, quotaNote);
 console.log('');
