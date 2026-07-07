@@ -46,6 +46,10 @@ interview-prep/sessions/*
 writing-samples/*
 !writing-samples/README.md
 
+# User assets (photo, signature scan — personal, never committed)
+assets/*
+!assets/.gitkeep
+
 # User config and customization (never auto-updated)
 config/profile.yml
 portals.yml

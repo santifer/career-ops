@@ -42,7 +42,6 @@
     background: #ffffff;
     padding: 0;
     margin: 0;
-    /* Disable ligatures here as well; see the * rule above. */
     font-variant-ligatures: none;
     font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
   }
@@ -56,83 +55,90 @@
 
   /* === HEADER === */
   .header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
     margin-bottom: 20px;
+  }
+
+  .header-content {
+    flex: 1;
+    min-width: 0;
   }
 
   .header h1 {
     font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     color: #1a1a2e;
     letter-spacing: -0.02em;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     line-height: 1.1;
   }
 
   .header-gradient {
-    height: 2px;
+    height: 2.5px;
     background: linear-gradient(to right, hsl(187, 74%, 32%), hsl(270, 70%, 45%));
-    border-radius: 1px;
+    border-radius: 2px;
     margin-bottom: 10px;
   }
 
   .contact-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 14px;
+    gap: 6px 12px;
     font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
-    font-size: 10.5px;
+    font-size: 10px;
     line-height: 1.4;
-    color: #555;
+    color: #666;
   }
 
   .contact-row a {
-    color: #555;
+    color: #666;
     text-decoration: none;
   }
 
   .contact-row .separator {
-    color: #ccc;
+    color: #d0d0d0;
   }
 
-  /* === OPTIONAL PROFILE PHOTO (opt-in, DACH/European markets — #264) ===
+  /* === PROFILE PHOTO (opt-in, DACH/European markets — #264) ===
      Off by default: with no candidate.photo the {{PHOTO}} slot is empty, no
-     <img> is emitted, and the layout is byte-identical to a photoless CV.
-     When opted in (candidate.photo in config/profile.yml) the photo floats into
-     the top corner and the header/summary text wraps beside it. Photos are
-     penalized by US/UK/many-market ATS, so this is never on by default. */
+     <img> is emitted, and the header renders as a single full-width column.
+     When opted in (candidate.photo in config/profile.yml) the photo sits as a
+     structured element inside the header flexbox. Photos are penalized by
+     US/UK/many-market ATS, so this is never on by default. */
   .cv-photo {
-    float: right;
-    width: 80px;
-    height: 100px;
+    width: 82px;
+    height: 105px;
     object-fit: cover;
-    margin: 0 0 8px 14px;
-    border-radius: 3px;
-    border: 1px solid #e2e2e2;
+    border-radius: 4px;
+    border: 1.5px solid #e0e0e0;
+    flex-shrink: 0;
   }
 
   /* === SECTIONS === */
   .section {
-    margin-bottom: 18px;
+    margin-bottom: 16px;
   }
 
   .section-title {
     font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     color: hsl(187, 74%, 32%);
-    border-bottom: 1.5px solid #e2e2e2;
     padding-bottom: 4px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     line-height: 1.2;
+    border-bottom: 1.5px solid hsl(187, 40%, 88%);
   }
 
   /* === PROFESSIONAL SUMMARY === */
   .summary-text {
     font-size: 11px;
-    line-height: 1.7;
+    line-height: 1.65;
     color: #2f2f2f;
   }
 
@@ -145,23 +151,23 @@
   .competencies-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
   }
 
   .competency-tag {
     font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
+    font-size: 9.5px;
+    font-weight: 600;
     color: hsl(187, 74%, 28%);
-    background: hsl(187, 40%, 95%);
-    padding: 4px 10px;
+    background: hsl(187, 40%, 96%);
+    padding: 3px 9px;
     border-radius: 3px;
     border: 1px solid hsl(187, 40%, 88%);
   }
 
   /* === WORK EXPERIENCE === */
   .job {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 
   .job-header {
@@ -169,44 +175,44 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 12px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .job-company {
     font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: hsl(270, 70%, 45%);
+    font-size: 12px;
+    font-weight: 700;
+    color: hsl(270, 60%, 42%);
   }
 
   .job-period {
-    font-size: 10.5px;
-    color: #777;
+    font-size: 10px;
+    color: #888;
     white-space: nowrap;
   }
 
   .job-role {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     color: #333;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .job-location {
-    font-size: 10px;
-    color: #888;
+    font-size: 9.5px;
+    color: #999;
   }
 
   .job ul {
-    padding-left: 18px;
-    margin-top: 6px;
+    padding-left: 16px;
+    margin-top: 4px;
   }
 
   .job li {
     font-size: 10.5px;
-    line-height: 1.6;
+    line-height: 1.55;
     color: #333;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
 
   .job li strong {
@@ -215,21 +221,21 @@
 
   /* === PROJECTS === */
   .project {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .project-title {
     font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 600;
-    color: hsl(270, 70%, 45%);
+    color: hsl(270, 60%, 42%);
   }
 
   .project-badge {
-    font-size: 9px;
-    font-weight: 500;
+    font-size: 8.5px;
+    font-weight: 600;
     color: hsl(187, 74%, 32%);
-    background: hsl(187, 40%, 95%);
+    background: hsl(187, 40%, 96%);
     padding: 1px 6px;
     border-radius: 2px;
     margin-left: 6px;
@@ -238,19 +244,19 @@
   .project-desc {
     font-size: 10.5px;
     color: #444;
-    margin-top: 3px;
-    line-height: 1.55;
+    margin-top: 2px;
+    line-height: 1.5;
   }
 
   .project-tech {
-    font-size: 9.5px;
-    color: #888;
-    margin-top: 3px;
+    font-size: 9px;
+    color: #999;
+    margin-top: 2px;
   }
 
   /* === EDUCATION === */
   .edu-item {
-    margin-bottom: 8px;
+    margin-bottom: 7px;
   }
 
   .edu-header {
@@ -267,13 +273,13 @@
   }
 
   .edu-org {
-    color: hsl(270, 70%, 45%);
+    color: hsl(270, 60%, 42%);
     font-weight: 500;
   }
 
   .edu-year {
     font-size: 10px;
-    color: #777;
+    color: #888;
     white-space: nowrap;
   }
 
@@ -297,7 +303,7 @@
   .cert-item > * {
     display: table-cell;
     vertical-align: baseline;
-    padding-bottom: 6px;
+    padding-bottom: 5px;
   }
 
   .cert-title {
@@ -307,13 +313,13 @@
   }
 
   .cert-org {
-    color: hsl(270, 70%, 45%);
+    color: hsl(270, 60%, 42%);
     white-space: nowrap;
   }
 
   .cert-year {
     font-size: 10px;
-    color: #777;
+    color: #888;
     white-space: nowrap;
     text-align: right;
     width: 44px;
@@ -323,7 +329,7 @@
   .skills-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 14px;
+    gap: 5px 14px;
   }
 
   .skill-item {
@@ -400,8 +406,12 @@
     background: linear-gradient(to left, hsl(187, 74%, 32%), hsl(270, 70%, 45%));
   }
 
+  html[lang="ar"] .header {
+    flex-direction: row-reverse;
+  }
+
   html[lang="ar"] .job ul {
-    padding-right: 18px;
+    padding-right: 16px;
     padding-left: 0;
   }
 
@@ -418,18 +428,7 @@
     direction: rtl;
   }
 
-  html[lang="ar"] .cv-photo {
-    float: left;
-    margin: 0 14px 8px 0;
-  }
-
   /* === CJK (Japanese) font fallback === */
-  /* The bundled webfonts are Latin-only (see #951). Without a CJK fallback,
-     Japanese text renders as tofu (□) in headless Chromium on any system
-     without a CJK system font (Linux/CI, minimal containers). The Latin brand
-     fonts are kept first so ASCII still uses Space Grotesk / DM Sans, then the
-     browser's per-glyph fallback picks the first installed CJK face for kana
-     and kanji. Mirrors the lang="ar" precedent above. */
   html[lang="ja"] body {
     font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
       'Yu Gothic', 'YuGothic', 'Noto Sans CJK JP', 'Noto Sans JP',
@@ -447,13 +446,14 @@
       Meiryo, 'MS PGothic', sans-serif;
   }
 
-  /* === German (DACH) market: DIN 5008 and Lebenslauf conventions ===
-     German CVs follow DIN 5008 typographic standards and expect a signature
-     block at the end. Photo support uses the existing .cv-photo rule (opt-in
-     via candidate.photo in profile.yml). Font sizes nudge up to meet the
-     DIN 5008 recommendation of 11-12pt body text. */
+  /* === German (DACH) market: DIN 5008 and Lebenslauf conventions === */
 
-  /* Signature block — placed at the bottom of the last page.
+  html[lang="de"] .job li,
+  html[lang="de"] .summary-text {
+    font-size: 11px;
+  }
+
+  /* === Signature block (DACH convention) ===
      Renders only when {{SIGNATURE}} emits the markup; empty slot = no output. */
   .signature-block {
     margin-top: 28px;
@@ -462,7 +462,7 @@
 
   .signature-location-date {
     font-size: 10.5px;
-    color: #555;
+    color: #666;
     margin-bottom: 24px;
   }
 
@@ -484,35 +484,29 @@
     color: #333;
     font-weight: 500;
   }
-
-  html[lang="de"] .job li {
-    font-size: 11px;
-  }
-
-  html[lang="de"] .summary-text {
-    font-size: 11px;
-  }
 </style>
 </head>
 <body>
 <div class="page">
 
-  {{PHOTO}}
   <!-- HEADER -->
   <div class="header">
-    <h1>{{NAME}}</h1>
-    <div class="header-gradient"></div>
-    <div class="contact-row">
-      <a href="tel:{{PHONE}}">{{PHONE}}</a>
-      <span class="separator">|</span>
-      <a href="mailto:{{EMAIL}}">{{EMAIL}}</a>
-      <span class="separator">|</span>
-      <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>
-      <span class="separator">|</span>
-      <a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a>
-      <span class="separator">|</span>
-      <span>{{LOCATION}}</span>
+    <div class="header-content">
+      <h1>{{NAME}}</h1>
+      <div class="header-gradient"></div>
+      <div class="contact-row">
+        <a href="tel:{{PHONE}}">{{PHONE}}</a>
+        <span class="separator">|</span>
+        <a href="mailto:{{EMAIL}}">{{EMAIL}}</a>
+        <span class="separator">|</span>
+        <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>
+        <span class="separator">|</span>
+        <a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a>
+        <span class="separator">|</span>
+        <span>{{LOCATION}}</span>
+      </div>
     </div>
+    {{PHOTO}}
   </div>
 
   <!-- PROFESSIONAL SUMMARY -->

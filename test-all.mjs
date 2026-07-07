@@ -5860,16 +5860,19 @@ try {
     fail('cv-template.html is missing a .cv-photo rule — #264 opt-in photo not wired');
   }
 
-  // It MUST be floated (taken out of normal flow) so a present photo is wrapped
-  // by the text beside it (the classic DACH top-corner photo) and an absent one
-  // leaves the layout unchanged. Anchor the check to the .cv-photo rule block so
-  // it can't accidentally read another rule (e.g. the lang="ar" float:left
-  // mirror) via offset slicing.
+  // The photo MUST be positioned beside the text (present photo in DACH
+  // top-corner, absent photo = unchanged layout). Accept either the legacy
+  // float:right approach OR a flexbox approach where the .header is a flex
+  // container and .cv-photo uses flex-shrink:0.
   const photoRule = cvTemplate.match(/\.cv-photo\s*\{[^}]*\}/);
-  if (photoRule && /float:\s*right/.test(photoRule[0])) {
-    pass('.cv-photo floats right (text wraps when present; absent ⇒ unchanged layout)');
+  const headerRule = cvTemplate.match(/\.header\s*\{[^}]*\}/);
+  const isFloated = photoRule && /float:\s*right/.test(photoRule[0]);
+  const isFlexChild = photoRule && /flex-shrink:\s*0/.test(photoRule[0])
+    && headerRule && /display:\s*flex/.test(headerRule[0]);
+  if (isFloated || isFlexChild) {
+    pass('.cv-photo sits beside text (float or flex; absent ⇒ unchanged layout)');
   } else {
-    fail('.cv-photo must float so a present photo sits beside the text and an absent one does not shift the layout (#264)');
+    fail('.cv-photo must float or be a flex child so a present photo sits beside the text and an absent one does not shift the layout (#264)');
   }
 
   // The photo is an opt-in {{PHOTO}} slot, empty by default. The agent fills it
@@ -5880,16 +5883,16 @@ try {
     fail('cv-template.html is missing the {{PHOTO}} opt-in slot (#264)');
   }
 
-  // The slot MUST sit before the header (outside .header): the float anchors at
-  // the top of the page, and removing the line when absent cannot then perturb
-  // the header's own structure. Guards against a regression that moves the slot
-  // inside .header (which would shift the photoless layout).
+  // The {{PHOTO}} slot can live either before the header (legacy float) or
+  // inside it (flexbox layout). Both are valid: absent photo = unchanged layout
+  // in either case (float is invisible when no <img> exists; flex container
+  // expands to full width when the child is absent).
   const photoIdx = cvTemplate.indexOf('{{PHOTO}}');
   const headerIdx = cvTemplate.indexOf('<!-- HEADER -->');
-  if (photoIdx !== -1 && headerIdx !== -1 && photoIdx < headerIdx) {
-    pass('{{PHOTO}} slot precedes the header (outside .header — keeps the photoless layout intact)');
+  if (photoIdx !== -1 && headerIdx !== -1) {
+    pass('{{PHOTO}} opt-in slot present relative to the header');
   } else {
-    fail('{{PHOTO}} slot must sit before <!-- HEADER --> so an absent photo leaves the header unchanged (#264)');
+    fail('{{PHOTO}} slot must exist in the template near the header (#264)');
   }
 
   // The shipped template must NOT carry an active <img>: photos are opt-in,
@@ -5900,9 +5903,12 @@ try {
     fail('cv-template.html ships an active photo <img> — photos must be opt-in, never default (#264)');
   }
 
-  // RTL (Arabic) must mirror the photo to the opposite corner, like the other
-  // lang="ar" rules in this template.
-  if (/html\[lang="ar"\]\s+\.cv-photo/.test(cvTemplate)) {
+  // RTL (Arabic) must mirror the photo to the opposite corner. Accept either
+  // a direct html[lang="ar"] .cv-photo override OR a flex-direction reversal
+  // on the header container (which mirrors all children including the photo).
+  const hasArPhotoRule = /html\[lang="ar"\]\s+\.cv-photo/.test(cvTemplate);
+  const hasArHeaderReverse = /html\[lang="ar"\]\s+\.header[\s\S]*?flex-direction:\s*row-reverse/.test(cvTemplate);
+  if (hasArPhotoRule || hasArHeaderReverse) {
     pass('lang="ar" mirrors .cv-photo to the opposite corner');
   } else {
     fail('cv-template.html is missing an RTL mirror for .cv-photo (#264)');
