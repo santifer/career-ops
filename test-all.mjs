@@ -138,7 +138,6 @@ console.log('\n2. Script execution (graceful on empty data)');
 
 const scripts = [
   { name: 'cv-sync-check.mjs', expectExit: 1, allowFail: true }, // fails without cv.md (normal in repo)
-  { name: 'verify-pipeline.mjs', expectExit: 0 },
   // --dry-run: these scripts resolve ROOT from import.meta.url and write
   // data/applications.md (or data/pipeline.md) in place. On a provisioned working
   // copy with a real tracker present, running them without --dry-run mutates user
@@ -6215,7 +6214,6 @@ try {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
-  writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
   writeFileSync(join(batchDir, 'batch-input.tsv'), [
     'id\turl\tsource\tnotes',

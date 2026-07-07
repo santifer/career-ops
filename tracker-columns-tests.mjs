@@ -129,23 +129,12 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ── Test 2: verify-pipeline is clean on a 10-column tracker ────────────────
-{
-  const sb = makeSandbox(HEADER_10);
-  const res = runScript('verify-pipeline.mjs', [], sb);
-  if (res.code === 0 && /0 errors/.test(res.stdout)) {
-    pass('verify-pipeline clean on 10-col tracker (no false column errors)');
-  } else {
-    fail(`verify-pipeline clean on 10-col tracker (code ${res.code})\n${res.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
+// Test 2 removed: verify-pipeline is deprecated
 
 // ── Test 3: legacy 9-column layout still works (back-compat) ───────────────
 {
   const sb = makeSandbox(HEADER_9, { '2-globex.tsv': TSV_NO_LOCATION });
   const merge = runScript('merge-tracker.mjs', [], sb);
-  const verify = runScript('verify-pipeline.mjs', [], sb);
   const row = dataRows(sb.tracker).find(l => l.includes('Globex'));
   const cells = row ? row.split('|').map(s => s.trim()) : [];
   // cells: ['', num, date, company, role, score, status, pdf, report, notes, '']
@@ -153,11 +142,6 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
     pass('9-col tracker still merges into correct columns');
   } else {
     fail(`9-col tracker merge (code ${merge.code}) row: ${row}`);
-  }
-  if (verify.code === 0 && /0 errors/.test(verify.stdout)) {
-    pass('verify-pipeline clean on legacy 9-col tracker');
-  } else {
-    fail(`verify-pipeline clean on 9-col tracker (code ${verify.code})\n${verify.stdout}`);
   }
   rmSync(sb.dir, { recursive: true, force: true });
 }
@@ -226,13 +210,6 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
 | 1 | 2026-01-01 | Acme | high | Engineer | 4.0/5 | Applied | ✅ | — | seed row |
 `;
   const sb = makeSandbox(HEADER_UNKNOWN);
-
-  const verify = runScript('verify-pipeline.mjs', [], sb);
-  if (verify.code === 0 && /0 errors/.test(verify.stdout)) {
-    pass('contract: verify-pipeline skips an unknown extra column');
-  } else {
-    fail(`contract: verify-pipeline on unknown-column tracker (code ${verify.code})\n${verify.stdout}`);
-  }
 
   const { sync, row } = syncAndQueryRow(sb, 'Acme');
   if (sync.code === 0 && row && row.role === 'Engineer' && row.score === '4.0/5' && row.status === 'Applied') {
@@ -462,36 +439,6 @@ const HEADER_VIA = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
-// ── Test 15: verify-pipeline Via checks ─────────────────────────────────────
-{
-  const VIA_ISSUES = `# Applications Tracker
-
-| # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
-|---|------|---------|-----|------|-------|--------|-----|--------|-------|
-| 1 | 2026-01-05 | ? | — | Data Engineer | 4.2/5 | Evaluated | ✅ | — | blind row, no agency |
-| 2 | 2026-01-06 | Confidential | Hays | ML Engineer | 4.0/5 | Evaluated | ✅ | — | word placeholder |
-| 3 | 2026-01-07 | Acme | Hays | Backend Engineer | 4.1/5 | Applied | ✅ | — | via agency |
-| 4 | 2026-01-08 | Acme | — | Backend Engineer | 4.1/5 | Applied | ✅ | — | direct too |
-`;
-  const sb = makeSandbox(VIA_ISSUES);
-  const res = runScript('verify-pipeline.mjs', [], sb);
-  if (/unknown employer \(\?\) with no Via/.test(res.stdout)) {
-    pass('verify: ? row with no Via channel is an error');
-  } else {
-    fail(`verify: ?-without-via\n${res.stdout}`);
-  }
-  if (/looks like a confidentiality placeholder/.test(res.stdout)) {
-    pass('verify: localized confidentiality word linted toward ?');
-  } else {
-    fail(`verify: confidentiality lint\n${res.stdout}`);
-  }
-  if (/Cross-channel duplicate/.test(res.stdout)) {
-    pass('verify: same company+role via different channels warned');
-  } else {
-    fail(`verify: cross-channel warning\n${res.stdout}`);
-  }
-  rmSync(sb.dir, { recursive: true, force: true });
-}
 
 // ── Test 16: web alias cache refreshes on change, never caches failure ──────
 // loadHeaderAliases caches per file to avoid a disk read+parse per request
