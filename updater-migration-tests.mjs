@@ -46,12 +46,14 @@ const userPaths = extractArray('USER_PATHS');
 const bootstrapPaths = extractArray('BOOTSTRAP_PATHS');
 
 const requiredSystemPaths = [
+  'modes/email.md',
   'modes/followup.md',
   'modes/interview.md',
   'modes/interview-prep.md',
   'modes/patterns.md',
   'modes/update.md',
   'modes/ar/',
+  'modes/hi/',
   'modes/tr/',
   'modes/ua/',
   'batch/README.md',
@@ -66,6 +68,7 @@ const requiredSystemPaths = [
   'updater-migration-tests.mjs',
   'README.ar.md',
   'README.de.md',
+  'README.hi.md',
   'README.ja.md',
   'README.ua.md',
   'CHANGELOG.md',

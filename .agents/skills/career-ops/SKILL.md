@@ -4,7 +4,7 @@ description: AI job search command center -- evaluate offers, generate CVs, scan
 arguments: mode
 user_invocable: true
 user-invocable: true
-argument-hint: "[scan | deep | pdf | latex | cover | eu-swe | oferta | ofertas | apply | batch | tracker | agent-inbox | pipeline | contacto | training | project | interview-prep | interview | interview/plan | interview/practice | interview/debrief | patterns | followup | update]"
+argument-hint: "[scan | deep | pdf | latex | cover | email | add | eu-swe | oferta | ofertas | apply | batch | tracker | agent-inbox | pipeline | contacto | training | project | interview-prep | interview | interview/plan | interview/practice | interview/debrief | patterns | offer-prep | titles | followup | update]"
 license: MIT
 ---
 
@@ -49,6 +49,7 @@ Determine the mode from `$mode`:
 | `interview/debrief` | `interview/debrief` |
 | `pdf` | `pdf` |
 | `latex` | `latex` |
+| `email` | `email` |
 | `training` | `training` |
 | `project` | `project` |
 | `tracker` | `tracker` |
@@ -59,9 +60,12 @@ Determine the mode from `$mode`:
 | `scan` | `scan` |
 | `batch` | `batch` |
 | `patterns` | `patterns` |
+| `offer-prep` | `offer-prep` |
+| `titles` | `titles` |
 | `followup` | `followup` |
 | `update` | `update` |
 | `cover` | `cover` |
+| `add` | `add` |
 
 **Auto-pipeline detection:** If `$mode` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
 
@@ -80,6 +84,7 @@ Concrete equivalents for Codex prompt-driven sessions:
 /career-ops scan           ↔ "Run the career-ops scan mode and summarize new matches."
 /career-ops pipeline       ↔ "Run the career-ops pipeline mode for data/pipeline.md."
 /career-ops pdf            ↔ "Run the career-ops pdf mode for the latest evaluated role."
+/career-ops email          ↔ "Run the career-ops email mode for the latest evaluated role."
 /career-ops tracker        ↔ "Run the career-ops tracker mode and summarize the current statuses."
 ```
 
@@ -104,6 +109,8 @@ Available commands:
   /career-ops pdf       → PDF only, ATS-optimized CV
   /career-ops latex     → Export CV as LaTeX/Overleaf .tex
   /career-ops cover     → Cover letter: standalone JD paste or /career-ops cover {slug}
+  /career-ops email     → Formal application email draft (draft-only; never sends, submits, or clicks)
+  /career-ops add       → Add a project/paper/role to your CV (fetch + preview + confirm)
   /career-ops training  → Evaluate course/cert against North Star
   /career-ops project   → Evaluate portfolio project idea
   /career-ops tracker   → Application status overview
@@ -112,6 +119,8 @@ Available commands:
   /career-ops scan      → Scan portals and discover new offers
   /career-ops batch     → Batch processing with parallel workers
   /career-ops patterns  → Analyze rejection patterns and improve targeting
+  /career-ops offer-prep → Read a received offer/contract with the candidate: clause walk + lawyer questions (not legal advice)
+  /career-ops titles    → Suggest adjacent job titles from your CV to broaden the search
   /career-ops followup  → Follow-up cadence tracker: flag overdue, generate drafts
   /career-ops update    → Update career-ops system files with diff preview + compat check
 
@@ -133,7 +142,7 @@ Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `p
 ### Standalone modes (only their mode file):
 Read `modes/{mode}.md`
 
-Applies to: `tracker`, `agent-inbox`, `deep`, `interview-prep`, `interview`, `regional/eu-swe`, `interview/plan`, `interview/practice`, `interview/debrief`, `latex`, `training`, `project`, `patterns`, `followup`, `cover`
+Applies to: `tracker`, `agent-inbox`, `deep`, `interview-prep`, `interview`, `regional/eu-swe`, `interview/plan`, `interview/practice`, `interview/debrief`, `latex`, `training`, `project`, `patterns`, `titles`, `followup`, `cover`, `email`, `add`, `offer-prep`
 
 ### Modes delegated to subagent:
 For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as a worker/subagent with the content of `_shared.md` + `modes/{mode}.md` injected into the worker prompt. If your CLI exposes an `Agent(...)` primitive, the call looks like this:
