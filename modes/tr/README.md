@@ -50,11 +50,13 @@ Ardından ilk oturumda Claude'a bu ayarı hatırlat ("profile.yml'e baktım, `la
 | `tracker.md` | `modes/tracker.md` (EN) | Başvuru takipçisi |
 | `auto-pipeline.md` | `modes/auto-pipeline.md` (EN) | Tam otomatik süreç (ilan çıkarma, değerlendirme, pdf, yanıt taslağı) |
 | `interview-prep.md` | `modes/interview-prep.md` (EN) | Mülakat hazırlığı |
-| `deep.md` | `modes/deep.md` (EN) | Şirket hakkında derinlemesine araştırma |
-| `contacto.md` | `modes/contacto.md` (ES) | LinkedIn vb. üzerinden ulaşım/bağlantı kurma stratejisi |
-| `teklifler.md` | `modes/ofertas.md` (ES) | Birden fazla teklifi karşılaştırma |
-| `patterns.md` | `modes/patterns.md` (EN) | Reddedilme kalıpları analizi |
-| `followup.md` | `modes/followup.md` (EN) | Başvuru takip (follow-up) stratejisi |
+| `deep.md` | `modes/deep.md` (EN) | Derinlemesine şirket araştırması |
+| `contacto.md` | `modes/contacto.md` (EN) | İletişim / Soğuk e-posta şablonları |
+| `ofertas.md` | `modes/ofertas.md` (EN) | Teklif karşılaştırma / değerlendirme |
+| `patterns.md` | `modes/patterns.md` (EN) | Başvuru örüntüleri analizi |
+| `followup.md` | `modes/followup.md` (EN) | Takip / Durum kontrolü |
+| `cover.md` | `modes/cover.md` (EN) | Ön yazı hazırlama |
+| `email.md` | `modes/email.md` (EN) | E-posta taslakları |
 
 Diğer modlar (`scan`, `batch`, `pdf`) İngilizce/İspanyolca orijinalleriyle çalışmaya devam eder — içerikleri büyük ölçüde araç komutları, dosya yolları ve yapılandırma talimatlarından oluştuğundan dilden bağımsız kalmaları tercih edilmiştir.
 

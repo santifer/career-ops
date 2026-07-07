@@ -23,19 +23,19 @@ Herhangi bir değerlendirme yapmadan önce ilanın hala yayında olduğunu onayl
 1. Adım 0'daki anlık görüntü/getirilen içerikten ilanı sınıflandırın:
    - **Aktif ilan kanıtı:** başlık/rol + gerçek bir iş tanımı veya başvuru/uygulama yolu
    - **Kapanmış ilan kanıtı:** süresi dolmuş/kapanmış/"artık başvuru kabul edilmiyor", sadece gezinme menüsü/alt bilgi (nav/footer) içeren eksik JD, genel kariyer/arama sayfasına zorunlu yönlendirme veya 404/410
-2. İlan kapanmış görünüyorsa veya sayfa ölü/yedek bir kabuksa, **burada durun**: Adım 1–Adım 4'ü çalıştırmayın. Adaya bağlantının ölü olduğunu söyleyin ve giriş `data/pipeline.md` konumundan geliyorsa, `- [x] ~~Şirket | Rol~~ — ilan aktif değil` olarak işaretleyin.
+2. İlan kapanmış görünüyorsa veya sayfa ölü/yedek bir kabuksa, **burada durun**: Adım 1–Adım 4'ü çalıştırmayın. Adaya bağlantının ölü olduğunu söyleyin ve giriş `data/pipeline.md` konumundan geliyorsa, `- [x] ~~Şirket | Rol~~ — ilan aktif değil` (aktif olmayan ilan) olarak işaretleyin.
 3. Sadece JD metni yapıştırıldıysa (URL yoksa), doğrulanacak bir bağlantı yoktur — bu kontrolü atlayıp devam edin.
 
 Bu kontrol çözülene kadar Adım 1'e geçmeyin.
 
 ## Adım 1 — A-G Değerlendirmesi
 
-`oferta` modundaki gibi yürütün (tüm A-F blokları + Blok G İlan Meşruiyeti için `modes/tr/is-ilani.md` dosyasını okuyun).
+`is-ilani` modundaki gibi yürütün (tüm A-F blokları + Blok G İlan Meşruiyeti için `modes/tr/is-ilani.md` dosyasını okuyun).
 
 ## Adım 2 — Raporu Kaydet .md
 
 Tam değerlendirmeyi `reports/{###}-{sirket-kisa-adi}-{YYYY-AA-GG}.md` konumuna kaydedin (format için `modes/tr/is-ilani.md` dosyasına bakın).
-Kaydedilen rapora G Blok'u ekleyin. Rapor başlığına **URL:** {url} ve **Meşruiyet (Legitimacy):** {tier} ekleyin.
+Kaydedilen rapora G Blok'u ekleyin. Rapor başlığına **URL:** {url} ve **Meşruiyet:** {tier} ekleyin.
 
 ## Adım 3 — PDF Oluştur
 
@@ -82,6 +82,6 @@ Eğer final puanı >= 4.5 ise, başvuru formu için yanıt taslakları oluşturu
 
 ## Adım 5 — Takipçiyi Güncelle
 
-`data/applications.md` dosyasına Report ve PDF dahil tüm sütunları ✅ olarak kaydedin.
+`data/applications.md` dosyasına Rapor ve PDF dahil tüm sütunları ✅ olarak kaydedin.
 
 **Herhangi bir adım başarısız olursa**, sonrakilerle devam edin ve başarısız olan adımı takipçide beklemede (pending) olarak işaretleyin.
