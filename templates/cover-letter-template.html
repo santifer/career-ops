@@ -117,7 +117,7 @@
   /* === Turkish (tr) — LTR, no font override === */
   /* Turkish uses standard Latin characters. Helvetica/Arial covers ç ğ ı İ ö ş ü.
      No direction or font-family override needed. */
-  html[lang="tr"] {}
+  html[lang="tr"] { /* Turkish placeholder */ }
 </style>
 </head>
 <body>
@@ -126,7 +126,9 @@
   {{CREDENTIALS_BLOCK}}
   <hr class="divider">
 
-  <div class="role-title">{{COVER_LETTER_LABEL}}{{ROLE_TITLE}}</div>
+  <!-- NOTE: COVER_LETTER_LABEL should NOT include trailing punctuation or space.
+       The separator is provided explicitly here. -->
+  <div class="role-title">{{COVER_LETTER_LABEL}}: {{ROLE_TITLE}}</div>
   <div class="dateline">{{DATELINE}}</div>
 
   {{GREETING_BLOCK}}
