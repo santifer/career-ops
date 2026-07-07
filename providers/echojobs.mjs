@@ -108,15 +108,15 @@ export default {
   },
 
   async fetch(entry, ctx) {
-    assertEchojobsUrl(FEED_BASE);
     const maxPages = resolveMaxPages(entry);
     const fallbackCompany = entry?.name;
     const out = [];
 
     for (let page = 1; page <= maxPages; page++) {
-      const url = `${FEED_BASE}?per_page=${PER_PAGE}&page=${page}`;
-      // redirect:'error' prevents SSRF via server-side redirects; combined with
-      // assertEchojobsUrl above it keeps the feed request pinned to echojobs.io.
+      // Validate the URL actually fetched (not just a constant) so the host pin
+      // is meaningful, then redirect:'error' blocks SSRF via server-side
+      // redirects — together they keep every page request on echojobs.io.
+      const url = assertEchojobsUrl(`${FEED_BASE}?per_page=${PER_PAGE}&page=${page}`);
       const json = /** @type {any} */ (await ctx.fetchJson(url, { redirect: 'error' }));
       if (!json || !Array.isArray(json.jobs)) {
         throw new Error(

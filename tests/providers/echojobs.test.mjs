@@ -41,8 +41,12 @@ try {
 
   // remote fallback when no listed place
   const remote = normalizeEchojobsJob({ title: 'X', url: 'https://jobs.lever.co/x/1', locations: [], remote_type: 'remote' });
-  if (remote?.location === 'Remote') pass('normalizeEchojobsJob falls back to "Remote" for a placeless remote/hybrid role');
-  else fail(`remote fallback => ${JSON.stringify(remote?.location)}`);
+  const hybrid = normalizeEchojobsJob({ title: 'X', url: 'https://jobs.lever.co/x/2', remote_type: 'hybrid' });
+  if (remote?.location === 'Remote' && hybrid?.location === 'Remote') {
+    pass('normalizeEchojobsJob falls back to "Remote" for a placeless remote OR hybrid role');
+  } else {
+    fail(`remote/hybrid fallback => ${JSON.stringify([remote?.location, hybrid?.location])}`);
+  }
 
   // company fallback to the entry name
   const bare = normalizeEchojobsJob({ title: 'X', url: 'https://jobs.lever.co/x/1' }, 'EntryName');

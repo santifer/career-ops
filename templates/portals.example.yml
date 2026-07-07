@@ -672,6 +672,7 @@ search_queries:
 #
 # - name: EchoJobs                        # tech jobs aggregated from company ATS boards
 #   provider: echojobs
+#   max_pages: 3                          # 100 jobs/page; raise for deeper coverage
 #   enabled: true
 #
 # - name: Hacker News "Who is hiring?"    # monthly "Ask HN: Who is hiring?" thread
