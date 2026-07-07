@@ -12,7 +12,7 @@
 | Demo yeteneği | %20 | 2 dakikalık canlı demo | Sadece kod, görsel değil |
 | Metrik potansiyeli | %15 | Net metrikler (gecikme, maliyet, doğruluk) | Metrik mümkün değil |
 | MVP süresi | %10 | 1 hafta | 3+ ay |
-| STAR hikaye potansiyeli | %10 | Artıları ve eksileriyle zengin hikaye | Yalnızca uygulama (implementation) |
+| STAR hikaye potansiyeli | %10 | Artıları ve eksileriyle zengin hikaye | Yalnızca gerçekleştirme (implementation) |
 
 ## "Mülakat Paketi" (Interview Pack) Gereksinimleri
 
