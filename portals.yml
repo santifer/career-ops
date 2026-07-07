@@ -546,10 +546,8 @@ tracked_companies:
 
   - name: Forto
     careers_url: https://jobs.ashbyhq.com/forto
-    scan_method: websearch
-    scan_query: 'site:jobs.ashbyhq.com/forto "Data" OR "Analytics" OR "ML"'
-    notes: "Berlin. Digital freight forwarder. Private Ashby API — WebSearch only."
-    enabled: false
+    notes: "Berlin. Digital freight forwarder. 18 jobs. Ashby API confirmed working."
+    enabled: true
 
   - name: Qonto
     careers_url: https://jobs.lever.co/qonto
@@ -564,6 +562,101 @@ tracked_companies:
     scan_query: 'site:jobs.ashbyhq.com/vinted "Data" OR "Analytics" OR "ML"'
     notes: "Berlin / Vilnius. C2C marketplace, data science. Private Ashby API — WebSearch only."
     enabled: false
+
+  # ── DACH e-health ──
+
+  - name: Doctolib
+    careers_url: https://jobs.ashbyhq.com/doctolib
+    notes: "Berlin / Munich / Paris. E-health platform. 161 jobs (51 in Germany). Ashby API confirmed."
+    enabled: true
+
+  # ── DACH cleantech / energy ──
+
+  - name: Enpal
+    careers_url: https://jobs.ashbyhq.com/enpal
+    notes: "Berlin. Solar/cleantech unicorn. 364 jobs. Ashby API confirmed."
+    enabled: true
+
+  # ── DACH fintech (additional) ──
+
+  - name: Moss
+    careers_url: https://jobs.ashbyhq.com/moss
+    notes: "Berlin / Munich. Expense management fintech. 27 jobs. Ashby API confirmed."
+    enabled: true
+
+  - name: Raisin
+    careers_url: https://job-boards.greenhouse.io/raisin
+    api: https://boards-api.greenhouse.io/v1/boards/raisin/jobs
+    notes: "Berlin. Savings & investment fintech. 36 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  - name: Solarisbank
+    careers_url: https://job-boards.greenhouse.io/solarisbank
+    api: https://boards-api.greenhouse.io/v1/boards/solarisbank/jobs
+    notes: "Berlin / Frankfurt. Banking-as-a-service. 23 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  - name: Grover
+    careers_url: https://job-boards.greenhouse.io/grover
+    api: https://boards-api.greenhouse.io/v1/boards/grover/jobs
+    notes: "Berlin. Tech rental/subscription. 13 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  # ── DACH e-commerce / digital ──
+
+  - name: Commercetools
+    careers_url: https://job-boards.greenhouse.io/commercetools
+    api: https://boards-api.greenhouse.io/v1/boards/commercetools/jobs
+    notes: "Munich. Commerce platform. 24 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  - name: Trivago
+    careers_url: https://job-boards.greenhouse.io/trivago
+    api: https://boards-api.greenhouse.io/v1/boards/trivago/jobs
+    notes: "Düsseldorf. Hotel search/travel tech. 8 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  # ── DACH mobility ──
+
+  - name: FreeNow
+    careers_url: https://job-boards.greenhouse.io/freenow
+    api: https://boards-api.greenhouse.io/v1/boards/freenow/jobs
+    notes: "Berlin / Hamburg. Mobility platform. 51 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  - name: Wolt
+    careers_url: https://job-boards.greenhouse.io/wolt
+    api: https://boards-api.greenhouse.io/v1/boards/wolt/jobs
+    notes: "Berlin / Frankfurt / Helsinki. Delivery (DoorDash subsidiary). 286 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  # ── DACH SaaS / enterprise (additional) ──
+
+  - name: Staffbase
+    careers_url: https://job-boards.greenhouse.io/staffbase
+    api: https://boards-api.greenhouse.io/v1/boards/staffbase/jobs
+    notes: "Berlin / Chemnitz. Employee communications platform. 21 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  - name: IONOS
+    careers_url: https://job-boards.greenhouse.io/ionos
+    api: https://boards-api.greenhouse.io/v1/boards/ionos/jobs
+    notes: "Karlsruhe / Berlin. Cloud hosting & domains. 30 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  # ── International data platforms with DACH offices ──
+
+  - name: Databricks
+    careers_url: https://job-boards.greenhouse.io/databricks
+    api: https://boards-api.greenhouse.io/v1/boards/databricks/jobs
+    notes: "Berlin / Munich / global. Lakehouse platform. 785 jobs. Greenhouse API confirmed."
+    enabled: true
+
+  - name: Datadog
+    careers_url: https://job-boards.greenhouse.io/datadog
+    api: https://boards-api.greenhouse.io/v1/boards/datadog/jobs
+    notes: "Berlin / Paris / global. Observability & monitoring. 417 jobs. Greenhouse API confirmed."
+    enabled: true
 
   # ── Sports tech companies ──
 
