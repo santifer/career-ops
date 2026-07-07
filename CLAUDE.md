@@ -210,8 +210,17 @@ Companies reject AI-written cover letters and smart readers recognize Claude/Cha
 ### Where the scanner lives + how to refresh it
 
 - Always-on scanner on LXC CT 203 at `10.1.30.50`, daily cron 07:00 MDT via `systemctl start career-scan.service`.
-- Sync changes via: `scp $FILE root@10.1.30.11:/tmp/ && ssh root@10.1.30.11 "pct push 203 /tmp/$FILE /opt/career-ops/$RELATIVE_PATH"`
-- Trigger a test scan: `ssh root@10.1.30.50 "systemctl start career-scan.service"` — completes in ~10s.
+- Sync changes via direct `scp $FILE root@10.1.30.50:/opt/career-ops/$RELATIVE_PATH` (the pct-push-via-10.1.30.11 dance is unnecessary).
+- Trigger a test scan: `ssh root@10.1.30.50 "systemctl start career-scan.service"`.
+- **Data sync (added 2026-07-06):** `./sync-ct203.sh pull` at session start, `push` after local merges, `status` to md5-compare pipeline scripts. CT 203 is the daily tracker writer (triage merges rows there); local sessions must pull before evaluating or numbering diverges — that split-brain once cost a month of results.
+
+### Triage scorer + auto-apply (hardened 2026-07-06)
+
+- **The scorer is fail-closed now.** `lib/location-gate.mjs` (18 self-tests: `node lib/location-gate.mjs`) hard-skips %-in-office and "Remote-Friendly (Travel-Required)" JDs pre-LLM; `openrouter-eval.mjs` `enforcePolicy()` caps any eval whose own LOCATION_POLICY extraction violates the hard rules to 1.0/SKIP in code, and UNCLEAR locations to ≤3.9. The model advises, the code decides — don't undo this by trusting raw scores.
+- **Auto-apply is wired into triage** (`triage.mjs` → `apply-orchestrator.mjs --submit`) for score ≥4.5 when the gate verdict AND the eval's LOCATION_POLICY are both clean and the platform is in `auto_apply_platforms`. `--no-auto-apply` disables per-run. On CT 203 there is no `claude -p`, so CV falls back to newest `output/cv-*.pdf` and no cover letter is generated (intentional — voice-engine ceiling rule).
+- Eval model: `anthropic/claude-sonnet-5` via OpenRouter (~$0.09/eval, 1–5 survivors/day typical). Override with `OPENROUTER_MODEL`.
+- Finder: Workday boards use `api_type: workday` + cxs `api:` in portals.yml (Tempus/CrowdStrike/DaVita wired); `scan-builtin.mjs` scrapes Built In Colorado (Denver) — its cron step lives in `/usr/local/bin/career-scan` (staged as `/opt/career-ops/career-scan.new` if not yet installed).
+- Gotcha: scan.mjs stamps rows with the **UTC** date — an evening MDT run writes tomorrow's date, so `triage --date` must match (`date -u +%F`).
 
 ### Default workflow for picking up
 

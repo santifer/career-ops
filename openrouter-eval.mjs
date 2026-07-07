@@ -38,7 +38,11 @@ const P = {
   cv:      join(ROOT, 'cv.md'),
   digest:  join(ROOT, 'article-digest.md'),
 };
-export const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5';
+// Sonnet 5 over Haiku 4.5: ~$0.09/eval at current volume (1–3 survivors/day). Haiku
+// scored 4.8 on hard-policy violations even with the rules in-prompt (2026-06/07 misses);
+// the deterministic enforcePolicy() cap is the real guard, but a stronger judge means
+// fewer wrong-side-of-threshold scores on the roles that DO pass the gates.
+export const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-5';
 
 export function loadKey() {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY.trim();
@@ -80,7 +84,7 @@ ${readFile(P.digest, 'article-digest.md')}
 1. Reports in ENGLISH. Apply the security-engineer-first lens from _profile.md.
 2. Enforce HARD rules: location policy (Denver-only/remote; non-Denver onsite or non-US = SKIP 1.0) and the $160K comp floor (if comp_max < $160K → 1-line SKIP, no full eval).
 3. No WebSearch/Playwright here: estimate comp from training data (note as estimate); judge legitimacy from JD text only.
-${locVerdict ? `4. LOCATION PRE-CLEARED by the orchestrator: verdict="${locVerdict.verdict}", note="${locVerdict.reason}". Trust this; if "confirm", flag "confirm remote" in Block A but do not auto-skip.` : ''}
+${buildLocationRule(locVerdict)}
 5. START your reply with EXACTLY this machine-readable block (so it survives truncation), THEN write the full A–G report below it:
 ---SCORE_SUMMARY---
 COMPANY: <name>
@@ -88,7 +92,66 @@ ROLE: <title>
 SCORE: <decimal e.g. 4.2>
 ARCHETYPE: <one of the four from _profile.md>
 LEGITIMACY: <High Confidence | Proceed with Caution | Suspicious>
----END_SUMMARY---`;
+LOCATION_POLICY: <REMOTE_US | DENVER_METRO | NON_DENVER_OFFICE | NON_US | TRAVEL_REQUIRED | UNCLEAR>
+LOCATION_EVIDENCE: <the JD phrase you based LOCATION_POLICY on, max 15 words, or "none">
+COMP_MAX_K: <max base salary in $K as integer, e.g. 250, or UNKNOWN>
+---END_SUMMARY---
+
+LOCATION_POLICY definitions — judge from the JD text ONLY, no benefit of the doubt:
+- REMOTE_US: genuinely remote for US employees, NO required office cadence, NO required travel to specific offices.
+- DENVER_METRO: office/hybrid within ~30min of Denver, CO.
+- NON_DENVER_OFFICE: any required on-site or hybrid presence (any %, any days/week) at a non-Denver office.
+- NON_US: role is located outside the US or not US-remote-eligible.
+- TRAVEL_REQUIRED: "remote-friendly" but with required recurring travel to non-Denver offices (e.g. "Remote-Friendly (Travel-Required)", "25% of time in one of our offices").
+- UNCLEAR: the JD genuinely does not say. Do NOT guess REMOTE_US from an isRemote flag or vibes.`;
+}
+
+function buildLocationRule(locVerdict) {
+  const v = locVerdict?.verdict;
+  if (v === 'pass-remote' || v === 'pass-denver') {
+    return `4. LOCATION PRE-CLEARED by the orchestrator: verdict="${v}", note="${locVerdict.reason}". Trust this for Block A.`;
+  }
+  if (locVerdict) {
+    return `4. LOCATION NOT VERIFIED (gate verdict="${v}": ${locVerdict.reason}). You MUST determine the working-location policy from the JD text yourself and enforce the HARD location rule: any required office presence or recurring travel to a non-Denver-metro office, or a non-US location, means SCORE: 1.0 and the matching LOCATION_POLICY value. If you cannot tell, use UNCLEAR — never assume remote.`;
+  }
+  return `4. No location pre-check was run. Determine the working-location policy from the JD text and enforce the HARD location rule (non-Denver office/hybrid/travel or non-US → SCORE: 1.0).`;
+}
+
+/**
+ * Deterministic policy enforcement AFTER the LLM eval — the model advises, this decides.
+ * Rationale: on 2026-06-11/13 Haiku scored 4.8 on roles whose own reports said "Zürich,
+ * 25% on-site" and "Remote-Friendly (Travel-Required)". Never again: a policy-violating
+ * LOCATION_POLICY caps the score to 1.0/SKIP in code, and an UNCLEAR location caps below
+ * the 4.0 apply threshold, regardless of what the model scored.
+ */
+export function enforcePolicy(result, locVerdict = null) {
+  const gatePassed = locVerdict && (locVerdict.verdict === 'pass-remote' || locVerdict.verdict === 'pass-denver');
+  const lp = (result.location_policy || 'UNCLEAR').toUpperCase();
+  const score = parseFloat(result.score);
+  result.status = 'Evaluated';
+
+  if (['NON_DENVER_OFFICE', 'NON_US', 'TRAVEL_REQUIRED'].includes(lp)) {
+    if (!(score <= 1.0)) result.original_score = result.score;
+    result.score = '1.0';
+    result.status = 'SKIP';
+    result.policy_reason = `HARD LOCATION SKIP (${lp}${result.location_evidence && result.location_evidence !== 'none' ? `: "${result.location_evidence}"` : ''})`;
+  } else if (lp === 'UNCLEAR' && !gatePassed && score > 3.9) {
+    result.original_score = result.score;
+    result.score = '3.9';
+    result.needs_confirm = true;
+    result.policy_reason = 'Location UNCLEAR and gate did not pass — capped below apply threshold until location is confirmed';
+  } else if (!gatePassed && locVerdict?.verdict === 'confirm') {
+    result.needs_confirm = true;
+  }
+
+  const compK = parseInt(result.comp_max_k, 10);
+  if (!isNaN(compK) && compK > 0 && compK < 160 && result.status !== 'SKIP') {
+    if (!result.original_score) result.original_score = result.score;
+    result.score = '1.0';
+    result.status = 'SKIP';
+    result.policy_reason = `Comp max $${compK}K below $160K floor`;
+  }
+  return result;
 }
 
 function parseSummary(text, fallbackCompany, url, locVerdict) {
@@ -99,6 +162,8 @@ function parseSummary(text, fallbackCompany, url, locVerdict) {
     company: c !== 'unknown' ? c : (fallbackCompany || 'unknown'),
     role: get('ROLE'), score: get('SCORE'), archetype: get('ARCHETYPE'),
     legitimacy: get('LEGITIMACY'), url: url || undefined, location_verdict: locVerdict?.verdict,
+    location_policy: get('LOCATION_POLICY'), location_evidence: get('LOCATION_EVIDENCE'),
+    comp_max_k: get('COMP_MAX_K'),
   };
 }
 
@@ -109,7 +174,9 @@ export async function evaluateJD({ jdText, company, url, locVerdict = null, mode
     headers: { 'Authorization': `Bearer ${loadKey()}`, 'Content-Type': 'application/json',
       'HTTP-Referer': 'https://moorelab.cloud', 'X-Title': 'career-ops' },
     body: JSON.stringify({
-      model, temperature: 0.4, max_tokens: 12000,
+      // 0.2, not 0.4: at 0.4 the same JD scored 3.7 and 4.2 in back-to-back runs —
+      // enough wobble to flip the ≥4.0 alert threshold. Lower temp = stabler scores.
+      model, temperature: 0.2, max_tokens: 12000,
       messages: [
         { role: 'system', content: buildSystemPrompt(locVerdict) },
         { role: 'user', content: `JOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
@@ -120,7 +187,8 @@ export async function evaluateJD({ jdText, company, url, locVerdict = null, mode
   const j = await r.json();
   const text = j.choices?.[0]?.message?.content || '';
   if (!text) throw new Error('Empty response from OpenRouter');
-  return { result: parseSummary(text, company, url, locVerdict), text };
+  const result = enforcePolicy(parseSummary(text, company, url, locVerdict), locVerdict);
+  return { result, text };
 }
 
 export function buildReportMarkdown({ result, text, url, locVerdict, model = DEFAULT_MODEL, date }) {
@@ -132,7 +200,7 @@ export function buildReportMarkdown({ result, text, url, locVerdict, model = DEF
 **Score:** ${result.score}/5
 **Legitimacy:** ${result.legitimacy}
 **PDF:** pending
-**Tool:** OpenRouter (${model})${locVerdict ? `\n**Location gate:** ${locVerdict.verdict} — ${locVerdict.reason}` : ''}
+**Tool:** OpenRouter (${model})${locVerdict ? `\n**Location gate:** ${locVerdict.verdict} — ${locVerdict.reason}` : ''}${result.location_policy ? `\n**Location policy (eval):** ${result.location_policy}${result.location_evidence && result.location_evidence !== 'none' ? ` — "${result.location_evidence}"` : ''}` : ''}${result.policy_reason ? `\n**⛔ POLICY CAP:** score forced to ${result.score} (model scored ${result.original_score ?? result.score}) — ${result.policy_reason}` : ''}
 
 ---
 
@@ -201,7 +269,7 @@ async function main() {
     writeFileSync(join(REPORTS_DIR, fn), buildReportMarkdown({ result, text, url, locVerdict, model, date }), 'utf-8');
     console.log(`\n✅ Report saved: reports/${fn}`);
     console.log(`📊 TSV → batch/tracker-additions/${num}-${slugify(result.company + '-' + result.role)}.tsv:`);
-    console.log(`   ${num}\t${date}\t${result.company}\t${result.role}\tEvaluated\t${result.score}/5\t❌\t[${num}](reports/${fn})\t<note>`);
+    console.log(`   ${num}\t${date}\t${result.company}\t${result.role}\t${result.status || 'Evaluated'}\t${result.score}/5\t❌\t[${num}](reports/${fn})\t<note>`);
   }
   console.log(`\n  Score: ${result.score}/5 | Archetype: ${result.archetype} | Legitimacy: ${result.legitimacy}\n`);
 }

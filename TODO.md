@@ -1,20 +1,24 @@
 # Career-Ops — Master TODO
 
-> Updated 2026-05-25. Owned by Patrick + Claude.
+> Updated 2026-07-06. Owned by Patrick + Claude.
 
 ---
 
-## 🔴 IMMEDIATE — Apply to open roles
+## 🔴 IMMEDIATE
 
-### Abridge (2 roles, both 4.7/4.6, remote, founding security team)
-- [x] Submit Abridge AppSec (#2, score 4.7) via apply-auto.mjs on CT 203 ✅ 2026-05-25
-- [x] Submit Abridge InfraSec (#3, score 4.6) via apply-auto.mjs on CT 203 ✅ 2026-05-25
-- [x] Verify both Ashby forms still active (liveness check) ✅
-- [ ] Tailor custom Ashby question answers using evaluation Block H + voice profile
+### Pipeline hardening (2026-07-06) — done, one manual step left
+- [x] Scorer fail-closed: location gate + enforcePolicy() + Sonnet 5 eval ✅ deployed to CT 203
+- [x] Auto-apply rewired: triage ≥4.5 → apply-orchestrator (gate+eval both clean) ✅ live for tomorrow's 07:00 cron
+- [x] Data layer repaired: tracker restored on CT 203, reports renumbered 015-024, sync-ct203.sh ✅
+- [x] Finder expanded: Workday (Tempus/CrowdStrike/DaVita), OpenAI/Twilio/SentinelOne/HiddenLayer/Gong/Dialpad/LivePerson boards, BIC scraper fixed ✅
+- [ ] **PATRICK:** install the BIC cron step: `ssh root@10.1.30.50 "cp /opt/career-ops/career-scan.new /usr/local/bin/career-scan && chmod +x /usr/local/bin/career-scan"`
+- [ ] Fresh base CV PDF for unattended applies (current fallback = Stripe-tailored from 05-25); name it to sort last in output/, e.g. `cv-patrick-moore-zz-base-<date>.pdf`
 
-### Stale candidates from last session
-- [x] ~~Turo — Staff Security Engineer, Infrastructure (Denver)~~ — DEAD (HTTP 410) ✅
-- [x] ~~Diligente Technologies — Sr. Cloud Security Engineer/Architect~~ — DEAD (page nav-only, no JD) ✅
+### Follow-ups overdue (31 business days, no responses)
+- [ ] Stripe / WorkOS / Abridge ×2 — followup-check now works again (tracker was missing on CT 203); Telegram reminder fires with tomorrow's cron. Decide: follow up or let die.
+
+### Backlog shortlist (verified live 2026-07-06, deprioritized by Patrick — apply via "apply #N" or ask Claude)
+- Hightouch EM Agents 4.6 (remote NA, $220-400K) · Cloudflare DistSys 4.1 (Denver office!) · Vercel Security Cloud 4.3 (remote US) · Snowflake FDE 4.3 (remote US) · Komodo FDE 4.5→4.0 re-eval (remote US) · Databricks FDE 4.1 (20% customer travel — gray)
 
 ---
 

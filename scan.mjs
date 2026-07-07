@@ -17,7 +17,16 @@
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import yaml from 'js-yaml';
+import { NON_US_RE } from './lib/location-gate.mjs';
 const parseYaml = yaml.load;
+
+// ── Location pre-filter ─────────────────────────────────────────────
+// Drop clearly-non-US postings at scan time so the daily digest and triage funnel
+// aren't dominated by Singapore/EMEA/India roles (user policy: US-remote or Denver).
+// Conservative on purpose: any US/remote-US/NA hint keeps the posting — the triage
+// location gate does the strict check with the full JD body.
+const US_HINT_RE = /\b(?:us|u\.s\.|usa|united states|north america|amer|denver|colorado)\b|remote\s*-\s*(?:us|north america)/i;
+const clearlyNonUS = (loc) => !!loc && NON_US_RE.test(loc) && !US_HINT_RE.test(loc);
 
 // ── Config ──────────────────────────────────────────────────────────
 
@@ -35,6 +44,11 @@ const FETCH_TIMEOUT_MS = 10_000;
 // ── API detection ───────────────────────────────────────────────────
 
 function detectApi(company) {
+  // Workday: explicit opt-in via api_type (endpoint shape isn't inferable from careers_url)
+  if (company.api_type === 'workday' && company.api) {
+    return { type: 'workday', url: company.api };
+  }
+
   // Greenhouse: explicit api field
   if (company.api && company.api.includes('greenhouse')) {
     return { type: 'greenhouse', url: company.api };
@@ -105,6 +119,41 @@ function parseLever(json, companyName) {
 }
 
 const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever };
+
+// Workday cxs API: POST with pagination (20/page), unlike the GET-based ATSes above.
+// portals.yml entry needs: api_type: workday, api: <cxs .../jobs endpoint>,
+// careers_url: <public board base, e.g. https://tempus.wd5.myworkdayjobs.com/en-US/Tempus_Careers>
+async function fetchWorkdayJobs(company) {
+  const jobs = [];
+  const base = (company.careers_url || '').replace(/\/$/, '');
+  for (let offset = 0; offset < 400; offset += 20) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await fetch(company.api, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 20, offset, searchText: '' }),
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const j = await res.json();
+      const posts = j.jobPostings || [];
+      for (const p of posts) {
+        jobs.push({
+          title: p.title || '',
+          url: base + (p.externalPath || ''),
+          company: company.name,
+          location: p.locationsText || '',
+        });
+      }
+      if (!posts.length || offset + 20 >= (j.total || 0)) break;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  return jobs;
+}
 
 // ── Fetch with timeout ──────────────────────────────────────────────
 
@@ -290,6 +339,7 @@ async function main() {
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
   let totalFiltered = 0;
+  let totalLocFiltered = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [];
@@ -297,13 +347,18 @@ async function main() {
   const tasks = targets.map(company => async () => {
     const { type, url } = company._api;
     try {
-      const json = await fetchJson(url);
-      const jobs = PARSERS[type](json, company.name);
+      const jobs = type === 'workday'
+        ? await fetchWorkdayJobs(company)
+        : PARSERS[type](await fetchJson(url), company.name);
       totalFound += jobs.length;
 
       for (const job of jobs) {
         if (!titleFilter(job.title)) {
           totalFiltered++;
+          continue;
+        }
+        if (clearlyNonUS(job.location)) {
+          totalLocFiltered++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -340,6 +395,7 @@ async function main() {
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by location:  ${totalLocFiltered} removed (clearly non-US)`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 

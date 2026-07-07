@@ -175,6 +175,28 @@ async function scrapeSearchPage(browser, searchPage) {
     const cards = await page.evaluate(() => {
       const results = [];
 
+      // Strategy 0: current Built In DOM (verified 2026-07-06) — job cards carry
+      // data-id hooks: [data-id="job-card"] > a[data-id="job-card-title"] +
+      // a[data-id="company-title"]. Location/remote text lives in the
+      // bounded-attribute-section column.
+      for (const card of document.querySelectorAll('[data-id="job-card"]')) {
+        const titleLink = card.querySelector('a[data-id="job-card-title"]');
+        const href = titleLink?.getAttribute('href');
+        if (!titleLink || !href) continue;
+        const company = card.querySelector('a[data-id="company-title"]')?.textContent?.trim() || '';
+        const attrText = card.querySelector('[class*="bounded-attribute-section"]')?.textContent || '';
+        const location = attrText.replace(/\s+/g, ' ').trim().slice(0, 120);
+        if (!results.some(r => r.url === href)) {
+          results.push({
+            title: titleLink.textContent.replace(/\s+/g, ' ').trim().slice(0, 200),
+            company: company.replace(/\s+/g, ' ').slice(0, 100),
+            url: href,
+            location,
+          });
+        }
+      }
+      if (results.length > 0) return results;
+
       // Strategy 1: Look for job card links with structured data
       const jobLinks = document.querySelectorAll('a[href*="/job/"], a[href*="/jobs/"]');
       for (const link of jobLinks) {

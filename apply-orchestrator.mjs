@@ -377,7 +377,7 @@ Short punchy sentences. Concrete specifics. Casual confidence. 75-120 words, 5-6
  * @returns {Promise<{score: number, applied: boolean, report?: string, error?: string}>}
  */
 export async function evaluateAndMaybeApply(opts) {
-  const { url, company, title, dryRun = false } = opts;
+  const { url, company, title, dryRun = false, submit = true } = opts;
   const profile = readProfile();
 
   // Check if already evaluated
@@ -395,6 +395,7 @@ export async function evaluateAndMaybeApply(opts) {
         reportPath: existing.path,
         reportNum: existing.num,
         dryRun,
+        submit,
       });
       return { score: existing.score, applied: result.success, report: existing.path, error: result.error };
     }
@@ -455,6 +456,7 @@ IMPORTANT: Include **Score:** and **URL:** headers in the report.`;
       score: report.score,
       reportPath: report.path,
       reportNum: report.num,
+      submit,
     });
     return { score: report.score, applied: result.success, report: report.path, error: result.error };
   }
@@ -476,7 +478,9 @@ if (import.meta.url === `file://${process.argv[1]}` ||
     process.exit(1);
   }
 
-  evaluateAndMaybeApply({ url: urlArg, dryRun })
+  // --submit is required for an actual submission: without it the form is filled and
+  // screenshotted but NOT submitted (review-first default per AGENTS.md).
+  evaluateAndMaybeApply({ url: urlArg, dryRun, submit })
     .then(result => {
       console.log('\nResult:', JSON.stringify(result, null, 2));
       process.exit(result.error ? 1 : 0);
