@@ -519,6 +519,7 @@ search_queries:
 #   rippling        ats.rippling.com/<slug>/jobs
 #   jibeapply       <slug>.jibeapply.com/jobs  (or provider: jibeapply + api: for a branded host's own /jobs path)
 #   tencent         careers.tencent.com  (zh-CN board; each keywords: entry queried server-side, results deduped)
+#   meituan         zhaopin.meituan.com  (zh-CN board; each keywords: entry queried server-side, results deduped)
 #   workday         <tenant>.wd<N>.myworkdayjobs.com[/<locale>]/<board>
 #   avature         <tenant>.avature.net  (branded host → provider: avature + api: the /careers/SearchJobs URL)
 #   amazon          amazon.jobs           (global board; provider: amazon + an amazon: filter block, see below)
@@ -570,6 +571,13 @@ search_queries:
 #   keywords: ["AI", "大模型"]   # each keyword is a separate server-side query, results deduped;
 #                                # omit keywords to pull the whole board
 #   max_pages: 20          # optional per-keyword page cap (100 posts/page, default 20)
+#   enabled: true
+#
+# - name: 美团 (Meituan)
+#   careers_url: https://zhaopin.meituan.com/web/social   # any https://zhaopin.meituan.com URL
+#   keywords: ["AI", "大模型"]   # each keyword is a separate server-side query, results deduped;
+#                                # omit keywords to pull the whole board
+#   max_pages: 30          # optional per-keyword page cap (100 posts/page, default 30)
 #   enabled: true
 #
 # - name: Example Workday Co
