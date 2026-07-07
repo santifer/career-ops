@@ -284,6 +284,37 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
   }
 }
 
+// ── Test 8b (#1623): report resolves by the row's link, not the row number ──
+// The web report page resolved a report purely by tracker row number, assuming
+// row `#N` maps to report file `N`. Those are separate counters that drift, so
+// the row's own Report-cell link is authoritative. reportLinkTarget() extracts
+// that link's basename (findReportFile in career-ops.ts then joins it under
+// reports/ and only falls back to the number scan when the cell has no link).
+{
+  const { reportLinkTarget } = await import('./web/src/lib/tracker-table.mjs');
+  const cases = [
+    // [reportCell, expected]
+    ['[006](../reports/006-acme-2026-01-01.md)', '006-acme-2026-01-01.md'], // drift: row #7 → report 006
+    ['[6](reports/006-acme-2026-01-01.md)', '006-acme-2026-01-01.md'],      // root-relative link
+    ['❌', null],                                                            // no PDF/report yet
+    ['—', null],                                                            // em-dash placeholder
+    ['', null],                                                             // empty cell
+    ['006', null],                                                          // bare number, no link
+  ];
+  let ok = true;
+  for (const [cell, expected] of cases) {
+    const got = reportLinkTarget(cell);
+    if (got !== expected) { ok = false; fail(`reportLinkTarget(${JSON.stringify(cell)}) → ${JSON.stringify(got)}, expected ${JSON.stringify(expected)}`); }
+  }
+  if (ok) pass('reportLinkTarget: extracts the linked report basename, null when the cell has no .md link (#1623)');
+  // Traversal safety: the basename is bare, so a link can't escape reports/.
+  if (reportLinkTarget('[x](../../etc/passwd.md)') === 'passwd.md') {
+    pass('reportLinkTarget: strips leading path — resolution can never escape reports/');
+  } else {
+    fail(`reportLinkTarget: path not stripped — got ${JSON.stringify(reportLinkTarget('[x](../../etc/passwd.md)'))}`);
+  }
+}
+
 // ═══ Stage 2 (#1596): Via column ════════════════════════════════════════════
 
 const HEADER_VIA = `# Applications Tracker

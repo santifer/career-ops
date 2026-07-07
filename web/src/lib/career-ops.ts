@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { atomicWrite } from "@/lib/core/safe-write";
-import { parseApplications } from "@/lib/tracker-table.mjs";
+import { parseApplications, reportLinkTarget } from "@/lib/tracker-table.mjs";
 
 /**
  * Resolve the career-ops "home" — the directory holding the user's sibling
@@ -197,6 +197,16 @@ export type ReportData = { content: string; file: string };
 /** Locate the evaluation report for an application number
  *  (reports/{n}-{slug}-{date}.md; the leading number may be zero-padded). */
 export function findReportFile(n: string): string | null {
+  // The tracker row's own Report link is authoritative: a report's leading
+  // number and its tracker row number (`#`) are separate counters that can
+  // drift, so resolving purely by row number can open a different role's report
+  // (#1623). Only fall back to the leading-number scan when the row has no
+  // usable link — an older row, or a report generated after the row was added.
+  const linked = reportLinkTarget(findApplication(n)?.report ?? "");
+  if (linked) {
+    const file = path.join(careerOpsRoot(), "reports", linked);
+    if (fs.existsSync(file)) return file;
+  }
   const target = parseInt(n, 10);
   if (Number.isNaN(target)) return null;
   let files: string[];
