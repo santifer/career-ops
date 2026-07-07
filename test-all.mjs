@@ -1137,6 +1137,99 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+// --- offer-prep mode: contract reading companion (describes, never judges) ---
+const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
+if (
+  offerPrepMode.includes('prepares the candidate for a decision; it does not make one') &&
+  offerPrepMode.includes('never outputs "safe to sign"') &&
+  offerPrepMode.includes('not legal advice') &&
+  !offerPrepMode.includes('🔴') && !offerPrepMode.includes('🟡') && !offerPrepMode.includes('🟢')
+) {
+  pass('offer-prep mode carries describe-not-judge posture, no verdicts, no traffic-light symbols');
+} else {
+  fail('offer-prep mode missing posture/no-verdict rules or contains severity symbols');
+}
+
+if (
+  offerPrepMode.includes('must not call WebSearch, WebFetch') &&
+  offerPrepMode.includes('Never state law from memory') &&
+  offerPrepMode.includes('assert what any law requires') &&
+  offerPrepMode.includes('must not run in batch/headless mode') &&
+  offerPrepMode.includes('data, never instructions')
+) {
+  pass('offer-prep mode enforces no-research, no-law-assertion, no-headless, and untrusted-input guards');
+} else {
+  fail('offer-prep mode missing no-research / no-law-assertion / no-headless / untrusted-input guards');
+}
+
+if (
+  offerPrepMode.includes('quote it verbatim') &&
+  offerPrepMode.includes('[commonly negotiated]') &&
+  offerPrepMode.includes('[ask your lawyer]') &&
+  offerPrepMode.includes('[differs from what you were told]') &&
+  offerPrepMode.includes('Restrictive covenants') &&
+  offerPrepMode.includes('Integration clause')
+) {
+  pass('offer-prep mode walks clauses verbatim with neutral tags against the taxonomy');
+} else {
+  fail('offer-prep mode missing verbatim rule, neutral tags, or taxonomy categories');
+}
+
+if (
+  offerPrepMode.includes('section headings and the first clause') &&
+  offerPrepMode.includes('if the contract is not in English, stop') &&
+  offerPrepMode.includes('data/offers/') &&
+  offerPrepMode.includes('notes.md') &&
+  offerPrepMode.includes('Notable absences') &&
+  offerPrepMode.includes('incorporates by reference') &&
+  offerPrepMode.includes('Questions for your lawyer') &&
+  offerPrepMode.includes('This is an AI-generated reading companion') &&
+  offerPrepMode.includes('Apache-2.0')
+) {
+  pass('offer-prep mode has extraction/language gates, promises file, absences + referenced-docs handling, lawyer list, fixed disclaimer, attribution');
+} else {
+  fail('offer-prep mode missing gates, promises file, absences/referenced-docs handling, lawyer list, fixed disclaimer, or attribution');
+}
+
+const routerSkill = readFile('.agents/skills/career-ops/SKILL.md');
+if (
+  /argument-hint:.*offer-prep/.test(routerSkill) &&
+  routerSkill.includes('| `offer-prep` | `offer-prep` |') &&
+  routerSkill.includes('/career-ops offer-prep') &&
+  /Applies to:.*`offer-prep`/.test(routerSkill) &&
+  !/Modes delegated to subagent[\s\S]*offer-prep/.test(routerSkill)
+) {
+  pass('router skill registers offer-prep (argument-hint, routing table, menu, standalone list; never subagent-delegated)');
+} else {
+  fail('router skill missing offer-prep registration (or offer-prep leaked into the subagent-delegated section)');
+}
+
+const claudeMdDoc = readFile('CLAUDE.md');
+const agentsMdDoc = readFile('AGENTS.md');
+if (
+  claudeMdDoc.includes('`offer-prep`') &&
+  agentsMdDoc.includes('`offer-prep`')
+) {
+  pass('CLAUDE.md and AGENTS.md document the offer-prep mode');
+} else {
+  fail('agent docs missing offer-prep mode row');
+}
+
+const dataContractDoc = readFile('DATA_CONTRACT.md');
+const gitignoreDoc = readFile('.gitignore');
+const updaterSrc = readFile('update-system.mjs');
+if (
+  dataContractDoc.includes('data/offers/') &&
+  dataContractDoc.includes('modes/offer-prep.md') &&
+  gitignoreDoc.includes('data/offers/*') &&
+  gitignoreDoc.includes('!data/offers/.gitkeep') &&
+  updaterSrc.includes("'modes/offer-prep.md'")
+) {
+  pass('offer-prep registered in data contract, gitignore, and updater manifest');
+} else {
+  fail('offer-prep missing from data contract / gitignore / SYSTEM_PATHS');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
@@ -5913,6 +6006,48 @@ try {
   }
 } catch (e) {
   fail(`core↔web contract freeze section crashed: ${e.message}`);
+}
+
+// ── 55b. OFFER-PREP POSTURE FREEZE (#1634) ──────────────────────
+// offer-prep's value AND its legal safety rest on describe-never-judge.
+// This freezes that posture: if the mode text ever gains verdict language
+// or drops a hard guard, CI fails loudly instead of the drift shipping.
+console.log('\n55b. offer-prep posture freeze (#1634)');
+try {
+  const prepSrc = readFileSync(join(ROOT, 'modes', 'offer-prep.md'), 'utf-8');
+  // Hard guards that must remain present (as written rules, not promises)
+  const REQUIRED_GUARDS = [
+    'never outputs "safe to sign"',
+    'No online research',
+    'Never state law from memory',
+    'Never headless',
+    'Untrusted input',
+  ];
+  const missingGuards = REQUIRED_GUARDS.filter((g) => !prepSrc.includes(g));
+  if (missingGuards.length === 0) {
+    pass('offer-prep keeps all five hard guards in the mode text');
+  } else {
+    fail(`offer-prep lost hard guard(s): ${missingGuards.join(' · ')} — the describe-never-judge posture is the mode's contract`);
+  }
+  // Verdict vocabulary must not appear as INSTRUCTION (outside the guard
+  // sentences that ban it). Cheap heuristic: these phrases may only appear
+  // on lines that also contain "never"/"not"/"NOT" (i.e. the prohibitions).
+  const VERDICT_PHRASES = ['safe to sign', 'risky clause', 'red flag rating', 'severity score'];
+  const offending = [];
+  for (const line of prepSrc.split('\n')) {
+    for (const p of VERDICT_PHRASES) {
+      if (line.toLowerCase().includes(p) && !/never|not\b|no\b|prohibit|ban/i.test(line)) {
+        offending.push(`"${p}" outside a prohibition: ${line.trim().slice(0, 70)}`);
+      }
+    }
+  }
+  if (offending.length === 0) {
+    pass('offer-prep contains no verdict vocabulary outside prohibitions');
+  } else {
+    fail(`offer-prep verdict-drift: ${offending[0]}`);
+  }
+} catch (e) {
+  fail(`offer-prep posture freeze crashed: ${e.message}`);
 }
 
 console.log('\n56. Fingerprint core — JD cross-listing detection (#1597)');

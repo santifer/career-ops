@@ -25,7 +25,7 @@ import path from "node:path";
  * @type {Record<string, string>}
  */
 const WEB_FIELD = {
-  num: "n", date: "date", company: "company", role: "role", location: "location",
+  num: "n", date: "date", company: "company", via: "via", role: "role", location: "location",
   score: "score", status: "status", pdf: "pdf", report: "report", notes: "notes",
 };
 
@@ -99,7 +99,7 @@ export function detectColumnMap(lines, aliases) {
  * mirroring parseTrackerRow in tracker-parse.mjs.
  * @param {string} md - content of data/applications.md.
  * @param {string} rootDir - career-ops root holding tracker-aliases.json.
- * @returns {{n: string, date: string, company: string, role: string, score: string, status: string, pdf: string, report: string, notes: string}[]}
+ * @returns {{n: string, date: string, company: string, via: string, role: string, score: string, status: string, pdf: string, report: string, notes: string}[]}
  */
 export function parseApplications(md, rootDir) {
   const lines = md.split("\n");
@@ -114,7 +114,7 @@ export function parseApplications(md, rootDir) {
       const at = (/** @type {string} */ k) => cells[map[k]] ?? "";
       if (!/^\d+$/.test(at("n"))) continue; // header / separator / malformed
       rows.push({
-        n: at("n"), date: at("date"), company: at("company"), role: at("role"),
+        n: at("n"), date: at("date"), company: at("company"), via: at("via"), role: at("role"),
         score: at("score"), status: at("status"), pdf: at("pdf"), report: at("report"),
         notes: at("notes"),
       });
@@ -122,7 +122,7 @@ export function parseApplications(md, rootDir) {
       // Legacy fixed order; tolerate the 8-cell variant where Notes is absent.
       if (!/^\d+$/.test(cells[0])) continue; // header / separator / malformed
       const [n, date, company, role, score, status, pdf, report, ...rest] = cells;
-      rows.push({ n, date, company, role, score, status, pdf, report, notes: rest.join(" | ") });
+      rows.push({ n, date, company, via: "", role, score, status, pdf, report, notes: rest.join(" | ") });
     }
   }
   return rows;
