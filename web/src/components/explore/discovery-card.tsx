@@ -66,7 +66,7 @@ export function DiscoveryCard({ offer, inPipeline, evaluatedN }: { offer: Discov
     <div className="co-rise group flex min-w-0 flex-col gap-2.5 rounded-xl border border-border bg-surface/40 p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-sm">
       <div className="flex items-start gap-3">
         <Logo company={offer.company} />
-        <a href={offer.url} target="_blank" rel="noopener noreferrer" className="block min-w-0 flex-1">
+        <a href={offer.url} target="_blank" rel="noopener noreferrer" className="block min-w-0 flex-1 max-sm:min-h-[44px]">
           <h3 className={`${instrumentSerif.className} truncate text-[17px] leading-tight text-foreground transition-colors group-hover:text-brand`}>{offer.title}</h3>
           <p className="mt-0.5 truncate text-[13px] text-muted">
             {offer.company}

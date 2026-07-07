@@ -303,7 +303,7 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Current date
 - Company
 - Role
-- Score: match average (1-5)
+- Score: match average (1-5) — Read `modes/_custom.md` → Scoring Rules, if it exists, and apply its override here. Default (if absent or silent): average of block scores.
 - Status: `Evaluated`
 - PDF: ❌ (or ✅ if auto-pipeline generated PDF)
 - Report: root-relative link `[001](reports/001-company-2026-01-01.md)` (when merged via `merge-tracker.mjs` it is normalized to be relative to the tracker's own dir, e.g. `../reports/...`; see #760)

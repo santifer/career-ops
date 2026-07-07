@@ -14,10 +14,8 @@
  * `metadata.sources` says which files were found — a fresh clone with zero
  * user data emits the full contract shape with null sections.
  *
- * `runs` is always null in this version: it is reserved for per-run scan
- * counters from data/scan-runs.tsv, which lands with the scan.mjs write path
- * in a follow-up PR (see #1604 — the file is a data-contract change and ships
- * separately). The key exists now so the contract is stable for consumers.
+ * `runs` aggregates data/scan-runs.tsv (per-run counters written by scan.mjs,
+ * #1604 PR-2) — null until the first non-dry scan creates the file.
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -293,6 +291,54 @@ export function computeFollowupStats(followupsContent, trackerByNum) {
   };
 }
 
+// ── Scan-run trends ─────────────────────────────────────────────────
+
+/**
+ * Aggregate data/scan-runs.tsv (written by scan.mjs, one row per non-dry run).
+ *
+ * Header-name parsing, NEVER positional: columns may be appended in later
+ * schema versions and a positional slice would silently miscount from then on.
+ * Torn rows (crash mid-append) and rows with a bad timestamp are skipped;
+ * failed runs count in totalRuns/failedRuns but are excluded from averages so
+ * an aborted run doesn't drag the trend down.
+ *
+ * @param {string} content - Raw scan-runs.tsv text.
+ * @returns {object|null} null for empty/unknown-schema files.
+ */
+export function computeRunStats(content) {
+  const lines = String(content ?? '').replace(/\r/g, '').split('\n').filter((l) => l.trim());
+  if (lines.length < 2) return null;
+  const header = lines[0].split('\t');
+  const idx = Object.fromEntries(header.map((h, i) => [h, i]));
+  if (idx.timestamp == null || idx.found == null) return null; // unknown schema
+  const filterCols = header.filter((h) => h.startsWith('filtered_'));
+  const rows = [];
+  for (const line of lines.slice(1)) {
+    const cols = line.split('\t');
+    if (cols.length < header.length) continue; // torn row
+    if (!/^\d{4}-\d{2}-\d{2}/.test(cols[idx.timestamp] || '')) continue;
+    const num = (name) => { const v = Number(cols[idx[name]]); return Number.isNaN(v) ? 0 : v; };
+    rows.push({
+      date: cols[idx.timestamp].slice(0, 10),
+      status: idx.status != null ? cols[idx.status] : 'completed',
+      found: num('found'),
+      filtered: filterCols.reduce((a, h) => a + num(h), 0),
+      newAdded: num('new_added'),
+    });
+  }
+  if (rows.length === 0) return null;
+  const completed = rows.filter((r) => r.status !== 'failed');
+  const sum = (arr, k) => arr.reduce((a, r) => a + r[k], 0);
+  return {
+    totalRuns: rows.length,
+    failedRuns: rows.length - completed.length,
+    lastRunDate: rows.map((r) => r.date).sort().at(-1),
+    avgFoundPerRun: completed.length ? round1(sum(completed, 'found') / completed.length) : 0,
+    avgNewPerRun: completed.length ? round1(sum(completed, 'newAdded') / completed.length) : 0,
+    filterRemovalPct: pct(sum(completed, 'filtered'), sum(completed, 'found')),
+  };
+}
+
 // ── Assembler + CLI ─────────────────────────────────────────────────
 
 /**
@@ -311,6 +357,7 @@ export function computeAllStats({
   const scanHist = read(scanHistoryFile);
   const fups = read(followupsFile);
   const portals = read(portalsFile);
+  const runs = read(scanRunsFile);
   const tracker = apps ? computeTrackerStats(apps) : null;
   const scan = scanHist ? computeScanStats(scanHist) : null;
   return {
@@ -321,7 +368,7 @@ export function computeAllStats({
         scanHistory: !!scanHist,
         followups: !!fups,
         portals: !!portals,
-        scanRuns: existsSync(scanRunsFile),
+        scanRuns: !!runs,
       },
     },
     tracker,
@@ -329,9 +376,7 @@ export function computeAllStats({
     scan,
     portals: portals ? computePortalStats(portals, scan, scanHist ? scanCompanyNames(scanHist) : []) : null,
     followups: fups && apps ? computeFollowupStats(fups, trackerStatusByNum(apps)) : null,
-    // Reserved for data/scan-runs.tsv per-run counters (PR-2 of #1604). The
-    // key ships now so the contract shape is stable for consumers.
-    runs: null,
+    runs: runs ? computeRunStats(runs) : null,
   };
 }
 
@@ -376,7 +421,13 @@ function printSummary(stats) {
   } else {
     console.log('Follow-ups: — no data (data/follow-ups.md missing)');
   }
-  console.log('Runs:       — no data (data/scan-runs.tsv pending; see #1604 PR-2)');
+  const r = stats.runs;
+  if (r) {
+    const failed = r.failedRuns > 0 ? ` | ${r.failedRuns} failed` : '';
+    console.log(`Runs:       ${r.totalRuns} recorded (last ${r.lastRunDate})${failed} | avg ${r.avgFoundPerRun} found / ${r.avgNewPerRun} new per run | filters remove ${r.filterRemovalPct}%`);
+  } else {
+    console.log('Runs:       — no data (data/scan-runs.tsv missing; created by the next scan)');
+  }
   console.log('');
 }
 
