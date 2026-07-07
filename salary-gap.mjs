@@ -157,11 +157,12 @@ export function fold(observations, apps, profileDesired) {
     const advertised = pickEffective('advertised', obs);
     const actual = pickEffective('actual', obs);
     // Gap pcts only compare like currencies — no FX conversion, so a cross-currency
-    // pct would be meaningless. Strict string equality; UNKNOWN === UNKNOWN counts
-    // as a match (we can't disprove a match we can't see). Skips are reported in
-    // quality.currencyMismatches, never dropped silently.
-    const advComparable = advertised && actual && advertised.currency === actual.currency;
-    const desComparable = desired && actual && desired.currency === actual.currency;
+    // pct would be meaningless. Gap math requires a PROVEN shared currency: strict
+    // string equality AND neither side UNKNOWN (two UNKNOWNs could be different real
+    // currencies, so UNKNOWN is never comparable — not even with itself). Skips are
+    // reported in quality.currencyMismatches, never dropped silently.
+    const advComparable = advertised && actual && advertised.currency === actual.currency && advertised.currency !== 'UNKNOWN';
+    const desComparable = desired && actual && desired.currency === actual.currency && desired.currency !== 'UNKNOWN';
     if (advertised && actual && !advComparable) currencyMismatches.push({ num, comparison: 'advertised-vs-actual', currencies: [advertised.currency, actual.currency] });
     if (desired && actual && !desComparable) currencyMismatches.push({ num, comparison: 'desired-vs-actual', currencies: [desired.currency, actual.currency] });
     applications.push({
@@ -232,6 +233,7 @@ const OBS_FIXTURE = [
   '002\t2026-06-25\tactual\t88k\tEUR\trecruiter-verbal\t',
   '007\t2026-06-25\tactual\t70k\tEUR\trecruiter-verbal\torphan - no report',
   '003\t2026-06-26\tactual\t9ok\tUSD\trecruiter-verbal\ttypo on purpose',
+  '005\t2026-07-01\tactual\t92k\tUNKNOWN\toffer-letter\tcurrency not stated',
 ].join('\n');
 
 const REPORT_FIXTURE_001 = `# Eval: Acme — ML Eng
@@ -267,6 +269,17 @@ score: 4.1
 advertised_comp: "100k USD"
 \`\`\`
 `;
+const REPORT_FIXTURE_005 = `# Eval: Hooli — AI Lead
+
+## Machine Summary
+
+\`\`\`yaml
+company: "Hooli"
+role: "AI Lead"
+score: 3.8
+advertised_comp: "95k"
+\`\`\`
+`;
 const REPORT_FIXTURE_003 = `# Eval: Initech — Platform
 
 ## Machine Summary
@@ -299,7 +312,7 @@ function selfTest() {
 
   // parseObservations
   const obs = parseObservations(OBS_FIXTURE);
-  assert(obs.length === 7, `7 observations, got ${obs.length}`);
+  assert(obs.length === 8, `8 observations, got ${obs.length}`);
   assert(obs[0].num === '001' && obs[0].type === 'desired' && obs[0].source === 'user', 'fields mapped');
   assert(parseObservations('').length === 0, 'empty log');
 
@@ -317,11 +330,13 @@ function selfTest() {
     '002': { company: 'Globex', role: 'Data Eng' },
     '003': { company: 'Initech', role: 'Platform' },
     '004': { company: 'Umbrella', role: 'AI Eng' },
+    '005': { company: 'Hooli', role: 'AI Lead' },
   };
   const reportObs = [
     { num: '001', ...reportToObservation(REPORT_FIXTURE_001, '001', '2026-06-20').observation },
     { num: '002', ...reportToObservation(REPORT_FIXTURE_002, '002', '2026-06-25').observation },
     { num: '004', ...reportToObservation(REPORT_FIXTURE_004, '004', '2026-06-27').observation },
+    { num: '005', ...reportToObservation(REPORT_FIXTURE_005, '005', '2026-06-28').observation },
   ];
   // cross-currency fixture: advertised USD (report) + actual GBP + desired EUR (profile)
   const crossCurrencyObs = parseObservations('004\t2026-06-30\tactual\t88k\tGBP\toffer-letter\tcross-currency on purpose');
@@ -356,11 +371,25 @@ function selfTest() {
   assert(result.quality.orphans.length === 1 && result.quality.orphans[0].num === '007', 'orphan 007 reported');
   assert(result.quality.unparseable.length === 1 && result.quality.unparseable[0].raw === '9ok', 'typo 9ok reported');
   const mm = result.quality.currencyMismatches;
-  assert(mm.length === 2, `2 currency mismatches reported, got ${mm.length}`);
+  assert(mm.length === 4, `4 currency mismatches reported, got ${mm.length}`);
   assert(mm.some(m => m.num === '004' && m.comparison === 'advertised-vs-actual' && m.currencies[0] === 'USD' && m.currencies[1] === 'GBP'),
     'advertised-vs-actual mismatch reported for 004');
   assert(mm.some(m => m.num === '004' && m.comparison === 'desired-vs-actual' && m.currencies[0] === 'EUR' && m.currencies[1] === 'GBP'),
     'desired-vs-actual mismatch reported for 004');
+
+  // UNKNOWN guard: advertised_comp without a currency token (guess UNKNOWN) vs actual
+  // logged with currency UNKNOWN — never comparable, even though the strings match
+  const a5 = result.applications.find(a => a.num === '005');
+  assert(a5.advertised.currency === 'UNKNOWN' && a5.actual.currency === 'UNKNOWN', '005 both sides UNKNOWN currency');
+  assert(a5.advToActPct === null, `005 UNKNOWN-vs-UNKNOWN adv->act pct must be null, got ${a5.advToActPct}`);
+  assert(a5.desiredToActPct === null, `005 EUR-vs-UNKNOWN desired->act pct must be null, got ${a5.desiredToActPct}`);
+  assert(mm.some(m => m.num === '005' && m.comparison === 'advertised-vs-actual' && m.currencies[0] === 'UNKNOWN' && m.currencies[1] === 'UNKNOWN'),
+    'UNKNOWN-vs-UNKNOWN skip reported for 005');
+  assert(mm.some(m => m.num === '005' && m.comparison === 'desired-vs-actual' && m.currencies[0] === 'EUR' && m.currencies[1] === 'UNKNOWN'),
+    'known-vs-UNKNOWN skip reported for 005');
+  const unk = result.aggregates.byCurrency.UNKNOWN;
+  assert(unk.confirmed === 1 && unk.meanAdvToActPct === null && unk.atOrAboveAdvertised === 0 && unk.atOrAboveDesired === 0,
+    'UNKNOWN bucket carries confirmed count only — no gap math from unproven currency');
 
   // aggregates (EUR: 001 +1.18%, 002 -12%) grouped per currency
   const eur = result.aggregates.byCurrency.EUR;
