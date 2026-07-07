@@ -60,7 +60,7 @@ export function DecisionCard({ app }: { app: Application }) {
           type="button"
           disabled={!!busy}
           onClick={() => setStatus("Applied")}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-brand-soft px-2.5 py-1.5 text-xs font-medium text-brand transition hover:bg-brand/15 disabled:opacity-60 max-sm:min-h-[44px]"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-brand-soft px-2.5 py-1.5 text-xs font-medium text-brand-text transition hover:bg-brand/15 disabled:opacity-60 max-sm:min-h-[44px]"
         >
           {busy === "Applied" ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} Mark applied
         </button>
