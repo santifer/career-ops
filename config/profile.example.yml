@@ -92,6 +92,20 @@ cv:
   # The ID starts with "D" and is 11 characters long.
   # canva_resume_design_id: "DAxxxxxxxxx"
 
+# ── Culture Screen ───────────────────────────────────────────────────────────
+#
+# Enforces structural capping on the "Cultural signals" dimension during evaluation.
+#
+# culture_screen:
+#   # What you actively look for in a team culture (e.g. org size, meeting frequency, async-first).
+#   # If absent/commented, the dimension is scored qualitatively without a hard cap.
+#   require:
+#     - "Small, flat teams (under 15 engineers)"
+#     - "Async-first communication, low meeting overhead"
+#   # If true, the dimension is capped at 2/5 if the JD lacks any evidence for the required criteria.
+#   # If false (or absent), lack of evidence defaults to a neutral 3/5.
+#   deprioritize_if_absent: true
+
 # ── Cover Letter Settings ──────────────────────────────────────────────────
 #
 # Used by `/career-ops cover` and the cover letter sub-flow in `/career-ops pdf`.
@@ -158,6 +172,18 @@ cover_letter:
 #   # message" instead of printing a concrete email address from candidate.email.
 #   # default_sender_note: "the email used to send this message"
 #   # signature_name: "Jane Smith"
+
+# ── Scan / JD extractor ─────────────────────────────────────────────────────
+#
+# How the scan and JD-extraction steps read SPA job pages.
+#   mcp (default) — the browser MCP (browser_navigate + browser_snapshot). Works
+#                   out of the box; the snapshot is token-heavy.
+#   cli           — the headless `browser-extract.mjs` helper: renders the page
+#                   and returns compact JSON, cutting per-page tokens ~2–5×. Opt-in.
+#                   If the helper isn't available, the modes fall back to mcp
+#                   silently, so nothing breaks. `doctor` reports the active mode.
+# scan:
+#   extractor: mcp   # mcp (default) | cli
 
 # ── Auto-PDF threshold ──────────────────────────────────────────────────────
 #

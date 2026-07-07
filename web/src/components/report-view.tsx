@@ -141,7 +141,7 @@ export function ReportView({
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-brand hover:underline"
+                className="inline-flex items-center justify-center gap-1 text-brand hover:underline max-sm:min-h-[44px]"
               >
                 posting <ExternalLink className="size-3" />
               </a>
