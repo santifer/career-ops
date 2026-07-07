@@ -8,7 +8,7 @@ Yapılandırılmış iş portallarını tara, başlık ilgisine göre filtrele v
 
 ## Önerilen Çalıştırma (Recommended Execution)
 
-Ana etkileşimli bağlamı (interactive context) tüketmekten kaçınmak için, eğer komut satırı arayüzünüz (CLI) destekliyorsa bunu bir çalışan (worker) / alt ajan (subagent) olarak yürütün:
+Ana etkileşimli bağlamı (interactive context) tüketmekten kaçınmak için, eğer komut satırı arayüzün (CLI) destekliyorsa bunu bir çalışan (worker) / alt ajan (subagent) olarak yürüt:
 
 ```python
 Agent(
@@ -205,7 +205,7 @@ Seviyeler eklenebilirdir (additive) — sırasıyla çalıştırılırlar ve son
    c. Normalize edilen `company` ismi `local_parser_ok` listesindeki herhangi bir isimle eşleşiyorsa sonucu **Atla (Skip)**.
    d. Kalanları adaylar listesinde biriktir (Seviye 0+1+2 ile tekilleştirilmiş).
 
-6. **Filter by Title** `portals.yml` içindeki `title_filter` değerlerini kullanarak:
+6a. **Filter by Title** `portals.yml` içindeki `title_filter` değerlerini kullanarak:
    - `positive` listesinden en az 1 anahtar kelime başlıkta görünmelidir (büyük/küçük harf duyarsız - case-insensitive).
    - `negative` listesinden hiçbir anahtar kelime geçmemelidir.
    - `seniority_boost` kelimeleri öncelik sağlar ancak zorunlu değildir.

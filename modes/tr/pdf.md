@@ -147,7 +147,7 @@ HTML iş akışıyla (yukarıdaki Adım 1-11) tamamen aynı içerik üretim (gen
 - JD gereksinimlerinden (requirements) en iyi yetkinlikleri seç
 - Anahtar kelimeleri doğal bir şekilde enjekte et (ASLA yeni bir şey uydurma)
 
-**ÖNEMLİ — Karakter bütçesi (Character budget) kuralı:** Her yeni yedek (replacement) metin, yerine geçtiği orijinal metinle YAKLAŞIK OLARAK aynı uzunlukta (karakter sayısı açısından ±%15 sapma payıyla) OLMALIDIR. Uyarlanmış (tailored) içerik daha uzunsa, bunu kısaltın (condense). Canva tasarımı sabit boyutlu (fixed-size) metin kutularına sahiptir — daha uzun bir metin, komşu öğelerle (adjacent elements) üst üste binmesine (overlapping) neden olur. 2. Adımdaki her orijinal öğenin karakterlerini sayın ve yeni alternatifleri üretirken bu bütçe kuralını sıkıca uygulayın.
+**ÖNEMLİ — Karakter bütçesi (Character budget) kuralı:** Her yeni yedek (replacement) metin, yerine geçtiği orijinal metinle YAKLAŞIK OLARAK aynı uzunlukta (karakter sayısı açısından ±%15 sapma payıyla) OLMALIDIR. Uyarlanmış (tailored) içerik daha uzunsa, bunu kısalt (condense). Canva tasarımı sabit boyutlu (fixed-size) metin kutularına sahiptir — daha uzun bir metin, komşu öğelerle (adjacent elements) üst üste binmesine (overlapping) neden olur. 2. Adımdaki her orijinal öğenin karakterlerini say ve yeni alternatifleri üretirken bu bütçe kuralını sıkıca uygula.
 
 #### Adım 4 — Düzenlemeleri uygula
 
@@ -161,7 +161,7 @@ c. **Metin değişiminden sonra düzeni (layout) yeniden akıt (Reflow):**
    Tüm metin değişiklikleri uygulandıktan sonra metin kutuları otomatik olarak yeniden boyutlanır, ancak komşu öğeler oldukları yerde kalır. Bu durum, iş deneyimi bölümleri arasında eşitsiz (uneven) boşluklar oluşmasına neden olur. Bunu düzelt:
    1. Güncellenmiş öğe pozisyonlarını ve boyutlarını `perform-editing-operations` yanıtından (response) oku
    2. Her iş deneyimi bölümü için (yukarıdan aşağıya), maddeler (bullets) metin kutusunun nerede bittiğini hesapla: `end_y = top + height`
-   3. Bir sonraki bölümün başlığı `end_y + consistent_gap` noktasından başlamalıdır (şablondaki orijinal boşluğu, tipik olarak ~30px, kullanın)
+   3. Bir sonraki bölümün başlığı `end_y + consistent_gap` noktasından başlamalıdır (şablondaki orijinal boşluğu, tipik olarak ~30px, kullan)
    4. Eşit boşluğu (even spacing) korumak adına sonraki bölümün tarihini, şirket adını, rol başlığını ve madde öğelerini taşımak için `position_element` kullan
    5. Tüm iş deneyimi bölümleri için bunu tekrar et
 d. **Kaydetmeden (commit) önce düzeni (layout) doğrula:**
@@ -179,7 +179,7 @@ b. Bash kullanarak PDF'i **DERHAL** indir (download):
    ```bash
    curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
    ```
-   Dışa aktarma (export) URL'si, yaklaşık 2 saat içinde süresi dolan, önceden imzalanmış (pre-signed) bir S3 bağlantısıdır. Bekletmeden hemen indirin.
+   Dışa aktarma (export) URL'si, yaklaşık 2 saat içinde süresi dolan, önceden imzalanmış (pre-signed) bir S3 bağlantısıdır. Bekletmeden hemen indir.
 c. İndirmeyi doğrula:
    ```bash
    file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
@@ -206,7 +206,7 @@ Bu rol için bir ön yazı (cover letter) da ister misiniz?
 - Ya da daha sonra `/career-ops cover {slug}` çalıştırın
 ```
 
-Ön yazıya `voice-dna.md` (eğer varsa) uygulayın — tam bariyer koruması (guardrail) ve sohbete dayalı (conversational) ses (Seviye 1 + Seviye 2) dahildir. CV PDF'sinin kendisi yalnızca Seviye 1 (formal ATS dili - register) kalır. Bkz. `_shared.md` → Voice DNA.
+Ön yazıya `voice-dna.md` (eğer varsa) uygula — tam bariyer koruması (guardrail) ve sohbete dayalı (conversational) ses (Seviye 1 + Seviye 2) dahildir. CV PDF'sinin kendisi yalnızca Seviye 1 (formal ATS dili - register) kalır. Bkz. `_shared.md` → Voice DNA.
 
 Kullanıcı "evet" derse, slug modunda `modes/cover.md` dosyasından tam ön yazı akışını çalıştır:
 1. Başlangıç noktası olarak değerlendirme raporundan mevcut `## Cover Letter Draft` bölümünü yükle (Load)
