@@ -74,6 +74,7 @@ you process the URL.
 ## Intelligent JD detection from URL
 
 1. **Playwright (preferred):** `browser_navigate` + `browser_snapshot`. Works with all SPAs.
+   - **Opt-in — CLI extractor (`scan.extractor: cli` in `config/profile.yml`):** run `node browser-extract.mjs <url>` (default `--mode jd`) instead; it returns compact `{ "url", "title", "text" }` — the JD main text at ~4–5× fewer tokens than a full snapshot. Use its `text` as the JD. **Fall back silently** to `browser_navigate` + `browser_snapshot` if it errors or is missing.
 2. **WebFetch (fallback):** For static pages or when Playwright is unavailable.
 3. **WebSearch (last resort):** Search in secondary portals that index the JD.
 

@@ -117,6 +117,8 @@ During the agent's scan, keep the **`local_parser_ok`** set in memory. This set 
 
 **Every company MUST have a `careers_url` in portals.yml.** If it does not, search for it once, save it, and use it in future scans.
 
+> **Opt-in — CLI extractor (`scan.extractor: cli`).** When `config/profile.yml` sets `scan.extractor: cli`, run `node browser-extract.mjs <careers_url> --mode listing` for each company instead of `browser_navigate` + `browser_snapshot`. It renders the page headlessly and returns compact JSON — `{ "url": ..., "jobs": [{ "title", "url" }] }` — so the listing enters context at a fraction of a full snapshot's tokens (~2–3× smaller here). Read the `jobs` array directly; then apply `title_filter` as usual. **Fall back silently** to `browser_navigate` + `browser_snapshot` if the command errors (it prints `{ "error", "code" }` and exits non-zero) or isn't present — never let the flag break a scan. Default (`scan.extractor` absent or `mcp`): the `browser_navigate` + `browser_snapshot` flow above.
+
 ### Level 2 — ATS APIs / Feeds (COMPLEMENTARY)
 
 For companies with a public API or structured feed **that are not in `local_parser_ok`**, use the JSON/XML response as a fast complement to Level 1. This is faster than Playwright and reduces visual scraping errors.
