@@ -30,7 +30,7 @@ mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
 function normalizeStatus(raw) {
   // Strip markdown bold
   let s = raw.replace(/\*\*/g, '').trim();
-  const lower = s.toLowerCase();
+  const lower = s.toLowerCase().replace(/\u0307/g, '');
 
   // DUPLICADO variants → Discarded
   if (/^duplicado/i.test(s) || /^dup\b/i.test(s)) {
@@ -79,7 +79,7 @@ function normalizeStatus(raw) {
 
   // Spanish & Turkish aliases → English canonicals
   if (['evaluada', 'değerlendirildi', 'degerlendirildi'].includes(lower)) return { status: 'Evaluated' };
-  if (['aplicado', 'enviada', 'aplicada', 'applied', 'sent', 'başvuruldu', 'basvuruldu'].includes(lower)) return { status: 'Applied' };
+  if (['aplicado', 'enviada', 'aplicada', 'sent', 'başvuruldu', 'basvuruldu'].includes(lower)) return { status: 'Applied' };
   if (['respondido', 'yanıt verildi', 'yanit verildi'].includes(lower)) return { status: 'Responded' };
   if (['entrevista', 'mülakat', 'mulakat'].includes(lower)) return { status: 'Interview' };
   if (['oferta', 'teklif'].includes(lower)) return { status: 'Offer' };
