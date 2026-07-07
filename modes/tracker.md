@@ -31,6 +31,8 @@ Possible states: `Evaluated` → `Applied` → `Responded` → `Interview` → `
 
 If the user asks to update a state, edit the corresponding row.
 
+**Salary observations:** when the user reports a confirmed compensation figure for a row ("recruiter said 84k", "offer letter says 92k", "signed at 90k"), append one `actual` observation line to `data/salary-observations.tsv` (create the file if missing; format per `docs/SCRIPTS.md` → salary-gap) with the source tier matching how the figure arrived: `recruiter-verbal` for a spoken figure, `offer-letter` for a written offer, `contract` for a signed contract. The log is append-only — a new figure is a new line, never an edit of a prior one. Then echo that application's gap in one line (advertised vs actual vs desired); `node salary-gap.mjs --summary` shows the full picture.
+
 **Reveal workflow (#1596):** when the user learns the end employer of a `?` row ("the Hays role is Barclays"):
 
 1. Edit the row's Company cell in place (`?` → real name). Never renumber.
@@ -45,6 +47,7 @@ Also show statistics:
 - Average score
 - % with PDF generated
 - % with report generated
+- If `data/salary-observations.tsv` has confirmed `actual` observations, include the output of `node salary-gap.mjs --summary` (advertised→actual gaps, desired attainment)
 
 For the full lifetime stats view (cumulative funnel, scanner totals, portal
 coverage, follow-up compliance), run `node stats.mjs --summary` and present its

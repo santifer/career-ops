@@ -181,6 +181,13 @@ Compare contract terms against:
 List every delta: what was recorded/targeted vs what the contract says, both
 quoted.
 
+Then append one `actual` observation line to `data/salary-observations.tsv`
+(create the file if missing; format per `docs/SCRIPTS.md` → salary-gap): the
+document's base compensation amount, source `contract` — or `offer-letter`
+when the document is an offer letter — with a total-comp note in the note
+column if the document states one. This records what the document says,
+nothing more; it implies no view on the number.
+
 ## Step 4 — Two lists
 
 **Questions for your lawyer** — jurisdiction-scoped and clause-anchored: at

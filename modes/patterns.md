@@ -75,6 +75,10 @@ When you narrate this to the user:
 - The `recommendations` array already contains the `high`-impact channel action
   when one qualifies — surface it verbatim rather than inventing a stronger claim.
 
+### Salary lens (optional)
+
+If compensation observations exist (report `advertised_comp` keys or `data/salary-observations.tsv` lines), run `node salary-gap.mjs --summary` as an additional lens: advertised→actual haircut per (company, role) and per currency, plus desired-attainment. Zero tokens — never recompute these numbers manually. Respect its data-quality section the same way as `sufficientSample`: low sample sizes are observations, not recommendations.
+
 ## Step 1b — Session-Content Targeting Signal (optional)
 
 Outcome data (Step 1) tells you *whether* you're winning. Interview sessions tell you *what role you're actually selling* in the room — a higher-resolution, lower-noise signal of role-fit than win/loss, which is confounded by comp, timing, headcount, and a dozen reasons unrelated to fit.

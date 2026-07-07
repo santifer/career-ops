@@ -94,6 +94,14 @@ Use the bounded research budget above for:
 
 Table with data and cited sources. If there is no data, state it instead of inventing.
 
+The table's **first row is always the JD's own advertised figure, verbatim** — before any researched market data:
+
+```markdown
+| Advertised (JD) | {verbatim figure or "not stated"} | JD |
+```
+
+Never blend the advertised figure with researched estimates or replace it with them — market research rows follow below it. This same verbatim figure goes into the Machine Summary `advertised_comp` key (see the report format).
+
 ## Block E — Customization Plan
 
 | # | Section | Current status | Proposed change | Why |
@@ -287,6 +295,9 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ---
 
+## Machine Summary
+(YAML fence for downstream scripts — see requirement below)
+
 ## A) Role Summary
 (full content of block A)
 
@@ -317,6 +328,8 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 (list of 15-20 keywords from the JD for ATS optimization)
 ```
 
+**Machine Summary (required):** every report carries a `## Machine Summary` YAML fence directly after the header — same schema, exact field names, and rules as the "Machine Summary" block in `batch/batch-prompt.md` (do not duplicate the schema here; that file is the source of truth). It includes `advertised_comp`: the JD's own salary figure **verbatim** (e.g. `"80-90k EUR"`), or `null` when the JD states nothing — never estimated, never replaced with researched market data. This key seeds the advertised salary observation read by `node salary-gap.mjs`.
+
 ### 2. Record in tracker
 
 **ALWAYS** record in `data/applications.md`:
@@ -341,3 +354,13 @@ With the optional Via column (intermediary channel, #1596) after Company:
 ```markdown
 | # | Date | Company | Via | Role | Score | Status | PDF | Report | Notes |
 ```
+
+### 3. Salary observations (desired ask only)
+
+If — and only if — the user **explicitly stated a role-specific desired number for THIS application** in the conversation ("I'd ask 95k here"), append one `desired` line (source `user`) to `data/salary-observations.tsv` (create the file if missing; format per `docs/SCRIPTS.md` → salary-gap):
+
+```text
+{tracker#}\t{YYYY-MM-DD}\tdesired\t{amount}\t{currency}\tuser\t{short context note}
+```
+
+Never infer a desired number from the JD, the score, or past conversations. The profile default (`config/profile.yml` → `compensation.target_range`) needs no line — `salary-gap.mjs` reads it as the fallback. The advertised figure also needs no line: the report's `advertised_comp` **is** the advertised observation.
