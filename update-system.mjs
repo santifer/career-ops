@@ -299,6 +299,7 @@ const USER_PATHS = [
   'plugins.local/',
   'plugins.lock',
   '.claude/settings.json',
+  '.claude/hooks/',
 ];
 
 function parseVersionFile(raw) {
