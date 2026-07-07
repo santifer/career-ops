@@ -4,7 +4,7 @@ Yapılandırılmış iş portallarını tara, başlık ilgisine göre filtrele v
 
 > **Not (v1.6+):** Varsayılan tarayıcı (`scan.mjs` / `npm run scan`) **sıfır jeton** (zero-token) kullanır ve yapılandırılmış kaynaklardan yararlanır: şirket başına yapılandırılmış yerel ayrıştırıcılar (local parsers) ve genel Greenhouse, Ashby, Lever API'leri. Aşağıda açıklanan Playwright/WebSearch seviyeleri tarayıcının kendisinin değil, **ajan** iş akışının (yapay zeka ajanı tarafından yürütülen) temsilidir. Bir şirketin yerel ayrıştırıcısı veya Greenhouse/Ashby/Lever API'si yoksa, `scan.mjs` o şirketi yok sayar; bu durumlarda ajan Seviye 1 (Playwright) veya Seviye 3'ü (WebSearch) manuel olarak tamamlamalıdır.
 >
-> **Kural (v1.8+):** Bir şirketin yerel ayrıştırıcısı Seviye 0'da başarıyla tamamlanırsa, ajan o şirketi Playwright (Seviye 1) veya API (Seviye 2) içinde **tekrarlamamalıdır**. Seviye 3'te genel sorgular aktif kalır, ancak halihazırda bir ayrıştırıcı tarafından kapsanmış olan şirketlerden gelen sonuçlar reddedilir. Bkz: [Kural: Başarılı Yerel Ayrıştırıcı](#rule-successful-local-parser--no-expensive-scraping-repetition).
+> **Kural (v1.8+):** Bir şirketin yerel ayrıştırıcısı Seviye 0'da başarıyla tamamlanırsa, ajan o şirketi Playwright (Seviye 1) veya API (Seviye 2) içinde **tekrarlamamalıdır**. Seviye 3'te genel sorgular aktif kalır, ancak halihazırda bir ayrıştırıcı tarafından kapsanmış olan şirketlerden gelen sonuçlar reddedilir. Bkz: [Kural: Başarılı Yerel Ayrıştırıcı](#kural-başarılı-yerel-ayrıştırıcı--pahalı-kazıma-tekrarı-yok).
 
 ## Önerilen Çalıştırma (Recommended Execution)
 
@@ -246,11 +246,11 @@ Seviyeler eklenebilirdir (additive) — sırasıyla çalıştırılırlar ve son
    d. Süresi dolmuşsa (expired): `scan-history.tsv` dosyasına `skipped_expired` durumu ile kaydet ve reddet.
    e. Aktif ise (active): 8. adıma geç.
 
-   **Tek bir URL hata verirse tüm taramayı iptal etme.** Eğer `browser_navigate` hata verirse (zaman aşımı - timeout, 403 vb.), `skipped_expired` olarak işaretle ve bir sonrakine geç.
+   **Tek bir URL hata verirse tüm taramayı iptal etme.** Eğer `browser_navigate` hata verirse (zaman aşımı - timeout, 403 vb.), kalıcı `skipped_expired` durumu atamak yerine `skipped_error` (veya unconfirmed) olarak işaretle ve bir sonrakine geç; böylece geçici ağ hataları ilanları kalıcı olarak tamamen yok saymaz.
 
 8. **For each new verified offer that passes filters**:
    a. `pipeline.md` "Pending" (Beklemede) bölümüne ekle: `- [ ] {url} | {company} | {title}`
-   b. `scan-history.tsv`'ye kaydet: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
+   b. `scan-history.tsv`'ye kaydet: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded\t{location}`
 
 9. **Offers filtered by title**: `scan-history.tsv`'ye `skipped_title` durumuyla kaydet.
 10. **Duplicate offers**: `skipped_dup` durumuyla kaydet.
@@ -278,8 +278,8 @@ Kamuya açık (publicly accessible) olmayan bir URL bulunursa:
 `data/scan-history.tsv` görülen TÜM URL'leri takip eder:
 
 ```tsv
-url	first_seen	portal	title	company	status
-https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
+url	first_seen	portal	title	company	status	location
+https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added	Remote
 ```
 
 ## Çıktı Özeti (Output Summary)
