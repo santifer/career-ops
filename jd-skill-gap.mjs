@@ -266,13 +266,18 @@ Python, Docker, Zookeeper
 
 ## Requirements
 - Bachelor's degree required
-- 5+ years of experience
-- Strong communication skills
+- Experience with cross-functional teams (5+ years)
+- Communication skills and Ability to self-organize
 `;
+  // The asserted words are capitalized in the fixture on purpose:
+  // SKILL_TOKEN_RE only captures uppercase-leading tokens, so a lowercase
+  // "experience" would never become a candidate and the assertion would
+  // pass without exercising the STOPWORDS filter at all.
   const boilerplateSkills = extractJdSkills(boilerplateJd);
   eq('does not extract "Bachelor" as a skill', boilerplateSkills.includes('Bachelor'), false);
   eq('does not extract "Experience" as a skill', boilerplateSkills.includes('Experience'), false);
   eq('does not extract "Communication" as a skill', boilerplateSkills.includes('Communication'), false);
+  eq('does not extract "Ability" as a skill', boilerplateSkills.includes('Ability'), false);
 
   console.log(`\njd-skill-gap self-test: ${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
