@@ -901,6 +901,147 @@ tracked_companies:
     notes: "Berlin DE. Delivery platform. 1113 postings. Also has Ashby (disabled). SmartRecruiters feed is active."
     enabled: true
 
+  # ── Personio ATS — DACH companies ──
+
+  - name: 1Komma5°
+    careers_url: https://1komma5grad.jobs.personio.de
+    notes: "Hamburg / Berlin DE. Climate-tech unicorn (solar, heat pumps, energy). 293 positions. Strong data/platform team."
+    enabled: true
+
+  - name: Thermondo
+    careers_url: https://thermondo.jobs.personio.de
+    notes: "Berlin DE. Climate-tech / heating. 203 positions."
+    enabled: true
+
+  - name: MILES Mobility
+    careers_url: https://miles-mobility.jobs.personio.de
+    notes: "Berlin DE. Car-sharing mobility. 57 positions."
+    enabled: true
+
+  - name: Pitch
+    careers_url: https://pitch.jobs.personio.de
+    notes: "Berlin DE. Presentation software. 10 positions. Multiple Senior Engineers."
+    enabled: true
+
+  - name: Tonies
+    careers_url: https://tonies.jobs.personio.de
+    notes: "Düsseldorf DE. Audio hardware/software for kids. 13 positions."
+    enabled: true
+
+  - name: OttoNova
+    careers_url: https://ottonova.jobs.personio.de
+    notes: "Munich DE. Digital health insurance. 10 positions."
+    enabled: true
+
+  - name: Taxdoo
+    careers_url: https://taxdoo.jobs.personio.de
+    notes: "Hamburg DE. Tax compliance automation SaaS. 8 positions."
+    enabled: true
+
+  - name: Orderbird
+    careers_url: https://orderbird.jobs.personio.de
+    notes: "Berlin DE. POS system for hospitality (acquired by METRO). 6 positions."
+    enabled: true
+
+  - name: Ratepay
+    careers_url: https://ratepay.jobs.personio.de
+    notes: "Berlin DE. Payment infrastructure (buy now pay later). 5 positions."
+    enabled: true
+
+  - name: Finanzguru
+    careers_url: https://finanzguru.jobs.personio.de
+    notes: "Frankfurt DE. Personal finance app. 4 positions."
+    enabled: true
+
+  - name: Friendsurance
+    careers_url: https://friendsurance.jobs.personio.de
+    notes: "Berlin DE. Insurtech / peer-to-peer insurance. 4 positions."
+    enabled: true
+
+  - name: Ecosia
+    careers_url: https://ecosia.jobs.personio.de
+    notes: "Berlin DE. Green search engine. 2 positions."
+    enabled: true
+
+  - name: Userlane
+    careers_url: https://userlane.jobs.personio.de
+    notes: "Munich DE. Digital adoption platform. 2 positions."
+    enabled: true
+
+  - name: Westwing
+    careers_url: https://westwing.jobs.personio.de
+    notes: "Munich DE. Home & living e-commerce. 62 positions."
+    enabled: true
+
+  - name: Holidu
+    careers_url: https://holidu.jobs.personio.de
+    notes: "Munich DE. Vacation rental search. 69 positions."
+    enabled: true
+
+  - name: Urban Sports Club
+    careers_url: https://urbansportsclub.jobs.personio.de
+    notes: "Berlin DE. Sports & fitness membership. 38 positions."
+    enabled: true
+
+  - name: Vivid Money
+    careers_url: https://vivid.jobs.personio.de
+    notes: "Berlin DE. Neobank / fintech. 24 positions."
+    enabled: true
+
+  - name: Chrono24
+    careers_url: https://chrono24.jobs.personio.de
+    notes: "Karlsruhe DE. Luxury watch marketplace. 12 positions."
+    enabled: true
+
+  # ── Workday ATS — DACH companies ──
+
+  - name: Evonik
+    careers_url: https://evonik.wd3.myworkdayjobs.com/External_Careers
+    notes: "Essen DE. Specialty chemicals. 356 positions. Data/digitalization teams."
+    enabled: true
+
+  - name: KION Group
+    careers_url: https://kiongroup.wd3.myworkdayjobs.com/KIONGroup
+    notes: "Frankfurt DE. Logistics & forklifts (Linde, STILL, Dematic). 992 positions. Data Engineer roles confirmed."
+    enabled: true
+
+  # ── Workday ATS — International companies with DACH offices ──
+
+  - name: Roche
+    careers_url: https://roche.wd3.myworkdayjobs.com/roche-ext
+    notes: "Basel CH / Penzberg DE / Mannheim DE. Pharma giant. 1235 positions. Data & digital health teams."
+    enabled: true
+
+  - name: NVIDIA
+    careers_url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+    notes: "Berlin / Munich DE. GPU & AI compute. 2000+ positions globally. Growing DACH AI team."
+    enabled: true
+
+  - name: Salesforce
+    careers_url: https://salesforce.wd12.myworkdayjobs.com/External_Career_Site
+    notes: "Munich / Frankfurt DE. CRM & data cloud. 1470 positions globally. Tableau/Data Cloud teams."
+    enabled: true
+
+  - name: Adobe
+    careers_url: https://adobe.wd5.myworkdayjobs.com/external_experienced
+    notes: "Munich / Hamburg DE. Creative & data tools. 1009 positions globally."
+    enabled: true
+
+  - name: PayPal
+    careers_url: https://paypal.wd1.myworkdayjobs.com/Jobs
+    notes: "Berlin DE. Payments & fintech. 160 positions. Data science & risk."
+    enabled: true
+
+  - name: Intel
+    careers_url: https://intel.wd1.myworkdayjobs.com/External
+    notes: "Munich DE. Semiconductor. 631 positions globally. AI/data teams in Munich."
+    enabled: true
+
+  - name: HP
+    careers_url: https://hp.wd5.myworkdayjobs.com/ExternalCareerSite
+    notes: "Böblingen DE. PC & printing. 710 positions globally."
+    enabled: true
+
 # -- Job boards (DACH-focused aggregators) --
 job_boards:
 
