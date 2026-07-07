@@ -18,7 +18,7 @@
  */
 
 import { execFileSync } from 'child_process';
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, utimesSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
@@ -480,6 +480,57 @@ const HEADER_VIA = `# Applications Tracker
     fail(`verify: cross-channel warning\n${res.stdout}`);
   }
   rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── Test 16: web alias cache refreshes on change, never caches failure ──────
+// loadHeaderAliases caches per file to avoid a disk read+parse per request
+// (readApplications runs on every API route / page render), but the cache is
+// mtime-keyed: a missing/corrupt file is NEVER cached — recovery is picked up
+// without a server restart — and a rewritten file (system update changing the
+// alias table) is re-read on the next call.
+{
+  const { loadHeaderAliases } = await import('./web/src/lib/tracker-table.mjs');
+  const dir = mkdtempSync(join(tmpdir(), 'co-alias-'));
+  const aliasFile = join(dir, 'tracker-aliases.json');
+  // Force distinct mtimes between rewrites — same-ms writes are otherwise
+  // indistinguishable on coarse-timestamp filesystems.
+  let tick = Date.now();
+  const bump = () => { tick += 2000; const t = new Date(tick); utimesSync(aliasFile, t, t); };
+
+  // (a) missing file → {} and NOT cached: creating the file afterwards is seen.
+  const missing = loadHeaderAliases(dir);
+  writeFileSync(aliasFile, JSON.stringify({ '#': 'num', 'company': 'company' }));
+  const recovered = loadHeaderAliases(dir);
+  if (Object.keys(missing).length === 0 && recovered['#'] === 'num' && recovered.company === 'company') {
+    pass('web reader: alias file created after a failed load is picked up (no restart)');
+  } else {
+    fail(`web reader: recovery after missing file — first ${JSON.stringify(missing)}, then ${JSON.stringify(recovered)}`);
+  }
+
+  // (b) file rewritten → new aliases visible without a process restart.
+  writeFileSync(aliasFile, JSON.stringify({ '#': 'num', 'req id': 'num' }));
+  bump();
+  const updated = loadHeaderAliases(dir);
+  if (updated['req id'] === 'num' && updated.company === undefined) {
+    pass('web reader: rewritten alias file is re-read (mtime-keyed cache)');
+  } else {
+    fail(`web reader: update not visible without restart — got ${JSON.stringify(updated)}`);
+  }
+
+  // (c) corrupt file → {} safely, and NOT cached: fixing it is seen.
+  writeFileSync(aliasFile, '{ not json');
+  bump();
+  const corrupt = loadHeaderAliases(dir);
+  writeFileSync(aliasFile, JSON.stringify({ '#': 'num' }));
+  bump();
+  const fixed = loadHeaderAliases(dir);
+  if (Object.keys(corrupt).length === 0 && fixed['#'] === 'num') {
+    pass('web reader: corrupt alias file yields {} and later fix is picked up');
+  } else {
+    fail(`web reader: corrupt handling — during ${JSON.stringify(corrupt)}, after fix ${JSON.stringify(fixed)}`);
+  }
+
+  rmSync(dir, { recursive: true, force: true });
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

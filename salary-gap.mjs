@@ -16,8 +16,9 @@
  *   advertised: user > recruiter-verbal > jd
  *
  * Aggregates grouped by (company, role) and per currency — no FX conversion.
- * Unparseable amounts, orphaned observations (tracker# without report/tracker
- * row), sample sizes, and staleness are reported loudly, never dropped silently.
+ * Unparseable amounts, unrecognized sources, orphaned observations (tracker#
+ * without report/tracker row), sample sizes, and staleness are reported loudly,
+ * never dropped silently.
  *
  * Run: node salary-gap.mjs             (JSON)
  *      node salary-gap.mjs --summary   (human-readable)
@@ -81,12 +82,19 @@ export function parseObservations(content) {
     if (cells.length < 6) continue;
     const [num, date, type, amount, currency, source, note = ''] = cells.map(c => c.trim());
     if (!VALID_TYPES.has(type)) continue;
-    out.push({ num, date, type, amount, currency: currency.toUpperCase(), source, note, parsed: parseAmount(amount) });
+    // blank currency cell -> UNKNOWN, so the fold's currency guard excludes it from
+    // gap math ('' === '' would otherwise pass the strict-equality comparability check)
+    out.push({ num, date, type, amount, currency: currency ? currency.toUpperCase() : 'UNKNOWN', source, note, parsed: parseAmount(amount) });
   }
   return out;
 }
 
-const FENCE_RE = /##\s*Machine Summary\s*\n+```(?:yaml|yml|json)?\s*\n([\s\S]*?)\n```/i; // same regex as analyze-patterns.mjs:110
+// Like analyze-patterns.mjs:110 but WITHOUT `json`: analyze-patterns feeds the fence
+// body to a real YAML parser (JSON is a YAML subset, so json fences parse fine there),
+// while yamlStr below only extracts `key: value` lines — a json fence would "match"
+// and silently yield null company/role/advertised_comp. Rejecting it outright means
+// the report falls back to the legacy no-Machine-Summary path instead.
+const FENCE_RE = /##\s*Machine Summary\s*\n+```(?:yaml|yml)?\s*\n([\s\S]*?)\n```/i;
 const yamlStr = (body, key) => {
   const m = body.match(new RegExp(`^${key}:\\s*(.*)$`, 'm'));
   if (!m) return null;
@@ -144,11 +152,23 @@ export function fold(observations, apps, profileDesired) {
   const unparseable = observations
     .filter(o => o.parsed === null && o.amount && o.amount !== '?')
     .map(o => ({ num: o.num, type: o.type, raw: o.amount }));
+  // pickEffective only trusts sources in TRUST[type]'s vocabulary — anything else
+  // (e.g. the `recruiter_verbal` underscore typo) must be reported, not silently
+  // dropped. Report-derived obs are always `jd` and profile obs `profile`, so in
+  // practice only TSV lines can land here.
+  const invalidSources = observations
+    .filter(o => TRUST[o.type] && !(o.source in TRUST[o.type]))
+    .map(o => ({ num: o.num, type: o.type, source: o.source }));
 
   const profileObs = profileDesired?.amount ? {
     num: '*', date: '0000-00-00', type: 'desired', amount: profileDesired.amount,
     currency: (profileDesired.currency || 'UNKNOWN').toUpperCase(), source: 'profile', note: '', parsed: parseAmount(profileDesired.amount),
   } : null;
+  // a garbage profile target (e.g. "competitive") would otherwise vanish silently:
+  // quality.unparseable above is built from TSV/report observations only
+  if (profileObs && profileObs.parsed === null && profileObs.amount !== '?') {
+    unparseable.push({ num: '*', type: 'desired', raw: profileObs.amount, source: 'profile' });
+  }
 
   for (const [num, obs] of byNum) {
     if (!apps[num]) { orphans.push({ num, count: obs.length }); continue; }
@@ -217,7 +237,7 @@ export function fold(observations, apps, profileDesired) {
     applications,
     aggregates: { byCurrency, byCompanyRole },
     quality: {
-      orphans, unparseable,
+      orphans, unparseable, invalidSources,
       currencyMismatches: currencyMismatches.sort((a, b) => a.num.localeCompare(b.num)),
       withoutActual: applications.filter(a => !a.actual).length, latestObservation: today,
     },
@@ -231,6 +251,7 @@ const OBS_FIXTURE = [
   '001\t2026-07-03\tactual\t84k\tEUR\toffer-letter\t',
   '001\t2026-07-05\tactual\t86k\tEUR\tcontract\tsigned',
   '002\t2026-06-25\tactual\t88k\tEUR\trecruiter-verbal\t',
+  '002\t2026-06-29\tactual\t99k\tEUR\trecruiter_verbal\tunderscore typo on purpose',
   '007\t2026-06-25\tactual\t70k\tEUR\trecruiter-verbal\torphan - no report',
   '003\t2026-06-26\tactual\t9ok\tUSD\trecruiter-verbal\ttypo on purpose',
   '005\t2026-07-01\tactual\t92k\tUNKNOWN\toffer-letter\tcurrency not stated',
@@ -312,9 +333,11 @@ function selfTest() {
 
   // parseObservations
   const obs = parseObservations(OBS_FIXTURE);
-  assert(obs.length === 8, `8 observations, got ${obs.length}`);
+  assert(obs.length === 9, `9 observations, got ${obs.length}`);
   assert(obs[0].num === '001' && obs[0].type === 'desired' && obs[0].source === 'user', 'fields mapped');
   assert(parseObservations('').length === 0, 'empty log');
+  const blankCur = parseObservations('008\t2026-07-01\tactual\t91k\t\toffer-letter\tblank currency cell');
+  assert(blankCur.length === 1 && blankCur[0].currency === 'UNKNOWN', 'blank currency cell -> UNKNOWN (excluded from gap math by the UNKNOWN guard)');
 
   // reportToObservation
   const r1 = reportToObservation(REPORT_FIXTURE_001, '001', '2026-06-20');
@@ -323,6 +346,8 @@ function selfTest() {
   assert(r1.observation.parsed.mid === 85000, 'advertised_comp parsed');
   assert(reportToObservation(REPORT_FIXTURE_003, '003', '2026-06-26').observation === null, 'null advertised_comp -> no obs');
   assert(reportToObservation('no machine summary', '009', '2026-06-01') === null, 'no fence -> null');
+  const jsonReport = '# Eval: JsonCo — Eng\n\n## Machine Summary\n\n```json\n{"company": "JsonCo", "role": "Eng", "advertised_comp": "100k EUR"}\n```\n';
+  assert(reportToObservation(jsonReport, '010', '2026-06-30') === null, 'json fence rejected (yamlStr cannot extract from JSON — see FENCE_RE comment)');
 
   // fold — golden test
   const apps = {
@@ -355,7 +380,9 @@ function selfTest() {
   assert(a1.trail.filter(t => t.type === 'actual').length === 3, '001 keeps full actual trail');
 
   const a2 = result.applications.find(a => a.num === '002');
-  assert(a2.actual.source === 'recruiter-verbal', '002 actual from verbal');
+  // the later recruiter_verbal (underscore typo) 99k must NOT become effective —
+  // unrecognized sources are excluded from pickEffective and reported instead
+  assert(a2.actual.source === 'recruiter-verbal' && a2.actual.value === 88000, '002 actual from verbal 88k, typo source ignored');
   assert(a2.desired.source === 'profile' && a2.desired.value === 90000, '002 desired falls back to profile');
 
   // cross-currency guard: advertised USD vs actual GBP, desired EUR vs actual GBP
@@ -370,6 +397,15 @@ function selfTest() {
   // data quality
   assert(result.quality.orphans.length === 1 && result.quality.orphans[0].num === '007', 'orphan 007 reported');
   assert(result.quality.unparseable.length === 1 && result.quality.unparseable[0].raw === '9ok', 'typo 9ok reported');
+  assert(result.quality.invalidSources.length === 1
+    && result.quality.invalidSources[0].num === '002'
+    && result.quality.invalidSources[0].type === 'actual'
+    && result.quality.invalidSources[0].source === 'recruiter_verbal',
+    'unrecognized source recruiter_verbal reported in invalidSources');
+  // unparseable profile target must be reported, not silently dropped
+  const badProfile = fold([], {}, { amount: 'competitive', currency: 'EUR' });
+  assert(badProfile.quality.unparseable.some(u => u.num === '*' && u.type === 'desired' && u.raw === 'competitive' && u.source === 'profile'),
+    'unparseable profile target reported');
   const mm = result.quality.currencyMismatches;
   assert(mm.length === 4, `4 currency mismatches reported, got ${mm.length}`);
   assert(mm.some(m => m.num === '004' && m.comparison === 'advertised-vs-actual' && m.currencies[0] === 'USD' && m.currencies[1] === 'GBP'),
@@ -501,6 +537,12 @@ function printSummary(result) {
     for (const u of quality.unparseable) console.log(`      #${u.num} ${u.type}: "${u.raw}"`);
   } else {
     console.log('  unparseable amounts: none');
+  }
+  if (quality.invalidSources.length) {
+    console.log(`  ⚠ ${quality.invalidSources.length} observation${quality.invalidSources.length === 1 ? '' : 's'} with unrecognized source (excluded from effective values — check for typos, e.g. recruiter_verbal vs recruiter-verbal):`);
+    for (const s of quality.invalidSources) console.log(`      #${s.num} ${s.type}: source "${s.source}"`);
+  } else {
+    console.log('  unrecognized sources: none');
   }
   if (quality.orphans.length) {
     console.log(`  ⚠ ${quality.orphans.length} orphaned tracker#${quality.orphans.length === 1 ? '' : 's'} (observations without a matching report — renumbering/dedup can strand them):`);

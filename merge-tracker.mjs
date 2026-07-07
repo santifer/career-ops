@@ -20,7 +20,7 @@ import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
 import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
-import { LEGACY_COLMAP, detectColumns, resolveScoreStatus } from './tracker-parse.mjs';
+import { LEGACY_COLMAP, detectColumns, resolveScoreStatus, normalizeVia } from './tracker-parse.mjs';
 import { resolveTrackerPath, trackerLockDirFor, acquireTrackerLock, writeFileAtomic, normalizeCompany, cell } from './tracker-utils.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
@@ -141,6 +141,11 @@ function validateStatus(status) {
   console.warn(`⚠️  Non-canonical status "${status}" → defaulting to "Evaluated"`);
   return 'Evaluated';
 }
+
+// normalizeVia (Unicode-aware Via/agency key, #1596/#1603) lives in
+// tracker-parse.mjs so merge-tracker and analyze-patterns share ONE normalizer
+// and agency identity can't drift between scripts. (normalizeCompany lives in
+// tracker-utils.mjs since #1460 so every tracker writer shares one company key.)
 
 /**
  * Extract the bracketed report number from a Markdown report link.
@@ -564,8 +569,10 @@ for (const file of tsvFiles) {
       // agencies is two real submissions — merging them silently is exactly
       // the double-submission hazard the Via column exists to surface. Only
       // the same channel (the agency re-blasting one listing) is a duplicate.
+      // Via comparison is Unicode-aware (#1603): normalizeCompany() would
+      // collapse distinct non-Latin agency names to the same empty key.
       if ((String(addition.company).trim() === '?' || String(app.company).trim() === '?')
-          && normalizeCompany(addition.via || '') !== normalizeCompany(app.via || '')) return false;
+          && normalizeVia(addition.via || '') !== normalizeVia(app.via || '')) return false;
       // Req/job-number guard (#1524): a similarly-worded title at the same
       // company can still be a genuinely distinct posting when a req/job
       // number in the Notes column proves it (employers like TD commonly run
