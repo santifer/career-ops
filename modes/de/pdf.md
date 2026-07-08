@@ -219,6 +219,7 @@ Unterbrechungen > 2–3 Monate gelten als erklärungsbedürftige "Lücke".
 - Fließtext: 11–12pt (nie unter 10pt)
 - Überschriften: +1–3pt und fett
 - Einheitliche Hierarchie durch Schriftgröße, nicht durch Farbe/Rahmen
+- **Umlaute und Eszett:** ä ö ü Ä Ö Ü ß IMMER korrekt setzen. Niemals durch ae/oe/ue/ss ersetzen, niemals Diakritika weglassen (z. B. „für" nicht „fur", „Geschäftsführung" nicht „Geschaftsfuhrung")
 
 ---
 
@@ -296,3 +297,4 @@ Vor der finalen Ausgabe an den Kandidaten prüfen:
 - [ ] Klartext-Test bestanden (keine Warnungen in der Konsolenausgabe von `generate-pdf.mjs`)
 - [ ] Foto nur wenn `candidate.photo` gesetzt
 - [ ] Seitennummerierung bei > 1 Seite
+- [ ] Umlaute und ß korrekt (ä/ö/ü/ß, NICHT a/o/u/ss oder ae/oe/ue)
