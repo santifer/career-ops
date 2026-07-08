@@ -46,12 +46,12 @@ func (m appModel) Init() tea.Cmd {
 	return nil
 }
 
-// Update handles global app state and routes messages to active screens.
+// Update manages global app state and routes incoming messages to active screens.
 func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
 		switch keyMsg.String() {
 		case "t", "T":
-			// Toggle language globally, unless user is typing in a text input
+			// Toggle language globally, unless the user is actively typing in a text input field
 			if !(m.state == viewPipeline && m.pipeline.IsTextInputActive()) {
 				i18n.ToggleLang()
 			}
