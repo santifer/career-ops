@@ -171,6 +171,7 @@ Analyze posting signals to assess whether this is a real, active opening.
 **Assessment:** Apply the same three tiers (High Confidence / Proceed with Caution / Suspicious), weighting available signals more heavily. If insufficient signals are available to make a determination, default to "Proceed with Caution" with a note about limited data.
 
 #### Score Global
+Read `modes/_custom.md` → Scoring Rules, if it exists, and apply its override here. Default (if absent or silent): calculate global score based on dimension scores below.
 
 | Dimensión | Score |
 |-----------|-------|
@@ -203,13 +204,16 @@ confidence: "{Low | Medium | High}"
 next_action: "{one concrete next step}"
 discard_reasons:
   - "{predicted reason if final_decision is Skip/Consider, e.g. salary_too_low, hybrid_required, tech_stack_mismatch, seniority_mismatch, geo_restriction, size_mismatch, company_culture, or other specific reason}"
-
+via: {agency/recruiter firm as a quoted string, or null for direct applications}
+company_confidential: {true when the end employer is unknown (company is "?"), else false}
+advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"), or null when the JD states nothing}
 ```
 
 Rules:
 - Use `[]` for `hard_stops`, `soft_gaps`, `top_strengths`, or `discard_reasons` when empty.
 - `score` is numeric only, without `/5`.
 - `final_decision` must reflect the full evaluation, not only the CV match.
+- `advertised_comp` is the JD's **own** figure, verbatim; `null` when the JD states nothing — never estimate it and never substitute researched market data (Block D research stays in Block D). Batch workers never write `data/salary-observations.tsv` — the report itself is the advertised observation (`salary-gap.mjs` reads it).
 - Do not invent missing data. If confidence is limited, set `confidence: "Low"` and explain the limitation in the human-readable sections.
 
 ### Paso 3 — Guardar Report .md
@@ -256,6 +260,9 @@ confidence: "{Low | Medium | High}"
 next_action: "{one concrete next step}"
 discard_reasons:
   - "{predicted reason if final_decision is Skip/Consider, e.g. salary_too_low, hybrid_required, tech_stack_mismatch, seniority_mismatch, geo_restriction, size_mismatch, company_culture, or other specific reason}"
+via: {agency/recruiter firm as a quoted string, or null for direct applications}
+company_confidential: {true when the end employer is unknown (company is "?"), else false}
+advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"), or null when the JD states nothing}
 ```
 
 ## A) Resumen del Rol
@@ -402,6 +409,8 @@ Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 | 9 | notes | string | `APPLY HIGH...` | Resumen 1 frase |
 
 **IMPORTANTE:** El orden TSV tiene status ANTES de score (col 5→status, col 6→score). En applications.md el orden es inverso (col 5→score, col 6→status). merge-tracker.mjs maneja la conversión.
+
+**Campos opcionales (col ≥ 10):** si la oferta llega vía agencia/recruiter (#1596), añade un campo etiquetado `via={Agencia}` (ej. `via=Hays`) — NUNCA posicional, la etiqueta es obligatoria. Un campo extra SIN etiqueta se interpreta como la location legacy. Si el empleador final es desconocido, usa `?` como company y añade el descriptor en notes (ej. `fintech, Leeds`). merge-tracker.mjs rechaza filas con extras ambiguos (dos campos sin etiqueta, o dos `via=`).
 
 **Estados canónicos válidos:** `Evaluada`, `Aplicado`, `Respondido`, `Entrevista`, `Oferta`, `Rechazado`, `Descartado`, `NO APLICAR`
 

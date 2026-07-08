@@ -114,6 +114,26 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case screens.ViewerUpdateStatusMsg:
+		normalized := data.NormalizeStatus(msg.NewStatus)
+		if normalized == "hired" {
+			err := data.UpdateApplicationStatus(m.careerOpsPath, msg.App, msg.NewStatus)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
+				m.reloadPipelineData()
+				return m, nil
+			}
+			m.state = viewPipeline
+			m.pipeline, _ = m.pipeline.StartHiredFlow(msg.App)
+			m.reloadPipelineData()
+			return m, nil
+		}
+		if normalized == "discarded" || normalized == "skip" {
+			m.state = viewPipeline
+			m.pipeline, _ = m.pipeline.StartDiscardReasonFlow(msg.App, msg.NewStatus)
+			m.reloadPipelineData()
+			return m, nil
+		}
+
 		err := data.UpdateApplicationStatus(m.careerOpsPath, msg.App, msg.NewStatus)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)

@@ -73,6 +73,8 @@ Examples of legitimate reformulation:
 
 ## Template HTML
 
+**Before generating: read `modes/_custom.md` (if it exists) and apply its formatting/content house rules to every CV in this session — including every item of a batch.** Rules recorded there (date formats, section-order preferences, content to always/never include) are persistent user instructions, not suggestions; if the user corrects the same thing twice in conversation, write it into `modes/_custom.md` so it stops drifting.
+
 Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
 
 | Placeholder | Content |
