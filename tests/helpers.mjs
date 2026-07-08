@@ -117,14 +117,9 @@ let bashCache = null;
 export function getBash() {
   if (bashCache !== null) return bashCache;
   if (process.platform !== 'win32') return (bashCache = 'bash');
-  try {
-    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
-    return (bashCache = 'bash');
-  } catch {}
   const candidates = [
     'C:\\Program Files\\Git\\bin\\bash.exe',
-    'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
-    'bash'
+    'C:\\Program Files\\Git\\usr\\bin\\bash.exe'
   ];
   for (const cmd of candidates) {
     try {
@@ -132,6 +127,14 @@ export function getBash() {
       return (bashCache = cmd);
     } catch {}
   }
+  try {
+    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
+    return (bashCache = 'bash');
+  } catch {}
+  try {
+    execSync('bash -c "true"', { stdio: 'ignore' });
+    return (bashCache = 'bash');
+  } catch {}
   return (bashCache = 'bash');
 }
 
