@@ -1,4 +1,7 @@
-// tests/providers/fourdayweek.test.mjs — moved verbatim from test-all.mjs (#1440).
+// tests/providers/4dayweek.test.mjs — renamed from fourdayweek.test.mjs to match
+// the provider id, so `--only providers/4dayweek` discovers it (#1657).
+// Note: providers/4dayweek.mjs has no detect() method (unlike echojobs.mjs), so
+// there's no detect() contract to test here — same as tests/providers/thehub.test.mjs.
 import { pass, fail, ROOT } from '../helpers.mjs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';

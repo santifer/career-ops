@@ -161,6 +161,8 @@ const SYSTEM_PATHS = [
   'salary-gap.mjs',
   'followup-cadence.mjs',
   'followup-cadence.test.mjs',
+  'invite-match.mjs',
+  'invite-match.test.mjs',
   'agent-inbox.mjs',
   'followup-seed.mjs',
   'followup-seed-tests.mjs',
@@ -245,6 +247,7 @@ const SYSTEM_PATHS = [
   'DOCKER.md',
   'plugins/',
   'plugins.mjs',
+  'plugins-registry/',
   'plugins-registry.json',
   'plugin-install.mjs',
   'plugin-audit.mjs',
@@ -272,6 +275,7 @@ const BOOTSTRAP_PATHS = [
   'tracker-columns-tests.mjs',
   'plugins/',
   'plugins.mjs',
+  'plugins-registry/',
   'plugins-registry.json',
   'plugin-install.mjs',
   'plugin-audit.mjs',
@@ -300,6 +304,7 @@ const USER_PATHS = [
   'plugins.local/',
   'plugins.lock',
   '.claude/settings.json',
+  '.claude/hooks/',
 ];
 
 function parseVersionFile(raw) {

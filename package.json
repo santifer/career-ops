@@ -35,6 +35,7 @@
     "patterns": "node analyze-patterns.mjs",
     "add": "node add-entry.mjs",
     "reposts": "node detect-reposts.mjs",
+    "invite-match": "node invite-match.mjs",
     "gemini:eval": "node gemini-eval.mjs",
     "ollama:eval": "node ollama-eval.mjs",
     "openai:eval": "node openai-eval.mjs",

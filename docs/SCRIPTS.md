@@ -26,6 +26,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run validate:portals` | `validate-portals.mjs` | Validate portals.yml shape before scanning |
 | `npm run tracker` | `tracker.mjs` | SQLite derived index over applications.md — sync/query/history/export |
 | `npm run find` | `find.mjs` | Resolve a report#/tracker#/company query to its full pipeline identity |
+| `npm run invite-match` | `invite-match.mjs` | Fuzzy-match a pasted interview-invite email against `data/applications.md` |
 
 ---
 
@@ -343,3 +344,72 @@ node find.mjs acme --json       # machine-readable output
 Multiple matches print as a table; zero matches print a clean message.
 
 **Exit codes:** `0` at least one match, `1` no match, missing query, or no `applications.md`.
+
+---
+
+## stats.mjs
+
+Aggregates lifetime pipeline stats into one JSON report. Stats include tracker, scanner, portals, follow-ups and runs. Reads from data/applications.md, data/scan-history.tsv, portals.yml, data/follow-ups.md and data/scan-runs.tsv. If a file doesn't exist yet, the section turns into null.
+
+```bash
+node stats.mjs --summary             # returns human-readable table
+node stats.mjs                       # returns json
+```
+On a fresh clone, with no data yet, the JSON format is as follows:
+
+```
+{
+  "metadata": {
+    "generatedAt": "2026-07-07",
+    "sources": {
+      "tracker": false,
+      "scanHistory": false,
+      "followups": false,
+      "portals": false,
+      "scanRuns": false
+    }
+  },
+  "tracker": null,
+  "funnel": null,
+  "scan": null,
+  "portals": null,
+  "followups": null,
+  "runs": null
+}
+```
+
+With --summary it returns:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Pipeline Stats — 2026-07-07
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tracker:    — no data (data/applications.md missing)
+Scanner:    — no data (data/scan-history.tsv missing)
+Portals:    — no data (portals.yml missing)
+Follow-ups: — no data (data/follow-ups.md missing)
+Runs:       — no data (data/scan-runs.tsv missing; created by the next scan)
+```
+
+---
+
+## data/scan-runs.tsv
+
+`scan.mjs` appends one row to this file after each non-dry scan run, recording how many companies/boards it checked, how many postings it found vs. filtered out vs. flagged as duplicates vs. added, and how many errors occurred. `--dry-run` scans never write to this file. Stats appended include:
+
+* `timestamp` — ISO timestamp of the scan
+* `status` — always `completed` for now
+* `companies` — number of companies scanned this run
+* `boards` — number of job boards scanned this run
+* `found` — total postings found
+* `filtered_title` — filtered out by title mismatch
+* `filtered_tier` — filtered out by tier
+* `filtered_location` — filtered out by location
+* `filtered_salary` — filtered out by salary
+* `filtered_content` — filtered out by content
+* `filtered_cooldown` — skipped because you recently applied to the same company + role and are still in the waiting period
+* `dupes` — duplicate postings skipped
+* `new_added` — new postings actually added to the pipeline
+* `errors` — number of errors during the run
+
+As the project is in continuous development, to parse for a stat we recommend doing it by column header instead of position.
