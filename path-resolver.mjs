@@ -38,8 +38,9 @@ export function getCareerOpsRoot() {
  * @returns {string} Absolute path to the tracker file
  */
 export function resolveTrackerPath(root) {
-  if (process.env.CAREER_OPS_TRACKER) {
-    return resolve(__dirname, process.env.CAREER_OPS_TRACKER);
+  const env = process.env.CAREER_OPS_TRACKER?.trim();
+  if (env) {
+    return resolve(__dirname, env);
   }
   const dataPath = join(root, 'data/applications.md');
   return existsSync(dataPath) ? dataPath : join(root, 'applications.md');
@@ -54,8 +55,9 @@ export function resolveTrackerPath(root) {
  * @returns {string} Absolute path to the tracker file for writing
  */
 export function resolveTrackerPathForWrite(root) {
-  if (process.env.CAREER_OPS_TRACKER) {
-    return resolve(__dirname, process.env.CAREER_OPS_TRACKER);
+  const env = process.env.CAREER_OPS_TRACKER?.trim();
+  if (env) {
+    return resolve(__dirname, env);
   }
   return join(root, 'data/applications.md');
 }

@@ -972,7 +972,7 @@ if (shared.includes('_profile.md')) {
 // honor rule in _shared.md, and an explicit pre-generation read in pdf.md ---
 const pdfModeCustom = readFile('modes/pdf.md');
 if (
-  shared.includes('| _custom.md | `modes/_custom.md` (if exists) |') &&
+  shared.includes('| _custom.md | `{DATA_ROOT}/modes/_custom.md` (if exists) |') &&
   shared.includes('Read _custom.md (if it exists) AFTER this file and honor its house rules in every mode') &&
   shared.includes('does not expire between sessions or between items in a batch') &&
   pdfModeCustom.includes('read `modes/_custom.md` (if it exists) and apply its formatting/content house rules')

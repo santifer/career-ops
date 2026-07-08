@@ -79,8 +79,9 @@ export function cell(v) {
  * @returns {string} Absolute canonical tracker path.
  */
 export function resolveTrackerPath(rootDir) {
-  const raw = process.env.CAREER_OPS_TRACKER
-    ? process.env.CAREER_OPS_TRACKER
+  const env = process.env.CAREER_OPS_TRACKER?.trim();
+  const raw = env
+    ? env
     : existsSync(join(rootDir, 'data/applications.md'))
       ? join(rootDir, 'data/applications.md')
       : join(rootDir, 'applications.md');

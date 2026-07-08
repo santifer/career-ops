@@ -31,7 +31,7 @@ const APPS_FILE = resolveTrackerPath(CAREER_OPS);
 const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
 // CAREER_OPS_REPORTS overrides the reports dir (used by tests, mirrors CAREER_OPS_TRACKER).
 const REPORTS_DIR = process.env.CAREER_OPS_REPORTS
-  ? resolve(CODE_ROOT, process.env.CAREER_OPS_REPORTS)
+  ? resolve(CAREER_OPS, process.env.CAREER_OPS_REPORTS)
   : join(CAREER_OPS, 'reports');
 const STATES_FILE = existsSync(join(CODE_ROOT, 'templates/states.yml'))
   ? join(CODE_ROOT, 'templates/states.yml')

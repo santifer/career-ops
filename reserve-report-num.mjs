@@ -47,13 +47,15 @@
  */
 
 import { readdirSync, writeFileSync, unlinkSync, statSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { getCareerOpsRoot } from './path-resolver.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CAREER_OPS = getCareerOpsRoot();
-const REPORTS_DIR = process.env.CAREER_OPS_REPORTS_DIR || join(CAREER_OPS, 'reports');
+const REPORTS_DIR = process.env.CAREER_OPS_REPORTS_DIR
+  ? resolve(CAREER_OPS, process.env.CAREER_OPS_REPORTS_DIR)
+  : join(CAREER_OPS, 'reports');
 
 // Sentinels older than this are considered stale and may be GC'd.
 // 4 hours covers any reasonable interactive or batch session.
