@@ -308,4 +308,5 @@ try {
 
 } catch (err) {
   console.warn(`⚠️   Could not save HTML: ${err.message}`);
+  process.exit(1);
 }
