@@ -2286,16 +2286,103 @@ try {
     fail('fix-slugs modified an unresolved entry it should have left alone');
   }
 
+  // Bottom-to-top processing: fixing an earlier-in-file company must not
+  // corrupt the line ranges of a later-in-file company still pending, even
+  // when the earlier fix inserts new lines (new `api:` field, new `notes:`
+  // field) that shift every line number below it.
+  const orderFixture = [
+    'tracked_companies:',
+    '',
+    '  - name: First Co',
+    '    careers_url: https://jobs.lever.co/firstco',
+    '    enabled: true',
+    '',
+    '  - name: Second Co',
+    '    careers_url: https://jobs.lever.co/secondco',
+    '    enabled: true',
+    '',
+    '  - name: Third Co',
+    '    careers_url: https://jobs.lever.co/thirdco',
+    '    enabled: true',
+    '',
+  ].join('\n');
+  const orderResults = [
+    { name: 'First Co', status: 'missing', ats: 'lever', slug: 'firstco', suggested: { ats: 'greenhouse', slug: 'first-gh' } },
+    { name: 'Second Co', status: 'missing', ats: 'lever', slug: 'secondco', suggested: { ats: 'greenhouse', slug: 'second-gh' } },
+    { name: 'Third Co', status: 'missing', ats: 'lever', slug: 'thirdco', suggested: { ats: 'ashby', slug: 'third-ashby' } },
+  ];
+  const { text: orderedText } = computeFixes(orderFixture, orderResults, { dateStr: '2026-07-09' });
+  const orderedParsed = yaml.load(orderedText);
+  const orderedByName = Object.fromEntries(orderedParsed.tracked_companies.map((c) => [c.name, c]));
+  if (
+    orderedByName['First Co'].careers_url === 'https://job-boards.greenhouse.io/first-gh' &&
+    orderedByName['First Co'].api === 'https://boards-api.greenhouse.io/v1/boards/first-gh/jobs' &&
+    orderedByName['Second Co'].careers_url === 'https://job-boards.greenhouse.io/second-gh' &&
+    orderedByName['Second Co'].api === 'https://boards-api.greenhouse.io/v1/boards/second-gh/jobs' &&
+    orderedByName['Third Co'].careers_url === 'https://jobs.ashbyhq.com/third-ashby' &&
+    !('api' in orderedByName['Third Co'])
+  ) {
+    pass('fix-slugs applies fixes bottom-to-top so earlier line-count shifts never corrupt a later block');
+  } else {
+    fail(`fix-slugs multi-company ordering wrong: ${JSON.stringify(orderedByName)}`);
+  }
+
+  // notes: edge cases — block scalar and embedded/single quotes must not
+  // corrupt the surrounding YAML.
+  const notesFixture = [
+    'tracked_companies:',
+    '',
+    '  - name: Block Co',
+    '    careers_url: https://jobs.lever.co/blockco',
+    '    notes: |',
+    '      Line one of notes.',
+    '      Line two of notes.',
+    '    enabled: true',
+    '',
+    '  - name: Quote Co',
+    '    careers_url: https://jobs.lever.co/quoteco',
+    '    notes: Some "quoted" unquoted text',
+    '    enabled: true',
+    '',
+    "  - name: Single Co",
+    '    careers_url: https://jobs.lever.co/singleco',
+    "    notes: 'It''s a single-quoted note'",
+    '    enabled: true',
+    '',
+  ].join('\n');
+  const notesResults = [
+    { name: 'Block Co', status: 'missing', ats: 'lever', slug: 'blockco', suggested: { ats: 'ashby', slug: 'block-ashby' } },
+    { name: 'Quote Co', status: 'missing', ats: 'lever', slug: 'quoteco', suggested: { ats: 'ashby', slug: 'quote-ashby' } },
+    { name: 'Single Co', status: 'missing', ats: 'lever', slug: 'singleco', suggested: { ats: 'ashby', slug: 'single-ashby' } },
+  ];
+  const { text: notesText } = computeFixes(notesFixture, notesResults, { dateStr: '2026-07-09' });
+  const notesParsed = yaml.load(notesText);
+  const notesByName = Object.fromEntries(notesParsed.tracked_companies.map((c) => [c.name, c]));
+  if (
+    notesByName['Block Co'].notes.includes('Line one of notes.') &&
+    notesByName['Block Co'].notes.includes('Line two of notes.') &&
+    notesByName['Block Co'].notes.includes('slug migrated lever->ashby 2026-07-09, verify-portals') &&
+    notesByName['Quote Co'].notes === 'Some "quoted" unquoted text (slug migrated lever->ashby 2026-07-09, verify-portals)' &&
+    notesByName['Single Co'].notes === "It's a single-quoted note (slug migrated lever->ashby 2026-07-09, verify-portals)"
+  ) {
+    pass('fix-slugs safely appends notes to block-scalar and quote-embedded values');
+  } else {
+    fail(`fix-slugs notes edge cases produced invalid/wrong content: ${JSON.stringify(notesByName)}`);
+  }
+
   // --dry-run must never mutate the file: computeFixes is pure (it only
   // returns text), so a caller doing dry-run simply never calls writeFileSync.
-  // Verify that guarantee holds by running computeFixes twice and confirming
-  // the ORIGINAL fixture string used as the base for a second run is untouched.
-  const fixtureBefore = fixture;
-  computeFixes(fixture, mockResults, { dateStr: '2026-07-08' });
-  if (fixture === fixtureBefore) {
+  // Verify that guarantee holds by calling computeFixes twice on the SAME base
+  // input and deep-equality-checking the two independently-returned outputs —
+  // comparing the input string to itself would prove nothing (strings are
+  // immutable in JS; that reference can never change no matter what the
+  // function does internally).
+  const runA = computeFixes(fixture, mockResults, { dateStr: '2026-07-08' });
+  const runB = computeFixes(fixture, mockResults, { dateStr: '2026-07-08' });
+  if (runA.text === runB.text && JSON.stringify(runA.fixes) === JSON.stringify(runB.fixes)) {
     pass('fix-slugs computeFixes does not mutate its input text (dry-run safe)');
   } else {
-    fail('fix-slugs computeFixes mutated its input text');
+    fail('fix-slugs computeFixes produced different output across two calls on the same input');
   }
 
   // End-to-end CLI --dry-run must not write to disk.

@@ -102,6 +102,80 @@ function findFieldLine(lines, startLine, endLine, fieldIndent, field) {
   return -1;
 }
 
+/** Escape a plain-scalar string so it's safe to wrap in a double-quoted YAML scalar. */
+function escapeForDoubleQuoted(str) {
+  return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+/**
+ * Append a migration note to an existing `notes:` field, without corrupting
+ * the surrounding YAML — handles three shapes:
+ *
+ *   1. Block scalar (`notes: |` / `notes: >`, with optional chomping
+ *      indicator and explicit indentation digit): the header must NOT be
+ *      rewritten as a plain scalar (that would silently truncate/garble any
+ *      multi-line content). Instead, the note is appended as a new
+ *      continuation line at the scalar's own content indentation.
+ *   2. Double-quoted plain scalar (`notes: "..."`): the existing escaped
+ *      content is reused as-is (already valid inside a `"..."` scalar) and
+ *      the note is appended before the closing quote.
+ *   3. Single-quoted or unquoted plain scalar: any embedded quote/backslash
+ *      characters are escaped before the value is re-wrapped in double
+ *      quotes, so an embedded `"` (or a single-quoted `''` YAML escape)
+ *      can't break the rewritten line.
+ *
+ * @param {string[]} lines - Full file, split by line (mutated).
+ * @param {{indent: string, startLine: number, endLine: number}} block - Mutated in place (endLine grows on insert).
+ * @param {number} notesLine - Line index of the existing `notes:` field.
+ * @param {string} fieldIndent - Indentation of fields inside this block.
+ * @param {string} note - The migration note text to append (no quoting needed — built from ats/slug/date).
+ */
+function appendNote(lines, block, notesLine, fieldIndent, note) {
+  const keyIdx = lines[notesLine].indexOf('notes:');
+  const afterKey = lines[notesLine].slice(keyIdx + 'notes:'.length).trim();
+
+  const blockScalarMatch = afterKey.match(/^([|>])[-+]?\d*\s*(#.*)?$/);
+  if (blockScalarMatch) {
+    // Walk the scalar's continuation lines to find their indentation and the
+    // insertion point (first line at/under the field's own indent, or the
+    // end of the block, ends the scalar).
+    let contentIndent = null;
+    let insertAt = notesLine + 1;
+    for (let i = notesLine + 1; i < block.endLine; i++) {
+      const line = lines[i];
+      if (line.trim() === '') {
+        insertAt = i + 1;
+        continue;
+      }
+      const lineIndent = line.match(/^[ \t]*/)[0];
+      if (lineIndent.length <= fieldIndent.length) break; // dedent — scalar ended
+      contentIndent = lineIndent;
+      insertAt = i + 1;
+    }
+    const noteIndent = contentIndent || `${fieldIndent}  `;
+    lines.splice(insertAt, 0, `${noteIndent}${note}`);
+    block.endLine += 1;
+    return;
+  }
+
+  let inner;
+  if (afterKey.length >= 2 && afterKey.startsWith('"') && afterKey.endsWith('"')) {
+    // Already double-quoted: the content between the quotes is already valid
+    // double-quoted-scalar text (any embedded `"`/`\` is already escaped) —
+    // reuse it verbatim rather than re-escaping already-escaped sequences.
+    inner = afterKey.slice(1, -1);
+  } else if (afterKey.length >= 2 && afterKey.startsWith("'") && afterKey.endsWith("'")) {
+    // Single-quoted YAML escapes a literal `'` as `''` — undo that, then
+    // escape for the double-quoted scalar we're about to produce.
+    inner = escapeForDoubleQuoted(afterKey.slice(1, -1).replace(/''/g, "'"));
+  } else {
+    // Unquoted plain scalar — may itself contain unescaped `"` or `\`
+    // characters that would break a naive re-wrap.
+    inner = escapeForDoubleQuoted(afterKey);
+  }
+  lines[notesLine] = `${fieldIndent}notes: "${inner} ${note}"`;
+}
+
 /**
  * Apply one resolved suggestion to a company's block in-place (mutates `lines`).
  *
@@ -146,10 +220,7 @@ function applyFix(lines, block, suggested, oldAts, dateStr) {
   const note = `(slug migrated ${oldAts}->${suggested.ats} ${dateStr}, verify-portals)`;
   const notesLine = findFieldLine(lines, block.startLine, block.endLine, fieldIndent, 'notes');
   if (notesLine !== -1) {
-    const raw = lines[notesLine].slice(lines[notesLine].indexOf('notes:') + 'notes:'.length).trim();
-    const quoted = raw.startsWith('"') && raw.endsWith('"');
-    const inner = quoted ? raw.slice(1, -1) : raw;
-    lines[notesLine] = `${fieldIndent}notes: "${inner} ${note}"`;
+    appendNote(lines, block, notesLine, fieldIndent, note);
   } else {
     lines.splice(insertAfter + 1, 0, `${fieldIndent}notes: "${note}"`);
     block.endLine += 1;
@@ -170,14 +241,30 @@ function applyFix(lines, block, suggested, oldAts, dateStr) {
 export function computeFixes(rawText, results, { dateStr = new Date().toISOString().slice(0, 10) } = {}) {
   const { lines, blocks } = splitCompanyBlocks(rawText);
   const blocksByName = new Map(blocks.map((b) => [b.name, b]));
-  const fixes = [];
 
+  // Pair each resolvable result with its block first, WITHOUT applying any
+  // edits yet. Line insertions/removals inside one block shift the absolute
+  // line numbers of every block further down the file — if we applied fixes
+  // in `results` order (which has no relation to file position), fixing an
+  // earlier-in-file company first could invalidate the startLine/endLine of
+  // a later-in-file company still waiting to be processed (or vice versa).
+  // Processing strictly bottom-to-top (highest startLine first) guarantees
+  // every edit only ever shifts lines that are BELOW it, so a block still
+  // pending above the current edit point never has its recorded position
+  // invalidated by a fix applied further down.
+  const pending = [];
   for (const r of results) {
     if (r.status !== 'missing' || !r.suggested) continue;
     const block = blocksByName.get(r.name);
     if (!block) continue; // name mismatch — leave untouched rather than guess
+    pending.push({ r, block });
+  }
+  pending.sort((a, b) => b.block.startLine - a.block.startLine);
+
+  const fixesByName = new Map();
+  for (const { r, block } of pending) {
     const { careersUrlOld, careersUrlNew } = applyFix(lines, block, r.suggested, r.ats || 'unknown', dateStr);
-    fixes.push({
+    fixesByName.set(r.name, {
       name: r.name,
       oldAts: r.ats || 'unknown',
       newAts: r.suggested.ats,
@@ -185,6 +272,10 @@ export function computeFixes(rawText, results, { dateStr = new Date().toISOStrin
       careersUrlNew,
     });
   }
+
+  // Report fixes back in the caller's original `results` order (diff output
+  // should read like the verify-portals run, not our bottom-to-top processing order).
+  const fixes = results.map((r) => fixesByName.get(r.name)).filter(Boolean);
 
   return { text: lines.join('\n'), fixes };
 }
