@@ -3706,6 +3706,75 @@ try {
   fail(`verify-pipeline report checks crashed: ${e.message}`);
 }
 
+// ── VERIFY-PIPELINE DUPLICATE TRACKER NUMBER (#1704) ────────────
+// A tracker # must be a unique row id. Two rows sharing a # is never
+// legitimate (unlike Check 2's company+role dedup, which can false-positive
+// on a genuine re-application) — verify-pipeline must flag it as an error.
+console.log('\n🧪 Testing verify-pipeline duplicate tracker # check (#1704)...');
+try {
+  const dupNumTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-dupnum-'));
+  try {
+    const dupNumTracker = join(dupNumTmp, 'applications.md');
+    const dupNumEnv = { ...process.env, CAREER_OPS_TRACKER: dupNumTracker };
+
+    writeFileSync(dupNumTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 698 | 2026-05-29 | University of Alberta | Curriculum Coordinator | 3.8/5 | Evaluated | ❌ | — | — |\n' +
+      '| 698 | 2026-06-03 | Esri Canada | Manager Talent and Organizational Development | 4.1/5 | Evaluated | ❌ | — | — |\n' +
+      '| 700 | 2026-06-10 | Shopify | Staff Engineer | 4.5/5 | Evaluated | ❌ | — | — |\n');
+
+    let dupNumOut;
+    try {
+      dupNumOut = execFileSync(NODE, ['verify-pipeline.mjs'], { cwd: ROOT, env: dupNumEnv, encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] });
+      fail('verify-pipeline should exit non-zero on a duplicate tracker number');
+    } catch (e) {
+      dupNumOut = (e.stdout || '').toString();
+      if (e.status === 1) {
+        pass('verify-pipeline exits 1 on a duplicate tracker number');
+      } else {
+        fail(`verify-pipeline: expected exit 1, got ${e.status}`);
+      }
+    }
+    if (dupNumOut.includes('Duplicate tracker number #698')
+        && dupNumOut.includes('University of Alberta') && dupNumOut.includes('Esri Canada')) {
+      pass('duplicate tracker number #698 flagged with both colliding rows named');
+    } else {
+      fail(`duplicate tracker number not flagged with both rows\n${dupNumOut}`);
+    }
+    if (/Duplicate tracker number #700/.test(dupNumOut)) {
+      fail('unique #700 row falsely flagged as a duplicate tracker number');
+    } else {
+      pass('unique tracker number not falsely flagged');
+    }
+  } finally {
+    rmSync(dupNumTmp, { recursive: true, force: true });
+  }
+
+  // Clean fixture: no duplicate numbers — must pass green.
+  const cleanTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-dupnum-clean-'));
+  try {
+    const cleanTracker = join(cleanTmp, 'applications.md');
+    writeFileSync(cleanTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-01 | Acme | Engineer | 4.0/5 | Evaluated | ❌ | — | — |\n' +
+      '| 2 | 2026-01-02 | Globex | Analyst | 3.9/5 | Evaluated | ❌ | — | — |\n');
+    const cleanOut = run(NODE, ['verify-pipeline.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: cleanTracker }, stdio: ['pipe', 'pipe', 'pipe'] });
+    if (cleanOut !== null && cleanOut.includes('No duplicate tracker numbers')) {
+      pass('clean tracker with unique numbers passes the duplicate-number check');
+    } else {
+      fail('clean fixture did not pass the duplicate tracker number check');
+    }
+  } finally {
+    rmSync(cleanTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`verify-pipeline duplicate tracker number test crashed: ${e.message}`);
+}
+
 // ── SHARED ROLE MATCHER + DEDUP-TRACKER SAFETY (#947) ───────────
 // dedup-tracker.mjs used to ship an older fuzzy role matcher than
 // merge-tracker.mjs. That weaker matcher collapsed sibling roles at the same
@@ -4329,6 +4398,83 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker report-number collision test crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER STALE-NUMBER COLLISION WITH AN EXISTING ROW (#1704) ────
+// Different from the #912 test above: that one is a same-run collision where
+// the incoming TSV's num equals an EXISTING row's num (addition.num <= maxNum,
+// already handled by the old ++maxNum fallback). This one exercises the actual
+// #1704 gap: an existing row's number is invisible to the plain maxNum scan
+// (merge-tracker's own header/separator-skip heuristic excludes any row whose
+// company/role text happens to contain "Empresa" or "---" — a real Spanish-
+// market company name is a realistic trigger), so the naive
+// `addition.num > maxNum` check trusted a colliding number as free. The fix
+// builds a Set of every number actually on the tracker (independent of that
+// heuristic) and refuses to trust a number already in it.
+console.log('\n🧪 Testing merge-tracker stale-number collision with a hidden existing row (#1704)...');
+try {
+  const staleNumTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-1704-'));
+  try {
+    mkdirSync(join(staleNumTmp, 'data'));
+    const staleNumAdditions = join(staleNumTmp, 'additions');
+    mkdirSync(staleNumAdditions);
+
+    const staleNumTracker = join(staleNumTmp, 'data', 'applications.md');
+    // Row #9's company text contains "Empresa" — merge-tracker's existingApps
+    // loop skips this line entirely (the same heuristic it uses to skip the
+    // Spanish-locale header row), so its number is NOT counted toward the old
+    // plain maxNum scan.
+    writeFileSync(staleNumTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 9 | 2026-01-02 | Empresa Digital SA | Analyst | 3.5/5 | Evaluated | ❌ | — | original |\n');
+
+    // Stale TSV for an unrelated company also embeds num=9 — numerically
+    // "ahead" of the naive maxNum(0) computed from the hidden row, but already
+    // used.
+    writeFileSync(join(staleNumAdditions, '001-newco.tsv'),
+      '9\t2026-01-10\tNewCo\tFresh Role\tEvaluated\t2.9/5\t❌\t—\tstale number\n');
+
+    const staleNumResult = run(NODE, ['merge-tracker.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: staleNumTracker, CAREER_OPS_ADDITIONS: staleNumAdditions },
+    });
+    if (staleNumResult === null) {
+      fail('merge-tracker crashed during stale-number collision test (#1704)');
+    } else {
+      const staleNumMerged = readFileSync(staleNumTracker, 'utf-8');
+      const staleNumRows = staleNumMerged.split('\n').filter(l => l.startsWith('| ') && !l.startsWith('| #') && !l.startsWith('|---'));
+
+      if (staleNumRows.length === 2) {
+        pass('stale-number collision (#1704): merged tracker has exactly 2 rows');
+      } else {
+        fail(`stale-number collision (#1704): expected 2 rows, got ${staleNumRows.length}`);
+      }
+
+      const numsUsed = staleNumRows.map(r => parseInt(r.split('|')[1].trim(), 10));
+      if (new Set(numsUsed).size === numsUsed.length) {
+        pass('stale-number collision (#1704): no two rows share a tracker number');
+      } else {
+        fail(`stale-number collision (#1704): duplicate tracker number produced — ${numsUsed.join(', ')}`);
+      }
+
+      if (staleNumRows.some(r => r.includes('Empresa Digital SA') && /^\| 9 \|/.test(r))) {
+        pass('stale-number collision (#1704): hidden existing row #9 (Empresa Digital SA) untouched');
+      } else {
+        fail(`stale-number collision (#1704): existing #9 row was overwritten\n${staleNumMerged}`);
+      }
+
+      if (staleNumRows.some(r => r.includes('NewCo') && !/^\| 9 \|/.test(r))) {
+        pass('stale-number collision (#1704): NewCo bumped to a truly free number instead of reusing #9');
+      } else {
+        fail(`stale-number collision (#1704): NewCo was not bumped off the colliding number\n${staleNumMerged}`);
+      }
+    }
+  } finally {
+    rmSync(staleNumTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker stale-number collision test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER REQ/JOB-NUMBER DEDUP GUARD (#1524) ─────────────────────
