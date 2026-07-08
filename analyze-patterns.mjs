@@ -504,7 +504,14 @@ function analyze() {
   // Enrich entries with report data and classification
   const enriched = entries.map(e => {
     const reportMatch = e.report.match(/\]\(([^)]+)\)/);
-    const reportPath = reportMatch ? join(CAREER_OPS, reportMatch[1]) : null;
+    // Tracker links are relative to the tracker file's own directory (see
+    // merge-tracker.mjs link normalization); fall back to repo root for
+    // legacy root-relative links.
+    let reportPath = null;
+    if (reportMatch) {
+      const fromTracker = join(dirname(APPS_FILE), reportMatch[1]);
+      reportPath = existsSync(fromTracker) ? fromTracker : join(CAREER_OPS, reportMatch[1]);
+    }
     const reportData = reportPath ? parseReport(reportPath) : null;
     const outcome = classifyOutcome(e.status);
     const trackerScore = parseFloat(e.score);
