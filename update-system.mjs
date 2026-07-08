@@ -176,6 +176,7 @@ const SYSTEM_PATHS = [
   'agent-inbox-tests.mjs',
   'validate-portals.mjs',
   'verify-portals.mjs',
+  'fix-slugs.mjs',
   'updater-migration-tests.mjs',
   'validate-system-paths-coverage.mjs',
   'reply-matcher.mjs',

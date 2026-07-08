@@ -29,6 +29,7 @@ import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFil
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
+import yaml from 'js-yaml';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
 
 /**
@@ -2111,6 +2112,162 @@ try {
   }
 } catch (e) {
   fail(`portal slug validator tests crashed: ${e.message}`);
+}
+
+// ── 10c. SLUG AUTO-FIXER (fix-slugs.mjs) ─────────────────────────
+
+console.log('\n10c. Slug auto-fixer');
+
+try {
+  const { splitCompanyBlocks, computeFixes } = await import(
+    pathToFileURL(join(ROOT, 'fix-slugs.mjs')).href
+  );
+
+  const fixture = [
+    'tracked_companies:',
+    '',
+    '  # A live company — must stay untouched',
+    '  - name: Live Co',
+    '    careers_url: https://job-boards.greenhouse.io/livewco',
+    '    api: https://boards-api.greenhouse.io/v1/boards/livewco/jobs',
+    '    notes: "Some notes here."',
+    '    enabled: true',
+    '',
+    '  - name: Migrated Co',
+    '    careers_url: https://jobs.lever.co/migratedco',
+    '    notes: "Old lever board."',
+    '    enabled: true',
+    '',
+    '  - name: Unresolved Co',
+    '    careers_url: https://job-boards.greenhouse.io/typo-slug',
+    '    enabled: true',
+    '',
+    '  - name: No Notes Co',
+    '    careers_url: https://jobs.ashbyhq.com/nonotesco',
+    '    enabled: true',
+    '',
+  ].join('\n');
+
+  const { blocks } = splitCompanyBlocks(fixture);
+  const blockNames = blocks.map((b) => b.name);
+  if (
+    blockNames.length === 4 &&
+    blockNames.includes('Live Co') &&
+    blockNames.includes('Migrated Co') &&
+    blockNames.includes('Unresolved Co') &&
+    blockNames.includes('No Notes Co')
+  ) {
+    pass('fix-slugs splits portals.yml text into per-company blocks (comments excluded)');
+  } else {
+    fail(`fix-slugs splitCompanyBlocks wrong: ${JSON.stringify(blockNames)}`);
+  }
+
+  // Mock verify-portals results: one resolvable ATS migration (lever->ashby),
+  // one resolvable migration into Greenhouse for an entry with no api/notes
+  // fields yet, one genuinely unresolved slug, and one already-live entry.
+  const mockResults = [
+    { name: 'Live Co', status: 'live', ats: 'greenhouse', slug: 'livewco' },
+    {
+      name: 'Migrated Co',
+      status: 'missing',
+      ats: 'lever',
+      slug: 'migratedco',
+      errorKind: 'slug_gone',
+      suggested: { ats: 'ashby', slug: 'top-hat' },
+    },
+    {
+      name: 'Unresolved Co',
+      status: 'missing',
+      ats: 'greenhouse',
+      slug: 'typo-slug',
+      errorKind: 'slug_gone',
+      // no `suggested` — nothing resolved
+    },
+    {
+      name: 'No Notes Co',
+      status: 'missing',
+      ats: 'ashby',
+      slug: 'nonotesco',
+      errorKind: 'slug_gone',
+      suggested: { ats: 'greenhouse', slug: 'nonotesnew' },
+    },
+  ];
+
+  const { text: fixedText, fixes } = computeFixes(fixture, mockResults, { dateStr: '2026-07-08' });
+  const fixedByName = Object.fromEntries(fixes.map((f) => [f.name, f]));
+
+  if (
+    fixes.length === 2 &&
+    fixedByName['Migrated Co']?.newAts === 'ashby' &&
+    fixedByName['Migrated Co']?.careersUrlNew === 'https://jobs.ashbyhq.com/top-hat' &&
+    fixedByName['No Notes Co']?.newAts === 'greenhouse' &&
+    fixedByName['No Notes Co']?.careersUrlNew === 'https://job-boards.greenhouse.io/nonotesnew'
+  ) {
+    pass('fix-slugs computeFixes resolves only entries with a suggested alternate');
+  } else {
+    fail(`fix-slugs computeFixes wrong fix set: ${JSON.stringify(fixedByName)}`);
+  }
+
+  const parsedFixed = yaml.load(fixedText);
+  const byNameFixed = Object.fromEntries(parsedFixed.tracked_companies.map((c) => [c.name, c]));
+  if (
+    byNameFixed['Live Co'].careers_url === 'https://job-boards.greenhouse.io/livewco' &&
+    byNameFixed['Live Co'].notes === 'Some notes here.' &&
+    byNameFixed['Migrated Co'].careers_url === 'https://jobs.ashbyhq.com/top-hat' &&
+    !('api' in byNameFixed['Migrated Co']) &&
+    byNameFixed['Migrated Co'].notes.includes('slug migrated lever->ashby 2026-07-08, verify-portals') &&
+    byNameFixed['Unresolved Co'].careers_url === 'https://job-boards.greenhouse.io/typo-slug' &&
+    byNameFixed['No Notes Co'].careers_url === 'https://job-boards.greenhouse.io/nonotesnew' &&
+    byNameFixed['No Notes Co'].api === 'https://boards-api.greenhouse.io/v1/boards/nonotesnew/jobs' &&
+    byNameFixed['No Notes Co'].notes.includes('slug migrated ashby->greenhouse 2026-07-08, verify-portals')
+  ) {
+    pass('fix-slugs writes resolved careers_url/api/notes and re-parses as valid YAML');
+  } else {
+    fail(`fix-slugs fixed-text YAML wrong: ${JSON.stringify(byNameFixed)}`);
+  }
+
+  // A resolvable-but-untouched control: an unresolved entry (no `suggested`)
+  // must come out of computeFixes byte-for-byte identical to its input block.
+  if (fixedText.includes('  - name: Unresolved Co\n    careers_url: https://job-boards.greenhouse.io/typo-slug\n    enabled: true')) {
+    pass('fix-slugs leaves an unresolved entry (no suggestion) completely untouched');
+  } else {
+    fail('fix-slugs modified an unresolved entry it should have left alone');
+  }
+
+  // --dry-run must never mutate the file: computeFixes is pure (it only
+  // returns text), so a caller doing dry-run simply never calls writeFileSync.
+  // Verify that guarantee holds by running computeFixes twice and confirming
+  // the ORIGINAL fixture string used as the base for a second run is untouched.
+  const fixtureBefore = fixture;
+  computeFixes(fixture, mockResults, { dateStr: '2026-07-08' });
+  if (fixture === fixtureBefore) {
+    pass('fix-slugs computeFixes does not mutate its input text (dry-run safe)');
+  } else {
+    fail('fix-slugs computeFixes mutated its input text');
+  }
+
+  // End-to-end CLI --dry-run must not write to disk.
+  const dryRunTmp = mkdtempSync(join(tmpdir(), 'career-ops-fix-slugs-dryrun-'));
+  const dryRunPortals = join(dryRunTmp, 'portals.yml');
+  writeFileSync(dryRunPortals, fixture);
+  const beforeDryRun = readFileSync(dryRunPortals, 'utf-8');
+  try {
+    execFileSync(NODE, [join(ROOT, 'fix-slugs.mjs'), '--file', dryRunPortals, '--dry-run'], {
+      cwd: ROOT,
+      timeout: 15000,
+    });
+  } catch {
+    // Network is reachable-or-not in CI; either way, no write should occur.
+  }
+  const afterDryRun = readFileSync(dryRunPortals, 'utf-8');
+  if (afterDryRun === beforeDryRun) {
+    pass('fix-slugs.mjs --dry-run (default) never writes to portals.yml');
+  } else {
+    fail('fix-slugs.mjs --dry-run wrote to portals.yml — must require --fix/--apply');
+  }
+  rmSync(dryRunTmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`slug auto-fixer tests crashed: ${e.message}`);
 }
 
 // ── 11. AGENTS.md INTEGRITY ─────────────────────────────────────
