@@ -155,7 +155,7 @@ func (m ProgressModel) renderFunnel() string {
 
 	if len(m.metrics.FunnelStages) == 0 {
 		dimStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
-		lines = append(lines, padStyle.Render(dimStyle.Render("No data")))
+		lines = append(lines, padStyle.Render(dimStyle.Render(i18n.Current.NoData)))
 		return strings.Join(lines, "\n")
 	}
 
@@ -224,7 +224,7 @@ func (m ProgressModel) renderScoreDistribution() string {
 
 	if len(m.metrics.ScoreBuckets) == 0 {
 		dimStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
-		lines = append(lines, padStyle.Render(dimStyle.Render("No data")))
+		lines = append(lines, padStyle.Render(dimStyle.Render(i18n.Current.NoData)))
 		return strings.Join(lines, "\n")
 	}
 
@@ -296,13 +296,13 @@ func (m ProgressModel) renderRates() string {
 
 	sep := sepStyle.Render("  |  ")
 
-	rates := labelStyle.Render("Response Rate: ") +
+	rates := labelStyle.Render(i18n.Current.RateResponse) +
 		valueStyle.Foreground(responseColor).Render(fmt.Sprintf("%.1f%%", m.metrics.ResponseRate)) +
 		sep +
-		labelStyle.Render("Interview Rate: ") +
+		labelStyle.Render(i18n.Current.RateInterview) +
 		valueStyle.Foreground(interviewColor).Render(fmt.Sprintf("%.1f%%", m.metrics.InterviewRate)) +
 		sep +
-		labelStyle.Render("Offer Rate: ") +
+		labelStyle.Render(i18n.Current.RateOffer) +
 		valueStyle.Foreground(offerColor).Render(fmt.Sprintf("%.1f%%", m.metrics.OfferRate))
 
 	lines = append(lines, padStyle.Render(rates))
@@ -327,7 +327,7 @@ func (m ProgressModel) renderWeeklyActivity() string {
 
 	if len(m.metrics.WeeklyActivity) == 0 {
 		dimStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
-		lines = append(lines, padStyle.Render(dimStyle.Render("No data")))
+		lines = append(lines, padStyle.Render(dimStyle.Render(i18n.Current.NoData)))
 		return strings.Join(lines, "\n")
 	}
 

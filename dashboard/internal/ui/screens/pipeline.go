@@ -2,7 +2,6 @@ package screens
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -170,14 +169,23 @@ func getOptionalCols() []colDef {
 	}
 }
 
-// getStatusOptions returns localized status labels for UI display only.
-// For data persistence, use getCanonicalStatusOptions() instead.
-func getStatusOptions() []string {
-	return []string{i18n.Current.StatusEvaluated, i18n.Current.StatusApplied, i18n.Current.StatusResponded, i18n.Current.StatusInterview, i18n.Current.StatusOffer, "Hired", i18n.Current.StatusRejected, i18n.Current.StatusDiscarded, i18n.Current.TabSkip}
+type StatusPair struct {
+	Display   string
+	Canonical string
 }
 
-func getCanonicalStatusOptions() []string {
-	return []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Hired", "Rejected", "Discarded", "Skip"}
+func getStatusPairs() []StatusPair {
+	return []StatusPair{
+		{i18n.Current.StatusEvaluated, "Evaluated"},
+		{i18n.Current.StatusApplied, "Applied"},
+		{i18n.Current.StatusResponded, "Responded"},
+		{i18n.Current.StatusInterview, "Interview"},
+		{i18n.Current.StatusOffer, "Offer"},
+		{i18n.Current.StatusHired, "Hired"},
+		{i18n.Current.StatusRejected, "Rejected"},
+		{i18n.Current.StatusDiscarded, "Discarded"},
+		{i18n.Current.StatusSkip, "Skip"},
+	}
 }
 
 // statusGroupOrder defines display order for grouped view.
@@ -229,9 +237,9 @@ type PipelineModel struct {
 	discardInputVal string
 }
 
-// IsSearchInputActive returns true if the search input is currently focused
-func (m PipelineModel) IsSearchInputActive() bool {
-	return m.searchInput
+// IsTextInputActive returns true if the search or any other text input is currently focused
+func (m PipelineModel) IsTextInputActive() bool {
+	return m.searchInput || m.discardStep == 2
 }
 
 // NewPipelineModel creates a new pipeline screen.
@@ -665,8 +673,8 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 
 	case "down", "j":
 		m.statusCursor++
-		if m.statusCursor >= len(getStatusOptions()) {
-			m.statusCursor = len(getStatusOptions()) - 1
+		if m.statusCursor >= len(getStatusPairs()) {
+			m.statusCursor = len(getStatusPairs()) - 1
 		}
 
 	case "up", "k":
@@ -678,7 +686,7 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 	case "enter":
 		m.statusPicker = false
 		if app, ok := m.CurrentApp(); ok {
-			newStatus := getCanonicalStatusOptions()[m.statusCursor]
+			newStatus := getStatusPairs()[m.statusCursor].Canonical
 			norm := data.NormalizeStatus(newStatus)
 			if norm == "hired" {
 				m.hiredApp = app
@@ -1750,16 +1758,16 @@ func (m PipelineModel) overlayStatusPicker(body string) string {
 	var picker []string
 	picker = append(picker, padStyle.Render(borderStyle.Render(i18n.Current.PickerChangeStatus)))
 
-	for i, opt := range getStatusOptions() {
+	for i, pair := range getStatusPairs() {
 		style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth)
 		if i == m.statusCursor {
 			style = style.Background(m.theme.Overlay).Bold(true)
 		}
 		prefix := "  "
 		if i == m.statusCursor {
-			prefix = "> "
+			prefix = " >"
 		}
-		picker = append(picker, padStyle.Render(style.Render(prefix+opt)))
+		picker = append(picker, padStyle.Render(prefix+style.Render(pair.Display)))
 	}
 
 	// Append picker to body
@@ -1963,23 +1971,7 @@ func (m PipelineModel) countByNormStatus(status string) int {
 // precision the data doesn't have (e.g. an entry dated today would otherwise
 // read "13h ago" simply because it's 1pm, not because contact was 13h back).
 func formatTimeAgo(dateStr string) string {
-	t, err := time.ParseInLocation("2006-01-02", dateStr, time.Local)
-	if err != nil {
-		return dateStr // not a date — show it untouched rather than lie
-	}
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-	contactDay := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
-	// Round to the nearest day so DST transitions don't skew the count.
-	days := int(math.Round(today.Sub(contactDay).Hours() / 24))
-	switch {
-	case days <= 0:
-		return i18n.Current.TimeToday
-	case days == 1:
-		return i18n.Current.TimeYesterday
-	default:
-		return fmt.Sprintf(i18n.Current.TimeDaysAgo, days)
-	}
+	return i18n.Current.FormatTimeAgo(dateStr)
 }
 
 // truncateRunes truncates a string to at most maxRunes runes, appending "..." if truncated.

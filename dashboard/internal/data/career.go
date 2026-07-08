@@ -504,7 +504,7 @@ func NormalizeStatus(raw string) string {
 
 	switch {
 	// Most restrictive first — accepts English, Spanish, and Turkish
-	case strings.Contains(s, "hired") || strings.Contains(s, "contratado") || strings.Contains(s, "contratada") || strings.Contains(s, "accepted") || s == "accept" || strings.Contains(s, "kabul edildi") || strings.Contains(s, "kabul_edildi") || strings.Contains(s, "işe alındı") || strings.Contains(s, "ise alindi"):
+	case s == "hired" || s == "contratado" || s == "contratada" || s == "accepted" || s == "accept" || s == "kabul edildi" || s == "kabul_edildi" || s == "işe alındı" || s == "ise alindi":
 		return "hired"
 	case strings.Contains(s, "no aplicar") || strings.Contains(s, "no_aplicar") || s == "skip" || strings.Contains(s, "geo blocker") || strings.Contains(s, "uygun değil") || strings.Contains(s, "uygun_değil") || strings.Contains(s, "uygun degil") || strings.Contains(s, "uygun_degil"):
 		return "skip"

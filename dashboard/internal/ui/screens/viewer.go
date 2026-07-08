@@ -140,8 +140,8 @@ func (m ViewerModel) Update(msg tea.Msg) (ViewerModel, tea.Cmd) {
 			m.statusPicker = true
 			m.statusCursor = 0
 			currentNorm := data.NormalizeStatus(m.app.Status)
-			for idx, opt := range getStatusOptions() {
-				if data.NormalizeStatus(opt) == currentNorm {
+			for idx, pair := range getStatusPairs() {
+				if pair.Canonical == currentNorm {
 					m.statusCursor = idx
 					break
 				}
@@ -210,7 +210,7 @@ func (m ViewerModel) Update(msg tea.Msg) (ViewerModel, tea.Cmd) {
 func (m ViewerModel) bodyHeight() int {
 	h := m.height - 4 // header + footer + padding
 	if m.statusPicker {
-		h -= (len(getStatusOptions()) + 1)
+		h -= (len(getStatusPairs()) + 1)
 	}
 	if h < 3 {
 		h = 3
@@ -746,8 +746,8 @@ func (m ViewerModel) handleStatusPicker(msg tea.KeyMsg) (ViewerModel, tea.Cmd) {
 
 	case "down", "j":
 		m.statusCursor++
-		if m.statusCursor >= len(getStatusOptions()) {
-			m.statusCursor = len(getStatusOptions()) - 1
+		if m.statusCursor >= len(getStatusPairs()) {
+			m.statusCursor = len(getStatusPairs()) - 1
 		}
 
 	case "up", "k":
@@ -759,7 +759,7 @@ func (m ViewerModel) handleStatusPicker(msg tea.KeyMsg) (ViewerModel, tea.Cmd) {
 	case "enter":
 		m.statusPicker = false
 		m.clampScrollOffset()
-		newStatus := getCanonicalStatusOptions()[m.statusCursor]
+		newStatus := getStatusPairs()[m.statusCursor].Canonical
 		return m, func() tea.Msg {
 			return ViewerUpdateStatusMsg{
 				App:       m.app,
@@ -782,16 +782,16 @@ func (m ViewerModel) overlayStatusPicker(body string) string {
 	var picker []string
 	picker = append(picker, padStyle.Render(borderStyle.Render(i18n.Current.PickerChangeStatus)))
 
-	for i, opt := range getStatusOptions() {
+	for i, pair := range getStatusPairs() {
 		style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth)
 		if i == m.statusCursor {
 			style = style.Background(m.theme.Overlay).Bold(true)
 		}
 		prefix := "  "
 		if i == m.statusCursor {
-			prefix = "> "
+			prefix = " >"
 		}
-		picker = append(picker, padStyle.Render(style.Render(prefix+opt)))
+		picker = append(picker, padStyle.Render(prefix+style.Render(pair.Display)))
 	}
 
 	bodyLines = append(bodyLines, picker...)

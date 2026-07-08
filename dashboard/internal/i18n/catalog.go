@@ -72,6 +72,7 @@ type Catalog struct {
 	StatusRejected  string
 	StatusDiscarded string
 	StatusSkip      string
+	StatusHired     string
 
 	// Additional UI strings
 	NoData        string
@@ -280,6 +281,7 @@ var En = Catalog{
 	StatusRejected:  "Rejected",
 	StatusDiscarded: "Discarded",
 	StatusSkip:      "SKIP",
+	StatusHired:     "Hired",
 
 	// Additional UI strings
 	NoData:        "No data",
@@ -405,6 +407,7 @@ var Tr = Catalog{
 	StatusRejected:  "Reddedildi",
 	StatusDiscarded: "İptal Edildi",
 	StatusSkip:      "Uygun Değil",
+	StatusHired:     "İşe Alındı",
 
 	// Additional UI strings
 	NoData:        "Veri yok",
