@@ -25,9 +25,17 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 - **Procedural rules** (house rules, custom workflows, output preferences, "always/never do X" automations) → `modes/_custom.md` (create it from `modes/_custom.template.md` if missing).
 - **NEVER** edit `modes/_shared.md`, `CLAUDE.md`, or any other system file for user-specific content — those get overwritten on update.
 
-**Path Resolution Override:**
-The User Layer location can be overridden using the `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR` environment variables. If set, User Layer files are loaded and written relative to that path, while System Layer files remain relative to the repository.
-- **Precedence:** `CAREER_OPS_TRACKER` overrides the specific applications tracker file path, taking precedence over `CAREER_OPS_ROOT` / `CAREER_OPS_DATA_DIR`. Relative paths in `CAREER_OPS_TRACKER` are resolved relative to the repository root directory (`__dirname`), not from `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR`.
+**Path Resolution Override & Precedence:**
+The User Layer location (Data Root) is resolved dynamically using the following precedence order:
+1. **Environment Variables:** `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR` overrides the root path (resolved relative to the repository root if it is a relative path).
+2. **Marker File:** If no environment variable is set, a `.career-ops-data` file in the repository root containing an absolute or relative path to the user data directory is used.
+3. **Repository Default:** If neither is present, the repository root directory itself is used.
+
+**Tracker Path & Canonical Writes:**
+- **Explicit override:** `CAREER_OPS_TRACKER` environment variable overrides the applications tracker file path. Relative paths are resolved relative to the repository root directory.
+- **Reading:** If no override is set, reading resolves to `{DATA_ROOT}/data/applications.md` if it exists; otherwise falls back to `{DATA_ROOT}/applications.md`.
+- **Writing:** All write operations (first-run creation or merge operations) target the canonical location `{DATA_ROOT}/data/applications.md` (or the explicit `CAREER_OPS_TRACKER` override).
+
 
 
 ## Source-of-Truth Boundary (CRITICAL)

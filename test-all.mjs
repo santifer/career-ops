@@ -11733,6 +11733,40 @@ try {
     rmSync(tempRoot, { recursive: true, force: true });
   }
 
+  // 6. Test .career-ops-data marker file resolution
+  const tempMarkerRoot = mkdtempSync(join(ROOT, 'co-temp-marker-'));
+  const markerFile = join(ROOT, '.career-ops-data');
+  const originalRootEnv = process.env.CAREER_OPS_ROOT;
+  const originalDataDirEnv = process.env.CAREER_OPS_DATA_DIR;
+  delete process.env.CAREER_OPS_ROOT;
+  delete process.env.CAREER_OPS_DATA_DIR;
+
+  try {
+    writeFileSync(markerFile, tempMarkerRoot, 'utf-8');
+    const { getCareerOpsRoot: getRootWithMarker } = await import(pathToFileURL(join(ROOT, 'path-resolver.mjs')).href + '?cachebust=' + Date.now());
+    const resolved = getRootWithMarker();
+    if (resolved === tempMarkerRoot) {
+      pass('getCareerOpsRoot() respects .career-ops-data marker file');
+    } else {
+      fail(`getCareerOpsRoot() with marker returned ${resolved}, expected ${tempMarkerRoot}`);
+    }
+  } finally {
+    try { unlinkSync(markerFile); } catch {}
+    if (originalRootEnv) process.env.CAREER_OPS_ROOT = originalRootEnv;
+    if (originalDataDirEnv) process.env.CAREER_OPS_DATA_DIR = originalDataDirEnv;
+    rmSync(tempMarkerRoot, { recursive: true, force: true });
+  }
+
+  // 7. Test resolveTrackerPathForWrite
+  const { resolveTrackerPathForWrite: getWriteTracker } = await import(pathToFileURL(join(ROOT, 'path-resolver.mjs')).href + '?cachebust=' + Date.now());
+  const expectedWritePath = join(ROOT, 'data/applications.md');
+  const actualWritePath = getWriteTracker(ROOT);
+  if (actualWritePath === expectedWritePath) {
+    pass('resolveTrackerPathForWrite() returns the canonical data/applications.md path deterministically');
+  } else {
+    fail(`resolveTrackerPathForWrite() returned ${actualWritePath}, expected ${expectedWritePath}`);
+  }
+
 } catch (e) {
   fail(`Path resolution layer test crashed: ${e.message}`);
 }

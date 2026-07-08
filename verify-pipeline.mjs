@@ -18,7 +18,7 @@
  */
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, unlinkSync, statSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 
@@ -30,7 +30,9 @@ const APPS_FILE = resolveTrackerPath(CAREER_OPS);
 
 const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
 // CAREER_OPS_REPORTS overrides the reports dir (used by tests, mirrors CAREER_OPS_TRACKER).
-const REPORTS_DIR = process.env.CAREER_OPS_REPORTS || join(CAREER_OPS, 'reports');
+const REPORTS_DIR = process.env.CAREER_OPS_REPORTS
+  ? resolve(CODE_ROOT, process.env.CAREER_OPS_REPORTS)
+  : join(CAREER_OPS, 'reports');
 const STATES_FILE = existsSync(join(CODE_ROOT, 'templates/states.yml'))
   ? join(CODE_ROOT, 'templates/states.yml')
   : join(CODE_ROOT, 'states.yml');

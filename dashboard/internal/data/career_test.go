@@ -264,3 +264,32 @@ func TestResolveTrackerColumns(t *testing.T) {
 		t.Errorf("fallback status index = %d, want 5 (legacy layout)", fallback["status"])
 	}
 }
+
+func TestParseApplicationsRespectsCareerOpsTracker(t *testing.T) {
+	tempDir := t.TempDir()
+	
+	// Create a tracker file outside the tempDir's default search paths
+	customTrackerPath := filepath.Join(tempDir, "custom-tracker.md")
+	
+	applications := `# Applications Tracker
+
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|------|-------|--------|-----|--------|-------|
+| 1 | 2026-07-01 | CustomCo | Specialist | 3.5/5 | Applied | ❌ | - | - |
+`
+	if err := os.WriteFile(customTrackerPath, []byte(applications), 0o644); err != nil {
+		t.Fatalf("failed to write custom tracker: %v", err)
+	}
+
+	t.Setenv("CAREER_OPS_TRACKER", customTrackerPath)
+
+	apps := ParseApplications(tempDir)
+	if len(apps) != 1 {
+		t.Fatalf("expected 1 parsed application, got %d", len(apps))
+	}
+
+	if apps[0].Company != "CustomCo" {
+		t.Errorf("expected company CustomCo, got %q", apps[0].Company)
+	}
+}
+

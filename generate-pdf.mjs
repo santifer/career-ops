@@ -281,15 +281,16 @@ async function generatePDF() {
   inputPath = resolve(inputPath);
   outputPath = resolve(outputPath);
 
-  // Path-traversal guard: keep the PDF write inside the project directory so a
-  // crafted output argument (e.g. "../../etc/cron.d/x") can't escape the repo.
-  // Anchored to the repo root (__dirname), not process.cwd(): running the script
-  // from outside the repo used to falsely refuse in-repo outputs — and, worse,
+  // Path-traversal guard: keep the PDF write inside the resolved career-ops
+  // root so a crafted output argument (e.g. "../../etc/cron.d/x") can't escape
+  // it. Anchored to getCareerOpsRoot() (repo root, or CAREER_OPS_ROOT /
+  // CAREER_OPS_DATA_DIR when set), not process.cwd(): running the script from
+  // outside the root used to falsely refuse in-root outputs — and, worse,
   // would have allowed writes anywhere under an arbitrary cwd.
   const dataRoot = getCareerOpsRoot();
   const relOut = relative(dataRoot, outputPath);
   if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
-    console.error(`Refusing to write the PDF outside the project directory: ${outputPath}`);
+    console.error(`Refusing to write the PDF outside the Career Ops root directory: ${outputPath}`);
     process.exit(1);
   }
 

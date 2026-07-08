@@ -241,11 +241,23 @@ func resolveEnvPath(envVal string) string {
 }
 
 func main() {
-	defaultPath := "."
+	defaultPath := getRepoRoot()
 	if envPath := resolveEnvPath(os.Getenv("CAREER_OPS_ROOT")); envPath != "" {
 		defaultPath = envPath
 	} else if envPath := resolveEnvPath(os.Getenv("CAREER_OPS_DATA_DIR")); envPath != "" {
 		defaultPath = envPath
+	} else {
+		markerFile := filepath.Join(getRepoRoot(), ".career-ops-data")
+		if content, err := os.ReadFile(markerFile); err == nil {
+			trimmed := strings.TrimSpace(string(content))
+			if trimmed != "" {
+				if filepath.IsAbs(trimmed) {
+					defaultPath = filepath.Clean(trimmed)
+				} else {
+					defaultPath = filepath.Clean(filepath.Join(getRepoRoot(), trimmed))
+				}
+			}
+		}
 	}
 	pathFlag := flag.String("path", defaultPath, "Path to career-ops directory")
 	flag.Parse()
