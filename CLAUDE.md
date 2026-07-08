@@ -181,10 +181,14 @@ If `config/profile.yml` is missing, copy from `config/profile.example.yml` and t
 > - Your location and timezone
 > - What roles are you targeting? (e.g., 'Senior Backend Engineer', 'AI Product Manager')
 > - Your salary target range
+> - How much do you want to spend on model usage per evaluation? Three options:
+>   - **economy** — cheapest and fastest, good for scanning lots of offers quickly
+>   - **standard** — balanced cost and quality (default if you're not sure)
+>   - **premium** — most capable model, best for offers you really care about
 >
 > I'll set everything up for you."
 
-Fill in `config/profile.yml` with their answers. For archetypes and targeting narrative, store the user-specific mapping in `modes/_profile.md` or `config/profile.yml` rather than editing `modes/_shared.md`.
+Fill in `config/profile.yml` with their answers, including `spend_tier` (defaults to `standard` if they skip the question). For archetypes and targeting narrative, store the user-specific mapping in `modes/_profile.md` or `config/profile.yml` rather than editing `modes/_shared.md`.
 
 #### Step 3: Portals (recommended)
 If `portals.yml` is missing:
