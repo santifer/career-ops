@@ -117,6 +117,8 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `process-quality.mjs` | Recruiting-process friction aggregator — parses `[process-friction]` tags candidates add to `data/active-interviews.md` Notes and reports per-company friction rate (JSON or `--summary` table output) |
 | `salary-gap.mjs` | Desired/advertised/actual compensation gap analyzer — folds report `advertised_comp` + `data/salary-observations.tsv` (JSON or `--summary`) |
 | `data/salary-observations.tsv` | Append-only salary observation log (user layer) |
+| `assessment-log.mjs` | Skills-assessment event logger — `add` appends platform/subject/threshold/score + candidate-observed staleness note to `data/assessments.tsv` (JSON or `--summary`) |
+| `data/assessments.tsv` | Append-only skills-assessment log (user layer, created on first `add`) |
 | `data/follow-ups.md` | Follow-up history tracker |
 | `data/blacklist.md` | Your do-not-apply company list (user layer, opt-in — never auto-populated; respected by `scan.mjs` and the `auto-pipeline`/`oferta`/`apply` gates) |
 | `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
