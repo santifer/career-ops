@@ -326,10 +326,24 @@ export function analyze({ trackerContent, logContent, benchmarks, states, todayS
   const coveredRows = [...timelines.keys()].filter(n => trackerNums.has(n)).length;
   const newestObs = observations.reduce((max, o) => (o.date > max ? o.date : max), '');
 
+  const velocity = computeVelocity(timelines, todayStr);
+  // The one hop with a candidate-side day benchmark gets it attached, so the
+  // renderer can show market context next to the own-median (same denominator:
+  // per-successful-process).
+  const io = benchmarks.days_interview_to_offer;
+  if (io && Array.isArray(io.range_days)) {
+    velocity.interviewToOffer.benchmark = {
+      rangeDays: io.range_days,
+      typicalDays: io.typical_days ?? null,
+      source: io.source ?? null,
+      year: io.year ?? null,
+    };
+  }
+
   return {
     calibration: computeCalibration(funnel, benchmarks),
     waiting: computeWaiting(rows, timelines, benchmarks, todayStr),
-    velocity: computeVelocity(timelines, todayStr),
+    velocity,
     dataQuality: {
       trackerRows: rows.length,
       coveredRows,
@@ -399,7 +413,8 @@ export function renderSummary(result, todayStr) {
     if (h.insufficientData) {
       out.push(`  ${h.from}→${h.to}: insufficient data (n=${h.n}${extraStr})`);
     } else {
-      out.push(`  ${h.from}→${h.to}: median ${h.median}d, p75 ${h.p75}d (n=${h.n} completed${extraStr} — median reflects answered applications only)`);
+      const bm = h.benchmark ? ` vs ${h.benchmark.rangeDays[0]}–${h.benchmark.rangeDays[1]}d typical (${h.benchmark.year}, directional)` : '';
+      out.push(`  ${h.from}→${h.to}: median ${h.median}d, p75 ${h.p75}d${bm} (n=${h.n} completed${extraStr} — median reflects answered applications only)`);
     }
   }
   if (!hopsWithData.length && dq.observations === 0) {
@@ -566,6 +581,22 @@ function selfTest() {
   const dqSummary = renderSummary(analyze({ trackerContent: waitTracker, logContent: LOG_FIXTURE, benchmarks: bm, states, todayStr: TODAY }), TODAY);
   check(dqSummary.includes('velocity data for'), 'summary: coverage line present');
   check(dqSummary.includes('still waiting, excluded'), 'summary: censoring surfaced next to velocity');
+
+  // -- interview→offer day benchmark wiring --
+  const ioLog = [
+    '1\t2026-05-01\tResponded\tInterview\tset-status\t',
+    '1\t2026-05-22\tInterview\tOffer\tset-status\t',
+    '2\t2026-05-01\tResponded\tInterview\tset-status\t',
+    '2\t2026-05-26\tInterview\tOffer\tset-status\t',
+    '3\t2026-05-01\tResponded\tInterview\tset-status\t',
+    '3\t2026-05-31\tInterview\tOffer\tset-status\t',
+  ].join('\n');
+  const ioResult = analyze({ trackerContent: waitTracker, logContent: ioLog, benchmarks: bm, states, todayStr: TODAY });
+  check(ioResult.velocity.interviewToOffer.benchmark?.rangeDays?.[0] === 20, 'io-benchmark: days_interview_to_offer attached to the hop');
+  check(ioResult.velocity.interviewToOffer.n === 3 && ioResult.velocity.interviewToOffer.median === 25, `io-benchmark: [21,25,30] → median 25, got ${ioResult.velocity.interviewToOffer.median}`);
+  const ioSummary = renderSummary(ioResult, TODAY);
+  check(ioSummary.includes('vs 20–28d typical (2019, directional)'), 'io-benchmark: summary carries the benchmark with year + directional');
+  check(!renderSummary(analyze({ trackerContent: waitTracker, logContent: '', benchmarks: bm, states, todayStr: TODAY }), TODAY).includes('20–28d typical'), 'io-benchmark: no benchmark context without a median (claims stay gated)');
 
   // -- empty state --
   const empty = analyze({ trackerContent: '', logContent: '', benchmarks: bm, states, todayStr: TODAY });
