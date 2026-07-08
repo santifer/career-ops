@@ -78,7 +78,20 @@ Examples of legitimate reformulation:
 
 **Before generating: read `modes/_custom.md` (if it exists) and apply its formatting/content house rules to every CV in this session — including every item of a batch.** Rules recorded there (date formats, section-order preferences, content to always/never include) are persistent user instructions, not suggestions; if the user corrects the same thing twice in conversation, write it into `modes/_custom.md` so it stops drifting.
 
-Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
+### Selecting the template
+
+Resolve which template to fill with the shared resolver (do not hardcode `cv-template.html`):
+
+- If the user named a template this turn (e.g. "use the *modern* template"), run:
+  `node cv-templates.mjs resolve cv "<name>"`
+- Otherwise run: `node cv-templates.mjs resolve cv`
+  (this returns the `cv.template` default from `config/profile.yml`, or the base `cv-template.html` when unset).
+
+The command prints the absolute path of the template to fill; a non-zero exit means the named template is missing or invalid — surface that message to the user instead of silently falling back.
+
+To show the user their options (e.g. "what CV templates do I have?"), run `node cv-templates.mjs list cv` and present each `displayName`.
+
+Then fill the resolved template's `{{...}}` placeholders with personalized content:
 
 | Placeholder | Content |
 |-------------|-----------|

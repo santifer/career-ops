@@ -7687,6 +7687,24 @@ try {
   fail(`titles mode registration checks crashed: ${e.message}`);
 }
 
+console.log('\n59. CV template resolver (cv-templates.mjs)');
+{
+  const unit = run(NODE, ['--test', 'test/cv-templates.test.mjs']);
+  if (unit !== null) pass('cv-templates.mjs unit tests pass');
+  else fail('cv-templates.mjs unit tests failed (run: node --test test/cv-templates.test.mjs)');
+
+  const listed = run(NODE, ['cv-templates.mjs', 'list', 'cv']);
+  if (listed && listed.includes('"name"')) pass('CLI: list cv returns JSON');
+  else fail('CLI: list cv did not return JSON');
+
+  // Hermetic: point at a nonexistent profile so this exercises the unset -> base
+  // fallback regardless of the developer's real config/profile.yml (cv.template).
+  const noProfile = { env: { ...process.env, CAREER_OPS_PROFILE: join(tmpdir(), 'career-ops-no-such-profile.yml') } };
+  const resolved = run(NODE, ['cv-templates.mjs', 'resolve', 'cv'], noProfile);
+  if (resolved && resolved.endsWith('cv-template.html')) pass('CLI: resolve cv (unset) -> base template');
+  else fail(`CLI: resolve cv (unset) unexpected: ${resolved}`);
+}
+
 console.log('\nTest layout guard (provider tests live in tests/providers/)');
 try {
   const src = readFileSync(join(ROOT, 'test-all.mjs'), 'utf-8');
