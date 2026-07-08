@@ -723,16 +723,10 @@ function analyze() {
 
   // --- Discard reason analysis (Issue 1380) ---
 
-  // Aggregates predicted reasons from Machine Summary `discard_reasons` lists
-  // plus any user-committed `DISCARD: <reason>` tags in the Notes column.
+  // Aggregates user-committed `DISCARD: <reason>` or `SKIP: <reason>` tags in the Notes column.
   const discardReasonCounts = new Map();
   for (const e of enriched) {
     if (e.outcome !== 'self_filtered' && e.outcome !== 'negative') continue;
-    // From report's predicted reasons
-    for (const reason of (e.report?.discardReasons ?? [])) {
-      const key = reason.trim().toLowerCase();
-      if (key) discardReasonCounts.set(key, (discardReasonCounts.get(key) || 0) + 1);
-    }
     // From tracker Notes column: "DISCARD: <reason>" or "SKIP: <reason>"
     const notesMatch = (e.notes || '').match(/(?:DISCARD|SKIP):\s*([^,;\n]+)/gi);
     if (notesMatch) {
