@@ -1,4 +1,4 @@
-﻿package screens
+package screens
 
 import (
 	"fmt"
@@ -70,6 +70,14 @@ type PipelineUpdateStatusMsg struct {
 	NewStatus     string
 }
 
+// PipelineUpdateStatusAndNotesMsg requests updating both status and notes.
+type PipelineUpdateStatusAndNotesMsg struct {
+	CareerOpsPath string
+	App           model.CareerApplication
+	NewStatus     string
+	NewNotes      string
+}
+
 // PipelineRefreshMsg requests a full tracker reload from disk.
 type PipelineRefreshMsg struct{}
 
@@ -82,6 +90,8 @@ type reportSummary struct {
 	remote    string
 	comp      string
 }
+
+const storyTemplateURL = "https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml"
 
 // Sort modes
 const (
@@ -155,10 +165,10 @@ var optionalCols = []colDef{
 	{ColLastContact, "LAST", "", 10, false},
 }
 
-var statusOptions = []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Rejected", "Discarded", "SKIP"}
+var statusOptions = []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Hired", "Rejected", "Discarded", "SKIP"}
 
 // statusGroupOrder defines display order for grouped view.
-var statusGroupOrder = []string{"interview", "offer", "responded", "applied", "evaluated", "skip", "rejected", "discarded"}
+var statusGroupOrder = []string{"hired", "interview", "offer", "responded", "applied", "evaluated", "skip", "rejected", "discarded"}
 
 // PipelineModel implements the career pipeline dashboard screen.
 type PipelineModel struct {
@@ -192,6 +202,18 @@ type PipelineModel struct {
 	colPicker    bool
 	colPickerIdx int
 	visibleCols  map[ColumnID]bool
+
+	// Hired win flow sub-state (Issue 1447)
+	hiredApp  model.CareerApplication
+	hiredStep int // 0 = inactive, 1 = celebration, 2 = story invite, 3 = anonymous stat
+
+	// Discard reason picker sub-state (Issue 1380)
+	discardApp      model.CareerApplication
+	discardStatus   string // "Discarded" or "SKIP"
+	discardStep     int    // 0 = inactive, 1 = pick reason, 2 = custom reason input
+	discardOptions  []string
+	discardCursor   int
+	discardInputVal string
 }
 
 // NewPipelineModel creates a new pipeline screen.
@@ -317,6 +339,12 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		m.flash = ""
+		if m.hiredStep > 0 {
+			return m.handleHiredFlow(msg)
+		}
+		if m.discardStep > 0 {
+			return m.handleDiscardFlow(msg)
+		}
 		if m.colPicker {
 			return m.handleColPicker(msg)
 		}
@@ -633,6 +661,21 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 		m.statusPicker = false
 		if app, ok := m.CurrentApp(); ok {
 			newStatus := statusOptions[m.statusCursor]
+			norm := data.NormalizeStatus(newStatus)
+			if norm == "hired" {
+				m.hiredApp = app
+				m.hiredStep = 1
+				return m, func() tea.Msg {
+					return PipelineUpdateStatusMsg{
+						CareerOpsPath: m.careerOpsPath,
+						App:           app,
+						NewStatus:     newStatus,
+					}
+				}
+			}
+			if norm == "discarded" || norm == "skip" {
+				return m.StartDiscardReasonFlow(app, newStatus)
+			}
 			return m, func() tea.Msg {
 				return PipelineUpdateStatusMsg{
 					CareerOpsPath: m.careerOpsPath,
@@ -671,6 +714,147 @@ func (m PipelineModel) handlePDFPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 		}
 	}
 	return m, nil
+}
+
+func (m PipelineModel) StartHiredFlow(app model.CareerApplication) (PipelineModel, tea.Cmd) {
+	m.hiredApp = app
+	m.hiredStep = 1
+	return m, nil
+}
+
+func (m PipelineModel) StartDiscardReasonFlow(app model.CareerApplication, status string) (PipelineModel, tea.Cmd) {
+	m.discardApp = app
+	m.discardStatus = status
+	m.discardStep = 1
+
+	reasons := data.LoadReportDiscardReasons(m.careerOpsPath, app.ReportPath)
+	reasons = append(reasons, "Salary below target", "Wrong location/timezone", "Not a fit for target archetypes", "Wrong company size / structure", "Other...")
+
+	keys := make(map[string]bool)
+	var list []string
+	for _, entry := range reasons {
+		if entry == "" {
+			continue
+		}
+		if _, seen := keys[entry]; !seen {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	m.discardOptions = list
+	m.discardCursor = 0
+	return m, nil
+}
+
+func (m PipelineModel) handleHiredFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
+	switch m.hiredStep {
+	case 1: // win screen
+		if msg.String() == "enter" {
+			m.hiredStep = 2
+		}
+	case 2: // story invite
+		switch msg.String() {
+		case "y", "Y":
+			m.hiredStep = 3
+			return m, func() tea.Msg {
+				return PipelineOpenURLMsg{URL: storyTemplateURL}
+			}
+		case "n", "N", "enter", "esc":
+			m.hiredStep = 3
+		}
+	case 3: // anonymous stat
+		switch msg.String() {
+		case "y", "Y":
+			weeks := m.calculateWeeksToHire()
+			if err := data.SaveAnonymousStat(m.careerOpsPath, m.hiredApp.Role, weeks); err != nil {
+				m.flash = "Could not record anonymous stat: " + err.Error()
+			}
+			m.hiredStep = 0
+		case "n", "N", "enter", "esc":
+			m.hiredStep = 0
+		}
+	}
+	return m, nil
+}
+
+func (m PipelineModel) handleDiscardFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
+	if m.discardStep == 1 {
+		switch msg.String() {
+		case "esc", "q":
+			m.discardStep = 0
+			return m, nil
+		case "down", "j":
+			m.discardCursor++
+			if m.discardCursor >= len(m.discardOptions) {
+				m.discardCursor = len(m.discardOptions) - 1
+			}
+		case "up", "k":
+			m.discardCursor--
+			if m.discardCursor < 0 {
+				m.discardCursor = 0
+			}
+		case "enter":
+			selected := m.discardOptions[m.discardCursor]
+			if selected == "Other..." {
+				m.discardStep = 2
+				m.discardInputVal = ""
+			} else {
+				reasonNotes := fmt.Sprintf("%s: %s", strings.ToUpper(m.discardStatus), selected)
+				m.discardStep = 0
+				return m, func() tea.Msg {
+					return PipelineUpdateStatusAndNotesMsg{
+						CareerOpsPath: m.careerOpsPath,
+						App:           m.discardApp,
+						NewStatus:     m.discardStatus,
+						NewNotes:      reasonNotes,
+					}
+				}
+			}
+		}
+	} else if m.discardStep == 2 {
+		switch msg.String() {
+		case "esc":
+			m.discardStep = 1
+			return m, nil
+		case "backspace", "ctrl+h":
+			runes := []rune(m.discardInputVal)
+			if len(runes) > 0 {
+				m.discardInputVal = string(runes[:len(runes)-1])
+			}
+		case "enter":
+			reasonNotes := fmt.Sprintf("%s: %s", strings.ToUpper(m.discardStatus), strings.TrimSpace(m.discardInputVal))
+			m.discardStep = 0
+			return m, func() tea.Msg {
+				return PipelineUpdateStatusAndNotesMsg{
+					CareerOpsPath: m.careerOpsPath,
+					App:           m.discardApp,
+					NewStatus:     m.discardStatus,
+					NewNotes:      reasonNotes,
+				}
+			}
+		default:
+			if len(msg.Runes) > 0 {
+				m.discardInputVal += string(msg.Runes)
+			}
+		}
+	}
+	return m, nil
+}
+
+func (m PipelineModel) calculateWeeksToHire() int {
+	if m.hiredApp.Date == "" {
+		return 1
+	}
+	appDate, err := time.Parse("2006-01-02", m.hiredApp.Date)
+	if err != nil {
+		return 1
+	}
+	days := int(time.Since(appDate).Hours() / 24)
+	weeks := (days + 3) / 7
+	if weeks < 1 {
+		weeks = 1
+	}
+	return weeks
 }
 
 // handleColPicker consumes keys while the column picker overlay is open.
@@ -900,6 +1084,10 @@ func (m PipelineModel) cursorLineEstimate() int {
 
 // View renders the pipeline screen.
 func (m PipelineModel) View() string {
+	if m.hiredStep > 0 {
+		return m.overlayHiredFlow()
+	}
+
 	header := m.renderHeader()
 	tabs := m.renderTabs()
 	metricsBar := m.renderMetrics()
@@ -939,6 +1127,11 @@ func (m PipelineModel) View() string {
 	// PDF picker overlay
 	if m.pdfPicker {
 		body = m.overlayPDFPicker(body)
+	}
+
+	// Discard reason picker overlay
+	if m.discardStep > 0 {
+		body = m.overlayDiscardFlow(body)
 	}
 
 	sections := []string{header, tabs, metricsBar, sortBar}
@@ -1553,6 +1746,86 @@ func (m PipelineModel) overlayStatusPicker(body string) string {
 	// Append picker to body
 	bodyLines = append(bodyLines, picker...)
 	return strings.Join(bodyLines, "\n")
+}
+
+func (m PipelineModel) overlayDiscardFlow(body string) string {
+	bodyLines := strings.Split(body, "\n")
+
+	pickerWidth := 50
+	padStyle := lipgloss.NewStyle().Padding(0, 2)
+	borderStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Blue).
+		Bold(true)
+
+	var picker []string
+	if m.discardStep == 1 {
+		picker = append(picker, padStyle.Render(borderStyle.Render(fmt.Sprintf("Select %s Reason:", m.discardStatus))))
+		for i, opt := range m.discardOptions {
+			style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth)
+			if i == m.discardCursor {
+				style = style.Background(m.theme.Overlay).Bold(true)
+			}
+			prefix := "  "
+			if i == m.discardCursor {
+				prefix = "> "
+			}
+			picker = append(picker, padStyle.Render(style.Render(prefix+opt)))
+		}
+	} else if m.discardStep == 2 {
+		picker = append(picker, padStyle.Render(borderStyle.Render(fmt.Sprintf("Enter custom %s reason (ESC to cancel):", m.discardStatus))))
+		style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth).Background(m.theme.Overlay)
+		picker = append(picker, padStyle.Render(style.Render("> "+m.discardInputVal+"█")))
+	}
+
+	bodyLines = append(bodyLines, picker...)
+	return strings.Join(bodyLines, "\n")
+}
+
+func (m PipelineModel) overlayHiredFlow() string {
+	borderStyle := lipgloss.NewStyle().
+		Border(lipgloss.DoubleBorder()).
+		BorderForeground(m.theme.Blue).
+		Padding(1, 2)
+
+	var winContent string
+	switch m.hiredStep {
+	case 1:
+		winContent = lipgloss.JoinVertical(lipgloss.Center,
+			lipgloss.NewStyle().Foreground(m.theme.Green).Bold(true).Render("🎉 CONGRATULATIONS! 🎉"),
+			"",
+			lipgloss.NewStyle().Foreground(m.theme.Text).Render("You landed the job!"),
+			lipgloss.NewStyle().Foreground(m.theme.Text).Render(fmt.Sprintf("%s @ %s", m.hiredApp.Role, m.hiredApp.Company)),
+			"",
+			lipgloss.NewStyle().Foreground(m.theme.Subtext).Render("This moment belongs entirely to you. Celebrate the win!"),
+			"",
+			lipgloss.NewStyle().Foreground(m.theme.Blue).Render("Press [ Enter ] to continue..."),
+		)
+	case 2:
+		winContent = lipgloss.JoinVertical(lipgloss.Center,
+			lipgloss.NewStyle().Foreground(m.theme.Green).Bold(true).Render("Share your story? 🚀"),
+			"",
+			lipgloss.NewStyle().Foreground(m.theme.Text).Render("We'd love to hear your story on GitHub!"),
+			lipgloss.NewStyle().Foreground(m.theme.Text).Render("Your story helps others in the community see what's possible."),
+			"",
+			lipgloss.NewStyle().Foreground(m.theme.Blue).Render("Press [ Y ] to open template in browser / [ N ] to skip"),
+		)
+	case 3:
+		weeks := m.calculateWeeksToHire()
+		winContent = lipgloss.JoinVertical(lipgloss.Center,
+			lipgloss.NewStyle().Foreground(m.theme.Green).Bold(true).Render("Opt-in Anonymous Stat? 📊"),
+			"",
+			lipgloss.NewStyle().Foreground(m.theme.Text).Render("Help us count community hires in the public README:"),
+			lipgloss.NewStyle().Foreground(m.theme.Subtext).Render(fmt.Sprintf("- Role: %s", m.hiredApp.Role)),
+			lipgloss.NewStyle().Foreground(m.theme.Subtext).Render(fmt.Sprintf("- Weeks to hire: %d", weeks)),
+			"",
+			lipgloss.NewStyle().Foreground(m.theme.Text).Render("No names, no companies, and no salaries are shared."),
+			"",
+			lipgloss.NewStyle().Foreground(m.theme.Blue).Render("Press [ Y ] to opt-in / [ N ] to keep completely local"),
+		)
+	}
+
+	box := borderStyle.Render(winContent)
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, box)
 }
 
 // overlayPDFPicker renders the PDF chooser inline at the bottom of the body,

@@ -61,6 +61,19 @@ short message; otherwise run the LinkedIn power move below.
 
 6. **Alternative targets** with justification for why they are good second choices
 
+**Contact channel preference:** Read `contact_preferences.preferred_channel` from
+`config/profile.yml`. If it is absent or set to `"either"`, write the CTA
+sentence exactly as specified above — no change. If it is set to `"email"` or
+`"phone"`, steer the CTA toward that channel instead of the generic default
+(e.g. Recruiter's CTA becomes "Happy to share my CV over email if this aligns
+with what you're looking for" rather than defaulting to a call; Hiring
+Manager's CTA leans on "happy to continue this over email" instead of
+proposing a call). Keep the same
+3-sentence structure and per-persona emphasis -- only the channel named in the
+CTA changes. If `contact_preferences.note` is set, you may fold its intent into
+the CTA phrasing (e.g. "screens unknown numbers" → prefer email wording) but do
+not quote the note verbatim in a public-facing message.
+
 **Message rules:**
 - Maximum 300 characters (LinkedIn connection request limit)
 - NO corporate-speak

@@ -54,7 +54,9 @@ export const ATS = {
     jobCount: (json) => (Array.isArray(json?.jobs) ? json.jobs.length : null),
   },
   lever: {
-    probeUrl: (slug) => `https://api.lever.co/v0/postings/${slug}`,
+    // EU boards (jobs.eu.lever.co) resolve to api.eu.lever.co, mirroring the
+    // provider's resolveApiUrl; the default is the base instance.
+    probeUrl: (slug, { eu = false } = {}) => `https://api.${eu ? 'eu.' : ''}lever.co/v0/postings/${slug}`,
     jobCount: (json) => (Array.isArray(json) ? json.length : null),
   },
 };
@@ -71,22 +73,42 @@ const ATS_URL_PATTERNS = [
   { ats: 'greenhouse', re: /boards\.greenhouse\.io\/([^/?#]+)/ },
   { ats: 'ashby', re: /api\.ashbyhq\.com\/posting-api\/job-board\/([^/?#]+)/ },
   { ats: 'ashby', re: /jobs\.ashbyhq\.com\/([^/?#]+)/ },
-  { ats: 'lever', re: /api\.lever\.co\/v0\/postings\/([^/?#]+)/ },
-  { ats: 'lever', re: /jobs\.lever\.co\/([^/?#]+)/ },
+  // Lever entries pin an exact `host` (checked via new URL(), like
+  // providers/lever.mjs's resolveApiUrl) instead of matching the hostname as a
+  // loose substring anywhere in the URL — otherwise a crafted
+  // https://evil.com/jobs.lever.co/x careers_url would falsely resolve as Lever.
+  { ats: 'lever', host: 'api.eu.lever.co', re: /^\/v0\/postings\/([^/?#]+)/, eu: true },
+  { ats: 'lever', host: 'jobs.eu.lever.co', re: /^\/([^/?#]+)/, eu: true },
+  { ats: 'lever', host: 'api.lever.co', re: /^\/v0\/postings\/([^/?#]+)/ },
+  { ats: 'lever', host: 'jobs.lever.co', re: /^\/([^/?#]+)/ },
 ];
 
 /**
  * Identify the ATS and slug embedded in a careers_url or api URL.
  *
  * @param {string} url - A `careers_url` or `api` value from portals.yml.
- * @returns {{ats: string, slug: string}|null} Match, or null for non-ATS URLs
- *   (branded careers pages, Workday, job boards, etc.) which this tool skips.
+ * @returns {{ats: string, slug: string, eu?: boolean}|null} Match, or null for
+ *   non-ATS URLs (branded careers pages, Workday, job boards, etc.) which this
+ *   tool skips. `eu` is set for Lever's EU data-residency instance.
  */
 export function parseAtsSlug(url) {
   const text = String(url || '');
-  for (const { ats, re } of ATS_URL_PATTERNS) {
+  let hostname = null;
+  let pathname = null;
+  try {
+    ({ hostname, pathname } = new URL(text));
+  } catch {
+    // Not a parseable absolute URL — host-scoped patterns below simply won't match.
+  }
+  for (const { ats, re, eu, host } of ATS_URL_PATTERNS) {
+    if (host) {
+      if (hostname !== host) continue;
+      const m = pathname.match(re);
+      if (m && m[1]) return eu ? { ats, slug: m[1], eu: true } : { ats, slug: m[1] };
+      continue;
+    }
     const m = text.match(re);
-    if (m && m[1]) return { ats, slug: m[1] };
+    if (m && m[1]) return eu ? { ats, slug: m[1], eu: true } : { ats, slug: m[1] };
   }
   return null;
 }
@@ -158,7 +180,8 @@ export function classifyFetchError(err) {
  *
  * @param {string} ats - Key into ATS (greenhouse | ashby | lever).
  * @param {string} slug - Candidate slug to probe.
- * @param {{fetchJson?: Function}} [deps] - Injectable HTTP for testability.
+ * @param {{fetchJson?: Function, eu?: boolean}} [deps] - Injectable HTTP for
+ *   testability; `eu` selects Lever's EU data-residency instance.
  * @returns {Promise<{ats,slug,url,status,jobCount?,httpStatus?,errorKind?,reason?}>}
  *   status is 'live' (jobs > 0), 'empty' (200, no jobs), or 'missing'
  *   (404/error/unexpected shape).
@@ -166,7 +189,7 @@ export function classifyFetchError(err) {
 export async function probeSlug(
   ats,
   slug,
-  { fetchJson = defaultFetchJson } = {},
+  { fetchJson = defaultFetchJson, eu = false } = {},
 ) {
   const spec = ATS[ats];
   if (!spec)
@@ -178,7 +201,7 @@ export async function probeSlug(
       errorKind: 'unknown',
       reason: `unknown ATS: ${ats}`,
     };
-  const url = spec.probeUrl(slug);
+  const url = spec.probeUrl(slug, { eu });
   try {
     const json = await fetchJson(url);
     const count = spec.jobCount(json);
@@ -216,9 +239,15 @@ async function discoverAlternates(name, { fetchJson }) {
   let bestEmpty = null;
   for (const slug of deriveSlugCandidates(name)) {
     for (const ats of Object.keys(ATS)) {
-      const r = await probeSlug(ats, slug, { fetchJson });
-      if (r.status === 'live') return r;
-      if (r.status === 'empty' && !bestEmpty) bestEmpty = r;
+      // Lever no longer has a separate 'lever-eu' registry key (unified into a
+      // single 'lever' + eu flag), so both instances must be probed explicitly
+      // here or EU-only tenants become undiscoverable via --add.
+      const euVariants = ats === 'lever' ? [false, true] : [false];
+      for (const eu of euVariants) {
+        const r = await probeSlug(ats, slug, { fetchJson, eu });
+        if (r.status === 'live') return r;
+        if (r.status === 'empty' && !bestEmpty) bestEmpty = r;
+      }
     }
   }
   return bestEmpty;
@@ -227,30 +256,48 @@ async function discoverAlternates(name, { fetchJson }) {
 /**
  * A liveness probe must never paginate an entire board — that is slow and rude
  * to the careers site (many rate-limit or bot-block aggressively). We signal
- * this sentinel when a provider tries to fetch a second page; the probe reads it
- * as "the first page came back fine → the endpoint is live", we just don't learn
- * the exact total. Distinct from a real HTTP error, which means a broken board.
+ * this sentinel when a provider exhausts its request budget; the probe reads it
+ * as "the budgeted pages came back fine → the endpoint is live", we just don't
+ * learn the exact total. Distinct from a real HTTP error (a broken board).
  */
 class ProbePageBudgetReached extends Error {}
 
 /**
- * Wrap an http context so a provider gets exactly ONE successful list request.
+ * A handful of requests, not one: some providers must spend requests before
+ * the first job can arrive — SuccessFactors CSB does a locale-discovery GET,
+ * then one POST per advertised locale until it hits the job-bearing one. A
+ * 1-request budget would misreport every such tenant as 'empty'.
+ */
+const PROBE_REQUEST_BUDGET = 4;
+
+/**
+ * Wrap an http context so a provider gets a bounded number of successful list
+ * requests (PROBE_REQUEST_BUDGET).
  *
  * Cooperating providers also see `maxPages: 1` and stop on their own (we then
- * learn the first-page count). Providers that ignore the hint are cut off at
- * their second request via the sentinel above — so the probe is bounded for
- * every provider, whether or not it honors `maxPages`.
+ * learn the first-page count). Providers that ignore the hint are cut off via
+ * the sentinel above — so the probe is bounded for every provider, whether or
+ * not it honors `maxPages`. `wasTripped()` reports a cut-off even when the
+ * provider swallowed the sentinel internally (e.g. a per-locale try/catch).
  *
  * @param {import('./providers/_types.js').Context} base
+ * @returns {{ctx: import('./providers/_types.js').Context, wasTripped: () => boolean}}
  */
 function boundedProbeCtx(base) {
   let used = 0;
+  let tripped = false;
   const guard = (fn) => async (url, opts) => {
-    if (used >= 1) throw new ProbePageBudgetReached();
+    if (used >= PROBE_REQUEST_BUDGET) {
+      tripped = true;
+      throw new ProbePageBudgetReached();
+    }
     used += 1;
     return fn(url, opts);
   };
-  return { ...base, maxPages: 1, fetchJson: guard(base.fetchJson), fetchText: guard(base.fetchText) };
+  return {
+    ctx: { ...base, maxPages: 1, fetchJson: guard(base.fetchJson), fetchText: guard(base.fetchText) },
+    wasTripped: () => tripped,
+  };
 }
 
 /**
@@ -262,15 +309,25 @@ function boundedProbeCtx(base) {
  * @returns {Promise<{provider,status,jobCount?,partial?,httpStatus?,errorKind?,reason?}>}
  *   status is 'live' (postings found), 'empty' (endpoint OK, no postings), or
  *   'missing' (the board 404s/errors — the company would silently drop from
- *   every scan). `partial` marks a live board whose exact count the one-page
+ *   every scan). `partial` marks a live board whose exact count the bounded
  *   probe didn't measure.
  */
 export async function probeProvider(entry, provider, baseCtx) {
-  const ctx = boundedProbeCtx(baseCtx);
+  const { ctx, wasTripped } = boundedProbeCtx(baseCtx);
   try {
     const jobs = await provider.fetch(entry, ctx);
     const count = Array.isArray(jobs) ? jobs.length : 0;
-    return { provider: provider.id, status: count > 0 ? 'live' : 'empty', jobCount: count };
+    if (count > 0) {
+      const result = { provider: provider.id, status: 'live', jobCount: count };
+      if (wasTripped()) result.partial = true;
+      return result;
+    }
+    // Zero jobs but the budget guard fired: the provider swallowed the sentinel
+    // (per-locale/per-page try/catch) after its budgeted requests all came back
+    // fine — the endpoint is reachable, we just never reached a job-bearing
+    // page. Same verdict as the propagated-sentinel case below.
+    if (wasTripped()) return { provider: provider.id, status: 'live', partial: true };
+    return { provider: provider.id, status: 'empty', jobCount: 0 };
   } catch (err) {
     if (err instanceof ProbePageBudgetReached) {
       return { provider: provider.id, status: 'live', partial: true };
@@ -293,7 +350,7 @@ export async function probeProvider(entry, provider, baseCtx) {
  *      with cross-probe suggestions when a slug 404s.
  *   2. Everything else is routed through the SAME provider plugins the scanner
  *      uses (Workday, SuccessFactors, SmartRecruiters, Avature, …), bounded to
- *      the first page. This catches broken non-ATS boards that used to be
+ *      a few requests. This catches broken non-ATS boards that used to be
  *      reported as an un-actionable "skipped".
  * A company reaches `skipped` only when no provider claims it. Probing is
  * sequential to stay gentle on rate limits.
@@ -317,7 +374,7 @@ export async function verifyCompanies(
     const match =
       parseAtsSlug(company.api) || parseAtsSlug(company.careers_url);
     if (match) {
-      const probe = await probeSlug(match.ats, match.slug, { fetchJson });
+      const probe = await probeSlug(match.ats, match.slug, { fetchJson, eu: match.eu });
       if (probe.status === 'live' || probe.status === 'empty') {
         results.push({ name, ...probe });
         continue;
