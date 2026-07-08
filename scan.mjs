@@ -581,7 +581,68 @@ export function loadSeenUrls(policy = {}) {
   return { seen, recheckEligible };
 }
 
-export function loadSeenCompanyRoles(appsPath = APPLICATIONS_PATH) {
+// The default company normalizer, used when no alias map is configured: just
+// lowercase and trim. buildCompanyCanonicalizer wraps this with the alias map.
+function defaultCompanyNormalizer(name) {
+  return String(name ?? '').trim().toLowerCase();
+}
+
+// Build a company-name canonicalizer from an alias map (config.company_aliases).
+// The map is `{ CanonicalName: [alias, ...] }`; every alias AND the canonical
+// name itself resolve to the lowercased canonical name. This closes the gap
+// where an ATS org name (e.g. "Intercom") differs from the tracker/brand label
+// (e.g. "Fin"): without it, the company::role dedup key never matches the
+// tracker and the same role is re-scanned and re-evaluated on every run.
+// Unknown names pass through as plain lowercased text, so behavior is unchanged
+// for companies with no alias entry.
+export function buildCompanyCanonicalizer(aliases) {
+  const map = new Map();
+  if (aliases && typeof aliases === 'object' && !Array.isArray(aliases)) {
+    for (const [canonical, list] of Object.entries(aliases)) {
+      const canon = defaultCompanyNormalizer(canonical);
+      if (!canon) continue;
+      map.set(canon, canon);
+      const arr = Array.isArray(list) ? list : [list];
+      for (const a of arr) {
+        const alias = defaultCompanyNormalizer(a);
+        if (alias) map.set(alias, canon);
+      }
+    }
+  }
+  return name => {
+    const key = defaultCompanyNormalizer(name);
+    return map.get(key) ?? key;
+  };
+}
+
+// Normalize a role/title for repost-tolerant dedup. Two postings of the same
+// role should collapse to one key even when the company re-lists it under a new
+// requisition ID (a new URL, so URL dedup misses it) or splits it per location
+// with a trailing tag like "(Berlin)". We therefore:
+//   1. lowercase
+//   2. strip trailing parenthetical/bracketed tags — "(Berlin)", "[Remote]",
+//      "(Berlin, Germany)", and stacked "(Senior) (Berlin)" — since these are
+//      the location/qualifier suffixes that create false distinct roles
+//   3. collapse all remaining punctuation/whitespace to single spaces so
+//      em-dash vs hyphen and double spaces don't split a key
+// The requisition ID lives in the URL, never the title, so keying on the
+// normalized title is inherently requisition-ID-agnostic.
+export function normalizeRoleForDedup(role) {
+  return String(role ?? '')
+    .toLowerCase()
+    .replace(/(?:\s*[([][^)\]]*[)\]])+\s*$/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+// The canonical company::role dedup key shared by both the tracker-side load and
+// the scan-side check, so the two can never drift. `canonicalize` defaults to
+// plain lowercase/trim (no alias map).
+export function companyRoleDedupKey(company, role, canonicalize = defaultCompanyNormalizer) {
+  return `${canonicalize(company)}::${normalizeRoleForDedup(role)}`;
+}
+
+export function loadSeenCompanyRoles(appsPath = APPLICATIONS_PATH, canonicalize = defaultCompanyNormalizer) {
   const seen = new Set();
   if (existsSync(appsPath)) {
     // Header-aware parse (tracker-parse.mjs, #954) — the old positional regex
@@ -592,9 +653,9 @@ export function loadSeenCompanyRoles(appsPath = APPLICATIONS_PATH) {
     for (const line of lines) {
       const row = parseTrackerRow(line, colmap);
       if (!row) continue;
-      const company = row.company.trim().toLowerCase();
-      const role = row.role.trim().toLowerCase();
-      if (company && role) seen.add(`${company}::${role}`);
+      const company = row.company.trim();
+      const role = row.role.trim();
+      if (company && role) seen.add(companyRoleDedupKey(company, role, canonicalize));
     }
   }
   return seen;
@@ -1085,7 +1146,8 @@ async function main() {
   const historyPolicy = scanHistoryPolicy(config);
   const seenUrlState = loadSeenUrls(historyPolicy);
   const seenUrls = seenUrlState.seen;
-  const seenCompanyRoles = loadSeenCompanyRoles();
+  const canonicalizeCompany = buildCompanyCanonicalizer(config.company_aliases);
+  const seenCompanyRoles = loadSeenCompanyRoles(APPLICATIONS_PATH, canonicalizeCompany);
 
   // 5. Fetch from each target
   const date = new Date().toISOString().slice(0, 10);
@@ -1168,7 +1230,7 @@ async function main() {
           totalDupes++;
           continue;
         }
-        const key = `${job.company.toLowerCase()}::${job.title.toLowerCase()}`;
+        const key = companyRoleDedupKey(job.company, job.title, canonicalizeCompany);
         if (seenCompanyRoles.has(key)) {
           totalDupes++;
           continue;
