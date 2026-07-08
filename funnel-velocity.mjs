@@ -359,7 +359,7 @@ export function analyze({ trackerContent, logContent, benchmarks, states, todayS
 // --- Summary rendering (tone contract lives here — see header) ---
 function fmtCalibrationLine(label, c, smallSample, n) {
   if (!c || c.ownPct === null) return `  ${label}: no data yet`;
-  const range = `${c.rangePct[0]}–${c.rangePct[1]}% typical band (${c.year}, directional)`;
+  const range = `${c.rangePct[0]}–${c.rangePct[1]}% typical band (${c.year ?? 'n/a'}, directional)`;
   let line = `  ${label}: ${c.ownPct}% vs ${range}`;
   if (smallSample) {
     line += ` — small sample (n=${n}) — directional only`;
@@ -413,7 +413,7 @@ export function renderSummary(result, todayStr) {
     if (h.insufficientData) {
       out.push(`  ${h.from}→${h.to}: insufficient data (n=${h.n}${extraStr})`);
     } else {
-      const bm = h.benchmark ? ` vs ${h.benchmark.rangeDays[0]}–${h.benchmark.rangeDays[1]}d typical (${h.benchmark.year}, directional)` : '';
+      const bm = h.benchmark ? ` vs ${h.benchmark.rangeDays[0]}–${h.benchmark.rangeDays[1]}d typical (${h.benchmark.year ?? 'n/a'}, directional)` : '';
       out.push(`  ${h.from}→${h.to}: median ${h.median}d, p75 ${h.p75}d${bm} (n=${h.n} completed${extraStr} — median reflects answered applications only)`);
     }
   }
@@ -597,6 +597,15 @@ function selfTest() {
   const ioSummary = renderSummary(ioResult, TODAY);
   check(ioSummary.includes('vs 20–28d typical (2019, directional)'), 'io-benchmark: summary carries the benchmark with year + directional');
   check(!renderSummary(analyze({ trackerContent: waitTracker, logContent: '', benchmarks: bm, states, todayStr: TODAY }), TODAY).includes('20–28d typical'), 'io-benchmark: no benchmark context without a median (claims stay gated)');
+
+  // -- missing year in a user-override benchmark file must render n/a, not null --
+  const bmNoYear = JSON.parse(JSON.stringify(bm));
+  delete bmNoYear.response_rate.year;
+  delete bmNoYear.application_to_interview.year;
+  delete bmNoYear.days_interview_to_offer.year;
+  const noYearSummary = renderSummary(analyze({ trackerContent: mkTracker(40, 0), logContent: ioLog, benchmarks: bmNoYear, states, todayStr: TODAY }), TODAY);
+  check(noYearSummary.includes('(n/a, directional)'), 'no-year: renders n/a fallback');
+  check(!noYearSummary.includes('null, directional'), 'no-year: never prints (null, directional)');
 
   // -- empty state --
   const empty = analyze({ trackerContent: '', logContent: '', benchmarks: bm, states, todayStr: TODAY });
