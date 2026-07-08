@@ -19,6 +19,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
+import yaml from 'js-yaml';
 
 try {
   const { config } = await import('dotenv');
@@ -155,8 +156,12 @@ const endpoint = `${baseUrl}/chat/completions`;
 // ---------------------------------------------------------------------------
 // File helpers
 // ---------------------------------------------------------------------------
-function readFile(path, label) {
+function readFile(path, label, required = false) {
   if (!existsSync(path)) {
+    if (required) {
+      console.error(`❌  Required context file not found: ${label} at ${path}`);
+      process.exit(1);
+    }
     console.warn(`⚠️   ${label} not found at: ${path}`);
     return `[${label} not found — skipping]`;
   }
@@ -168,11 +173,11 @@ function readFile(path, label) {
 // ---------------------------------------------------------------------------
 console.log('\\n📂  Loading context files...');
 
-const sharedContext  = readFile(PATHS.shared, 'modes/_shared.md');
-const pdfModeLogic   = readFile(PATHS.pdfMode, 'modes/pdf.md');
-const cvContent      = readFile(PATHS.cv, 'cv.md');
-const profileContent = readFile(PATHS.profile, 'config/profile.yml');
-const templateHtml   = readFile(PATHS.template, 'templates/cv-template.html');
+const sharedContext  = readFile(PATHS.shared, 'modes/_shared.md', false);
+const pdfModeLogic   = readFile(PATHS.pdfMode, 'modes/pdf.md', false);
+const cvContent      = readFile(PATHS.cv, 'cv.md', true);
+const profileContent = readFile(PATHS.profile, 'config/profile.yml', true);
+const templateHtml   = readFile(PATHS.template, 'templates/cv-template.html', true);
 
 // ---------------------------------------------------------------------------
 // Build system prompt
@@ -266,7 +271,7 @@ try {
 }
 
 // Clean up markdown block wrapping if the LLM adds it despite instructions
-tailoredHtml = tailoredHtml.replace(/^\\s*\`\`\`(html)?\\s*/i, '').replace(/\\s*\`\`\`\\s*$/, '');
+tailoredHtml = tailoredHtml.replace(/^\s*```(html)?\s*/i, '').replace(/\s*```\s*$/, '');
 
 // ---------------------------------------------------------------------------
 // Save tailored HTML
@@ -276,7 +281,16 @@ try {
     mkdirSync(PATHS.output, { recursive: true });
   }
 
-  const candidateName = (profileContent.match(/name:\\s*(.+)/i)?.[1] || 'candidate')
+  let candidateName = 'candidate';
+  try {
+    const profile = yaml.load(profileContent);
+    if (profile && profile.name) {
+      candidateName = profile.name;
+    }
+  } catch (err) {
+    console.warn(`⚠️   Failed to parse profile.yml: ${err.message}`);
+  }
+  candidateName = candidateName
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
   const filename = `cv-${candidateName}-${companySlug}.html`;
