@@ -184,6 +184,7 @@ In deutschen Stellenanzeigen und Vertragsverhandlungen tauchen Begriffe auf, die
 6. Inhalte in der Sprache der Stellenanzeige erzeugen (Deutsch, wenn die Anzeige deutsch ist; Englisch sonst)
 7. Direkt und konkret sein — keine Floskeln
 8. Beim Erzeugen deutscher Texte (PDF-Summaries, Bullets, LinkedIn-Nachrichten, STAR-Stories): natürliches Tech-Deutsch, keine wörtliche Übersetzung. Kurze Sätze, aktive Verben, Passiv vermeiden. Fachbegriffe (Stack, Pipeline, Deployment, Embedding) nicht zwanghaft eindeutschen
+8c. **Umlaute und Eszett (KRITISCH):** Deutschen Text IMMER mit korrekten Sonderzeichen schreiben: ä, ö, ü, Ä, Ö, Ü, ß. NIEMALS durch ae/oe/ue/ss ersetzen und NIEMALS die Diakritika weglassen (a/o/u statt ä/ö/ü). Beispiele: „für" nicht „fur", „über" nicht „uber", „Qualitätssicherung" nicht „Qualitatssicherung", „Universität" nicht „Universitat", „Geschäftsführung" nicht „Geschaftsfuhrung", „Fußball" nicht „Fussball", „fließend" nicht „fliessend". Das gilt für ALLE generierten Inhalte: HTML, PDF-Texte, Anschreiben, LinkedIn-Nachrichten, STAR-Stories, Tracker-Notizen
 8b. **Case-Study-URLs in der PDF Professional Summary:** Wenn das PDF Case Studies oder Demos erwähnt, MÜSSEN die URLs schon im ersten Absatz (Professional Summary) auftauchen. Recruiter lesen oft nur die Summary. Alle URLs im HTML mit `white-space: nowrap`
 9. **Tracker-Einträge als TSV** — `applications.md` NIEMALS direkt für neue Einträge editieren. TSV in `batch/tracker-additions/` schreiben, `merge-tracker.mjs` übernimmt das Mergen
 10. **`**URL:**` in jedem Report-Header** — zwischen Score und PDF
@@ -204,6 +205,7 @@ Für PDF-Erzeugung im DACH-Markt gelten besondere Regeln — **vollständige Anw
 | **Unterschrift** | Ort + Datum + Name am Ende des Lebenslaufs |
 | **Seitennummerierung** | "Seite X von Y" bei mehrseitigen CVs (`--page-numbers`) |
 | **Layout** | Einspaltig, ATS-kompatibel, serifenlose Schrift 11–12pt |
+| **Umlaute/ß** | Immer korrekt: ä ö ü Ä Ö Ü ß — niemals weglassen oder durch ae/oe/ue/ss ersetzen |
 
 **Ergebnisorientierte Bullets** statt Aufgabenlisten. Aktive Verben + messbare Resultate. Natürliches Tech-Deutsch, keine zwanghafte Eindeutschung.
 
