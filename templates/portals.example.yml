@@ -780,6 +780,23 @@ search_queries:
 #     provider: jibeapply
 #     enabled: true
 
+# -- Company aliases (optional) --
+# Map alternate company names to a single canonical label so the scanner's
+# company+role dedup matches your tracker. The scanner keys dedup on the name a
+# provider returns — usually the ATS org (e.g. Greenhouse "Intercom") — which
+# may differ from the brand you track (e.g. "Fin"). Without an alias, the same
+# role is re-scanned and re-evaluated every run because "intercom::role" never
+# matches "fin::role" in data/applications.md.
+#
+# Format: `CanonicalName: [alias, ...]`. Every alias AND the canonical name
+# resolve to the canonical label (case-insensitive). Companies with no entry are
+# unaffected. Combined with title normalization, this also collapses reposts
+# (same role re-listed under a new requisition ID / URL) and per-location splits
+# ("Engineer (Berlin)" vs "Engineer") onto one dedup key.
+#
+# company_aliases:
+#   Fin: [Intercom]
+
 tracked_companies:
 
   # -- AI Labs & LLM providers --
