@@ -4991,6 +4991,39 @@ try {
     fail(`premium spend_tier did not route to opus: argv=${JSON.stringify(premiumArgv)}, out=${JSON.stringify(premiumOut.slice(-240))}`);
   }
 
+  writeFileSync(join(configDir, 'profile.yml'), 'spend_tier: standard\n');
+  rmSync(argFile, { force: true });
+  rmSync(join(batchDir, 'batch-state.tsv'), { force: true });
+  const standardOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  const standardArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+
+  if (standardArgv.includes('--model') && standardArgv.includes('claude-sonnet-4-6') && standardOut.includes('spend_tier=standard')) {
+    pass('standard spend_tier resolves to claude-sonnet-4-6');
+  } else {
+    fail(`standard spend_tier did not route to sonnet: argv=${JSON.stringify(standardArgv)}, out=${JSON.stringify(standardOut.slice(-240))}`);
+  }
+
+  // Also check default fallback when spend_tier is missing
+  writeFileSync(join(configDir, 'profile.yml'), 'some_other_key: true\n');
+  rmSync(argFile, { force: true });
+  rmSync(join(batchDir, 'batch-state.tsv'), { force: true });
+  const defaultOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], {
+    cwd: tmp,
+    env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }) || '';
+  const defaultArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+
+  if (defaultArgv.includes('--model') && defaultArgv.includes('claude-sonnet-4-6') && defaultOut.includes('spend_tier=standard')) {
+    pass('missing spend_tier defaults to standard (claude-sonnet-4-6)');
+  } else {
+    fail(`missing spend_tier did not route to standard: argv=${JSON.stringify(defaultArgv)}, out=${JSON.stringify(defaultOut.slice(-240))}`);
+  }
+
   rmSync(argFile, { force: true });
   rmSync(join(batchDir, 'batch-state.tsv'), { force: true });
   const overrideOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--model', 'claude-sonnet-4-6'], {

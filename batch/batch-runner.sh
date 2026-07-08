@@ -336,7 +336,7 @@ read_spend_tier() {
       printf '%s\n' "standard"
       ;;
     *)
-      echo "WARN: Invalid spend_tier \"$raw\" in ${PROFILE_FILE#$PROJECT_DIR/}; falling back to standard." >&2
+      echo "WARN: Invalid spend_tier \"$raw\" in ${PROFILE_FILE#"$PROJECT_DIR"/}; falling back to standard." >&2
       printf '%s\n' "standard"
       ;;
   esac
