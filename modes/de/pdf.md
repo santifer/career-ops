@@ -211,6 +211,7 @@ Unterbrechungen > 2–3 Monate gelten als erklärungsbedürftige "Lücke".
 - Keine eingebetteten Informationen in Bildern
 - Einfache, flache HTML-Struktur (kein verschachteltes CSS-Grid)
 - Standard-Sektionsüberschriften (Kurzprofil, Berufserfahrung, Ausbildung, Kenntnisse)
+- **Klartext-Test (automatisch):** `generate-pdf.mjs` führt nach dem Rendern automatisch eine Textextraktions-Validierung durch — simuliert den „Strg+A → Kopieren → Einfügen in Notepad"-Test. Prüft: (1) Textebene vorhanden, (2) Kontaktdaten in den ersten Zeilen, (3) kein Spalten-Interleaving, (4) Sektionsüberschriften erkennbar. Warnungen dem Kandidaten mitteilen.
 
 **Typografie (DIN 5008):**
 - Max. 2 Schriftarten (eine für Überschriften, eine für Fließtext)
@@ -292,5 +293,6 @@ Vor der finalen Ausgabe an den Kandidaten prüfen:
 - [ ] Telefonnummer im DIN-5008-Format
 - [ ] Unterschriftsblock am Ende (Ort + Datum + Name)
 - [ ] ATS-kompatibles Layout (einspaltig, keine Grafiken in Skills)
+- [ ] Klartext-Test bestanden (keine Warnungen in der Konsolenausgabe von `generate-pdf.mjs`)
 - [ ] Foto nur wenn `candidate.photo` gesetzt
 - [ ] Seitennummerierung bei > 1 Seite

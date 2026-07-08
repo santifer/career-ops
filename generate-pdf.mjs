@@ -190,6 +190,85 @@ function validateCvSectionOrder(html, cvMarkdown) {
 }
 
 /**
+ * Klartext-Test: validates the rendered page's text layer for ATS parseability.
+ *
+ * Simulates the "Ctrl+A → copy → paste into Notepad" test recommended for
+ * checking whether a PDF will parse correctly. Uses page.innerText('body')
+ * which mirrors the text Chromium writes into the PDF content stream.
+ *
+ * Checks:
+ * 1. Text is non-empty and substantial (> 100 chars)
+ * 2. Section headers appear as identifiable standalone text blocks
+ * 3. No column-interleaving patterns (dates/periods mixed into unrelated lines)
+ * 4. Contact info (email) is detectable in the first portion
+ *
+ * @param {import('playwright').Page} page - The Playwright page with the CV rendered
+ * @returns {Promise<{passed: boolean, warnings: string[]}>}
+ */
+async function validateKlartextExtraction(page) {
+  const warnings = [];
+  const bodyText = await page.innerText('body');
+
+  if (!bodyText || bodyText.trim().length < 100) {
+    warnings.push('Klartext-Test FAILED: extracted text is empty or too short (< 100 chars). The PDF text layer may be broken.');
+    console.warn(`⚠️  ${warnings[0]}`);
+    return { passed: false, warnings };
+  }
+
+  const lines = bodyText.split(/\n/).map(l => l.trim()).filter(Boolean);
+
+  // Check 1: email should appear in the first 10 lines (contact info at top)
+  const headerLines = lines.slice(0, 10).join(' ');
+  const hasEmail = /[\w.+-]+@[\w-]+\.[\w.]+/.test(headerLines);
+  if (!hasEmail) {
+    warnings.push('Klartext-Test: no email address found in the first 10 lines. Contact info may be in a header/footer that ATS parsers skip.');
+    console.warn(`⚠️  ${warnings[warnings.length - 1]}`);
+  }
+
+  // Check 2: detect potential column interleaving — a line containing both a
+  // date range pattern AND unrelated long text from another "column"
+  const datePattern = /\d{2}\/\d{4}\s*[-–—]\s*(\d{2}\/\d{4}|present|heute|aujourd'hui|現在|حالي)/i;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (datePattern.test(line) && line.length > 80) {
+      const parts = line.split(datePattern);
+      const nonDateText = parts.filter(p => p && !datePattern.test(p) && p.trim().length > 30);
+      if (nonDateText.length > 0) {
+        warnings.push(`Klartext-Test: possible column interleaving at line ${i + 1} — date range mixed with long text block. ATS may misparse this section.`);
+        console.warn(`⚠️  ${warnings[warnings.length - 1]}`);
+        break;
+      }
+    }
+  }
+
+  // Check 3: section headers should appear as short standalone lines (not merged)
+  const expectedSections = [
+    /summary|kurzprofil|profil|résumé/i,
+    /experience|berufserfahrung|expérience|経験/i,
+    /education|ausbildung|studium|formation|学歴/i,
+    /skills|kenntnisse|fähigkeiten|compétences|スキル/i,
+  ];
+  let sectionsFound = 0;
+  for (const pattern of expectedSections) {
+    const found = lines.some(l => pattern.test(l) && l.length < 60);
+    if (found) sectionsFound++;
+  }
+  if (sectionsFound < 2) {
+    warnings.push(`Klartext-Test: only ${sectionsFound}/4 expected section headers detected as standalone lines. Sections may be merged or garbled.`);
+    console.warn(`⚠️  ${warnings[warnings.length - 1]}`);
+  }
+
+  const passed = warnings.length === 0;
+  if (passed) {
+    console.log('✅ Klartext-Test passed: text layer is ATS-parseable');
+  } else {
+    console.log(`⚠️  Klartext-Test: ${warnings.length} warning(s) — review PDF parseability`);
+  }
+
+  return { passed, warnings };
+}
+
+/**
  * Convert a path to a repo-relative manifest entry, or blank if it is unknown
  * or outside the career-ops repository.
  *
@@ -443,6 +522,9 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
       ].join('');
     }
 
+    // Klartext-Test: extract rendered text (= what ATS parsers see) and validate
+    const klartextResult = await validateKlartextExtraction(page);
+
     const pdfBuffer = await page.pdf(pdfOpts);
 
     // Write PDF
@@ -455,6 +537,10 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     console.log(`✅ PDF generated: ${outputPath}`);
     console.log(`📊 Pages: ${pageCount}`);
     console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
+
+    if (!klartextResult.passed) {
+      console.log(`⚠️  Klartext warnings: ${klartextResult.warnings.join('; ')}`);
+    }
 
     try {
       updatePDFManifest(reportNum, outputPath, inputPath, format);

@@ -33,6 +33,7 @@
 - No nested tables
 - Distributed JD keywords: Summary (top 5), first bullet of each role, Skills section
 - No hidden text, keyword stuffing, or white-font tricks. Optimize for parseability plus human review.
+- **Klartext-Test (automated):** `generate-pdf.mjs` runs a post-render text extraction validation that simulates the "Ctrl+A → copy → paste into Notepad" test. It checks: (1) text layer is non-empty, (2) contact info is in the first lines, (3) no column-interleaving detected, (4) section headers are identifiable. Warnings are logged if issues are found — report them to the user so they can review.
 
 ## Recruiter Review Gates
 
