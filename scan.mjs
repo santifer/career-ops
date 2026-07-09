@@ -156,6 +156,23 @@ export function buildTitleFilter(titleFilter) {
   };
 }
 
+// ── Company exclusion filter ────────────────────────────────────────
+// Blocks specific employers the user has evaluated and decided against, so
+// re-listings (even under a fresh URL that bypasses URL/company::role dedup)
+// never re-enter the pipeline. Case-insensitive substring match on company name.
+// Configured via `exclude_companies:` (list of strings) in portals.yml.
+export function buildCompanyExcludeFilter(excludeCompanies) {
+  const blocked = (Array.isArray(excludeCompanies) ? excludeCompanies : [])
+    .filter(c => typeof c === 'string')
+    .map(c => c.trim().toLowerCase())
+    .filter(c => c.length > 0);
+  return (company) => {
+    const lower = (company || '').toLowerCase();
+    // returns true if the company should be KEPT (not excluded)
+    return !blocked.some(b => lower.includes(b));
+  };
+}
+
 // ── Location filter ─────────────────────────────────────────────────
 // Optional. If `location_filter` is absent from portals.yml, all locations pass.
 // Semantics (case-insensitive substring, in this order):
@@ -907,6 +924,7 @@ async function main() {
   const companies = Array.isArray(config.tracked_companies) ? config.tracked_companies : [];
   const boards = Array.isArray(config.job_boards) ? config.job_boards : [];
   const titleFilter = buildTitleFilter(config.title_filter);
+  const companyExcludeFilter = buildCompanyExcludeFilter(config.exclude_companies);
 
   // Seniority tier classifier integration
   let classifyTier = null;
@@ -1036,6 +1054,10 @@ async function main() {
         job.trustLevel = trustResult.level;
 
         if (!titleFilter(job.title)) {
+          totalFilteredTitle++;
+          continue;
+        }
+        if (!companyExcludeFilter(job.company)) {
           totalFilteredTitle++;
           continue;
         }
