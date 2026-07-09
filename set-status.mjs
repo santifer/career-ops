@@ -190,12 +190,19 @@ function checkReportLink(row, num) {
   const m = /(?:^|[(\/])reports\/0*(\d+)-/.exec(row.report ?? '');
   if (m) {
     const linkedNum = parseInt(m[1], 10);
-    if (linkedNum !== num && !flags.force) {
-      failWith(EXIT_AMBIGUOUS, 'report-link-mismatch',
-        `Row #${num}'s Report column points to reports/${m[1]}-... — the tracker row number has drifted from the report file's own number (#1733). ` +
-        `Selector "${num}" may be targeting the wrong row (${row.company} — ${row.role}). ` +
-        `Use the company name as selector, or pass --force to write anyway.`,
-        { rowNum: num, linkedReportNum: linkedNum, company: row.company, role: row.role });
+    if (linkedNum !== num) {
+      if (!flags.force) {
+        failWith(EXIT_AMBIGUOUS, 'report-link-mismatch',
+          `Row #${num}'s Report column points to reports/${m[1]}-... — the tracker row number has drifted from the report file's own number (#1733). ` +
+          `Selector "${num}" may be targeting the wrong row (${row.company} — ${row.role}). ` +
+          `Use the company name as selector, or pass --force to write anyway.`,
+          { rowNum: num, linkedReportNum: linkedNum, company: row.company, role: row.role });
+      }
+      // Forced past a known mismatch — leave an audit trail on stderr so the
+      // override is visible in logs rather than silent.
+      console.error(
+        `set-status: warning — --force overriding report-link mismatch: row #${num} links reports/${m[1]}-... (${row.company} — ${row.role})`
+      );
     }
   }
   return row;
