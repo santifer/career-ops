@@ -2347,8 +2347,8 @@ console.log('\n12a. Skill entrypoint materialization');
     writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
     writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
 
-    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-    const materialized = updater.materializeSkillEntrypoints(fixtureRoot).sort();
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const materialized = skills.materializeSkillEntrypoints(fixtureRoot).sort();
     const expected = [
       '.claude/skills/career-ops/SKILL.md',
       '.opencode/skills/career-ops/SKILL.md',
@@ -2446,14 +2446,44 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
       fail(`relativeImportSpecifiers mismatch: got ${JSON.stringify(specs)}`);
     }
 
+    // #1706: update-system.mjs must be SELF-LOADING — no static (top-level)
+    // relative imports. A pre-#1245 client's apply() self-reexec checks out
+    // ONLY update-system.mjs before re-execing it, so a static top-level
+    // relative import crashes that re-exec with ERR_MODULE_NOT_FOUND on the
+    // old→new jump. Relative modules must be pulled in lazily instead. Matched
+    // line-anchored (not via relativeImportSpecifiers, whose loose regex also
+    // matches such specifiers inside prose/comments) so only real top-level
+    // import/export statements count.
     const liveSource = readFileSync(join(ROOT, 'update-system.mjs'), 'utf-8');
-    if (updater.relativeImportSpecifiers(liveSource).includes('./scaffolder/bin/skill-entrypoints.mjs')) {
-      pass('relativeImportSpecifiers picks up the live skill-entrypoints import (#1245)');
+    const staticRelativeImport = /^\s*(?:import|export)\b[^\n]*?\bfrom\s*['"]\.[^'"]*['"]|^\s*import\s*['"]\.[^'"]*['"]/m;
+    if (!staticRelativeImport.test(liveSource)) {
+      pass('update-system.mjs has no static relative imports — self-loading (#1706)');
     } else {
-      fail('relativeImportSpecifiers missed the live skill-entrypoints import');
+      fail('update-system.mjs has a static relative import that breaks old→new re-exec (#1706)');
     }
   } catch (e) {
     fail(`relativeImportSpecifiers test crashed: ${e.message}`);
+  }
+}
+
+{
+  // #1706 end-to-end regression: reproduce the old→new re-exec by checking out
+  // ONLY update-system.mjs into an otherwise-empty dir (no scaffolder/) and
+  // importing it. Before the lazy-import fix this threw ERR_MODULE_NOT_FOUND at
+  // module load; it must now load standalone.
+  const isolatedRoot = mkdtempSync(join(tmpdir(), 'career-ops-updater-standalone-'));
+  try {
+    const updaterSource = readFileSync(join(ROOT, 'update-system.mjs'), 'utf-8');
+    const isolatedUpdater = join(isolatedRoot, 'update-system.mjs');
+    writeFileSync(isolatedUpdater, updaterSource);
+    try {
+      await import(pathToFileURL(isolatedUpdater).href);
+      pass('update-system.mjs imports standalone without scaffolder/ present (#1706)');
+    } catch (err) {
+      fail(`update-system.mjs failed to import standalone (old→new re-exec crash, #1706): ${err.code || err.message}`);
+    }
+  } finally {
+    rmSync(isolatedRoot, { recursive: true, force: true });
   }
 }
 
@@ -2469,8 +2499,8 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
     mkdirSync(join(canonicalDir, 'SKILL.md'));
     writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
 
-    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const materialized = skills.materializeSkillEntrypoints(fixtureRoot);
     const claudeSkill = readFileSync(join(claudeDir, 'SKILL.md'), 'utf-8');
     if (materialized.length === 0 && claudeSkill === pointer) {
       pass('update-system skips skill materialization when canonical entrypoint is unreadable');
@@ -2500,8 +2530,8 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
     mkdirSync(join(claudeDir, 'SKILL.md'));
     writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
 
-    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const materialized = skills.materializeSkillEntrypoints(fixtureRoot);
     const opencodeSkill = readFileSync(join(opencodeDir, 'SKILL.md'), 'utf-8');
     if (JSON.stringify(materialized) === JSON.stringify(['.opencode/skills/career-ops/SKILL.md']) && opencodeSkill === fixtureSkill) {
       pass('update-system skips non-file skill entrypoints while materializing valid pointers');
@@ -2557,7 +2587,8 @@ console.log('\n12c. Materialized skill index mode');
     gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.opencode/skills/career-ops/SKILL.md`]);
 
     const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const materialized = skills.materializeSkillEntrypoints(fixtureRoot);
     updater.prepareMaterializedSkillEntrypointsForStage(materialized, fixtureRoot);
     gitRun(['add', '--', '.claude/skills/', '.opencode/skills/']);
 
