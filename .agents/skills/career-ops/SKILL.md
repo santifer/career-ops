@@ -142,7 +142,7 @@ Read `modes/_shared.md` + `modes/_profile.md` (if exists) + `modes/_custom.md` (
 
 Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
 
-### Standalone modes (only their mode file)
+### Standalone modes with profile and custom context
 
 Read `modes/_profile.md` (if exists) + `modes/_custom.md` (if exists) + `modes/{mode}.md`
 
