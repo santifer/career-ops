@@ -633,23 +633,36 @@ for (const file of tsvFiles) {
       skipped++;
     }
   } else {
-    // New entry — trust the TSV's own number only when it is BOTH ahead of
-    // this run's max AND not already claimed by any row on the tracker.
-    // `addition.num > maxNum` alone is not proof the number is free: a stale,
-    // precomputed number (e.g. carried by a batch worker's TSV that sat
-    // unmerged while other unrelated evaluations were merged in the
-    // meantime) can still collide with a row already on the tracker even
-    // though it's numerically ahead of a naive maxNum snapshot (#1704).
-    // usedNumbers already includes every number this run has assigned so
-    // far (added below), so same-run collisions are covered too.
+    // New entry — keep the TSV's own reserved number whenever it is free.
+    // Report numbers come from reserve-report-num.mjs (counts off reports/),
+    // while maxNum comes from the tracker's own rows — two independent
+    // counters. A reserved number <= maxNum is therefore the COMMON case,
+    // not an anomaly, and silently replacing it with ++maxNum permanently
+    // diverges the tracker row # from the number embedded in the report
+    // file (filename + Machine Summary), which then makes
+    // `set-status.mjs <report#>` edit the wrong row (#1733, field report
+    // in #1704). So: trust addition.num as long as it's a valid positive
+    // integer AND not already claimed by any tracker row or by an earlier
+    // addition in this same run (usedNumbers covers both, per #1704).
+    // Only fall back to fresh max-based assignment when the number is
+    // genuinely taken — and warn loudly, because from that point the row #
+    // no longer matches the report file's number.
+    const reservedNum = Number.isInteger(addition.num) && addition.num > 0
+      ? addition.num : null;
     let entryNum;
-    if (addition.num > maxNum && !usedNumbers.has(addition.num)) {
-      entryNum = addition.num;
+    if (reservedNum !== null && !usedNumbers.has(reservedNum)) {
+      entryNum = reservedNum;
     } else {
       entryNum = maxNum + 1;
       while (usedNumbers.has(entryNum)) entryNum++;
+      if (reservedNum !== null) {
+        console.warn(`⚠️  Reserved #${reservedNum} already used by another tracker row — assigned #${entryNum} to ${addition.company} — ${addition.role} instead. Tracker row # no longer matches the report file's number (reports/${String(reservedNum).padStart(3, '0')}-...); fix the report link/number manually if needed.`);
+      }
     }
     usedNumbers.add(entryNum);
+    // maxNum must never go backwards: keeping a low reserved number (e.g.
+    // #415 while max is #417) must not make a later number-less addition
+    // land on #416 twice.
     if (entryNum > maxNum) maxNum = entryNum;
 
     const newLine = buildRow({

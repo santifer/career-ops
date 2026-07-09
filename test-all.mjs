@@ -24,7 +24,7 @@
  */
 
 
-import { execSync, execFileSync, spawn } from 'child_process';
+import { execSync, execFileSync, spawn, spawnSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
 import { join, dirname, delimiter } from 'path';
 import { tmpdir } from 'os';
@@ -4475,6 +4475,93 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker stale-number collision test crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER RESERVED-NUMBER FIDELITY (#1733) ───────────────────────
+// Opposite branch of #1704: report numbers are reserved off reports/
+// (reserve-report-num.mjs) while maxNum comes from the tracker's own rows —
+// two independent counters — so a reserved number <= maxNum is the COMMON
+// case. The old `addition.num > maxNum ? addition.num : ++maxNum` silently
+// replaced the reserved number, permanently diverging the tracker row # from
+// the number embedded in the report file, which later made
+// `set-status.mjs <report#>` edit the wrong (single, valid-looking) row.
+// Pins: (a) a free reserved number <= maxNum is KEPT; (b) a genuinely taken
+// number falls back to a fresh unused number AND warns loudly; (c) keeping a
+// low number never drags maxNum backwards — the fallback still assigns past
+// the true max.
+console.log('\n🧪 Testing merge-tracker reserved-number fidelity (#1733)...');
+try {
+  const fidTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-1733-'));
+  try {
+    mkdirSync(join(fidTmp, 'data'));
+    const fidAdditions = join(fidTmp, 'additions');
+    mkdirSync(fidAdditions);
+
+    const fidTracker = join(fidTmp, 'data', 'applications.md');
+    // Tracker max is #417; #415 is NOT on the tracker (it was reserved off
+    // reports/ by a batch worker) and #416 IS taken by an unrelated row.
+    writeFileSync(fidTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 416 | 2026-07-01 | OldCo | Data Analyst | 3.2/5 | Evaluated | ❌ | — | — |\n' +
+      '| 417 | 2026-07-02 | OtherCo | ML Engineer | 4.0/5 | Applied | ✅ | — | — |\n');
+
+    // (a) reserved #415 is free → must be kept even though 415 <= max 417.
+    writeFileSync(join(fidAdditions, '001-lowco.tsv'),
+      '415\t2026-07-09\tLowCo\tCloudOps Engineer\tEvaluated\t4.1/5\t❌\t[415](reports/415-lowco-2026-07-09.md)\treserved low number\n');
+    // (b) reserved #416 is taken by OldCo → fallback + loud warning.
+    writeFileSync(join(fidAdditions, '002-clashco.tsv'),
+      '416\t2026-07-09\tClashCo\tPlatform Engineer\tEvaluated\t3.9/5\t❌\t[416](reports/416-clashco-2026-07-09.md)\tclashing number\n');
+
+    // spawnSync instead of run(): the fallback warning goes to stderr
+    // (console.warn) and run() only returns stdout.
+    const fidRes = spawnSync(NODE, ['merge-tracker.mjs'], {
+      cwd: ROOT, encoding: 'utf-8', timeout: 30000,
+      env: { ...process.env, CAREER_OPS_TRACKER: fidTracker, CAREER_OPS_ADDITIONS: fidAdditions },
+    });
+    if (fidRes.status !== 0) {
+      fail(`reserved-number fidelity (#1733): merge-tracker exited ${fidRes.status}\n${fidRes.stdout}${fidRes.stderr}`);
+    } else {
+      const fidMerged = readFileSync(fidTracker, 'utf-8');
+      const fidRows = fidMerged.split('\n').filter(l => l.startsWith('| ') && !l.startsWith('| #') && !l.startsWith('|---'));
+
+      if (fidRows.some(r => /^\| 415 \|/.test(r) && r.includes('LowCo'))) {
+        pass('reserved-number fidelity (#1733): free reserved #415 kept as tracker row # despite being <= max 417');
+      } else {
+        fail(`reserved-number fidelity (#1733): reserved #415 was not kept\n${fidMerged}`);
+      }
+
+      // (c) fallback for the taken #416 must land PAST the true max (418+),
+      // proving keeping #415 did not drag maxNum backwards onto #416/#417.
+      const clashRow = fidRows.find(r => r.includes('ClashCo'));
+      const clashNum = clashRow ? parseInt(clashRow.split('|')[1].trim(), 10) : NaN;
+      if (clashNum >= 418) {
+        pass(`reserved-number fidelity (#1733): taken #416 fell back to fresh #${clashNum} past the true max`);
+      } else {
+        fail(`reserved-number fidelity (#1733): fallback assigned #${clashNum} (want >= 418)\n${fidMerged}`);
+      }
+
+      if ((fidRes.stderr || '').includes('Reserved #416 already used')) {
+        pass('reserved-number fidelity (#1733): fallback warns loudly that row # no longer matches the report file');
+      } else {
+        fail(`reserved-number fidelity (#1733): expected loud fallback warning on stderr, got:\n${fidRes.stderr}`);
+      }
+
+      const fidNums = fidRows.map(r => parseInt(r.split('|')[1].trim(), 10));
+      if (new Set(fidNums).size === fidNums.length
+          && fidRows.some(r => /^\| 416 \|/.test(r) && r.includes('OldCo'))
+          && fidRows.some(r => /^\| 417 \|/.test(r) && r.includes('OtherCo'))) {
+        pass('reserved-number fidelity (#1733): no duplicate numbers, existing rows untouched');
+      } else {
+        fail(`reserved-number fidelity (#1733): duplicate numbers or existing rows disturbed — ${fidNums.join(', ')}\n${fidMerged}`);
+      }
+    }
+  } finally {
+    rmSync(fidTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker reserved-number fidelity test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER REQ/JOB-NUMBER DEDUP GUARD (#1524) ─────────────────────

@@ -8,14 +8,18 @@
  * modes (apply Step 9, followup, batch) call this instead of editing the table.
  *
  * Usage:
- *   node set-status.mjs <report#|company> <state> [--note "..."] [--role "..."] [--dry-run] [--json]
+ *   node set-status.mjs <report#|company> <state> [--note "..."] [--role "..."] [--force] [--dry-run] [--json]
  *
  * Row resolution:
  *   - numeric argument → exact match on the # column; if the tracker has a
  *     duplicate # (see #1704 — merge-tracker.mjs bug, now fixed, that could
  *     assign the same # to two rows), --role narrows it, otherwise it fails
  *     ambiguous with a candidate list instead of silently editing whichever
- *     row was found first
+ *     row was found first. If the single matched row's Report column links a
+ *     report file whose embedded 3-digit number differs from the selector
+ *     (row # drift, #1733), the write is refused unless --force is passed —
+ *     a valid-looking single match can still be the WRONG row when the
+ *     tracker numbering has diverged from the report files.
  *   - otherwise → company match (normalized, same key as merge-tracker dedup);
  *     multiple hits are narrowed with --role (fuzzy, role-matcher.mjs), and
  *     anything still ambiguous fails with a numbered candidate list.
@@ -32,7 +36,8 @@
  *
  * Exit codes: 0 success (including no-op re-runs) · 1 usage error,
  * non-canonical state, unreadable states.yml, or non-retryable lock/write failure ·
- * 2 row not found or unreadable tracker · 3 ambiguous company match ·
+ * 2 row not found or unreadable tracker · 3 ambiguous company match or
+ * report-link mismatch (override with --force) ·
  * 4 tracker lock timeout (busy — retry later).
  *
  * When the new status is Applied, the JSON output carries
@@ -59,12 +64,14 @@ const EXIT_NOT_FOUND = 2;
 const EXIT_AMBIGUOUS = 3;
 const EXIT_LOCK_TIMEOUT = 4;
 
-const USAGE = `Usage: node set-status.mjs <report#|company> <state> [--note "..."] [--role "..."] [--dry-run] [--json]
+const USAGE = `Usage: node set-status.mjs <report#|company> <state> [--note "..."] [--role "..."] [--force] [--dry-run] [--json]
 
   <report#|company>  Row selector: tracker # (exact) or company name (normalized match)
   <state>            Canonical state from templates/states.yml (aliases accepted)
   --note "..."       Append to the Notes cell ("; "-separated, idempotent)
   --role "..."       Disambiguate when several rows share the company (fuzzy match)
+  --force            Write even when the row's Report link embeds a different
+                     report number than the selector (row # drift, #1733)
   --dry-run          Resolve and validate, but write nothing
   --json             Machine-readable output on stdout (errors included)`;
 
@@ -72,7 +79,7 @@ const USAGE = `Usage: node set-status.mjs <report#|company> <state> [--note "...
 
 const rawArgs = process.argv.slice(2);
 const positional = [];
-const flags = { note: null, role: null, dryRun: false, json: false };
+const flags = { note: null, role: null, force: false, dryRun: false, json: false };
 
 for (let i = 0; i < rawArgs.length; i++) {
   const a = rawArgs[i];
@@ -86,6 +93,7 @@ for (let i = 0; i < rawArgs.length; i++) {
     flags[a === '--note' ? 'note' : 'role'] = value;
     i++;
   }
+  else if (a === '--force') { flags.force = true; }
   else if (a === '--dry-run') { flags.dryRun = true; }
   else if (a === '--json') { flags.json = true; }
   else if (a.startsWith('--')) { failUsage(`Unknown flag: ${a}`); }
@@ -163,6 +171,37 @@ if (!existsSync(APPS_FILE)) {
 }
 
 /**
+ * Report-link sanity check for the numeric selector (#1733).
+ *
+ * merge-tracker.mjs once silently renumbered additions whose reserved report
+ * number was <= the tracker max, so a tracker can carry rows whose # disagrees
+ * with the number embedded in their own Report link (filename + Machine
+ * Summary). For those rows a bare-number selector finds exactly ONE
+ * valid-looking match — and it's the wrong one. When the matched row's Report
+ * column links a report file whose embedded number differs from the selector,
+ * refuse to write unless --force is passed. Rows without a parseable report
+ * link (e.g. "—") pass through unchecked.
+ *
+ * @param {object} row - The single matched row.
+ * @param {number} num - The numeric selector.
+ * @returns {object} The same row, if the check passes. Exits on mismatch.
+ */
+function checkReportLink(row, num) {
+  const m = /(?:^|[(\/])reports\/0*(\d+)-/.exec(row.report ?? '');
+  if (m) {
+    const linkedNum = parseInt(m[1], 10);
+    if (linkedNum !== num && !flags.force) {
+      failWith(EXIT_AMBIGUOUS, 'report-link-mismatch',
+        `Row #${num}'s Report column points to reports/${m[1]}-... — the tracker row number has drifted from the report file's own number (#1733). ` +
+        `Selector "${num}" may be targeting the wrong row (${row.company} — ${row.role}). ` +
+        `Use the company name as selector, or pass --force to write anyway.`,
+        { rowNum: num, linkedReportNum: linkedNum, company: row.company, role: row.role });
+    }
+  }
+  return row;
+}
+
+/**
  * Find the tracker row matching the CLI selector.
  *
  * @param {object[]} rows - Parsed data rows (parseTrackerRow output + lineIdx).
@@ -177,7 +216,7 @@ function resolveRow(rows) {
     }
     if (matches.length > 1 && flags.role) {
       const narrowed = matches.filter(r => roleFuzzyMatch(r.role, flags.role));
-      if (narrowed.length === 1) return narrowed[0];
+      if (narrowed.length === 1) return checkReportLink(narrowed[0], num);
       // Fall through with the original list so the candidates stay visible.
     }
     if (matches.length > 1) {
@@ -192,7 +231,7 @@ function resolveRow(rows) {
         `#${num} is a duplicate tracker number shared by ${matches.length} rows (see #1704) — pass --role to disambiguate, or use the company name instead:\n${listing}`,
         { candidates });
     }
-    return matches[0];
+    return checkReportLink(matches[0], num);
   }
 
   const key = normalizeCompany(selector);
