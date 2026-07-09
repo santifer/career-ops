@@ -203,7 +203,7 @@ try {
     fail(`tencent.fetch() ctx.maxPages=1: ${probe.calls.length} requests, keyword=${JSON.stringify(probe.calls[0] && probe.calls[0].keyword)}`);
   }
 
-  const blip = mkCtx(({ keyword }) => {
+  const blip = mkCtx((keyword) => {
     if (keyword === '大模型') throw new Error('HTTP 503');
     return { Code: 200, Data: { Count: 1, Posts: [mkPost(7, '幸存岗位')] } };
   });
@@ -212,6 +212,21 @@ try {
     pass('tencent.fetch() keeps already-collected jobs when a later request fails');
   } else {
     fail(`tencent.fetch() partial results on failure: ${JSON.stringify(blipJobs.map(j => j.title))}`);
+  }
+
+  const zeroThenBlip = mkCtx((keyword) => {
+    if (keyword === '大模型') throw new Error('HTTP 503');
+    return { Code: 200, Data: { Count: 0, Posts: [] } };
+  });
+  let zeroThenBlipJobs;
+  let zeroThenBlipThrew = false;
+  try {
+    zeroThenBlipJobs = await tencent.fetch({ name: '腾讯', careers_url: TENCENT_URL, keywords: ['AI', '大模型'] }, zeroThenBlip.ctx);
+  } catch { zeroThenBlipThrew = true; }
+  if (!zeroThenBlipThrew && Array.isArray(zeroThenBlipJobs) && zeroThenBlipJobs.length === 0) {
+    pass('tencent.fetch() treats a later failure as a blip even when earlier keywords matched 0 jobs (board is alive)');
+  } else {
+    fail(`tencent.fetch() 0-result keyword then 503: ${zeroThenBlipThrew ? 'threw' : JSON.stringify(zeroThenBlipJobs)}`);
   }
 
   let firstFailThrew = false;

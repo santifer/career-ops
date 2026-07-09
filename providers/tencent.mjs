@@ -103,6 +103,7 @@ export default {
     const seen = new Map();
     const sleep = (ms) => (typeof ctx?.sleep === 'function' ? ctx.sleep(ms) : new Promise((r) => setTimeout(r, ms)));
     let firstRequest = true;
+    let succeededOnce = false;
 
     for (const keyword of keywords) {
       for (let page = 1; page <= maxPages; page++) {
@@ -116,11 +117,13 @@ export default {
         } catch (err) {
           // A dead board should still read as a failure, but a mid-run blip
           // must not discard what's already collected (same idiom as
-          // workday/jobstreet/glints).
-          if (seen.size === 0) throw err;
+          // workday/jobstreet/glints). Track successes directly — a keyword
+          // can legitimately match 0 jobs, so seen.size is not the signal.
+          if (!succeededOnce) throw err;
           console.error(`  ⚠ tencent: keyword "${keyword}" page ${page} failed (${err.message}) — keeping the ${seen.size} jobs collected so far`);
           return [...seen.values()];
         }
+        succeededOnce = true;
         const { jobs, total } = parseTencentResponse(json, entry.name || '腾讯');
         if (jobs.length === 0) break;
 
