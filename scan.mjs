@@ -640,6 +640,133 @@ export function buildCompanyCanonicalizer(aliases) {
   };
 }
 
+const ROLE_LOCATION_SUFFIXES = new Set([
+  'amer',
+  'americas',
+  'amsterdam',
+  'apac',
+  'austin',
+  'barcelona',
+  'bay area',
+  'belgium',
+  'berlin',
+  'boston',
+  'brussels',
+  'budapest',
+  'canada',
+  'chicago',
+  'copenhagen',
+  'dublin',
+  'emea',
+  'eu',
+  'europe',
+  'finland',
+  'france',
+  'frankfurt',
+  'germany',
+  'hamburg',
+  'helsinki',
+  'india',
+  'ireland',
+  'italy',
+  'la',
+  'latin america',
+  'lisbon',
+  'london',
+  'los angeles',
+  'madrid',
+  'melbourne',
+  'milan',
+  'montreal',
+  'munich',
+  'netherlands',
+  'new york',
+  'north america',
+  'nyc',
+  'on site',
+  'onsite',
+  'oslo',
+  'paris',
+  'poland',
+  'porto',
+  'prague',
+  'remote',
+  'rome',
+  'san francisco',
+  'seattle',
+  'sf',
+  'singapore',
+  'spain',
+  'stockholm',
+  'sydney',
+  'tokyo',
+  'toronto',
+  'uk',
+  'united kingdom',
+  'united states',
+  'us',
+  'usa',
+  'vancouver',
+  'vienna',
+  'warsaw',
+  'zurich',
+]);
+
+const ROLE_REMOTE_SUFFIXES = new Set([
+  'distributed',
+  'hybrid',
+  'on site',
+  'onsite',
+  'remote',
+  'wfh',
+  'work from home',
+]);
+
+/**
+ * Normalize bracket text before checking whether it is a location suffix.
+ *
+ * @param {unknown} tag - Text from a trailing parenthetical or bracket suffix.
+ * @returns {string} Lowercased, punctuation-normalized suffix text.
+ */
+function normalizeRoleSuffixTag(tag) {
+  return String(tag ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+/**
+ * Decide whether a trailing role-title suffix is a location/remote tag.
+ *
+ * Only known remote/location suffixes are stripped. Seniority, discipline, team,
+ * and product qualifiers are intentionally preserved so distinct role variants
+ * do not collapse to the same scanner dedupe key.
+ *
+ * @param {unknown} tag - Text from a trailing parenthetical or bracket suffix.
+ * @returns {boolean} True when the suffix is safe to remove for dedupe.
+ */
+function isRoleLocationSuffix(tag) {
+  const normalized = normalizeRoleSuffixTag(tag);
+  if (!normalized) return false;
+  if (ROLE_LOCATION_SUFFIXES.has(normalized)) return true;
+
+  const raw = String(tag ?? '').toLowerCase();
+  const parts = raw
+    .split(/[,/|;]+|\s+(?:and|or)\s+/g)
+    .map(normalizeRoleSuffixTag)
+    .filter(Boolean);
+  if (parts.length > 1 && parts.every(part => ROLE_LOCATION_SUFFIXES.has(part))) return true;
+
+  for (const remote of ROLE_REMOTE_SUFFIXES) {
+    const prefix = `${remote} `;
+    if (normalized.startsWith(prefix) && ROLE_LOCATION_SUFFIXES.has(normalized.slice(prefix.length))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Normalize a role title for repost-tolerant dedupe.
  *
@@ -648,19 +775,22 @@ export function buildCompanyCanonicalizer(aliases) {
  * a trailing tag like "(Berlin)". The requisition ID lives in the URL, never the
  * title, so keying on the normalized title is requisition-ID agnostic.
  *
- * The normalizer lowercases the title, strips trailing parenthetical/bracketed
- * tags such as "(Berlin)" and "[Remote]", then collapses punctuation and
- * whitespace so em dash vs hyphen or double spaces do not split a key.
+ * The normalizer lowercases the title, strips trailing location/remote
+ * parenthetical/bracketed tags such as "(Berlin)" and "[Remote]", then
+ * collapses punctuation and whitespace so em dash vs hyphen or double spaces do
+ * not split a key.
  *
  * @param {unknown} role - Raw role title from a tracker row or provider job.
  * @returns {string} Normalized role key.
  */
 export function normalizeRoleForDedup(role) {
-  return String(role ?? '')
-    .toLowerCase()
-    .replace(/(?:\s*[([][^)\]]*[)\]])+\s*$/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
+  let title = String(role ?? '').toLowerCase();
+  while (true) {
+    const match = title.match(/\s*[\[(]([^[\]()]+)[\])]\s*$/);
+    if (!match || !isRoleLocationSuffix(match[1])) break;
+    title = title.slice(0, match.index).trimEnd();
+  }
+  return title.replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
 /**

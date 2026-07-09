@@ -6141,10 +6141,20 @@ try {
   } else {
     fail(`trailing location tag not stripped: "${normalizeRoleForDedup('AI Infrastructure Engineer (Berlin)')}"`);
   }
-  if (normalizeRoleForDedup('Senior Engineer (Senior) (Berlin, Germany)') === 'senior engineer') {
-    pass('normalizeRoleForDedup strips stacked trailing tags');
+  if (normalizeRoleForDedup('Platform Engineer [Remote]') === normalizeRoleForDedup('Platform Engineer')) {
+    pass('normalizeRoleForDedup strips a trailing remote tag "[Remote]"');
   } else {
-    fail(`stacked tags not stripped: "${normalizeRoleForDedup('Senior Engineer (Senior) (Berlin, Germany)')}"`);
+    fail(`trailing remote tag not stripped: "${normalizeRoleForDedup('Platform Engineer [Remote]')}"`);
+  }
+  if (normalizeRoleForDedup('Senior Engineer (Senior) (Berlin, Germany)') === 'senior engineer senior') {
+    pass('normalizeRoleForDedup strips location suffixes while preserving level qualifiers');
+  } else {
+    fail(`location suffix/level qualifier handling wrong: "${normalizeRoleForDedup('Senior Engineer (Senior) (Berlin, Germany)')}"`);
+  }
+  if (normalizeRoleForDedup('Engineer (Senior)') !== normalizeRoleForDedup('Engineer (Junior)')) {
+    pass('normalizeRoleForDedup keeps trailing seniority variants distinct');
+  } else {
+    fail('trailing seniority variants over-merged distinct roles');
   }
   if (normalizeRoleForDedup('Engineering Manager, AI Models  Infrastructure') === normalizeRoleForDedup('Engineering Manager — AI Models Infrastructure')) {
     pass('normalizeRoleForDedup collapses punctuation/whitespace (comma vs em-dash, double space)');
