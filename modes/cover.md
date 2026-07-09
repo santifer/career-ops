@@ -1,9 +1,30 @@
-# Mode: cover — Cover Letter Generator
+# Mode: cover — Cover Letter Generator (2026)
 
-Generates a tailored cover letter for any candidate from a job description.
+Generates a tailored cover letter for any candidate from a job description. The modern cover letter is a **pitch, not an essay** — recruiters and ATS systems filter in seconds. Every sentence must deliver value.
+
 Works in two modes:
 - **Slug mode:** `/career-ops cover {slug}` — loads the existing evaluation report draft as a starting point
 - **Paste mode:** `/career-ops cover` or JD pasted directly — starts from scratch
+
+---
+
+## 2026 Best Practices (mandatory)
+
+| Outdated | Best Practice 2026 |
+|----------|-------------------|
+| "I am writing to express my interest..." | Direct hook with your strongest argument |
+| Summarizing your resume in prose | Focus on future value and problem-solving |
+| Wall-of-text paragraphs only | Bullet points for scannability |
+| "I would be grateful for the opportunity" | Confident close: "I look forward to discussing..." |
+| Claiming soft skills without evidence | Show adaptability with a concrete example |
+
+### 5 Core Principles
+
+1. **Hook in the first sentence** — No wasted space. Immediately state why you're the solution to their problem.
+2. **Use bullet points** — 2-4 evidence bullets in the body for quantified achievements. Screen reading = scannability wins.
+3. **AI-assisted but authentic** — Use AI for structure and tightening, but the voice must be human. Generic robot text is immediately detectable.
+4. **Show adaptability** — Hard skills live in the CV. The letter shows *how* you work: learning agility, adapting to new tools/structures, concrete example.
+5. **Strong, committed close** — Specific start date, salary expectation (only if asked), confident call to action.
 
 ---
 
@@ -205,7 +226,7 @@ Format: `**Bold lead phrase,** one sentence of impact with metric.`
 
 ## Step 8 — Draft the letter in chat (mandatory before PDF)
 
-Write the full letter as plain text in the chat. Follow this structure:
+Write the full letter as plain text in the chat. Modern structure: **pitch, not essay.** Bullet points are mandatory in the body. Prose for context and motivation, bullets for evidence and scannability.
 
 ```text
 [Candidate Name]
@@ -220,33 +241,83 @@ Cover Letter: [Role Title]
 [Salutation — optional]
 Address the named hiring manager if known, e.g. "Dear Jane Smith,". Omit if no name.
 
-[Opening — 2 sentences]
-Why applying + functional summary. Derived from Angle A. Uses JD mirror vocabulary.
+[1. Hook — 2-3 sentences max]
+Direct, value-first opening. Strongest argument first.
+Company challenge → bridge to candidate.
+Derived from Angle A + company research (Step 3).
 
-[Profile introduction — 1 paragraph]
-Years of experience, current/most recent role, domain. Read from cv.md summary.
-Tone matches user's choice from Step 6D.
+    Strong: "Over the past three years, I cut operational costs by 15%
+    at [Company X] — I'd bring that same efficiency to your team as
+    [Position]."
 
-[Achievements — 4-5 bullets]
-• **Lead phrase,** impact sentence with metric.
-• **Lead phrase,** impact sentence with metric.
-• **Lead phrase,** impact sentence with metric.
-• **Lead phrase,** impact sentence with metric.
+    Strong: "Your new product launch strategy caught my attention —
+    having scaled two similar market entries, this is a natural fit."
 
-[Problems I will solve — 2-3 sentences]
-Derived from: confirmed research (Step 3) + Angle B + Angle C.
-Specific to this company's actual situation. Not generic.
+[2. Evidence bullets — 2-4 quantified milestones]
+Brief transition line, then bullet points:
 
-[Closing — 1-2 sentences]
-Availability + any gap acknowledgments the user chose to include (Step 5).
+  • **Lead phrase,** impact sentence with metric from cv.md.
+  • **Lead phrase,** impact sentence with metric from cv.md.
+  • **Lead phrase,** impact sentence with metric from cv.md.
+  • **Lead phrase,** optional fourth.
+
+Each bullet: active verb + specific outcome + number.
+Apply keyword mirroring from Step 4.
+
+[3. How you work + adaptability — 2-3 sentences]
+Show HOW you work, not just WHAT. Concrete example of learning agility
+or adapting to new tools/structures/challenges.
+Derived from Angle B + C. Specific to company's situation.
+
+[4. Committed close — 2-3 sentences]
+Availability (specific date or "immediately").
+Salary expectation only if requested (precise number, not round).
+Confident call to action — no hedging, no subjunctive mood.
+
+    Strong: "I look forward to discussing how I can contribute to
+    [specific initiative] in a conversation."
+
+    Banned: "I would be grateful for the opportunity to discuss..."
 
 [Language closing — if applicable]
 Only if user confirmed inclusion in Step 5. Written in that language. Italic in PDF.
 ```
 
+### AI Authenticity Check (mandatory before presenting)
+
+Before presenting the draft, check every sentence against this list:
+
+1. **Does it sound like a robot?** Generic lines that could appear in any cover letter → rewrite.
+2. **Is the tone consistent?** The chosen tone (Step 6D) must hold throughout — no register shifts.
+3. **Symmetry monotony?** Vary sentence lengths deliberately. Not every sentence the same length or starting with "I".
+4. **AI tells?** Check against the list in `_profile.md` and `voice-dna.md` if they exist.
+5. **Would a human say this?** When in doubt: shorter, more direct, less polished.
+
 End the draft with: "How does this read? Once you approve I'll generate the PDF."
 
 **Do NOT generate any PDF until the user explicitly approves.** Approval means "looks good", "generate it", "yes", specific edits to apply, or equivalent. A question or silence is not approval.
+
+---
+
+## Content Guardrails (from practice iterations)
+
+### Header: no date of birth
+Date of birth belongs in the CV, not the cover letter. The contact row contains: name, phone, email, LinkedIn, optionally GitHub and location. Goal: fit everything on one line.
+
+### No named individuals in body text
+Never name individual employees in the body text (except in the salutation). It reads as over-researched and presumptuous. Instead reference department growth, company philosophy, or public facts.
+
+- **Banned:** "The fact that John Smith went from analyst to department head shows me..."
+- **Better:** "The department's growth over the past years shows me..." or "The focus on development over acquisition..."
+
+### Closing: specific, not generic
+The final sentence must be company-specific. "I look forward to a conversation" alone is too generic — always add "about" + a concrete reference to the role or company.
+
+- **Strong:** "I look forward to discussing how {specific initiative from JD/research}."
+- **Weak:** "I look forward to hearing from you."
+
+### Research sources: only verifiable
+Only reference publicly accessible sources the candidate can verify. No paywalled articles, no unconfirmed interviews. If the candidate can't check the source themselves, don't use it.
 
 ---
 
@@ -258,10 +329,13 @@ End the draft with: "How does this read? Once you approve I'll generate the PDF.
 4. **No buzzwords** — hard ban: leverage, synergy, seamless, holistic, robust, cutting-edge, spearheaded, championed, orchestrated, passionate, excited, stakeholder alignment, data-driven (say what the data drove instead), actionable insights, move the needle, north star, unique opportunity, perfect fit, strong track record
 5. **No filler openers** — never "I am pleased to", "I am writing to express", "I am excited to"
 6. **Concrete over abstract** — every claim needs a number, system name, or specific outcome. "Improved performance" is banned. "Cut latency from 2s to 380ms" is fine.
-7. **350-420 words** total body (header + credentials not counted)
-8. **Bullet format** — `**Bold lead phrase,** impact sentence with metric.` No em dash between lead and sentence.
-9. **Self-check** — before finalising, re-read each sentence: could it appear in any cover letter for any company? If yes, rewrite it.
-10. **Tone consistency** — apply the chosen tone (Step 6D) uniformly. Don't shift register mid-letter.
+7. **280–420 words** total body (header + credentials not counted). Shorter is better — recruiters scan in seconds
+8. **Bullet points mandatory** — at least 2, at most 4 evidence bullets in the body. Prose-only letters are outdated
+9. **Show adaptability** — at least one concrete example of learning agility, adapting to new tools/structures, or handling change. Hard skills live in the CV; the letter shows *how* you work
+10. **Bullet format** — `**Bold lead phrase,** impact sentence with metric.` No em dash between lead and sentence.
+11. **Self-check** — before finalising, re-read each sentence: could it appear in any cover letter for any company? If yes, rewrite it.
+12. **Tone consistency** — apply the chosen tone (Step 6D) uniformly. Don't shift register mid-letter.
+13. **Confident close** — no subjunctive mood ("would", "could", "might"). Use present tense: "I look forward to", "I am available from"
 
 ---
 

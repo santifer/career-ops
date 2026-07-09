@@ -1,10 +1,33 @@
-# Modus: cover — Anschreiben-Generator (Deutscher Markt, DIN 5008)
+# Modus: cover — Anschreiben-Generator (Deutscher Markt, 2026)
 
 Erzeugt ein maßgeschneidertes Anschreiben für den deutschen Arbeitsmarkt 2026. Folgt der DIN 5008 für Geschäftsbriefe UND den ATS-Kompatibilitätsanforderungen moderner Bewerbermanagement-Systeme (Personio, Softgarden, SAP SuccessFactors, Workday, Greenhouse).
 
 Arbeitet in zwei Modi:
 - **Slug-Modus:** `/career-ops cover {slug}` — lädt den bestehenden Bewertungs-Report als Ausgangspunkt
 - **Paste-Modus:** `/career-ops cover` oder JD direkt eingefügt — startet von vorne
+
+---
+
+## Paradigmenwechsel 2026 (verpflichtend beachten)
+
+Das moderne deutsche Anschreiben funktioniert als **Pitch, nicht als Aufsatz**. Recruiter und KI-gestützte ATS filtern in Sekunden. Jeder Satz muss Mehrwert liefern.
+
+| Veraltet | Best Practice 2026 |
+|----------|-------------------|
+| "Hiermit bewerbe ich mich..." | Direkter Einstieg (Hook) mit stärkstem Argument |
+| Lebenslauf als Text zusammengefasst | Fokus auf Zukunft und Problemlösung |
+| Reine Fließtext-Struktur | Bulletpoints für Scannbarkeit |
+| Konjunktive ("Ich würde mich freuen") | Selbstbewusster Abschluss ("Ich freue mich auf...") |
+| Stärken behaupten ("teamfähig, flexibel") | Stärken belegen (konkretes Beispiel + Zahl) |
+| Reine Hard-Skills-Auflistung | Adaptabilität und Arbeitsweise zeigen |
+
+### 5 Kernprinzipien
+
+1. **Hook im ersten Satz** — Kein Platz verschwenden. Sofort den Grund liefern, warum der Kandidat die Lösung für das Problem des Unternehmens ist.
+2. **Bulletpoints nutzen** — Der Hauptteil enthält 2-4 Bulletpoints für konkrete Erfolge oder Hard Skills, die exakt zur Stelle passen. Am Bildschirm gelesen = Scannbarkeit entscheidet.
+3. **KI-Nutzung mit eigener Stimme** — KI für Struktur und Straffung nutzen, aber zwingend mit authentischer Tonalität. Generische Roboter-Texte fallen auf und fallen durch.
+4. **Adaptabilität zeigen** — Hard Skills stehen im CV. Das Anschreiben zeigt *wie* gearbeitet wird: Lernbereitschaft, Anpassung an neue Tools/Strukturen, konkretes Beispiel.
+5. **Starker, verbindlicher Abschluss** — Kein Konjunktiv. Konkretes Eintrittsdatum, Gehaltsvorstellung (nur wenn gefordert), selbstbewusste Gesprächseinladung.
 
 ---
 
@@ -202,73 +225,127 @@ Auf alle vier Antworten warten, bevor zu Schritt 7 übergegangen wird.
 
 ## Schritt 8 — Anschreiben im Chat entwerfen (Pflicht vor PDF)
 
-Das vollständige Anschreiben als Klartext im Chat schreiben. Die folgende DIN-5008-Struktur (Form B) einhalten:
+Das vollständige Anschreiben als Klartext im Chat schreiben. Moderne Struktur: **Pitch, nicht Aufsatz.** Bulletpoints sind Pflicht im Hauptteil. Fließtext für Kontext und Motivation, Bullets für Belege und Scannbarkeit.
 
 ```text
-[Absender-Block — oben rechts oder zentriert]
-{Vorname Nachname}
-{Straße Hausnummer}
-{PLZ Ort}
-{Telefon: +49 XXX XXXXXXXX}
-{E-Mail: xxx@xxx.de}
+[Kopfzeile — Name + Kontaktdaten einzeilig]
+{Vorname Nachname} | {Telefon} | {E-Mail} | {LinkedIn-URL}
 
-[Empfänger-Anschriftfeld — linksbündig, DIN 5008 Form B]
+[Empfänger-Anschriftfeld — linksbündig]
 {Firmenname}
 {ggf. Abteilung}
 {Anrede + akadem. Grad + Name}
 {Straße Hausnummer}
 {PLZ Ort}
 
-[Datum — rechtsbündig, 2 Leerzeilen unter Anschriftfeld]
-{Ort, DD.MM.YYYY}
+[Datum — rechtsbündig]
+{Ort, DD. Monat YYYY}
 
-[Betreffzeile — fett, 2 Leerzeilen unter Datum]
+[Betreffzeile — fett, als Abschnittsüberschrift]
 Bewerbung als {exakter Stellentitel} {ggf. — Kennziffer: XXX}
 
-[Anrede — 2 Leerzeilen unter Betreff]
-Sehr geehrte/r {Anrede} {akadem. Grad} {Nachname},
+[Anrede]
+{Persönliche Anrede — immer versuchen, konkreten Namen zu recherchieren}
 
-[Eröffnungsabsatz — 1 Leerzeile nach Anrede, 5-8 Zeilen]
-Direkter, nutzenorientierter Einstieg. Perspektive des Arbeitgebers spiegeln.
-Herausforderung des Unternehmens adressieren und sofort aufzeigen, wie der
-Bewerber diese lösen kann. Aus Angle A + Unternehmensrecherche (Schritt 3) ableiten.
+[1. Hook — 2-4 Sätze, max.]
+Direkter, nutzenorientierter Einstieg. Stärkstes Argument zuerst.
+Herausforderung des Unternehmens → Brücke zum Kandidaten.
+Aus Angle A + Unternehmensrecherche (Schritt 3) ableiten.
 
-[Qualifikations-Absatz — 1 Leerzeile Abstand, 5-8 Zeilen]
-Berufserfahrung, aktuelle/letzte Position, Domain. Aus cv.md Summary lesen.
-Ausgewählte Achievements einweben (Schritt 7). Aktive Verben, quantifizierbare
-Resultate. Keywords aus der Anzeige natürlich einflechten.
+    Stark: "In den letzten drei Jahren habe ich bei [Firma] die operativen
+    Kosten um 15 % gesenkt — genau diese Effizienz möchte ich als
+    [Position] in Ihr Team einbringen."
 
-[Nutzen-Absatz — 1 Leerzeile Abstand, 5-8 Zeilen]
-Konkreter Mehrwert für das Unternehmen. Aus bestätigter Recherche (Schritt 3)
-+ Angle B + Angle C ableiten. Spezifisch auf die tatsächliche Situation des
-Unternehmens eingehen. Nicht generisch.
+    Stark: "Ihr neues Produktlaunch-Konzept hat mich begeistert. Da ich
+    bereits zwei ähnliche Markteintritte erfolgreich skaliert habe, ist
+    diese Position der perfekte Match."
 
-[Administrativer Schluss — 1 Leerzeile Abstand]
+[2. Evidence-Bullets — 2-4 quantifizierte Meilensteine]
+Kurze Überleitung ("Meine relevantesten Meilensteine für diese Position:"),
+dann Bulletpoints:
+
+  – {Achievement 1 mit Zahl aus cv.md}
+  – {Achievement 2 mit Zahl aus cv.md}
+  – {Achievement 3 mit Zahl aus cv.md}
+  – {Optional: Achievement 4}
+
+Jeder Bullet: aktives Verb + konkretes Ergebnis + Zahl.
+Keyword-Spiegelung aus Schritt 4 auf das Vokabular anwenden.
+
+[3. Arbeitsweise + Adaptabilität — 2-4 Sätze]
+Zeigen, WIE gearbeitet wird, nicht nur WAS. Konkretes Beispiel für
+Lernbereitschaft oder Anpassung an neue Tools/Strukturen/Krisen.
+Aus Angle B + C ableiten. Spezifisch auf Unternehmens-Situation eingehen.
+
+[4. Verbindlicher Abschluss — 2-3 Sätze]
 Eintrittstermin (konkret, z. B. "Unter Berücksichtigung meiner vertraglichen
-Kündigungsfrist von drei Monaten stehe ich Ihnen ab dem {Datum} zur Verfügung.").
-Gehaltsvorstellung NUR wenn die Anzeige explizit danach fragt (Brutto-Jahresgehalt,
-präzise krumme Zahl). Einladung zum Gespräch.
+Kündigungsfrist stehe ich Ihnen ab dem {Datum} zur Verfügung.").
+Gehaltsvorstellung NUR wenn gefordert (Brutto-Jahresgehalt, krumme Zahl).
+Selbstbewusste Gesprächseinladung im Indikativ.
 
-[Grußformel — 1 Leerzeile Abstand]
+    Stark: "Ich freue mich auf ein Gespräch darüber, wie
+    {firmenspezifisches Thema aus JD/Recherche}."
+
+    OK: "Ich freue mich auf ein Gespräch."
+
+    Verboten: "Ich würde mich freuen, von Ihnen zu hören."
+
+    REGEL: Der letzte Satz MUSS mit "Ich freue mich auf ein Gespräch"
+    beginnen — optional gefolgt von "über/darüber" + spezifischem Bezug
+    zur Rolle oder zum Unternehmen. Nie generisch enden.
+
+[Grußformel]
 Mit freundlichen Grüßen
 
 [3 Leerzeilen Platz für Unterschrift]
 
 {Vorname Nachname}
 
-[Anlagen — 1+ Leerzeile unter dem Namen, fett]
+[Anlagen — fett, ohne Doppelpunkt]
 Anlagen
-- Lebenslauf
-- Arbeitszeugnisse
-- {weitere Dokumente}
+– Lebenslauf
+– Zeugnisse
+– {weitere Dokumente falls vorhanden}
 
 [Optionales Postskriptum — unter Anlagen]
 PS: {Quantifizierter Teaser, der Neugier weckt und erst im Gespräch aufgelöst wird}
 ```
 
+### KI-Authentizitäts-Check (Pflicht vor Freigabe)
+
+Vor dem Präsentieren jeden Satz gegen diese Checkliste prüfen:
+
+1. **Klingt das nach Roboter?** Generische Formulierungen, die in jedem Anschreiben stehen könnten, umschreiben.
+2. **Ist der Ton konsistent?** Den gewählten Ton (Schritt 6D) durchgängig anwenden — keine Stilbrüche zwischen formell und locker.
+3. **Gibt es Symmetrie-Monotonie?** Satzlängen bewusst variieren. Nicht jeder Satz gleich lang, nicht jeder mit Subjekt anfangend.
+4. **AI-Tells?** Prüfe gegen die Liste in `_profile.md` (Abschnitt "German AI-Tells to avoid") und `voice-dna.md`.
+5. **Würde ein Mensch das so sagen?** Im Zweifel kürzer, direkter, ungeschliffener.
+
 Ende des Entwurfs mit: "Wie liest sich das? Sobald du es freigibst, erzeuge ich das PDF."
 
 **Kein PDF erzeugen, bis der Kandidat explizit freigibt.** Freigabe bedeutet "sieht gut aus", "generier es", "ja", spezifische Änderungen. Eine Frage oder Stille ist keine Freigabe.
+
+---
+
+## Inhaltliche Leitplanken (aus Praxis-Iterationen)
+
+### Kopfzeile: kein Geburtsdatum
+Das Geburtsdatum gehört in den Lebenslauf, nicht ins Anschreiben. Die Kontaktzeile enthält: Name, Telefon, E-Mail, LinkedIn, optional GitHub und Standort. Ziel: alles in eine Zeile.
+
+### Keine namentlichen Einzelpersonen
+Nie einzelne Mitarbeiter des Unternehmens im Fließtext namentlich erwähnen (außer in der Anrede). Das wirkt überrecherchiert und anmaßend. Stattdessen Abteilungswachstum, Unternehmensphilosophie oder öffentliche Fakten referenzieren.
+
+- **Verboten:** "Dass Max Müller den Weg vom Analysten zum Abteilungsleiter gegangen ist, zeigt mir..."
+- **Besser:** "Dass die Abteilung in den letzten Jahren gewachsen ist, zeigt mir..." oder "Der Fokus auf Entwicklung statt Einkauf..."
+
+### Abschluss: spezifisch, nicht generisch
+Der letzte Satz muss firmenspezifisch sein. "Ich freue mich auf ein Gespräch" allein ist zu generisch — immer mit "über/darüber" + konkretem Bezug zur Rolle oder zum Unternehmen ergänzen.
+
+### Anlagen: Standardset
+Default-Anlagen für deutsche Bewerbungen: **Lebenslauf + Zeugnisse**. Weitere Dokumente nur wenn vorhanden und relevant (z.B. Portfolio, Referenzen).
+
+### Recherche-Quellen: nur Verifizierbares
+Nur öffentlich zugängliche und vom Kandidaten verifizierbare Quellen im Anschreiben referenzieren. Keine Paywall-Artikel, keine unbestätigten Interviews. Wenn der Kandidat die Quelle nicht selbst prüfen kann, nicht verwenden.
 
 ---
 
@@ -280,24 +357,29 @@ Ende des Entwurfs mit: "Wie liest sich das? Sobald du es freigibst, erzeuge ich 
 2. **Keine Abkürzungen** außer branchenüblichen (z. B., ggf., etc.) — Fachbegriffe beim ersten Auftreten ausschreiben
 3. **Keine Gedankenstriche (—)** — durch Komma, Punkt oder Umformulierung ersetzen
 4. **Konkret statt abstrakt** — jede Behauptung braucht eine Zahl, einen Systemnamen oder ein konkretes Ergebnis
-5. **350-450 Wörter** Gesamtkörper (Absender/Empfänger/Datum nicht gezählt). Maximal eine DIN-A4-Seite
-6. **Absätze: 5-8 Zeilen**, getrennt durch je eine Leerzeile
-7. **Selbst-Check** — vor der Finalisierung jeden Satz prüfen: Könnte dieser Satz in jedem Anschreiben für jede Firma stehen? Wenn ja, umschreiben
-8. **Ton-Konsistenz** — den gewählten Ton (Schritt 6D) durchgängig anwenden
+5. **250–350 Wörter** Gesamtkörper (Absender/Empfänger/Datum nicht gezählt). Maximal eine DIN-A4-Seite. Kürzer ist besser — Recruiter lesen in Sekunden
+6. **Bulletpoints Pflicht** — mindestens 2, maximal 4 Evidence-Bullets im Hauptteil. Fließtext allein ist veraltet
+7. **Adaptabilität zeigen** — mindestens ein konkretes Beispiel für Anpassungsfähigkeit, Lernbereitschaft oder Umgang mit neuen Tools/Strukturen. Hard Skills stehen im CV, das Anschreiben zeigt *wie* gearbeitet wird
+8. **Selbst-Check** — vor der Finalisierung jeden Satz prüfen: Könnte dieser Satz in jedem Anschreiben für jede Firma stehen? Wenn ja, umschreiben
+9. **Ton-Konsistenz** — den gewählten Ton (Schritt 6D) durchgängig anwenden
+10. **Indikativ im Schluss** — nie Konjunktiv. "Ich freue mich auf ein Gespräch", nicht "Ich würde mich freuen"
 
 ### Verbotene Formulierungen (Ausschlussgrund bei HR-Professionals)
 
 | Verboten | Warum | Alternative |
 |----------|-------|-------------|
-| "Mit großem Interesse habe ich Ihre Anzeige gelesen" | Floskelhaft, redundant, zeigt keine Auseinandersetzung | Direkter Einstieg über Unternehmens-Herausforderung oder Nutzenversprechen |
 | "Hiermit bewerbe ich mich als..." | Wiederholt eine offensichtliche Tatsache | Stellentitel gehört in die Betreffzeile, nicht in den Eröffnungssatz |
+| "Mit großem Interesse habe ich Ihre Anzeige gelesen" | Floskelhaft, redundant, zeigt keine Auseinandersetzung | Direkter Einstieg über Unternehmens-Herausforderung oder Nutzenversprechen |
 | "Ich bin teamfähig, flexibel, belastbar" | Reine Behauptungen ohne Evidenz | Konkretes Beispiel: "In meinem Team von 8 Kollegen koordiniere ich internationale Projekte über 3 Zeitzonen" |
 | "Ich bin hochmotiviert / begeistert" | Subjektive Eigenschaftsauflistung | Stattdessen zeigen, nicht behaupten: konkretes Ergebnis, das Motivation belegt |
-| "Ich würde mich freuen, von Ihnen zu hören" | Unterwürfig, passiv | "Gerne erläutere ich Ihnen im persönlichen Gespräch, wie..." |
+| "Ich würde mich freuen, von Ihnen zu hören" | Unterwürfig, passiv, Konjunktiv | "Ich freue mich darauf, meine Ideen im Gespräch zu vertiefen." (Indikativ) |
 | "Zu Händen" (z. Hd.) im Anschriftfeld | Veraltet | Name direkt: "Frau Dr. Müller" / "Herrn Schmidt" |
-| "den" im Datumsstring ("München, den 20.01.2026") | Veraltetes Relikt | "München, 20.01.2026" oder "20. Januar 2026" |
+| "den" im Datumsstring ("München, den 20.01.2026") | Veraltetes Relikt | "Köln, 9. Juli 2026" (ausgeschriebener Monat, kein "den") |
 | Passivkonstruktionen ("wurde mir übertragen") | Signalisiert mangelnde Eigeninitiative | Aktiv: "Ich habe eigenverantwortlich die Neukundenakquise gesteuert" |
 | "Betreff:" als Wort vor der Betreffzeile | Veraltet nach DIN 5008 | Betreffzeile direkt schreiben, fett formatiert |
+| Lebenslauf als Fließtext nacherzählen | Redundant, verschwendet Platz | Fokus auf Zukunft und Problemlösung — der CV liegt bei |
+| Reine Fließtext-Wände ohne Bullets | Schlecht scannbar am Bildschirm | Bulletpoints für Meilensteine, Fließtext für Kontext |
+| Konjunktiv im Abschluss ("könnte", "würde") | Unsicher, unverbindlich | Indikativ: "Ich stehe Ihnen ab dem ... zur Verfügung" |
 
 ### Evidenz-Prinzip
 
@@ -446,38 +528,49 @@ Wenn die Bewerbung per E-Mail versendet wird (nicht über ein Portal):
 
 ---
 
-## DIN 5008 — Technische Formatierungsvorgaben
+## DIN 5008 meets Digital — Formatierung 2026
 
-### Seitenränder (Form B)
-- Links: 2,5 cm
-- Rechts: 2,0 cm (mind. 1,0 cm)
-- Oben: 4,5 cm (inkl. Absenderfeld)
-- Unten: 2,0–2,5 cm
+Auch wenn der Inhalt moderner geworden ist, gibt das grundlegende Format (angelehnt an die DIN 5008) in Deutschland immer noch den professionellen Rahmen vor, besonders bei traditionelleren Unternehmen. Aber: **Digitale Lesbarkeit schlägt Briefpost-Konventionen** — postalische Elemente können entfallen, wenn die Bewerbung nur digital erfolgt.
+
+### Seitenränder (Form B — `--margins=din5008`)
+- Links: 2,5 cm (0,98 in)
+- Rechts: 2,0 cm (0,79 in)
+- Oben: 1,5 cm (0,59 in) — kompakter als klassische 4,5 cm, da Absenderblock kürzer
+- Unten: 1,5 cm (0,59 in)
+
+### Kopfzeile (modern)
+- **Pflicht:** Name, Telefon, E-Mail, LinkedIn-URL
+- **Optional:** GitHub, Portfolio-URL, Geburtsdatum (DACH-Markt), Standort
+- **Format:** Einzeilig mit Trennzeichen, nicht als Briefblock. Ein postalisches Anschreiben ist die absolute Ausnahme.
 
 ### Typografie
-- Serifenlose Systemschriften: Arial, Calibri, Helvetica, Verdana
-- Fließtext: 11-12 pt
-- Betreffzeile: fett, gleiche Schriftgröße wie Fließtext
-- Zeilenabstand: 1,15- bis 1,2-fach
+- Serifenlose Systemschriften: Liberation Sans, Arial, Calibri, Helvetica
+- Fließtext: 10,5-11 pt (abhängig von Inhaltslänge — Einseitigkeit hat Vorrang)
+- Betreffzeile: fett, gleiche oder leicht größere Schriftgröße
+- Zeilenabstand: 1,4- bis 1,6-fach (etwas großzügiger als DIN-Minimum, für Bildschirmlesbarkeit)
 - Linksbündiger Flattersatz (kein Blocksatz ohne Silbentrennung)
 
-### Anschriftfeld (Form B)
-- Höhe: 4,5 cm, Breite: 8,5 cm
-- Max. 9 Zeilen, davon 3 für postalische Vermerke (z. B. "Einschreiben")
+### Empfängerfeld
+- Max. 6 Zeilen: Firma, Abteilung (optional), Anrede + Name, Straße, PLZ Ort
 - Anrede im Feld: "Herrn" (Akkusativ, nicht "Herr") / "Frau"
 - Akademischer Grad vor dem Namen: "Frau Dr. Müller"
 - Bachelor/Master hinter dem Namen: "Herrn Schmidt, M.Sc."
+- **Immer versuchen, einen konkreten Ansprechpartner herauszufinden**
 
-### Abstände
-- 2 Leerzeilen zwischen Anschriftfeld und Datum
-- 2 Leerzeilen zwischen Datum und Betreffzeile
-- 2 Leerzeilen zwischen Betreff und Anrede
+### Abstände (kompakt für Einseitigkeit)
+- Datum rechtsbündig, unter Empfängerfeld
+- Betreffzeile unter Datum
+- 1 Leerzeile zwischen Betreff und Anrede
 - 1 Leerzeile zwischen Anrede und erstem Absatz
-- 1 Leerzeile zwischen Absätzen
+- 1 Leerzeile zwischen Absätzen / vor Bulletliste
 - 1 Leerzeile zwischen letztem Absatz und Grußformel
-- 3 Leerzeilen zwischen Grußformel und gedrucktem Namen (Platz für Unterschrift)
+- 2-3 Leerzeilen zwischen Grußformel und gedrucktem Namen (Platz für Unterschrift)
 - "Mit freundlichen Grüßen" OHNE nachfolgendes Komma
 - "Anlagen" fett, OHNE Doppelpunkt
+
+### Länge
+- **250–350 Wörter** (Kern-Text, ohne Kopf-/Fußdaten)
+- **Maximal eine DIN-A4-Seite** — bei Überlauf zuerst Inhalte kürzen, dann Schriftgröße anpassen (nie unter 10 pt)
 
 ### Dateiformat
 - Textbasiertes PDF (kein Scan)

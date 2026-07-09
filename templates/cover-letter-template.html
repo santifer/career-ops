@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{LANG}}">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cover Letter — {{NAME}}</title>
 <style>
+  /* CV-matching design system: Liberation Sans, teal/purple accent,
+     gradient header bar. Margins handled by Playwright,
+     NOT by @page — do not add @page margin rules here. */
+
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    /* Disable fi/fl/ffi ligatures. Headless Chromium substitutes these letter
-       pairs with the Unicode glyphs U+FB01/FB02/FB03 at PDF layout time, and PDF
-       text extractors (what ATS systems read) decode them back to those
-       codepoints, so "verification" becomes "veriﬁcation" and a literal keyword
-       search misses it. Required ligatures (rlig) stay on. */
     font-variant-ligatures: none;
     font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
   }
@@ -23,108 +23,182 @@
   }
 
   body {
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 10pt;
-    line-height: 1.4;
-    color: #1a1a1a;
+    font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #1a1a2e;
     background: #ffffff;
-    /* Disable ligatures here as well; see the * rule above. */
+    padding: 0;
+    margin: 0;
     font-variant-ligatures: none;
     font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
+    text-align: left;
   }
 
-  .name {
+  .page {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 2px 0;
+  }
+
+  /* ── Header (matching cv-template.html) ── */
+  .header {
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
+    font-size: 20px;
     font-weight: 700;
-    font-size: 14pt;
-    margin-bottom: 3pt;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    line-height: 1.1;
   }
 
-  .contact, .credentials {
-    font-size: 9pt;
-    color: #666666;
-    line-height: 1.3;
-    margin-bottom: 2pt;
+  .header-gradient {
+    height: 2.5px;
+    background: linear-gradient(to right, hsl(187, 74%, 32%), hsl(270, 70%, 45%));
+    border-radius: 2px;
+    margin-bottom: 10px;
   }
 
-  .contact a, .credentials a, .footnotes a {
-    color: #1a56a0;
-    text-decoration: none;
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #666;
   }
 
-  .divider {
-    border: none;
-    border-top: 0.5pt solid #cccccc;
-    margin: 6pt 0 8pt;
-  }
+  .contact-row a { color: #666; text-decoration: none; }
+  .contact-row .separator { color: #d0d0d0; }
 
+  /* ── Role title + dateline ── */
   .role-title {
+    font-size: 11px;
     font-weight: 700;
-    font-size: 11pt;
-    margin-top: 10pt;
-    margin-bottom: 2pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(187, 74%, 32%);
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+    line-height: 1.2;
+    border-bottom: 1.5px solid hsl(187, 40%, 88%);
   }
 
   .dateline {
-    font-size: 9pt;
-    color: #666666;
-    margin-bottom: 12pt;
+    text-align: right;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 14px;
   }
 
+  /* ── Greeting (purple accent like CV job-company) ── */
   .greeting {
-    margin-bottom: 8pt;
+    font-size: 11px;
+    font-weight: 600;
+    color: hsl(270, 60%, 42%);
+    margin-bottom: 8px;
   }
 
+  /* ── Body paragraphs ── */
   p {
-    margin-bottom: 8pt;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #2f2f2f;
+    margin-bottom: 7px;
+  }
+
+  /* ── Evidence / bullet list (matching CV job bullets) ── */
+  .evidence-intro {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #2f2f2f;
+    margin-bottom: 4px;
   }
 
   .achievements {
     list-style: none;
-    margin-bottom: 4pt;
+    padding-left: 16px;
+    margin-bottom: 7px;
   }
 
   .achievements li {
-    margin-bottom: 5pt;
-    padding-left: 14pt;
+    font-size: 10.5px;
+    line-height: 1.55;
+    color: #333;
+    margin-bottom: 3px;
     position: relative;
   }
 
   .achievements li::before {
     content: "\2022";
     position: absolute;
-    left: 0;
+    left: -14px;
+    color: hsl(187, 74%, 32%);
+    font-weight: 700;
   }
 
+  .achievements li strong {
+    font-weight: 600;
+  }
+
+  /* ── Language closing ── */
   .language-closing {
     font-style: italic;
-    margin-top: 4pt;
-    margin-bottom: 8pt;
+    margin-top: 4px;
+    margin-bottom: 8px;
   }
 
+  /* ── Footnotes ── */
   .footnotes {
-    margin-top: 10pt;
-    padding-top: 4pt;
-    border-top: 0.5pt solid #cccccc;
+    margin-top: 14px;
+    padding-top: 4px;
+    border-top: 0.5px solid #cccccc;
   }
 
   .footnotes p {
-    font-size: 8pt;
+    font-size: 8px;
     color: #888888;
     line-height: 1.3;
-    margin-bottom: 3pt;
+    margin-bottom: 3px;
+  }
+
+  .footnotes a {
+    color: hsl(187, 74%, 32%);
+    text-decoration: none;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 0; }
   }
 </style>
 </head>
 <body>
-  <div class="name">{{NAME}}</div>
-  <div class="contact">{{CONTACT_LINE}}</div>
-  {{CREDENTIALS_BLOCK}}
-  <hr class="divider">
+<div class="page">
 
+  <!-- Header (matching CV) -->
+  <div class="header">
+    <h1>{{NAME}}</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      {{CONTACT_LINE}}
+    </div>
+  </div>
+
+  {{CREDENTIALS_BLOCK}}
+
+  <!-- Role title (styled as section-title) -->
   <div class="role-title">Cover Letter: {{ROLE_TITLE}}</div>
   <div class="dateline">{{DATELINE}}</div>
 
   {{GREETING_BLOCK}}
+
+  <!-- Body: Hook → Evidence → Adaptability → Close -->
   <p>{{OPENING}}</p>
   <p>{{PROFILE_INTRO}}</p>
 
@@ -134,5 +208,7 @@
   {{CLOSING_BLOCK}}
   {{LANGUAGE_CLOSING_BLOCK}}
   {{FOOTNOTES_BLOCK}}
+
+</div>
 </body>
 </html>

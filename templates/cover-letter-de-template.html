@@ -2,8 +2,13 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anschreiben — {{NAME}}</title>
 <style>
+  /* CV-matching design system: Liberation Sans, teal/purple accent,
+     gradient header bar. Margins handled by Playwright (--margins=din5008),
+     NOT by @page — do not add @page margin rules here. */
+
   * {
     margin: 0;
     padding: 0;
@@ -17,106 +22,191 @@
     print-color-adjust: exact;
   }
 
-  @page {
-    size: A4;
-    margin: 20mm 20mm 25mm 25mm; /* DIN 5008 Form B */
-  }
-
   body {
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 11pt;
-    line-height: 1.18;
-    color: #1a1a1a;
+    font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #1a1a2e;
     background: #ffffff;
+    padding: 0;
+    margin: 0;
     font-variant-ligatures: none;
     font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
-    text-align: left; /* Flattersatz per DIN 5008 */
+    text-align: left;
   }
 
-  /* ── Sender block (top right) ── */
-  .sender-block {
-    text-align: right;
-    font-size: 9pt;
-    color: #444444;
-    line-height: 1.4;
-    margin-bottom: 24pt;
+  .page {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 2px 0;
   }
 
-  .sender-block .sender-name {
+  /* ── Header (matching cv-template.html) ── */
+  .header {
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif;
+    font-size: 20px;
     font-weight: 700;
-    font-size: 10pt;
-    color: #1a1a1a;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    line-height: 1.1;
   }
 
-  .sender-block a {
-    color: #1a56a0;
-    text-decoration: none;
+  .header-gradient {
+    height: 2.5px;
+    background: linear-gradient(to right, hsl(187, 74%, 32%), hsl(270, 70%, 45%));
+    border-radius: 2px;
+    margin-bottom: 10px;
   }
 
-  /* ── Recipient address field (DIN 5008 Form B) ── */
-  .recipient-block {
-    font-size: 11pt;
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-size: 10px;
     line-height: 1.4;
-    min-height: 40mm;
-    margin-bottom: 16pt;
+    color: #666;
   }
 
-  /* ── Date line (right-aligned) ── */
+  .contact-row a { color: #666; text-decoration: none; }
+  .contact-row .separator { color: #d0d0d0; }
+
+  /* ── Recipient ── */
+  .recipient-block {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #1a1a2e;
+    margin-bottom: 10px;
+  }
+
+  /* ── Date (right-aligned) ── */
   .date-line {
     text-align: right;
-    font-size: 11pt;
-    margin-bottom: 16pt;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 14px;
   }
 
-  /* ── Subject line (Betreff) ── */
+  /* ── Betreff (styled like CV section-title) ── */
   .betreff {
+    font-size: 11px;
     font-weight: 700;
-    font-size: 11pt;
-    margin-bottom: 16pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(187, 74%, 32%);
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+    line-height: 1.2;
+    border-bottom: 1.5px solid hsl(187, 40%, 88%);
   }
 
-  /* ── Salutation (Anrede) ── */
+  /* ── Anrede (purple accent like CV job-company) ── */
   .anrede {
-    margin-bottom: 10pt;
+    font-size: 11px;
+    font-weight: 600;
+    color: hsl(270, 60%, 42%);
+    margin-bottom: 8px;
   }
 
   /* ── Body paragraphs ── */
   p {
-    margin-bottom: 10pt;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #2f2f2f;
+    margin-bottom: 7px;
   }
 
-  /* ── Closing formula (Grussformel) ── */
+  /* ── Evidence / bullet list (matching CV job bullets) ── */
+  .evidence-intro {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #2f2f2f;
+    margin-bottom: 4px;
+  }
+
+  ul.evidence {
+    list-style: none;
+    padding-left: 16px;
+    margin-bottom: 7px;
+  }
+
+  ul.evidence li {
+    font-size: 10.5px;
+    line-height: 1.55;
+    color: #333;
+    margin-bottom: 3px;
+    position: relative;
+  }
+
+  ul.evidence li::before {
+    content: "\2013";
+    position: absolute;
+    left: -14px;
+    color: hsl(187, 74%, 32%);
+    font-weight: 700;
+  }
+
+  ul.evidence li strong {
+    font-weight: 600;
+  }
+
+  /* ── Closing ── */
   .grussformel {
-    margin-top: 10pt;
+    margin-top: 8px;
     margin-bottom: 0;
+    font-size: 11px;
+    color: #2f2f2f;
   }
 
-  /* ── Signature area ── */
+  /* ── Signature (matching CV signature-block) ── */
+  .signature-block {
+    margin-top: 24px;
+  }
+
   .signature-area {
-    min-height: 36pt;
-    margin-bottom: 0;
+    min-height: 28px;
     position: relative;
   }
 
   .signature-image {
-    max-height: 32pt;
-    max-width: 150pt;
+    max-height: 32px;
+    max-width: 150px;
     display: block;
-    margin: 4pt 0;
+    margin: 4px 0;
   }
 
-  .printed-name {
-    margin-bottom: 16pt;
+  .signature-line {
+    width: 180px;
+    border-bottom: 1px solid #999;
+    margin-bottom: 4px;
   }
 
-  /* ── Anlagen (attachments) ── */
+  .signature-name {
+    font-size: 10.5px;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+
+  /* ── Anlagen (matching CV section-title style) ── */
   .anlagen {
-    margin-top: 10pt;
+    margin-top: 14px;
+    padding-top: 8px;
+    border-top: 1.5px solid hsl(187, 40%, 88%);
   }
 
   .anlagen-title {
+    font-size: 11px;
     font-weight: 700;
-    margin-bottom: 4pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(187, 74%, 32%);
+    margin-bottom: 4px;
   }
 
   .anlagen-list {
@@ -125,52 +215,66 @@
   }
 
   .anlagen-list li {
-    padding-left: 12pt;
+    font-size: 10.5px;
+    color: #333;
+    padding-left: 14px;
     position: relative;
-    margin-bottom: 2pt;
+    margin-bottom: 2px;
   }
 
   .anlagen-list li::before {
-    content: "-";
+    content: "\2013";
     position: absolute;
     left: 0;
+    color: hsl(187, 74%, 32%);
   }
 
   /* ── Postskriptum ── */
   .postskriptum {
-    margin-top: 12pt;
+    margin-top: 12px;
     font-style: italic;
+    font-size: 11px;
+    color: #2f2f2f;
   }
 
-  /* ── Footnotes (reused from EN template) ── */
+  /* ── Footnotes ── */
   .footnotes {
-    margin-top: 14pt;
-    padding-top: 4pt;
-    border-top: 0.5pt solid #cccccc;
+    margin-top: 14px;
+    padding-top: 4px;
+    border-top: 0.5px solid #cccccc;
   }
 
   .footnotes p {
-    font-size: 8pt;
+    font-size: 8px;
     color: #888888;
     line-height: 1.3;
-    margin-bottom: 3pt;
+    margin-bottom: 3px;
   }
 
   .footnotes a {
-    color: #1a56a0;
+    color: hsl(187, 74%, 32%);
     text-decoration: none;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 0; }
   }
 </style>
 </head>
 <body>
-  <!-- Sender block -->
-  <div class="sender-block">
-    <div class="sender-name">{{NAME}}</div>
-    {{SENDER_ADDRESS_BLOCK}}
-    {{SENDER_CONTACT_BLOCK}}
+<div class="page">
+
+  <!-- Header (matching CV) -->
+  <div class="header">
+    <h1>{{NAME}}</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      {{SENDER_CONTACT_BLOCK}}
+    </div>
   </div>
 
-  <!-- Recipient address field (DIN 5008 Form B) -->
+  <!-- Recipient address field -->
   <div class="recipient-block">
     {{RECIPIENT_BLOCK}}
   </div>
@@ -178,7 +282,7 @@
   <!-- Date (right-aligned) -->
   <div class="date-line">{{DATE_LINE}}</div>
 
-  <!-- Betreff (bold, no prefix) -->
+  <!-- Betreff (bold, styled as section-title) -->
   <div class="betreff">{{BETREFF}}</div>
 
   <!-- Anrede -->
@@ -187,19 +291,21 @@
   <!-- Body paragraphs -->
   <p>{{OPENING}}</p>
   <p>{{QUALIFICATIONS}}</p>
+  {{EVIDENCE_BLOCK}}
   <p>{{VALUE_PROPOSITION}}</p>
   <p>{{ADMINISTRATIVE_CLOSE}}</p>
 
   <!-- Grussformel (no trailing comma per DIN 5008) -->
   <p class="grussformel">{{GRUSSFORMEL}}</p>
 
-  <!-- Signature area (3 blank lines equivalent) -->
-  <div class="signature-area">
-    {{SIGNATURE_IMAGE_BLOCK}}
+  <!-- Signature -->
+  <div class="signature-block">
+    <div class="signature-area">
+      {{SIGNATURE_IMAGE_BLOCK}}
+    </div>
+    <div class="signature-line"></div>
+    <div class="signature-name">{{PRINTED_NAME}}</div>
   </div>
-
-  <!-- Printed name -->
-  <div class="printed-name">{{PRINTED_NAME}}</div>
 
   <!-- Anlagen -->
   {{ANLAGEN_BLOCK}}
@@ -208,5 +314,7 @@
   {{POSTSKRIPTUM_BLOCK}}
 
   {{FOOTNOTES_BLOCK}}
+
+</div>
 </body>
 </html>

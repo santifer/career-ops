@@ -117,16 +117,32 @@ function buildSenderAddressBlock(candidate) {
 }
 
 function buildSenderContactBlock(candidate) {
-  const lines = [];
-  if (candidate.phone) lines.push(`Tel.: ${escapeHtml(candidate.phone)}`);
+  const parts = [];
+  if (candidate.phone) parts.push(`<a href="tel:${escapeHtml(candidate.phone)}">${escapeHtml(candidate.phone)}</a>`);
   if (candidate.email) {
     const email = escapeHtml(candidate.email);
-    lines.push(`<a href="mailto:${email}">${email}</a>`);
+    parts.push(`<a href="mailto:${email}">${email}</a>`);
   }
   if (candidate.linkedin) {
-    lines.push(`<a href="${escapeHtml(asUrl(candidate.linkedin))}">LinkedIn</a>`);
+    const display = candidate.linkedin.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    parts.push(`<a href="${escapeHtml(asUrl(candidate.linkedin))}">${escapeHtml(display)}</a>`);
   }
-  return lines.map(l => `<div>${l}</div>`).join("\n    ");
+  if (candidate.github) {
+    const display = candidate.github.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    parts.push(`<a href="${escapeHtml(asUrl(candidate.github))}">${escapeHtml(display)}</a>`);
+  }
+  if (candidate.location) parts.push(`<span>${escapeHtml(candidate.location)}</span>`);
+  return parts.join('\n      <span class="separator">|</span>\n      ');
+}
+
+function buildEvidenceBlock(evidence) {
+  if (!evidence || !evidence.length) return "";
+  const items = evidence.map(e => {
+    const label = escapeHtml(e.label || "");
+    const text = escapeHtml(e.text || "");
+    return `    <li><strong>${label}:</strong> ${text}</li>`;
+  }).join("\n");
+  return `  <p class="evidence-intro">${escapeHtml(evidence._intro || "")}</p>\n  <ul class="evidence">\n${items}\n  </ul>`;
 }
 
 function buildRecipientBlock(recipient) {
@@ -174,6 +190,10 @@ export function buildHtmlDe(payload) {
 
   const dateLine = [letter.city, letter.date].filter(Boolean).map(escapeHtml).join(", ");
 
+  const evidenceBlock = Array.isArray(letter.evidence)
+    ? buildEvidenceBlock(Object.assign(letter.evidence, { _intro: letter.evidence_intro || "" }))
+    : "";
+
   const replacements = {
     "{{NAME}}": escapeHtml(candidate.name),
     "{{SENDER_ADDRESS_BLOCK}}": buildSenderAddressBlock(candidate),
@@ -184,6 +204,7 @@ export function buildHtmlDe(payload) {
     "{{ANREDE}}": escapeHtml(letter.anrede || "Sehr geehrte Damen und Herren,"),
     "{{OPENING}}": escapeHtml(letter.opening),
     "{{QUALIFICATIONS}}": escapeHtml(letter.qualifications || ""),
+    "{{EVIDENCE_BLOCK}}": evidenceBlock,
     "{{VALUE_PROPOSITION}}": escapeHtml(letter.value_proposition || ""),
     "{{ADMINISTRATIVE_CLOSE}}": escapeHtml(letter.administrative_close || ""),
     "{{GRUSSFORMEL}}": escapeHtml(letter.grussformel || "Mit freundlichen Grüßen"),
