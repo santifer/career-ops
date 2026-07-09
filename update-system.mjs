@@ -129,6 +129,7 @@ const SYSTEM_PATHS = [
   'patch-latex-content.mjs',
   'lib/latex-escape.mjs',
   'lib/latex-content.mjs',
+  'img-to-pdf.mjs',
   'archive-posting.mjs',
   'application-answers.mjs',
   'generate-cover-letter.mjs',
