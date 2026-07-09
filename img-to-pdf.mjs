@@ -131,10 +131,14 @@ export async function convertImageToPdf(inputPath, outputPath) {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'load' });
 
-    await page.waitForFunction(() => {
-      const img = document.getElementById('career-ops-img');
-      return !!img && img.complete && img.naturalWidth > 0;
-    });
+    try {
+      await page.waitForFunction(() => {
+        const img = document.getElementById('career-ops-img');
+        return !!img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0;
+      }, { timeout: 10000 });
+    } catch (err) {
+      throw new Error(`Image failed to decode within 10s (unreadable or corrupt file?): ${inputPath}`);
+    }
 
     const { width, height } = await page.evaluate(() => {
       const img = document.getElementById('career-ops-img');
