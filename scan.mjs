@@ -581,20 +581,38 @@ export function loadSeenUrls(policy = {}) {
   return { seen, recheckEligible };
 }
 
-// The default company normalizer, used when no alias map is configured: just
-// lowercase and trim. buildCompanyCanonicalizer wraps this with the alias map.
+/**
+ * Normalize a company label when no alias map is configured.
+ *
+ * This deliberately does only the pre-existing behavior: trim and lowercase the
+ * raw company name. `buildCompanyCanonicalizer` wraps this with the optional
+ * alias map so installs without `company_aliases` keep byte-for-byte dedupe
+ * semantics.
+ *
+ * @param {unknown} name - Raw company value from a tracker row or provider job.
+ * @returns {string} Lowercased, trimmed company key.
+ */
 function defaultCompanyNormalizer(name) {
   return String(name ?? '').trim().toLowerCase();
 }
 
-// Build a company-name canonicalizer from an alias map (config.company_aliases).
-// The map is `{ CanonicalName: [alias, ...] }`; every alias AND the canonical
-// name itself resolve to the lowercased canonical name. This closes the gap
-// where an ATS org name (e.g. "Intercom") differs from the tracker/brand label
-// (e.g. "Fin"): without it, the company::role dedup key never matches the
-// tracker and the same role is re-scanned and re-evaluated on every run.
-// Unknown names pass through as plain lowercased text, so behavior is unchanged
-// for companies with no alias entry.
+/**
+ * Build a company-name canonicalizer from `config.company_aliases`.
+ *
+ * The map is `{ CanonicalName: [alias, ...] }`; every alias and the canonical
+ * name itself resolve to the lowercased canonical name. This closes the gap
+ * where an ATS org name, for example Greenhouse "Intercom", differs from the
+ * tracker/brand label, for example "Fin". Without it, the company+role dedupe
+ * key never matches the tracker and the same role is re-scanned every run.
+ *
+ * Unknown names pass through as plain lowercased text, so behavior is unchanged
+ * for companies with no alias entry.
+ *
+ * @param {Record<string, unknown>|undefined|null} aliases - Optional canonical
+ *   company name to alias list map.
+ * @returns {(name: unknown) => string} Canonicalizer for tracker and scan-side
+ *   company labels.
+ */
 export function buildCompanyCanonicalizer(aliases) {
   const map = new Map();
   if (aliases && typeof aliases === 'object' && !Array.isArray(aliases)) {
@@ -609,24 +627,34 @@ export function buildCompanyCanonicalizer(aliases) {
       }
     }
   }
-  return name => {
+
+  /**
+   * Canonicalize one raw company label through the alias map.
+   *
+   * @param {unknown} name - Raw company value from a tracker row or provider job.
+   * @returns {string} Canonical lowercased company key.
+   */
+  return function canonicalizeCompany(name) {
     const key = defaultCompanyNormalizer(name);
     return map.get(key) ?? key;
   };
 }
 
-// Normalize a role/title for repost-tolerant dedup. Two postings of the same
-// role should collapse to one key even when the company re-lists it under a new
-// requisition ID (a new URL, so URL dedup misses it) or splits it per location
-// with a trailing tag like "(Berlin)". We therefore:
-//   1. lowercase
-//   2. strip trailing parenthetical/bracketed tags — "(Berlin)", "[Remote]",
-//      "(Berlin, Germany)", and stacked "(Senior) (Berlin)" — since these are
-//      the location/qualifier suffixes that create false distinct roles
-//   3. collapse all remaining punctuation/whitespace to single spaces so
-//      em-dash vs hyphen and double spaces don't split a key
-// The requisition ID lives in the URL, never the title, so keying on the
-// normalized title is inherently requisition-ID-agnostic.
+/**
+ * Normalize a role title for repost-tolerant dedupe.
+ *
+ * Two postings of the same role should collapse to one key even when the
+ * company re-lists it under a new requisition ID or splits it per location with
+ * a trailing tag like "(Berlin)". The requisition ID lives in the URL, never the
+ * title, so keying on the normalized title is requisition-ID agnostic.
+ *
+ * The normalizer lowercases the title, strips trailing parenthetical/bracketed
+ * tags such as "(Berlin)" and "[Remote]", then collapses punctuation and
+ * whitespace so em dash vs hyphen or double spaces do not split a key.
+ *
+ * @param {unknown} role - Raw role title from a tracker row or provider job.
+ * @returns {string} Normalized role key.
+ */
 export function normalizeRoleForDedup(role) {
   return String(role ?? '')
     .toLowerCase()
@@ -635,13 +663,34 @@ export function normalizeRoleForDedup(role) {
     .trim();
 }
 
-// The canonical company::role dedup key shared by both the tracker-side load and
-// the scan-side check, so the two can never drift. `canonicalize` defaults to
-// plain lowercase/trim (no alias map).
+/**
+ * Build the canonical company+role dedupe key.
+ *
+ * This shared helper is used by both the tracker-side load and the scan-side
+ * check so those two code paths cannot drift. `canonicalize` defaults to plain
+ * lowercase/trim behavior when no alias map is configured.
+ *
+ * @param {unknown} company - Raw company label.
+ * @param {unknown} role - Raw role title.
+ * @param {(name: unknown) => string} [canonicalize] - Company canonicalizer.
+ * @returns {string} Stable dedupe key in `company::role` form.
+ */
 export function companyRoleDedupKey(company, role, canonicalize = defaultCompanyNormalizer) {
   return `${canonicalize(company)}::${normalizeRoleForDedup(role)}`;
 }
 
+/**
+ * Load company+role keys already present in the applications tracker.
+ *
+ * Existing tracker rows are canonicalized with the same company aliasing and
+ * role-title normalization used for freshly scanned jobs. That lets URL-new
+ * reposts match older tracker entries instead of being evaluated again.
+ *
+ * @param {string} [appsPath=APPLICATIONS_PATH] - Applications tracker path.
+ * @param {(name: unknown) => string} [canonicalize=defaultCompanyNormalizer] -
+ *   Company canonicalizer shared with scan-side dedupe.
+ * @returns {Set<string>} Existing company+role dedupe keys.
+ */
 export function loadSeenCompanyRoles(appsPath = APPLICATIONS_PATH, canonicalize = defaultCompanyNormalizer) {
   const seen = new Set();
   if (existsSync(appsPath)) {
