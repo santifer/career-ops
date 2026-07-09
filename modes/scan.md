@@ -239,6 +239,11 @@ Levels are additive — they are executed in order, and results are merged and d
    d. If expired: record in `scan-history.tsv` with status `skipped_expired` and discard.
    e. If active: continue to step 8.
 
+   **Auth-walled URLs (LinkedIn, XING, etc.):** These portals require login and cannot be verified via Playwright, WebFetch, or `check-liveness.mjs` (they return `uncertain / auth_wall`). To avoid adding stale cached listings to the pipeline:
+   - If the company is in `tracked_companies`, cross-reference the role against the company's own `careers_url` or ATS API. Only add the LinkedIn URL if the role also appears on the company's own site.
+   - If no cross-reference is possible, mark the URL as `skipped_unverifiable` in `scan-history.tsv` and do NOT add it to `pipeline.md`.
+   - **Exception:** Results from the zero-token LinkedIn provider (`providers/linkedin.mjs`) are pre-filtered by recency (`f_TPR`) and do not require this step — they come from LinkedIn's guest API, not from Google-cached search results.
+
    **Do not interrupt the entire scan if a single URL fails.** If `browser_navigate` errors (timeout, 403, etc.), mark as `skipped_expired` and continue with the next one.
 
 8. **For each new verified offer that passes filters**:

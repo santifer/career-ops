@@ -39,6 +39,20 @@ const BOT_CHALLENGE_PATTERNS = [
   /please complete the security check/i,
 ];
 
+// Auth-wall interstitials (LinkedIn, XING, etc.) render a login page instead
+// of the posting. Like bot challenges, these must NOT be read as expired — the
+// posting may still be live behind the wall. Classify as uncertain/auth_wall so
+// the scan pipeline can cross-reference against the company's own careers page.
+const AUTH_WALL_PATTERNS = [
+  /zustimmen und linkedin beitreten/i,
+  /einloggen, um jobbenachrichtigung/i,
+  /join linkedin.*to see/i,
+  /sign in.*to view this job/i,
+  /log in or sign up/i,
+  /nutzervereinbarung.*datenschutzrichtlinie.*cookie/i,
+  /melden sie sich an.*xing/i,
+];
+
 const EXPIRED_URL_PATTERNS = [
   /[?&]error=true/i,
 ];
@@ -82,6 +96,10 @@ export function classifyLiveness({ status = 0, finalUrl = '', bodyText = '', app
   const botChallenge = firstMatch(BOT_CHALLENGE_PATTERNS, bodyText);
   if (botChallenge) {
     return { result: 'uncertain', code: 'bot_challenge', reason: `anti-bot challenge: ${botChallenge.source}` };
+  }
+  const authWall = firstMatch(AUTH_WALL_PATTERNS, bodyText);
+  if (authWall) {
+    return { result: 'uncertain', code: 'auth_wall', reason: `login wall detected: ${authWall.source}` };
   }
   if (status === 403 || status === 503) {
     return { result: 'uncertain', code: 'access_blocked', reason: `HTTP ${status} (access blocked, likely anti-bot)` };
