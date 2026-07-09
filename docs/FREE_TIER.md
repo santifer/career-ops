@@ -25,23 +25,22 @@ subscription required. This guide covers setup, limits, and trade-offs.
    curl -fsSL https://antigravity.google/cli/install.cmd -o install.cmd && install.cmd && del install.cmd
    ```
 
-2. Authenticate with your Google account.
-
-   There is no `agy auth login` subcommand in current Antigravity CLI
-   releases. Auth is handled on first interactive launch:
+2. Start Antigravity CLI:
 
    ```bash
    agy
    ```
 
-   The TUI opens a browser Google sign-in (or prints a URL/code flow for
-   SSH/remote sessions). After that, headless mode works too.
+   If you are not signed in, `agy` handles auth itself: it checks the
+   system keyring, then falls back to Google Sign-In (browser locally,
+   or a URL/code paste flow over SSH). There is no `agy auth login`
+   subcommand.
 
-3. Run career-ops as usual:
+3. Use career-ops from there:
 
    ```bash
    agy          # interactive — paste a URL, evaluate, scan, etc.
-   agy -p "..." # headless / batch mode
+   agy -p "..." # headless / batch mode (after you have signed in once)
    ```
 
 ## Daily Limits
