@@ -28,6 +28,12 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 Before generating any application answers, verify that the form still points to the intended active job. This gate runs after the page has been detected, the company/role has been identified, and the matching report has been loaded.
 
+**Cross-channel check (#1596):** before drafting — and ALWAYS before the user authorizes an agency to submit on their behalf — check `data/applications.md` for an existing row with the same company+role under a different Via (agency vs direct, or two agencies). A double submission burns the candidate with both the agency and the employer. If found, stop and ask the user which channel owns the candidacy. If the end employer is still unknown (Company `?`), the check still runs in degraded form — it is never silently skipped:
+
+1. Ask the user (or the recruiter, via the user) for the client company name first — the reveal is the cheapest fix and unlocks the full check.
+2. If the name is not available, check the tracker for `?` rows with the same Via + a similar role (the same agency re-blasting one listing) and for similar-role rows at plausible-match companies; surface anything close.
+3. Then STOP and require explicit user acknowledgment before the agency is authorized: "The end employer is unknown, so I cannot verify you haven't already applied to this company directly. Authorize anyway?" Never proceed on silence — the reveal-time check only catches damage after the fact.
+
 1. Read the visible URL, page title, company, role, and any closed/expired signals.
 2. If a URL is available, verify liveness with Playwright:
    - active posting evidence: title/role + job description or form fields + submit/apply path
@@ -166,7 +172,7 @@ node application-answers.mjs --report reports/NNN-company-role-date.md --input a
 ## Step 9 — Post-apply (optional)
 
 If the candidate confirms that they submitted the application:
-1. Update status in `applications.md` from "Evaluated" to "Applied"
+1. Update status to Applied via the canonical CLI: `node set-status.mjs <report#> Applied` (never hand-edit the table)
 2. Seed the follow-up schedule: run `node followup-seed.mjs {num} --json` (where `{num}` is the tracker row number). If the candidate applied on a different day than today, pass `--date YYYY-MM-DD` with the actual submission date. It's idempotent, so re-running is safe.
 3. Refresh the report's `## Application Answers` section with the final field values and `**State:** submitted`
 4. Suggest next step: run the `contacto` mode (`/career-ops contacto` where available) for LinkedIn outreach
@@ -211,3 +217,15 @@ Field-tested across ~12 Playwright-driven applications (Ashby, Greenhouse, Lever
 - **Symptom:** Country, university, or field-of-study dropdowns contain thousands of `<option>` entries. Snapshotting them floods context and stalls the agent.
 - **Agent:** Use `select_option` directly by value or visible label. Never snapshot the full option list. If the exact label is unknown, ask the candidate for the value instead of dumping options into context.
 - **Candidate:** Provides the correct label when the agent cannot infer it from `config/profile.yml`.
+
+### Job-board host ≠ application host — re-check the URL after "Apply"
+
+- **Symptom:** The posting is discovered on one ATS, but clicking **Apply** hands off to a *different* ATS for the actual form. Enterprise career sites (commonly Phenom-, iCIMS-, or Radancy-hosted) frequently redirect into a Workday, Greenhouse, or SmartRecruiters application flow. Choosing fill tactics from the *board* URL applies the wrong quirks.
+- **Agent:** After the Step 5 preflight, follow the Apply button/redirect and read the URL of the page that actually renders the form fields. Match your fill tactics to *that* host — not the board the job was discovered on. A `myworkdayjobs.com` handoff in particular means the Workday quirk below applies.
+- **Candidate:** Confirms the destination page looks like the right company/role before the agent starts filling.
+
+### Workday — set-value doesn't register on React fields
+
+- **Symptom:** Setting a Workday text field's value programmatically (without real keystrokes) leaves it visually filled but empty to Workday's validation — the React `onChange` never fires, so Save throws "required" on a visibly-filled field. Yes/No dropdowns also vary their option order per question, so a positional click can select the wrong answer (e.g. "No" on *are you authorized to work?*).
+- **Agent:** For required text fields, **type** real keystrokes (focus → select-all → type), or verify each value registered before Save. Survey the whole step top-to-bottom first (the address block is often below the fold) and fill from the candidate's saved profile (`config/profile.yml` / `cv.md`) proactively, rather than discovering fields via validation errors. For dropdowns, use **type-ahead** (open → type the option text → confirm the highlight) instead of positional clicks, and verify each selection.
+- **Candidate:** Reviews the filled step — especially work-authorization/sponsorship dropdowns and any EEO/legal attestations — before Save/Submit.

@@ -20,11 +20,13 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run update` | `update-system.mjs apply` | Apply upstream update |
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
+| `npm run extract` | `browser-extract.mjs` | Headless read-only page extractor (opt-in `scan.extractor: cli`) — compact JSON for scan/JD |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
 | `npm run scan:full` | `scan-ats-full.mjs` | Reverse ATS discovery scanner |
 | `npm run validate:portals` | `validate-portals.mjs` | Validate portals.yml shape before scanning |
 | `npm run tracker` | `tracker.mjs` | SQLite derived index over applications.md — sync/query/history/export |
 | `npm run find` | `find.mjs` | Resolve a report#/tracker#/company query to its full pipeline identity |
+| `npm run invite-match` | `invite-match.mjs` | Fuzzy-match a pasted interview-invite email against `data/applications.md` |
 
 ---
 
@@ -165,6 +167,28 @@ node analyze-patterns.mjs --self-test
 ```
 
 **Exit codes:** `0` analysis succeeded, `1` insufficient data or parser self-test failure.
+
+---
+
+## salary-gap
+
+Folds compensation observations into per-application desired/advertised/actual values and gap aggregates. Sources: `reports/*.md` Machine Summary `advertised_comp` (advertised, source `jd` — historical reports backfill automatically), `data/salary-observations.tsv` (desired/actual, append-only), and `config/profile.yml` `compensation.target_range` (desired default). Fold precedence: highest trust tier wins, then latest date (`actual`: contract > offer-letter > recruiter-verbal > user). Aggregates group by (company, role) and per currency — no FX conversion. Unparseable amounts, orphaned tracker numbers, sample sizes, and staleness are always reported.
+
+```bash
+node salary-gap.mjs             # JSON
+node salary-gap.mjs --summary   # table + data-quality section
+node salary-gap.mjs --self-test
+```
+
+Observation line format (TSV, one per line, `#`-prefixed lines are comments):
+
+```text
+{tracker#}\t{YYYY-MM-DD}\t{desired|advertised|actual}\t{amount}\t{currency}\t{source}\t{note}
+```
+
+Amounts: number + optional k/K suffix, ranges allowed ("80-90k"), annual gross unless noted. Sources: jd | profile | user | recruiter-verbal | offer-letter | contract.
+
+**Exit codes:** `0` always (missing sources produce an explanatory empty result), `1` self-test failure.
 
 ---
 
@@ -320,3 +344,72 @@ node find.mjs acme --json       # machine-readable output
 Multiple matches print as a table; zero matches print a clean message.
 
 **Exit codes:** `0` at least one match, `1` no match, missing query, or no `applications.md`.
+
+---
+
+## stats.mjs
+
+Aggregates lifetime pipeline stats into one JSON report. Stats include tracker, scanner, portals, follow-ups and runs. Reads from data/applications.md, data/scan-history.tsv, portals.yml, data/follow-ups.md and data/scan-runs.tsv. If a file doesn't exist yet, the section turns into null.
+
+```bash
+node stats.mjs --summary             # returns human-readable table
+node stats.mjs                       # returns json
+```
+On a fresh clone, with no data yet, the JSON format is as follows:
+
+```
+{
+  "metadata": {
+    "generatedAt": "2026-07-07",
+    "sources": {
+      "tracker": false,
+      "scanHistory": false,
+      "followups": false,
+      "portals": false,
+      "scanRuns": false
+    }
+  },
+  "tracker": null,
+  "funnel": null,
+  "scan": null,
+  "portals": null,
+  "followups": null,
+  "runs": null
+}
+```
+
+With --summary it returns:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Pipeline Stats — 2026-07-07
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tracker:    — no data (data/applications.md missing)
+Scanner:    — no data (data/scan-history.tsv missing)
+Portals:    — no data (portals.yml missing)
+Follow-ups: — no data (data/follow-ups.md missing)
+Runs:       — no data (data/scan-runs.tsv missing; created by the next scan)
+```
+
+---
+
+## data/scan-runs.tsv
+
+`scan.mjs` appends one row to this file after each non-dry scan run, recording how many companies/boards it checked, how many postings it found vs. filtered out vs. flagged as duplicates vs. added, and how many errors occurred. `--dry-run` scans never write to this file. Stats appended include:
+
+* `timestamp` — ISO timestamp of the scan
+* `status` — always `completed` for now
+* `companies` — number of companies scanned this run
+* `boards` — number of job boards scanned this run
+* `found` — total postings found
+* `filtered_title` — filtered out by title mismatch
+* `filtered_tier` — filtered out by tier
+* `filtered_location` — filtered out by location
+* `filtered_salary` — filtered out by salary
+* `filtered_content` — filtered out by content
+* `filtered_cooldown` — skipped because you recently applied to the same company + role and are still in the waiting period
+* `dupes` — duplicate postings skipped
+* `new_added` — new postings actually added to the pipeline
+* `errors` — number of errors during the run
+
+As the project is in continuous development, to parse for a stat we recommend doing it by column header instead of position.

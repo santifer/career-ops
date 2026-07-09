@@ -145,6 +145,22 @@
 #   negative:
 #     - "php"
 #     - "wordpress"
+#
+# by_title_keyword (optional): scope a stricter positive/negative pair to only
+# the jobs matched via a specific title_filter.positive keyword, instead of
+# applying it to every scanned job. Useful when a title keyword is broad
+# enough to need extra confirmation from the description (e.g. "AI Engineer"
+# roles where you want the JD to actually mention a concrete AI tool) without
+# that same requirement leaking onto unrelated categories (Instructional
+# Designer, HR Coordinator, ...). Jobs matched via a keyword with no entry
+# here fall back to the global positive/negative pair above.
+# content_filter:
+#   by_title_keyword:
+#     "AI Engineer":
+#       positive:
+#         - "gpt"
+#         - "llm"
+#         - "claude"
 
 # -- Title filter --
 # The scanner uses these keywords to decide if a title is relevant.
@@ -482,7 +498,7 @@ search_queries:
 #
 #   greenhouse      job-boards(.eu)?.greenhouse.io/<slug>  (or api: field)
 #   ashby           jobs.ashbyhq.com/<slug>
-#   lever           jobs.lever.co/<slug>
+#   lever           jobs.(eu.)?lever.co/<slug>
 #   workable        apply.workable.com/<slug>
 #   smartrecruiters (careers|jobs).smartrecruiters.com/<slug>
 #   recruitee       <slug>.recruitee.com
@@ -633,6 +649,36 @@ search_queries:
 #   provider: dassault                    # optional — 3ds.com host also auto-detects
 #   enabled: true                         # ~445 English postings (zero-token XML)
 #
+# - name: Deutsche Bahn                   # single-company; db.jobs Avature front
+#   careers_url: https://db.jobs          # auto-detects; SSR search, paginated over HTTP
+#   provider: deutschebahn                # optional — db.jobs host also auto-detects
+#   enabled: true
+#
+# - name: Heckler & Koch                  # single-company; SSR Nuxt vacancy list
+#   careers_url: https://www.heckler-koch.com/de/Karriere/Stellenangebote
+#   provider: hecklerkoch                 # optional — heckler-koch.com host also auto-detects
+#   enabled: true
+#
+# - name: Rheinmetall                     # single-company; SSR Nuxt vacancy list
+#   careers_url: https://www.rheinmetall.com/en/career/vacancies
+#   provider: rheinmetall                 # optional — rheinmetall.com host also auto-detects
+#   enabled: true
+#
+# - name: OHB                             # Cornerstone OnDemand (csod) branded site
+#   careers_url: https://career-ohb.csod.com/ux/ats/careersite/4/home?c=career-ohb
+#   provider: csod                        # anonymous-JWT bootstrap, then public search API
+#   enabled: true
+#
+# - name: RENK                            # softgarden hosted job widget
+#   careers_url: https://renk-group.softgarden.io/de/widgets/jobs
+#   provider: softgarden
+#   enabled: true
+#
+# - name: Mercedes-Benz                   # BeeSite (milch & zucker) search backend
+#   careers_url: https://mercedes-benz.app.beesite.de   # the *.app.beesite.de host, not the branded front
+#   provider: beesite
+#   enabled: true
+#
 # -- Remote-job feeds (no careers_url, no extra fields) --
 # title_filter / location_filter defined above still apply.
 #
@@ -670,6 +716,11 @@ search_queries:
 #   provider: jobicy
 #   enabled: true
 #
+# - name: EchoJobs                        # tech jobs aggregated from company ATS boards
+#   provider: echojobs
+#   max_pages: 3                          # 100 jobs/page; raise for deeper coverage
+#   enabled: true
+#
 # - name: Hacker News "Who is hiring?"    # monthly "Ask HN: Who is hiring?" thread
 #   provider: hackernews
 #   enabled: true
@@ -680,6 +731,10 @@ search_queries:
 #
 # - name: The Muse                        # board-wide public jobs API
 #   provider: themuse
+#   enabled: true
+#
+# - name: LaraJobs                        # Laravel / PHP jobs (public RSS feed)
+#   provider: larajobs
 #   enabled: true
 #
 # Comeet needs the full careers-api URL (it carries a per-tenant token that a
@@ -1218,6 +1273,11 @@ tracked_companies:
   - name: Pigment
     careers_url: https://jobs.lever.co/pigment
     notes: "Paris FR / NYC / London. AI-powered FP&A planning platform."
+    enabled: true
+
+  - name: Diabolocom
+    careers_url: https://jobs.eu.lever.co/diabolocom
+    notes: "Paris FR. AI-native contact center (CCaaS) platform — Frost & Sullivan 2026 AI CX Leader in Europe; hybrid LLM/SLM architecture powering Agent Assist, Voice Analytics, and automated QA."
     enabled: true
 
   # -- UK & Ireland AI (EU-friendly hiring) --

@@ -12,17 +12,38 @@
  * leading pipe, so the first real column ("#"/num) is index 1.
  */
 
+import { readFileSync } from 'fs';
+
 /** The original fixed 9-column layout (num … notes at indices 1 … 9). */
 export const LEGACY_COLMAP = {
   num: 1, date: 2, company: 3, role: 4, score: 5, status: 6, pdf: 7, report: 8, notes: 9,
 };
 
-/** Header text (lowercased) → canonical field name. Includes ES aliases. */
-export const HEADER_ALIASES = {
-  '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
-  'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
-  'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
-};
+/**
+ * Header text (lowercased) → canonical field name. Includes ES aliases.
+ * Loaded from tracker-aliases.json — the ONE shared alias table, which the web
+ * read path (web/src/lib/tracker-table.mjs) also loads at runtime, so the two
+ * can never drift (PR #1598 review). Add new aliases in the JSON, not here.
+ *
+ * A missing or corrupt JSON is a broken install (the file ships alongside this
+ * module in SYSTEM_PATHS/BOOTSTRAP_PATHS): fail fast with an actionable
+ * message rather than degrading silently — a quiet fallback here would
+ * reintroduce exactly the reader drift the shared table exists to prevent.
+ * (The web loader degrades to the legacy fixed order instead because it reads
+ * the file from a user-configured root at request time.)
+ */
+export const HEADER_ALIASES = (() => {
+  const src = new URL('./tracker-aliases.json', import.meta.url);
+  try {
+    return JSON.parse(readFileSync(src, 'utf-8'));
+  } catch (e) {
+    throw new Error(
+      `tracker-parse.mjs: cannot load tracker-aliases.json (${e.message}). ` +
+      'The file ships with career-ops next to tracker-parse.mjs — restore it ' +
+      'from the repo or re-run: node update-system.mjs apply',
+    );
+  }
+})();
 
 /**
  * A score cell in the tracker: `N/5` or `N.N/5` (any precision), or the
@@ -102,7 +123,15 @@ export function resolveColumns(lines) {
 export function parseTrackerRow(line, colmap = LEGACY_COLMAP) {
   if (typeof line !== 'string' || !line.startsWith('|')) return null;
   const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
+  // Dynamic width guard: a complete row splits into leading '' + one cell per
+  // column (+ trailing '' when the row ends with a pipe). Anything shorter is
+  // missing a cell, and a missing INTERIOR cell shifts every later column one
+  // left while the trailing empty cell keeps the count plausible — so require
+  // the full width rather than mere coverage of the highest mapped index.
+  // Hand-edited rows without the trailing pipe are one part narrower but
+  // still complete (tracker-utils rebuildRow supports them).
+  const width = Math.max(...Object.values(colmap)) + (line.trimEnd().endsWith('|') ? 2 : 1);
+  if (parts.length < width) return null;
   const num = parseInt(parts[colmap.num], 10);
   if (isNaN(num)) return null;
   const at = (k) => (colmap[k] != null ? (parts[colmap[k]] ?? '') : '');
@@ -119,5 +148,26 @@ export function parseTrackerRow(line, colmap = LEGACY_COLMAP) {
     raw: line,
   };
   if (colmap.location != null) row.location = at('location');
+  if (colmap.via != null) row.via = at('via');
   return row;
+}
+
+/**
+ * Unicode-aware key for Via (agency) comparison.
+ *
+ * normalizeCompany()-style keys strip everything outside [a-z0-9], so
+ * non-Latin agency names (リクルート, パーソル, …) all collapse to the same
+ * empty key — which made the #1596 cross-channel guard treat two different
+ * agencies as one channel and silently merge two real submissions. Keep
+ * letters and digits of any script instead; NFKC first so full-width/
+ * half-width variants compare equal.
+ *
+ * Shared by every Via consumer (merge-tracker dedup guard, analyze-patterns
+ * channel buckets) so agency identity can't drift between scripts.
+ *
+ * @param {string} name - Raw Via cell or via= tag value.
+ * @returns {string} Case-folded, punctuation-free, script-preserving key.
+ */
+export function normalizeVia(name) {
+  return String(name).normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 }
