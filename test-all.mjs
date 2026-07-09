@@ -253,6 +253,32 @@ try {
     fail(`Polish apply control not recognized: ${activePolishPosting.result} (${activePolishPosting.code})`);
   }
 
+  const redirectedOffPosting = classifyLiveness({
+    status: 200,
+    requestedUrl: 'https://jobs.careers.microsoft.com/professionals/us/en/job/1399802/Intune-Support-Engineer',
+    finalUrl: 'https://apply.careers.microsoft.com/careers?start=0&sort_by=timestamp',
+    bodyText: 'Search jobs. Partner Marketing Manager. Software Engineer II. Browse all open positions at Microsoft. '.repeat(6),
+    applyControls: ['Apply now', 'Apply now', 'Apply now'],
+  });
+  if (redirectedOffPosting.result === 'uncertain' && redirectedOffPosting.code === 'redirected_off_posting') {
+    pass('Dead permalink 301 to a generic listing is uncertain, not revived by other jobs\' Apply buttons');
+  } else {
+    fail(`Off-posting redirect misclassified as ${redirectedOffPosting.result} (${redirectedOffPosting.code})`);
+  }
+
+  const redirectKeepingJobId = classifyLiveness({
+    status: 200,
+    requestedUrl: 'https://boards.greenhouse.io/acme/jobs/4567890',
+    finalUrl: 'https://job-boards.greenhouse.io/acme/jobs/4567890',
+    bodyText: 'Senior AI Engineer. Own delivery across evaluation, deployment, and reliability at Acme. '.repeat(6),
+    applyControls: ['Apply for this Job'],
+  });
+  if (redirectKeepingJobId.result === 'active') {
+    pass('Redirect that keeps the job id (board migration) still classifies active');
+  } else {
+    fail(`Same-job redirect misclassified as ${redirectKeepingJobId.result} (${redirectKeepingJobId.code})`);
+  }
+
   // Liveness API rung (liveness-api.mjs) — the zero-token ATS first rung. We test the
   // pure URL→API resolution + SSRF guard; the network fetch is conservative by
   // construction (only 404/410→expired, 200→active, else null→Playwright fallback).
