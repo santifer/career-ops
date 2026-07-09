@@ -1049,17 +1049,17 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
   };
 
   const sharedModeOrder = sectionOrder(
-    '### Modes that require `_shared.md` + their mode file:',
+    '### Modes that require `_shared.md` + their mode file',
     '### Standalone modes',
     ['modes/_profile.md', 'modes/_custom.md', 'modes/{mode}.md'],
   );
   const standaloneModeOrder = sectionOrder(
     '### Standalone modes',
-    '### Modes delegated to subagent:',
+    '### Modes delegated to subagent',
     ['modes/_profile.md', 'modes/_custom.md', 'modes/{mode}.md'],
   );
   const delegatedModeOrder = sectionOrder(
-    '### Modes delegated to subagent:',
+    '### Modes delegated to subagent',
     'Execute the instructions from the loaded mode file.',
     ['content of modes/_profile.md if exists', 'content of modes/_custom.md if exists', 'content of modes/{mode}.md'],
   );
