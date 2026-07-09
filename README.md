@@ -181,10 +181,7 @@ See [docs/SETUP.md](docs/SETUP.md) for the full setup guide, [docs/RUNNING_ON_A_
 
 Career-ops supports Antigravity CLI natively, the same way it supports Claude Code and OpenCode. All slash commands are available through the shared skill entrypoint, using the same `modes/*.md` evaluation logic.
 
-Google has transitioned the native Gemini CLI path to Antigravity CLI. If `gemini`
-is not installed, use `agy` for the Google-hosted CLI experience. `GEMINI.md` is
-now a no-op compatibility guard so Antigravity does not duplicate the full
-project instructions when it reads both `AGENTS.md` and `GEMINI.md`.
+Google has transitioned consumer Gemini CLI access to Antigravity CLI. `GEMINI.md` is now a no-op compatibility guard so Antigravity does not duplicate the full project instructions when it reads both `AGENTS.md` and `GEMINI.md`.
 
 ### Native Antigravity CLI
 
@@ -255,7 +252,7 @@ grok
 
 For headless batch workers, use `grok -p "prompt"` (add `--yolo` to auto-approve tool executions).
 
-### Legacy Gemini API script (no Gemini CLI install needed)
+### Standalone Gemini API Script (No CLI install needed)
 
 ```bash
 # 1. Get a free API key at https://aistudio.google.com/apikey
@@ -272,7 +269,7 @@ node agent-inbox.mjs add "..."   # queue a request for the next session
 npm run gemini:eval -- "JD text here"
 ```
 
-> **Free tier:** Both Google paths work without billing. Antigravity CLI uses Google OAuth; the legacy API script uses `gemini-2.5-flash` (15 RPM, 1M tokens/day free). The old `gemini` CLI command is not required for either path.
+> **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-2.5-flash` (15 RPM, 1M tokens/day free).
 
 ## Usage
 

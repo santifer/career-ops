@@ -20,6 +20,7 @@ const NPM = process.platform === "win32" ? "npm.cmd" : "npm";
 // install, configure, or remove anything per-CLI.
 const SUPPORTED_CLIS = [
   { name: "Claude Code", cmd: "claude" },
+  { name: "Gemini CLI", cmd: "gemini" },
   { name: "Codex", cmd: "codex" },
   { name: "Qwen Code", cmd: "qwen" },
   { name: "OpenCode", cmd: "opencode" },
@@ -147,7 +148,6 @@ async function main() {
   console.log("\nOn first launch it walks you through setup — your CV, profile and target");
   console.log("roles — just by chatting. Nothing to configure by hand.");
   console.log("\ncareer-ops is AI-agnostic — Claude Code, Codex, Qwen, OpenCode, Copilot, Antigravity and Grok all work.");
-  console.log("Gemini CLI is legacy; use Antigravity CLI (`agy`) for the native Google CLI path.");
   console.log("\nOptional (for PDF generation):");
   console.log("  npx playwright install chromium\n");
 }

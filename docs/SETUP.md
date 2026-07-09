@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- An AI coding CLI — [Claude Code](https://claude.ai/code), Codex, Qwen Code, OpenCode, GitHub Copilot CLI, Antigravity CLI, or Grok Build CLI (see [Supported CLIs](SUPPORTED_CLIS.md)). Gemini CLI is legacy; use Antigravity CLI (`agy`) for the native Google CLI path.
+- An AI coding CLI — [Claude Code](https://claude.ai/code), Codex, Qwen Code, OpenCode, GitHub Copilot CLI, Antigravity CLI, or Grok Build CLI (see [Supported CLIs](SUPPORTED_CLIS.md)). Prefer `agy` over the legacy `gemini` CLI command.
 - [Node.js](https://nodejs.org) 18+ and `git` (`npx` ships with Node — the installer refuses to run without them)
 - (Optional) Go 1.21+ (for the dashboard TUI)
 

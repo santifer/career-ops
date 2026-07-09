@@ -12,4 +12,4 @@ Career-ops is AI-agnostic and runs on several command-line agent tools. The core
 | Qwen | `AGENTS.md` | Interactive: `qwen`. Headless/Batch: `qwen -p "prompt"` |
 | Kimi | `KIMI.md` | Interactive: `kimi` |
 | GitHub Copilot CLI | `AGENTS.md` | Headless/Batch: `copilot -p "prompt"` |
-| Gemini | `GEMINI.md` | Legacy compatibility guard only. The native Google CLI path is Antigravity CLI (`agy`); for Gemini API evaluation, use `node gemini-eval.mjs`. |
+| Gemini | `GEMINI.md` | Legacy wrapper redirecting to `AGENTS.md` (transitioned to Antigravity CLI). |

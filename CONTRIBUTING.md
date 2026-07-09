@@ -1,6 +1,6 @@
 # Contributing to Career-Ops
 
-Thanks for your interest in contributing! Career-Ops is built with Claude Code, but the repo is CLI-agnostic and can also be developed with Codex, OpenCode, Qwen, Antigravity CLI, Grok Build CLI, and other supported agent CLIs.
+Thanks for your interest in contributing! Career-Ops is built with Claude Code, and you can use it for development too.
 
 ## Why contribute here
 
@@ -38,13 +38,6 @@ A large *feature* PR that skipped this step may be asked to start with an issue 
 5. Test with a fresh clone (see [docs/SETUP.md](docs/SETUP.md))
 6. Commit and push
 7. Open a Pull Request referencing the issue
-
-### CLI notes
-
-- Use `agy` for the native Google CLI path. The old `gemini` command is legacy and may not exist on new machines.
-- `GEMINI.md` remains only as a compatibility guard for tools that still look for it.
-- Gemini model evaluation is still available through the standalone script: `node gemini-eval.mjs`.
-- Codex works through plain prompts or `codex exec`; see [docs/CODEX.md](docs/CODEX.md).
 
 ## What to Contribute
 
