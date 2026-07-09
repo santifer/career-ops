@@ -2712,10 +2712,40 @@ try {
   const {
     buildLocationFilter,
     buildContentFilter,
+    buildPostingAgeFilter,
     shouldDedupScanHistoryRow,
     formatPipelineOffer,
     formatScanHistoryRow,
   } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // ── posting-age filter (max_posting_age_days) ──
+  // Opt-in freshness gate. `now` is injected so the boundary math is deterministic.
+  const NOW = Date.parse('2026-07-09T00:00:00Z');
+  const DAY = 24 * 60 * 60 * 1000;
+  const ageFilter = buildPostingAgeFilter(45, NOW);
+  if (
+    ageFilter(NOW - 10 * DAY) === true && // fresh → pass
+    ageFilter(NOW - 60 * DAY) === false && // older than 45d → skip
+    ageFilter(NOW - 45 * DAY) === true && // exactly at the cutoff → kept (>=)
+    ageFilter(undefined) === true && // no provider date → pass (don't penalize missing data)
+    ageFilter(Number.NaN) === true && // malformed date → pass
+    ageFilter('2026-01-01') === true // non-number → pass
+  ) {
+    pass('posting-age filter skips only dated offers older than N days; missing/invalid dates pass');
+  } else {
+    fail('posting-age filter did not gate on age / missing-date correctly');
+  }
+  // Absent or non-positive config → pass-all (opt-in, disabled by default).
+  if (
+    buildPostingAgeFilter(undefined, NOW)(NOW - 9999 * DAY) === true &&
+    buildPostingAgeFilter(0, NOW)(NOW - 9999 * DAY) === true &&
+    buildPostingAgeFilter(-5, NOW)(NOW - 9999 * DAY) === true &&
+    buildPostingAgeFilter(3.5, NOW)(NOW - 9999 * DAY) === true // non-integer → disabled
+  ) {
+    pass('posting-age filter is opt-in: absent / 0 / negative / non-integer config disables it');
+  } else {
+    fail('posting-age filter should be a pass-all no-op when unconfigured or misconfigured');
+  }
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],

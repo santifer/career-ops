@@ -173,6 +173,22 @@ export function buildLocationFilter(locationFilter) {
   };
 }
 
+// ── Posting-age filter ──────────────────────────────────────────────
+// Optional opt-in. If `max_posting_age_days` is absent (or not a positive
+// integer) in portals.yml, every offer passes. An offer is skipped only when
+// the provider supplied a postedAt (epoch ms) AND it is older than N days.
+// Offers with no date always pass — same "don't penalize missing data"
+// convention as the location filter. `now` is injectable for deterministic tests.
+export function buildPostingAgeFilter(maxAgeDays, now = Date.now()) {
+  const max = Number(maxAgeDays);
+  if (!Number.isInteger(max) || max <= 0) return () => true;
+  const cutoff = now - max * 24 * 60 * 60 * 1000; // N days in ms, subtracted from now
+  return (postedAt) => {
+    if (typeof postedAt !== 'number' || !Number.isFinite(postedAt)) return true;
+    return postedAt >= cutoff;
+  };
+}
+
 // ── Content filter ──────────────────────────────────────────────────
 // Optional. If `content_filter` is absent from portals.yml, all jobs pass.
 // Filters on the job DESCRIPTION text to separate same-titled roles with
@@ -990,6 +1006,7 @@ async function main() {
   }
 
   const locationFilter = buildLocationFilter(config.location_filter);
+  const postingAgeFilter = buildPostingAgeFilter(config.max_posting_age_days);
   const salaryFilter = buildSalaryFilter(config.salary_filter);
   const trustValidator = buildTrustValidator(config.trust_filter);
   const contentFilter = buildContentFilter(config.content_filter);
@@ -1068,6 +1085,7 @@ async function main() {
   let totalFilteredTitle = 0;
   let totalFilteredTier = 0;
   let totalFilteredLocation = 0;
+  let totalFilteredPostingAge = 0;
   let totalFilteredSalary = 0;
   let totalFilteredContent = 0;
   let totalDupes = 0;
@@ -1120,6 +1138,10 @@ async function main() {
         }
         if (!locationFilter(job.location)) {
           totalFilteredLocation++;
+          continue;
+        }
+        if (!postingAgeFilter(job.postedAt)) {
+          totalFilteredPostingAge++;
           continue;
         }
         if (!salaryFilter(job.salary)) {
@@ -1264,6 +1286,9 @@ async function main() {
     console.log(`Filtered by tier:      ${totalFilteredTier} removed`);
   }
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
+  if (config.max_posting_age_days != null || totalFilteredPostingAge > 0) {
+    console.log(`Filtered by age:       ${totalFilteredPostingAge} removed`);
+  }
   console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
   console.log(`Filtered by content:  ${totalFilteredContent} removed`);
   if (Object.keys(windows).length > 0 || totalFilteredCooldown > 0) {
