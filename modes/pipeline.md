@@ -45,6 +45,7 @@ This complements — does not replace — the per-URL liveness gate in `auto-pip
 - [ ] https://jobs.ashbyhq.com/acme/789 | Acme Corp | Solutions Architect | Remote (US)
 - [ ] https://jobs.ashbyhq.com/acme/790 | Acme Corp | AI Engineer | Remote (US) | 180000-220000 USD
 - [ ] https://jobs.ashbyhq.com/acme/791 | Acme Corp | Staff PM | note: curated shortlist
+- [ ] https://boards.greenhouse.io/acme/jobs/792 | Acme Corp | Backend Engineer | Remote (US) | posted: 2026-06-18
 - [!] https://private.url/job — Error: login required
 
 ## Processed
@@ -63,13 +64,20 @@ carrying compensation always includes the location cell (empty if unknown); a ro
 with only a location stays 4 columns. Existing shorter rows remain valid and are
 read as having empty values for the missing trailing columns.
 
-One further trailing segment is optional and **labeled**, not positional:
-`| note: {text}`. Unlike the positional cells above, it can ride on any row shape
-(`- [ ] {url} | {company} | {title} | note: curated shortlist` is valid), because
-the `note:` prefix identifies it regardless of column position. It carries a
-free-text ranking signal an importer attached to the offer (the deterministic
-scanner never sets it). Treat it as a hint when triaging; it does not change how
-you process the URL.
+Beyond the positional cells, rows may carry optional **labeled** segments —
+`| {label}: {value}` — that ride on any row shape (bare URL, 3-, 4-, or 5-column),
+because the `{label}:` prefix identifies them regardless of column position. Two
+are defined:
+
+- `| posted: {YYYY-MM-DD}` — the posting date, when the provider's API exposed one
+  (`offer.postedAt`). The scanner writes it so freshness is visible at triage time
+  without re-fetching the ATS. Rows from providers with no posting date simply omit
+  the segment.
+- `| note: {text}` — a free-text ranking signal an importer attached to the offer
+  (`- [ ] {url} | {company} | {title} | note: curated shortlist` is valid). The
+  deterministic scanner never sets it.
+
+Treat both as hints when triaging; neither changes how you process the URL.
 
 ## Intelligent JD detection from URL
 

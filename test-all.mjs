@@ -2879,7 +2879,8 @@ try {
   const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
   const historyColumns = historyRow.split('\t');
   if (
-    historyColumns.length === 8 && // 7 metadata columns + fingerprint (#1597)
+    historyColumns.length === 9 && // 7 metadata + fingerprint (#1597) + postedAt
+    historyColumns[8] === '' && // no postedAt on hostileOffer → empty trailing col
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
@@ -2889,6 +2890,48 @@ try {
     pass('scan-history writer preserves row shape and neutralizes spreadsheet formulas');
   } else {
     fail(`scan-history metadata sanitizer produced unsafe TSV row: ${JSON.stringify(historyColumns)}`);
+  }
+
+  // ── postedAt persistence ──
+  // Providers already parse the posting date into `offer.postedAt` (epoch ms).
+  // scan-history gets it as a trailing ISO column; pipeline.md gets it as a
+  // labeled `posted:` segment. Both are backward-compatible: an offer without a
+  // date leaves the column empty / omits the segment (byte-identical output).
+  const datedOffer = {
+    url: 'https://jobs.example.com/42',
+    source: 'greenhouse-api',
+    title: 'Staff Engineer',
+    company: 'Acme',
+    location: 'Remote (US)',
+    description: '',
+    postedAt: Date.parse('2026-06-18T00:00:00Z'),
+  };
+  const datedHistory = formatScanHistoryRow(datedOffer, '2026-07-09').split('\t');
+  const noDateHistory = formatScanHistoryRow({ ...datedOffer, postedAt: undefined }, '2026-07-09').split('\t');
+  if (
+    datedHistory.length === 9 &&
+    datedHistory[8] === '2026-06-18' && // epoch ms → YYYY-MM-DD in the trailing column
+    noDateHistory.length === 9 &&
+    noDateHistory[8] === '' // missing postedAt → empty trailing column, never a bogus date
+  ) {
+    pass('scan-history writer appends postedAt as an ISO trailing column (empty when absent)');
+  } else {
+    fail(`scan-history postedAt column wrong: dated=${JSON.stringify(datedHistory)} / noDate=${JSON.stringify(noDateHistory)}`);
+  }
+
+  const datedPipeline = formatPipelineOffer(datedOffer);
+  const noDatePipeline = formatPipelineOffer({ ...datedOffer, postedAt: undefined });
+  const badDatePipeline = formatPipelineOffer({ ...datedOffer, postedAt: -1 });
+  const nanDatePipeline = formatPipelineOffer({ ...datedOffer, postedAt: Number.NaN });
+  if (
+    datedPipeline === '- [ ] https://jobs.example.com/42 | Acme | Staff Engineer | Remote (US) | posted: 2026-06-18' &&
+    noDatePipeline === '- [ ] https://jobs.example.com/42 | Acme | Staff Engineer | Remote (US)' &&
+    badDatePipeline === noDatePipeline && // negative epoch → no segment (guarded)
+    nanDatePipeline === noDatePipeline // NaN → no segment (guarded)
+  ) {
+    pass('pipeline writer appends a labeled posted: segment (omitted/byte-identical when date missing or invalid)');
+  } else {
+    fail(`pipeline postedAt segment wrong: dated="${datedPipeline}" / noDate="${noDatePipeline}" / bad="${badDatePipeline}" / nan="${nanDatePipeline}"`);
   }
 
   // ── content_filter (#734) ──
@@ -6471,7 +6514,7 @@ try {
     '2026-07-06',
   );
   const cols = withBody.split('\t');
-  if (cols.length === 8 && /^[0-9a-f]{16}$/.test(cols[7])) {
+  if (cols.length === 9 && /^[0-9a-f]{16}$/.test(cols[7])) {
     pass('formatScanHistoryRow appends a fingerprint column for described offers');
   } else {
     fail(`formatScanHistoryRow columns: ${cols.length}, last=${JSON.stringify(cols[7])}`);
@@ -6481,7 +6524,7 @@ try {
     '2026-07-06',
   );
   const cols2 = withoutBody.split('\t');
-  if (cols2.length === 8 && cols2[7] === '') {
+  if (cols2.length === 9 && cols2[7] === '') {
     pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
   } else {
     fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);

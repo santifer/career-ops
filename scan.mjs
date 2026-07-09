@@ -333,7 +333,7 @@ export function loadReApplyWindows(profilePath = PROFILE_PATH) {
       const lastApplyDate = win.last_apply_date;
       if (typeof lastApplyDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(lastApplyDate)) continue;
       if (isNaN(Date.parse(lastApplyDate))) continue;
-      
+
       const sameRoleDays = win.same_role_days;
       if (sameRoleDays !== undefined && (!Number.isInteger(sameRoleDays) || sameRoleDays < 0)) continue;
 
@@ -652,6 +652,10 @@ export function formatPipelineOffer(offer) {
   let line = base;
   if (compensation) line = `${base} | ${location} | ${compensation}`;
   else if (location) line = `${base} | ${location}`;
+  // Optional labeled posting-date segment (like note:) — keeps the positional
+  // 1/3/4/5-column contract in modes/pipeline.md intact.
+  const posted = postedAtIsoDate(offer.postedAt);
+  if (posted) line = `${line} | posted: ${posted}`;
   // Optional free-text ranking signal (e.g. a curated-list flag an importer
   // attaches). Labeled — not positional like location/compensation — so it can
   // ride on any row shape (bare URL, 3-, 4-, or 5-column) without a reader
@@ -661,6 +665,11 @@ export function formatPipelineOffer(offer) {
   return note ? `${line} | note: ${note}` : line;
 }
 
+// postedAt arrives as epoch ms (or absent). Convert to 'YYYY-MM-DD', or '' when missing.
+function postedAtIsoDate(postedAt) {
+  if (typeof postedAt !== 'number' || !Number.isFinite(postedAt) || postedAt <= 0) return '';
+  return new Date(postedAt).toISOString().slice(0, 10);
+}
 export function formatScanHistoryRow(offer, date, status = 'added') {
   return [
     normalizeScanUrl(offer.url),
@@ -675,6 +684,9 @@ export function formatScanHistoryRow(offer, date, status = 'added') {
     // the same body re-posted under a different company (agency cross-listing)
     // without storing the body. All readers tolerate the extra column.
     offer.fingerprint ?? fingerprintText(offer.description),
+    // New trailing column: posting date. Existing readers index by position up to
+    // col 7, so appending col 8 is backward-compatible.
+    postedAtIsoDate(offer.postedAt),
   ].map(sanitizeTsvField).join('\t');
 }
 
@@ -1016,7 +1028,7 @@ async function main() {
         continue;
       }
       if (filterCompany && !entry.name.toLowerCase().includes(filterCompany)) continue;
-      
+
       const resolved = resolveProvider(entry, providers);
       if (!resolved) {
         skippedCount++;
@@ -1029,12 +1041,12 @@ async function main() {
         }
         continue;
       }
-      
-      if (resolved.error) { 
-        resolveErrors.push({ company: entry.name, error: resolved.error }); 
-        continue; 
+
+      if (resolved.error) {
+        resolveErrors.push({ company: entry.name, error: resolved.error });
+        continue;
       }
-      
+
       targets.push({ ...entry, _provider: resolved.provider, _isBoard: isBoard });
       if (isBoard) boardCount++;
     }
