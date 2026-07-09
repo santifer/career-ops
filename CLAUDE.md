@@ -344,6 +344,7 @@ Verify a posting is still live before applying — using the cheapest check that
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
 - Batch in `batch/` (gitignored except scripts and prompt)
 - Report numbering: sequential 3-digit zero-padded, max existing + 1
+- **Parallel fan-outs — reserve report numbers first.** When orchestrating N parallel evaluators (headless workers, subagents, or multiple agent windows), reserve the report-number range before spawning: `node reserve-report-num.mjs --count N` prints e.g. `042-049`; hand each worker its own number. Each slot claim is individually atomic; the contiguous range is an ergonomic allocation, not an all-or-nothing transaction — on collision the partially claimed slots are released and the reservation restarts past the collision. Release with `node reserve-report-num.mjs --release 042-049` when done (stale sentinels are GC'd after 4h, so reserve right before spawning; collision restarts leave permanent — harmless — gaps in the sequence). Never let parallel workers compute `max+1` themselves — that is the #749 race.
 - **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
 
@@ -387,5 +388,11 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 **Source of truth (full descriptions + aliases):** `templates/states.yml`. The 8 canonical states (use exactly one): `Evaluated` · `Applied` · `Responded` · `Interview` · `Offer` · `Rejected` · `Discarded` · `SKIP`.
 
 **RULES:** no markdown bold (`**`), no dates (those go in the date column), no extra text (use the notes column) in the status field.
-@AGENTS.md
+
+<!-- CLAUDE.md is a complete, standalone spec for Claude Code. It intentionally does NOT
+     `@AGENTS.md`: that transclude double-loaded every shared rule into each Claude Code
+     session (~8K tokens, ~77% duplicated). AGENTS.md remains the entrypoint for other CLIs.
+     Claude-Code-relevant rules that previously lived only in AGENTS.md (e.g. parallel
+     report-number reservation) have been ported into the body above. Add anything
+     Claude-Code-specific here. -->
 <!-- Add anything Claude Code specific that other agents don't need -->
