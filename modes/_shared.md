@@ -88,6 +88,38 @@ Block G assesses whether a posting is likely a real, active opening. It does NOT
 - Present signals and let the user decide
 - Always note legitimate explanations for concerning signals
 
+## Company Type and Compensation Reliability
+
+Public salary data is a signal, not a promise. Before interpreting compensation, classify the employer / hiring entity first, then decide how much to trust the published range.
+
+**Company type taxonomy:**
+
+| Company type | Typical comp reliability | Signals |
+|--------------|--------------------------|---------|
+| Public big tech / mature tech | High to medium | Public company, structured levels, large engineering org, repeatable hiring process |
+| Growth-stage startup / VC-backed startup | Medium | Funded startup, competitive hiring market, may mix base + equity + bonus |
+| Early-stage startup / pre-revenue startup | Medium to low | Small team, vague role scope, equity-heavy promises, unclear bands |
+| Enterprise / traditional corporate | Medium | Formal HR process, stable base, slower bands, bonus may be discretionary |
+| Agency / outsourcing / consulting vendor | Medium to low | Client allocation, project-based work, billability pressure, variable bonus |
+| Local SMB / service business | Low | Small company, broad role, informal HR, "comprehensive salary" language |
+| Sales / commission-heavy org | Low unless base is explicit | OTE, uncapped commission, performance bonus, target-based pay |
+| Recruiter / staffing listing | Low to medium | Third-party posting, range may reflect client budget rather than offer terms |
+| Government / academic / nonprofit | Medium to high | Published grades/bands, but lower market competitiveness |
+| Open-source community / education community | Medium to low | Community-led org, foundation/association sponsor, campus/community operations, unclear employment entity |
+
+If the brand differs from the legal employer or posting entity, classify the **actual contract / hiring entity** first and mention the brand relationship separately. If the company type is uncertain, mark it as `Unknown` and default compensation reliability to the conservative canonical tier: `Low`.
+
+**Compensation reliability tiers:**
+
+| Tier | Meaning |
+|------|---------|
+| High | Salary is stated as base or backed by structured public bands / multiple consistent sources |
+| Medium | Range is plausible but components are not fully separated |
+| Low | Public number likely includes variable, attendance, commission, subsidy, or "up to" components |
+| Unknown | No usable salary data |
+
+When a JD publishes a salary figure, distinguish advertised range, likely guaranteed base, variable / conditional cash components, expected stable cash, and non-cash benefits. If the JD publishes no salary figure, collapse compensation analysis to two concise lines: company type and reliability tier. Never present advertised compensation as real take-home pay unless the source explicitly supports that interpretation.
+
 ## Archetype Detection
 
 Classify every offer into one of these types (or hybrid of 2):
