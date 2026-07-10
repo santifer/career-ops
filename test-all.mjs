@@ -2114,6 +2114,7 @@ console.log('\n10. Portals config validator');
 try {
   const tmp = mkdtempSync(join(tmpdir(), 'career-ops-portals-validator-'));
   const validPath = join(tmp, 'valid.yml');
+  const validProviderPluginPath = join(tmp, 'valid-provider-plugin.yml');
   const invalidProviderPath = join(tmp, 'invalid-provider.yml');
   const emptyKeywordPath = join(tmp, 'empty-keyword.yml');
   const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
@@ -2127,6 +2128,14 @@ title_filter:
 tracked_companies:
   - name: "Acme"
     careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
+  writeFileSync(validProviderPluginPath, `
+title_filter:
+  positive: ["AI"]
+tracked_companies:
+  - name: "Apify Source"
+    provider: "apify"
 `, 'utf-8');
 
   writeFileSync(invalidProviderPath, `
@@ -2188,6 +2197,13 @@ tracked_companies:
     pass('validate-portals accepts a minimal valid portals file');
   } else {
     fail('validate-portals should accept a minimal valid portals file');
+  }
+
+  const validProviderPluginResult = run(NODE, ['validate-portals.mjs', '--file', validProviderPluginPath]);
+  if (validProviderPluginResult !== null && validProviderPluginResult.includes('0 errors')) {
+    pass('validate-portals accepts bundled provider-plugin ids');
+  } else {
+    fail('validate-portals should accept bundled provider-plugin ids');
   }
 
   const exampleResult = run(NODE, ['validate-portals.mjs', '--file', 'templates/portals.example.yml']);
