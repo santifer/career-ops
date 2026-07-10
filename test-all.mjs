@@ -2310,7 +2310,7 @@ const claudeWrapperBody = claudeWrapperLines.slice(1).filter(line => line.trim()
 if (
   claudeWrapperLines[0] === '@AGENTS.md' &&
   claudeWrapperBody.length <= 1 &&
-  claudeWrapperBody.every(line => /^<!--.*-->$/.test(line.trim()))
+  claudeWrapperBody.every(line => { const t = line.trim(); return t.startsWith('<!--') && t.endsWith('-->'); })
 ) {
   pass('CLAUDE.md is a thin AGENTS.md wrapper (#1088)');
 } else {
