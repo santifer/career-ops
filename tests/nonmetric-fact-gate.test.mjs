@@ -1,3 +1,4 @@
+import { pass, fail } from './helpers.mjs';
 import { factClaims, verifyFacts } from '../verify-cv-facts.mjs';
 import { mkdtempSync, writeFileSync, rmSync } from 'fs';
 import { join } from 'path';
@@ -16,20 +17,18 @@ try {
   if (claims.some(claim => claim.kind === 'employer' && claim.value === 'acme labs')
       && claims.some(claim => claim.kind === 'title' && claim.value === 'senior platform engineer')
       && claims.some(claim => claim.kind === 'tool' && claim.value === 'react')) {
-    console.log('  ✅ extracts employer, title, and tool claims');
+    pass('extracts employer, title, and tool claims');
   } else {
-    console.error(`  ❌ claim extraction incomplete: ${JSON.stringify(claims)}`);
-    process.exitCode = 1;
+    fail(`claim extraction incomplete: ${JSON.stringify(claims)}`);
   }
 
   const supported = verifyFacts('I worked at Acme Labs as a Senior Platform Engineer, using React and Docker.', {
     sourcePaths: [source], configPath: config,
   });
   if (supported.verdict === 'pass' && supported.unsupportedFacts.length === 0) {
-    console.log('  ✅ source-backed non-metric facts pass');
+    pass('source-backed non-metric facts pass');
   } else {
-    console.error(`  ❌ source-backed non-metric facts blocked: ${JSON.stringify(supported)}`);
-    process.exitCode = 1;
+    fail(`source-backed non-metric facts blocked: ${JSON.stringify(supported)}`);
   }
 
   const unsupported = verifyFacts('I worked at Invented Labs as a Principal Platform Engineer, using React and Terraform.', {
@@ -39,10 +38,18 @@ try {
       && unsupported.unsupportedFacts.some(claim => claim.value === 'invented labs')
       && unsupported.unsupportedFacts.some(claim => claim.value === 'principal platform engineer')
       && unsupported.unsupportedFacts.some(claim => claim.value === 'terraform')) {
-    console.log('  ✅ unsupported employer, title, and tool claims block');
+    pass('unsupported employer, title, and tool claims block');
   } else {
-    console.error(`  ❌ unsupported non-metric facts were not blocked: ${JSON.stringify(unsupported)}`);
-    process.exitCode = 1;
+    fail(`unsupported non-metric facts were not blocked: ${JSON.stringify(unsupported)}`);
+  }
+
+  const trailingProse = factClaims('I built this using React and Docker for containerized deployments.');
+  if (trailingProse.some(claim => claim.kind === 'tool' && claim.value === 'react')
+      && trailingProse.some(claim => claim.kind === 'tool' && claim.value === 'docker')
+      && !trailingProse.some(claim => claim.value.includes('containerized deployments'))) {
+    pass('tool claims stop before trailing prepositional prose');
+  } else {
+    fail(`tool claim over-captured trailing prose: ${JSON.stringify(trailingProse)}`);
   }
 } finally {
   rmSync(tmp, { recursive: true, force: true });

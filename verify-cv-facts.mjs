@@ -45,12 +45,14 @@ export function factClaims(text) {
   const claims = [];
   const patterns = [
     ['employer', /\b(?:worked at|joined|employer\s*:\s*|company\s*:\s*)\s*([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4})/g],
-    ['title', /\b(?:served as|worked as|\bas|title\s*:\s*|role\s*:\s*)\s*(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})/g],
-    ['tool', /\b(?:using|built with|worked with|technologies?\s*:\s*|tech stack\s*:\s*)([^.;\n]+)/gi],
+    ['title', /\b(?:served as|worked as|title\s*:\s*|role\s*:\s*)\s*(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})|\bas\s+(?:an?\s+|the\s+)([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})/g],
+    ['tool', /\b(?:using|built with|worked with|technologies?\s*:\s*|tech stack\s*:\s*)([^.;\n]+?)(?=\s+\b(?:for|with|in)\b|[.;\n]|$)/gi],
   ];
   for (const [kind, pattern] of patterns) {
     for (const match of clean.matchAll(pattern)) {
-      const rawValues = kind === 'tool' ? match[1].split(/,|\band\b/i) : [match[1]];
+      const rawValues = kind === 'tool'
+        ? match[1].split(/,|\band\b/i)
+        : [match[1] || match[2]];
       for (const raw of rawValues) {
         const value = normalizeFact(raw);
         if (value) claims.push({ kind, value });

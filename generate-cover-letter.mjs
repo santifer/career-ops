@@ -199,7 +199,13 @@ Usage:
     // Cover letters are candidate-facing documents too. Reuse the CV fact
     // validator before importing Playwright or writing a PDF so a failed gate
     // cannot leave behind a misleading artifact.
-    assertFacts(html, { label: "cover letter" });
+    const factCheck = assertFacts(html, { label: "cover letter" });
+    if (factCheck.verdict === "warn") {
+      console.error(`CV fact check warning: cover letter`);
+      for (const phrase of factCheck.warnings) {
+        console.error(`  - advisory phrase: ${phrase}`);
+      }
+    }
     const outputPath = resolve(payload.output_path);
     await renderHtmlToPdf(html, outputPath, { format: "a4" });
     console.log(`\nCover letter PDF: ${payload.output_path}`);
