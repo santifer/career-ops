@@ -271,9 +271,10 @@ Only after explicit user approval.
 
 Before rendering, run the shared fact validator against the assembled cover
 letter HTML. It checks metric-like claims against `cv.md`,
-`article-digest.md`, and the optional `config/cv-facts.json` allowlist. If the
-check fails, stop and do not create a PDF; add the missing evidence or obtain a
-verified allowlist exception first.
+`article-digest.md`, and the optional `config/cv-facts.json` allowlist. The
+validator returns a stable `pass`, `warn`, or `block` verdict. Advisory
+`warn_phrases` do not stop PDF generation; a `block` verdict does, so add the
+missing evidence or obtain a verified allowlist exception first.
 
 Assemble the JSON payload:
 

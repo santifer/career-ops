@@ -51,9 +51,9 @@ export function metricClaims(text) {
 }
 
 function loadConfig(path) {
-  if (!existsSync(path)) return { allow_metrics: [], forbidden_phrases: [] };
+  if (!existsSync(path)) return { allow_metrics: [], forbidden_phrases: [], warn_phrases: [] };
   const config = JSON.parse(readFileSync(path, 'utf-8'));
-  for (const key of ['allow_metrics', 'forbidden_phrases']) {
+  for (const key of ['allow_metrics', 'forbidden_phrases', 'warn_phrases']) {
     if (config[key] == null) config[key] = [];
     else if (!Array.isArray(config[key])) throw new Error(`${key} must be an array in ${path}`);
   }
@@ -86,11 +86,14 @@ export function verifyFacts(targetText, {
   const forbidden = config.forbidden_phrases
       .filter(Boolean)
       .filter(phrase => stripMarkup(targetText).toLowerCase().includes(String(phrase).toLowerCase()));
+  const warnings = config.warn_phrases
+      .filter(Boolean)
+      .filter(phrase => stripMarkup(targetText).toLowerCase().includes(String(phrase).toLowerCase()));
   return {
-    verdict: invented.length || forbidden.length ? 'block' : 'pass',
+    verdict: invented.length || forbidden.length ? 'block' : warnings.length ? 'warn' : 'pass',
     invented,
     forbidden,
-    warnings: [],
+    warnings,
   };
 }
 
@@ -163,10 +166,15 @@ export function runCli(args = process.argv.slice(2)) {
     });
     if (parsed.json) {
       console.log(JSON.stringify(result));
-      return result.verdict === 'pass' ? 0 : 1;
+      return result.verdict === 'block' ? 1 : 0;
     }
     if (result.verdict === 'pass') {
       console.log(`CV fact check passed: ${basename(targetPath)}`);
+      return 0;
+    }
+    if (result.verdict === 'warn') {
+      console.error(`CV fact check warning: ${basename(targetPath)}`);
+      for (const phrase of result.warnings) console.error(`  - advisory phrase: ${phrase}`);
       return 0;
     }
     console.error(`CV fact check failed: ${basename(targetPath)}`);

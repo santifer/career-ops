@@ -5,5 +5,8 @@
   "forbidden_phrases": [
     "Fortune 500",
     "patented"
+  ],
+  "warn_phrases": [
+    "maybe"
   ]
 }
