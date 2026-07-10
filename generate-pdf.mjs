@@ -97,6 +97,11 @@ function normalizeTextForATS(html) {
     // wrong for half of users \u2014 better to leave the glyph than emit bad data.
     t = t.replace(/\u20AC/g, () => { bump('euro', 1); return 'EUR '; });
     t = t.replace(/\u00A3/g, () => { bump('pound', 1); return 'GBP '; });
+    // Markdown bold from tailored CV builders (SUMMARY_TEXT uses **…**).
+    t = t.replace(/\*\*([^*]+?)\*\*/g, (_, inner) => {
+      bump('markdown-bold', 1);
+      return `<strong>${inner}</strong>`;
+    });
     return t;
   }
 }

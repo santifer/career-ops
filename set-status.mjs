@@ -11,7 +11,11 @@
  *   node set-status.mjs <report#|company> <state> [--note "..."] [--role "..."] [--dry-run] [--json]
  *
  * Row resolution:
- *   - numeric argument → exact match on the # column
+ *   - numeric argument → exact match on the # column; if the tracker has a
+ *     duplicate # (see #1704 — merge-tracker.mjs bug, now fixed, that could
+ *     assign the same # to two rows), --role narrows it, otherwise it fails
+ *     ambiguous with a candidate list instead of silently editing whichever
+ *     row was found first
  *   - otherwise → company match (normalized, same key as merge-tracker dedup);
  *     multiple hits are narrowed with --role (fuzzy, role-matcher.mjs), and
  *     anything still ambiguous fails with a numbered candidate list.
@@ -167,11 +171,28 @@ if (!existsSync(APPS_FILE)) {
 function resolveRow(rows) {
   if (/^\d+$/.test(selector)) {
     const num = parseInt(selector, 10);
-    const row = rows.find(r => r.num === num);
-    if (!row) {
+    let matches = rows.filter(r => r.num === num);
+    if (matches.length === 0) {
       failWith(EXIT_NOT_FOUND, 'not-found', `No tracker row with #${num}`);
     }
-    return row;
+    if (matches.length > 1 && flags.role) {
+      const narrowed = matches.filter(r => roleFuzzyMatch(r.role, flags.role));
+      if (narrowed.length === 1) return narrowed[0];
+      // Fall through with the original list so the candidates stay visible.
+    }
+    if (matches.length > 1) {
+      // A bare report number should never match more than one row — this is
+      // exactly the failure mode from #1704: a stale tracker # reused across
+      // 2+ rows means "the first match" is a silent coin flip on which
+      // company gets edited. Refuse to guess; require --role or the company
+      // selector instead.
+      const candidates = matches.map(r => ({ num: r.num, company: r.company, role: r.role }));
+      const listing = candidates.map(c => `#${c.num}\t${c.company}\t${c.role}`).join('\n');
+      failWith(EXIT_AMBIGUOUS, 'ambiguous',
+        `#${num} is a duplicate tracker number shared by ${matches.length} rows (see #1704) — pass --role to disambiguate, or use the company name instead:\n${listing}`,
+        { candidates });
+    }
+    return matches[0];
   }
 
   const key = normalizeCompany(selector);
