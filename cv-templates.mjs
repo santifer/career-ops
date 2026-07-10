@@ -43,6 +43,16 @@ export function kebab(display) {
     .replace(/^-+|-+$/g, '');
 }
 
+// The only template formats the resolver recognizes. `format` reaches path
+// construction (fileFor) unmodified, so it must be allowlisted or a value like
+// `--format=../../etc/passwd` would traverse out of the templates dir.
+const VALID_FORMATS = new Set(['html', 'tex']);
+function assertFormat(format) {
+  if (!VALID_FORMATS.has(format)) {
+    throw new Error(`Unsupported template format: ${format} (expected html or tex)`);
+  }
+}
+
 // filename → {name, format} | null. Base "cv-template.html" → name "standard";
 // "cv-template.<name>.html" → that name. Only html/tex are recognized.
 function parseFilename(prefix, file) {
@@ -71,6 +81,7 @@ export function parseMeta(path) {
 export function listTemplates(kind, { dir = DEFAULT_TEMPLATES_DIR, format = 'html' } = {}) {
   const cfg = KINDS[kind];
   if (!cfg) throw new Error(`Unknown template kind: ${kind}`);
+  assertFormat(format);
   if (!existsSync(dir)) return [];
   const out = [];
   for (const file of readdirSync(dir)) {
@@ -121,6 +132,7 @@ export function resolveTemplate(kind, name, opts = {}) {
     profilePath = DEFAULT_PROFILE_PATH,
     fallback = false,
   } = opts;
+  assertFormat(format);
 
   const explicit = Boolean(name && String(name).trim());
   let chosen = kebab(explicit ? name : loadProfileDefault(kind, { profilePath }) || 'standard');
