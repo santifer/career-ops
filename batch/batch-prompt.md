@@ -209,6 +209,36 @@ Assess whether the posting appears real and worth pursuing.
 
 Batch mode limitation: Playwright is not available, so exact apply-button state and freshness cannot be directly verified. Mark those signals as `unverified (batch mode)`.
 
+#### Risk Summary (después del Bloque G)
+
+Cierra el cuerpo del report con un bloque `## Risk Summary` justo después de la sección del Bloque G — una fila por señal de riesgo, orden fijo, tres estados por fila: `✅ {clear verdict}` / `⚠️ {finding}` / `— not evaluated`. **Aggregation only, zero new judgment:** cada fila cita el veredicto ya producido por su señal fuente; nunca re-puntúa ni sobrescribe.
+
+**`— not evaluated` es un estado de primera clase:** una señal que este worker no puede evaluar se declara explícitamente — NUNCA se omite la fila — para que un summary todo-✅ sea fiable.
+
+Reglas batch por fila:
+
+| Signal | Batch rendering |
+|--------|-----------------|
+| Posting legitimacy | Espejo del tier del Bloque G: `✅ High Confidence`, o `⚠️ {tier} — {one-line reason}` |
+| Employment classification | `— not evaluated` (el check de clasificación no forma parte del Bloque G batch) |
+| Culture screen | `— not evaluated` (el Bloque A batch no produce el campo Culture screen pass/caution/fail) |
+| Interview red flags | Si existe `interview-prep/{company-slug}-redflags.md`, espejo de su warning level + link relativo `[{level}](../interview-prep/{company-slug}-redflags.md)`; si no, `— no interview sessions yet` |
+| AI claims vs. infrastructure | Si este prompt/report contiene el check de mismatch AI/infraestructura, espejo de su veredicto (`✅ consistent` / `⚠️ {finding}`); si no, `— not evaluated` |
+
+Formato del bloque:
+
+```markdown
+## Risk Summary
+
+| Signal | Status |
+|--------|--------|
+| Posting legitimacy | ✅ High Confidence |
+| Employment classification | — not evaluated |
+| Culture screen | — not evaluated |
+| Interview red flags | — no interview sessions yet |
+| AI claims vs. infrastructure | — not evaluated |
+```
+
 #### Score Global
 Read `modes/_custom.md` → Scoring Rules, if it exists, and apply its override here. Default (if absent or silent): calculate global score based on dimension scores below.
 
@@ -267,6 +297,12 @@ discard_reasons:
 via: {agency/recruiter firm as a quoted string, or null for direct applications}
 company_confidential: {true when the end employer is unknown (company is "?"), else false}
 advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"), or null when the JD states nothing}
+risk_summary:
+  legitimacy: {high_confidence | proceed_with_caution | suspicious}
+  classification: {clear | flagged | not_evaluated}
+  culture: {pass | caution | fail | not_evaluated}
+  interview_redflags: {none | caution | warning | not_evaluated}
+  ai_infra: {consistent | mismatch | not_evaluated}
 ```
 
 Rules:
@@ -275,6 +311,7 @@ Rules:
 - `final_decision` must reflect the full evaluation, not only the CV match.
 - `advertised_comp` is the JD's **own** figure, verbatim; `null` when the JD states nothing — never estimate it and never substitute researched market data (Block D research stays in Block D). Batch workers never write `data/salary-observations.tsv` — the report itself is the advertised observation (`salary-gap.mjs` reads it).
 - Do not invent missing data. If confidence is limited, set `confidence: "Low"` and explain the limitation in the human-readable sections.
+- `risk_summary` mirrors the `## Risk Summary` block row by row — same source verdicts, snake_cased: `legitimacy` from the Block G tier (`high_confidence` / `proceed_with_caution` / `suspicious`), `culture` from the Block A Culture screen (`pass` / `caution` / `fail`), `interview_redflags` from the red-flag file's warning level (`none` / `caution` / `warning`). Any row rendered `— not evaluated` (or `— no interview sessions yet`) is `not_evaluated` here. Never invent a value the block does not show.
 
 ### Step 3 — Save the Report
 
@@ -325,6 +362,12 @@ discard_reasons:
 via: {agency/recruiter firm as a quoted string, or null for direct applications}
 company_confidential: {true when the end employer is unknown (company is "?"), else false}
 advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"), or null when the JD states nothing}
+risk_summary:
+  legitimacy: {high_confidence | proceed_with_caution | suspicious}
+  classification: {clear | flagged | not_evaluated}
+  culture: {pass | caution | fail | not_evaluated}
+  interview_redflags: {none | caution | warning | not_evaluated}
+  ai_infra: {consistent | mismatch | not_evaluated}
 ```
 ```
 
@@ -338,6 +381,7 @@ Then include:
 - `## E) Personalization Plan`
 - `## F) Interview Plan`
 - `## G) Posting Legitimacy`
+- `## Risk Summary`
 - `## Extracted Keywords`
 
 Translate these human-facing headings according to `language.output` when it is not English. Keep `## Machine Summary` and YAML keys exact for downstream parsers.

@@ -109,7 +109,7 @@ Compute a **red-flag score**:
 
 ## Step 5 — Generate Output
 
-**Output routing:** Red-flag analysis is company-wide (signals aggregate across rounds regardless of role). Write to a single company-level file: `interview-prep/{company-slug}-redflags.md`. Create it if absent. If sessions span multiple role slugs, note all roles in the header. Do not append to per-role intel files — those are role-specific, this is company-specific.
+**Output routing:** Red-flag analysis is company-wide (signals aggregate across rounds regardless of role). Write to a single company-level file: `interview-prep/{company-slug}-redflags.md`. Create it if absent. If sessions span multiple role slugs, note all roles in the header. Do not append to per-role intel files — those are role-specific, this is company-specific. This file is cross-referenced by the evaluation report's `## Risk Summary` block (see `modes/oferta.md`), which surfaces its warning level plus a relative link — keep the `**Warning level:**` line intact.
 
 Write the following structure:
 
