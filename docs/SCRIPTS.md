@@ -244,7 +244,7 @@ node assessment-log.mjs --summary   # per-event + per-platform table
 node assessment-log.mjs --self-test
 ```
 
-Log line format (TSV, one per line, `#`-prefixed lines are comments; `-` or an absent trailing cell = unknown):
+Log line format (TSV, one per line, `#`-prefixed lines are comments; for `report#`, `threshold%`, and `score%`, `-` or an absent trailing cell = unknown; an empty `stale_note` means no staleness was observed, not unknown):
 
 ```text
 {YYYY-MM-DD}\t{company}\t{report#|-}\t{platform}\t{subject}\t{threshold%|-}\t{score%|-}\t{stale_note}

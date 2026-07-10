@@ -148,9 +148,13 @@ function addEntry(args) {
   }
   // Append-only: existing rows are never rewritten. Create with header comment on first use.
   mkdirSync(dirname(LOG_PATH), { recursive: true });
-  const prefix = existsSync(LOG_PATH)
-    ? (readFileSync(LOG_PATH, 'utf-8').endsWith('\n') || readFileSync(LOG_PATH, 'utf-8') === '' ? '' : '\n')
-    : HEADER_COMMENT + '\n';
+  let prefix;
+  if (existsSync(LOG_PATH)) {
+    const existing = readFileSync(LOG_PATH, 'utf-8');
+    prefix = existing.endsWith('\n') || existing === '' ? '' : '\n';
+  } else {
+    prefix = HEADER_COMMENT + '\n';
+  }
   appendFileSync(LOG_PATH, prefix + row + '\n');
   console.log(JSON.stringify({ added: true, row: row.split('\t') }, null, 2));
 }
