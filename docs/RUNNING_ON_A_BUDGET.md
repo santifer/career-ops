@@ -14,7 +14,30 @@ By choosing a CLI that supports custom model configurations and routing it to a 
 
 ---
 
-## 2. Configuring Alternative CLI Setups
+## 2. Pick Your Spend Tier
+
+Before diving into CLI configuration, know that career-ops has a built-in knob for controlling evaluation cost: the `spend_tier` setting in [`config/profile.yml`](../config/profile.example.yml). It controls which model tier your CLI uses to evaluate offers — no provider setup required.
+
+| Tier | Behaviour |
+|------|-----------|
+| **economy** | Cheapest/fastest model, no extended thinking. Best for high-volume scanning. |
+| **standard** | Balanced model, no extended thinking. Default if the key is absent. |
+| **premium** | Most capable model, adaptive extended thinking. Best for high-stakes offers. |
+
+The **economy** tier is the high-volume scanning choice — it processes the most offers per dollar. On **standard** and **premium**, a pre-screen gate automatically trims batch spend by skipping obvious mismatches before the full evaluation runs.
+
+Set it once in your profile:
+
+```yaml
+# config/profile.yml
+spend_tier: standard
+```
+
+The actual model behind each tier depends on your CLI. See the mapping table in [`modes/_shared.md`](../modes/_shared.md) for the full breakdown.
+
+---
+
+## 3. Configuring Alternative CLI Setups
 
 Different CLIs offer different levels of flexibility for model routing. The two most common options for budget setups are **OpenCode** and **Qwen CLI**.
 
@@ -61,7 +84,7 @@ $env:QWEN_API_KEY="your_deepseek_api_key_here"
 
 ---
 
-## 3. Recommended Cost-Efficient Models
+## 4. Recommended Cost-Efficient Models
 
 When choosing a budget-friendly model, you need strong reasoning capabilities to handle the multi-dimensional scoring and resume tailoring. Here are the recommended models that hold up well under evaluation:
 
@@ -84,7 +107,7 @@ When choosing a budget-friendly model, you need strong reasoning capabilities to
 
 ---
 
-## 4. Local LLM Tradeoffs (Ollama / Llama.cpp)
+## 5. Local LLM Tradeoffs (Ollama / Llama.cpp)
 
 Running a model 100% locally via Ollama is completely free, but it comes with significant tradeoffs:
 
@@ -101,7 +124,7 @@ Running 32B or 70B models locally requires substantial system resources:
 
 ---
 
-## 5. Token-Saving Best Practices
+## 6. Token-Saving Best Practices
 
 To prevent unnecessary API costs or hitting rate limits, implement the following practices:
 
@@ -128,7 +151,7 @@ To prevent unnecessary API costs or hitting rate limits, implement the following
 
 ---
 
-## 6. Worked Example: Running the Pipeline Cheaply
+## 7. Worked Example: Running the Pipeline Cheaply
 
 Here is a concrete, end-to-end walkthrough of scanning for jobs and evaluating a single posting using **DeepSeek V3 via OpenRouter** and the standalone `openai-eval.mjs` evaluator. This bypasses the need for an expensive CLI agent for the heavy evaluation block.
 
@@ -171,7 +194,7 @@ By routing the heaviest step (Evaluation) to a cheap OpenAI-compatible endpoint,
 
 ---
 
-## 7. Zero-Cost Paths (No Claude / Paid CLI Required)
+## 8. Zero-Cost Paths (No Claude / Paid CLI Required)
 
 Career-ops ships a full pipeline that runs **entirely on free models** — no Claude Code, no Anthropic API key, no paid CLI subscription. Everything below works out of the box after a one-time `.env` setup.
 
@@ -216,7 +239,7 @@ If you want **zero network calls** and complete privacy, run evaluations against
 npm run ollama:eval
 ```
 
-This calls `ollama-eval.mjs` which hits your local Ollama server. No API key, no internet, no cost. See [Section 4](#4-local-llm-tradeoffs-ollama--llamacpp) for model size recommendations (32B+ minimum for reliable scoring).
+This calls `ollama-eval.mjs` which hits your local Ollama server. No API key, no internet, no cost. See [Section 5](#5-local-llm-tradeoffs-ollama--llamacpp) for model size recommendations (32B+ minimum for reliable scoring).
 
 ### Path C: Any OpenAI-Compatible Endpoint (`openai:eval`)
 
