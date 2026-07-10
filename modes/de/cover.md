@@ -209,17 +209,19 @@ Auf alle vier Antworten warten, bevor zu Schritt 7 übergegangen wird.
 
 ## Schritt 7 — Achievement-Auswahl (nur aus cv.md)
 
-3-4 Achievement-Bullets aus `cv.md` auswählen (`article-digest.md` darf für Kontext gelesen werden, ist aber keine Quelle für Achievement-Bullets):
+3-4 Erfahrungsbereiche aus `cv.md` auswählen (`article-digest.md` darf für Kontext gelesen werden, ist aber keine Quelle für Achievement-Bullets):
 1. Alle Bullet Points über alle Stationen in cv.md lesen
 2. Jeden gegen die Top 3-4 Muss-Kompetenzen der Anzeige bewerten
-3. Die 3-4 mit dem höchsten Score auswählen, mindestens eine Kennzahl pro Bullet
-4. Exakten Wortlaut und Kennzahlen aus cv.md verwenden — nie paraphrasieren oder erfinden
-5. Keyword-Spiegelung aus Schritt 4 auf das Vokabular um die Bullets anwenden (nicht auf die Kennzahlen)
+3. Die 3-4 mit dem höchsten Score auswählen
+4. Für jeden: den konkreten Bedarf des Unternehmens aus der JD identifizieren, dann die passende Erfahrung des Kandidaten aus cv.md als Brücke formulieren
+5. Keyword-Spiegelung aus Schritt 4 auf das Vokabular anwenden
 
-**Formulierungsformat:** Evidenzbasiertes Storytelling — aktive Verben, konkrete Zahlen, kein Passiv.
+**WICHTIG:** Das Anschreiben wiederholt KEINE CV-Metriken wörtlich. Der CV zeigt WAS erreicht wurde (Zahlen, Systeme, Skalierung). Das Anschreiben zeigt WARUM diese Skills für DIESEN Arbeitgeber relevant sind. Jeder Bullet führt mit dem Bedarf des Unternehmens und zeigt dann, wie die eigene Erfahrung diesen löst.
 
-**Schlecht:** "Es wurde eine signifikante Verbesserung der Prozesse erreicht."
-**Gut:** "Durch Einführung eines agilen Task-Management-Systems die Projektabschlusszeiten um 20 % verkürzt."
+**Formulierungsformat:** Bedarf des Unternehmens → eigene Erfahrung als Lösung. Aktive Verben, kein Passiv.
+
+**Schlecht:** "500+ dbt-Modelle und Multi-Warehouse-Architektur aufgebaut" (reine CV-Wiederholung)
+**Gut:** "Catapult-Tracking, Sportec-Matchdaten und Scouting-Datenbanken in eine einheitliche Pipeline zusammenführen — bei [Firma] habe ich dasselbe mit heterogenen Quellsystemen aufgebaut" (Bedarf → Lösung)
 
 ---
 
@@ -248,36 +250,58 @@ Bewerbung als {exakter Stellentitel} {ggf. — Kennziffer: XXX}
 {Persönliche Anrede — immer versuchen, konkreten Namen zu recherchieren}
 
 [1. Hook — 2-4 Sätze, max.]
-Direkter, nutzenorientierter Einstieg. Stärkstes Argument zuerst.
-Herausforderung des Unternehmens → Brücke zum Kandidaten.
+Direkter, nutzenorientierter Einstieg. Unternehmenskontext oder
+aktuelle Herausforderung → Brücke zur eigenen Erfahrung.
+Stärkstes Argument zuerst.
 Aus Angle A + Unternehmensrecherche (Schritt 3) ableiten.
 
     Stark: "In den letzten drei Jahren habe ich bei [Firma] die operativen
     Kosten um 15 % gesenkt — genau diese Effizienz möchte ich als
     [Position] in Ihr Team einbringen."
 
-    Stark: "Ihr neues Produktlaunch-Konzept hat mich begeistert. Da ich
-    bereits zwei ähnliche Markteintritte erfolgreich skaliert habe, ist
-    diese Position der perfekte Match."
+    Stark: "Vom Europa-League-Finale in die Conference League, ein Kader
+    im Umbruch: Mit jeder Wettbewerbsebene wachsen die Anforderungen an
+    Datenqualität und Analysetiefe. Seit fünf Jahren baue ich genau
+    solche Systeme."
 
-[2. Evidence-Bullets — 2-4 quantifizierte Meilensteine]
-Kurze Überleitung ("Meine relevantesten Meilensteine für diese Position:"),
-dann Bulletpoints:
+[2. Warum DIESER Arbeitgeber — 2-4 Sätze]
+Was konkret an diesem Unternehmen überzeugt — Kultur, Philosophie,
+Produkt, Mission, Wachstumskurs. Dann die Brücke: Wie die eigene
+Arbeitsweise, Domain-Ownership oder Teamdynamik zum Unternehmen passt.
+Dieser Block beantwortet "Warum wir?" bevor der Leser fragen kann.
+Aus Unternehmensrecherche (Schritt 3) + Angle A ableiten.
 
-  – {Achievement 1 mit Zahl aus cv.md}
-  – {Achievement 2 mit Zahl aus cv.md}
-  – {Achievement 3 mit Zahl aus cv.md}
-  – {Optional: Achievement 4}
+    Stark: "Eigengewächse tragen das Team, der Trainer kommt aus den
+    eigenen Reihen. Entwicklung statt Einkauf, auf jeder Ebene. Bei
+    [Firma] verantworte ich als Domain Owner alle Daten-Initiativen für
+    zwei Geschäftsbereiche und kenne die Dynamik, wenn unterschiedliche
+    Teams unterschiedliche Dinge von derselben Datenbasis brauchen."
 
-Jeder Bullet: aktives Verb + konkretes Ergebnis + Zahl.
+[3. Mehrwert-Bullets — 2-4 Punkte]
+Kurze Überleitung ("Drei Bereiche, in denen ich sofort Wert schaffen kann:"),
+dann Bulletpoints. Jeder Bullet führt mit dem BEDARF DES UNTERNEHMENS
+und zeigt, wie die eigene Erfahrung diesen löst. Schema:
+  [Bedarf des Unternehmens] → [eigene Erfahrung als Lösung]
+
+Der CV zeigt WAS erreicht wurde (Metriken, Zahlen). Das Anschreiben
+zeigt WARUM es für DIESE Rolle relevant ist. CV-Bullets NICHT wörtlich
+wiederholen.
+
+  – {Bedarf des Unternehmens} → {eigene Erfahrung als Lösung}
+  – {Bedarf des Unternehmens} → {eigene Erfahrung als Lösung}
+  – {Bedarf des Unternehmens} → {eigene Erfahrung als Lösung}
+
 Keyword-Spiegelung aus Schritt 4 auf das Vokabular anwenden.
 
-[3. Arbeitsweise + Adaptabilität — 2-4 Sätze]
-Zeigen, WIE gearbeitet wird, nicht nur WAS. Konkretes Beispiel für
-Lernbereitschaft oder Anpassung an neue Tools/Strukturen/Krisen.
-Aus Angle B + C ableiten. Spezifisch auf Unternehmens-Situation eingehen.
+[4. Persönlicher Proof / Anekdote — 2-3 Sätze (empfohlen)]
+Ein lockerer, persönlicher Beweis: Nebenprojekt, privates Interesse,
+Wettbewerbsergebnis oder Anekdote, die Domain-Fit oder Leidenschaft
+jenseits des Berufsalltags belegt. Besonders wertvoll bei Domain-
+Wechseln (z. B. Healthcare → Sport, Wissenschaft → Industrie).
+Kurz und konkret halten — ein Proof Point, keine Lebensgeschichte.
+Nur weglassen, wenn es tatsächlich nichts Relevantes gibt.
 
-[4. Verbindlicher Abschluss — 2-3 Sätze]
+[5. Verbindlicher Abschluss — 2-3 Sätze]
 Eintrittstermin (konkret, z. B. "Unter Berücksichtigung meiner vertraglichen
 Kündigungsfrist stehe ich Ihnen ab dem {Datum} zur Verfügung.").
 Gehaltsvorstellung NUR wenn gefordert (Brutto-Jahresgehalt, krumme Zahl).
