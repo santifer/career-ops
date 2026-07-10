@@ -123,7 +123,7 @@ export function resolveTemplate(kind, name, opts = {}) {
   } = opts;
 
   const explicit = Boolean(name && String(name).trim());
-  let chosen = explicit ? kebab(name) : loadProfileDefault(kind, { profilePath }) || 'standard';
+  let chosen = kebab(explicit ? name : loadProfileDefault(kind, { profilePath }) || 'standard');
   const fileFor = (n) => (n === 'standard' ? `${cfg.prefix}.${format}` : `${cfg.prefix}.${n}.${format}`);
 
   let path = resolve(dir, fileFor(chosen));

@@ -132,6 +132,12 @@ test('resolveTemplate: falls back to profile default when no name', () => {
   assert.ok(p.endsWith('cv-template.executive-authority.html'));
 });
 
+test('resolveTemplate: profile default is kebab-normalized (parity with explicit name)', () => {
+  const { dir, profile } = fixtureWithProfile('Executive Authority');
+  const p = resolveTemplate('cv', undefined, { dir, profilePath: profile });
+  assert.ok(p.endsWith('cv-template.executive-authority.html'));
+});
+
 test('resolveTemplate: base standard when nothing set (backward-compatible)', () => {
   const { dir, profile } = fixtureWithProfile(null);
   const p = resolveTemplate('cv', undefined, { dir, profilePath: profile });
