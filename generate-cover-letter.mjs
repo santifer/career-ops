@@ -201,9 +201,6 @@ Usage:
 
   if (!existsSync(OUTPUT_ROOT)) mkdirSync(OUTPUT_ROOT, { recursive: true });
 
-  // Imported lazily so buildHtml can be used (and tested) without Playwright.
-  const { renderHtmlToPdf } = await import("./generate-pdf.mjs");
-
   try {
     const html = buildHtml(payload);
     // Cover letters are candidate-facing documents too. Reuse the CV fact
@@ -216,6 +213,9 @@ Usage:
         console.error(`  - advisory phrase: ${phrase}`);
       }
     }
+    // Imported only after fact validation so a failed gate does not load
+    // Playwright or create a PDF artifact.
+    const { renderHtmlToPdf } = await import("./generate-pdf.mjs");
     const outputPath = resolve(payload.output_path);
     await renderHtmlToPdf(html, outputPath, { format: "a4" });
     console.log(`\nCover letter PDF: ${payload.output_path}`);

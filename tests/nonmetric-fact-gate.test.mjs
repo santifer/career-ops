@@ -51,6 +51,31 @@ try {
   } else {
     fail(`tool claim over-captured trailing prose: ${JSON.stringify(trailingProse)}`);
   }
+
+  const connectorTools = factClaims('I built this using React with Redux in Dify.');
+  if (connectorTools.some(claim => claim.kind === 'tool' && claim.value === 'react')
+      && connectorTools.some(claim => claim.kind === 'tool' && claim.value === 'redux')
+      && connectorTools.some(claim => claim.kind === 'tool' && claim.value === 'dify')) {
+    pass('tool claims split across with/in connectors');
+  } else {
+    fail(`connector-separated tool claims were not extracted: ${JSON.stringify(connectorTools)}`);
+  }
+
+  const proseTitle = factClaims('The company was recognized as a Top Employer.');
+  if (!proseTitle.some(claim => claim.kind === 'title')) {
+    pass('ordinary as prose is not treated as a title claim');
+  } else {
+    fail(`ordinary prose produced a false title claim: ${JSON.stringify(proseTitle)}`);
+  }
+
+  const boundary = verifyFacts('I am using Go and Google Cloud.', {
+    sourcePaths: [source], configPath: config,
+  });
+  if (boundary.unsupportedFacts.some(claim => claim.kind === 'tool' && claim.value === 'go')) {
+    pass('fact matching does not accept embedded substrings');
+  } else {
+    fail(`fact matching accepted an embedded substring: ${JSON.stringify(boundary)}`);
+  }
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

@@ -43,20 +43,19 @@ function normalizeFact(value) {
   return normalizeClaim(value).replace(/[.;:,]+$/g, '').trim();
 }
 
-/** Extract only explicitly asserted non-metric facts, not every noun in prose. */
 /** Extract explicitly asserted employer, title, and tool claims from text. */
 export function factClaims(text) {
   const clean = stripMarkup(text);
   const claims = [];
   const patterns = [
     ['employer', /\b(?:worked at|joined|employer\s*:\s*|company\s*:\s*)\s*([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4})/g],
-    ['title', /\b(?:served as|worked as|title\s*:\s*|role\s*:\s*)\s*(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})|\bas\s+(?:an?\s+|the\s+)([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})/g],
-    ['tool', /\b(?:using|built with|worked with|technologies?\s*:\s*|tech stack\s*:\s*)([^.;\n]+?)(?=\s+\b(?:for|with|in)\b|[.;\n]|$)/gi],
+    ['title', /\b(?:served as|worked as|title\s*:\s*|role\s*:\s*)\s*(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})|\b(?:worked at|joined)\s+[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+as\s+(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})/g],
+    ['tool', /\b(?:using|built with|worked with|technologies?\s*:\s*|tech stack\s*:\s*)([^.;\n]+?)(?=\s+\bfor\b|[.;\n]|$)/gi],
   ];
   for (const [kind, pattern] of patterns) {
     for (const match of clean.matchAll(pattern)) {
       const rawValues = kind === 'tool'
-        ? match[1].split(/,|\band\b/i)
+        ? match[1].split(/,|\band\b|\bwith\b|\bin\b/i)
         : [match[1] || match[2]];
       for (const raw of rawValues) {
         const value = normalizeFact(raw);
@@ -99,6 +98,14 @@ function resolveInputPath(path, cwd = process.cwd()) {
   return isAbsolute(path) ? path : join(cwd, path);
 }
 
+/** Check a normalized fact as a complete token or phrase, not a substring. */
+function sourceContainsFact(sourceText, value) {
+  const escaped = value
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/\s+/g, '\\s+');
+  return new RegExp(`(?:^|[^\\p{L}\\p{N}+#/-])${escaped}(?=$|[^\\p{L}\\p{N}+#/-])`, 'iu').test(sourceText);
+}
+
 /**
  * @param {string} targetText generated candidate-facing HTML/Markdown/text
  * @param {{ sourcePaths?: string[], configPath?: string, cwd?: string }} options
@@ -121,7 +128,7 @@ export function verifyFacts(targetText, {
   const sourceNormalized = normalizeFact(stripMarkup(sourceText));
   const allowedFacts = new Set(config.allow_facts.map(normalizeFact));
   const unsupportedFacts = factClaims(targetText)
-    .filter(({ value }) => !sourceNormalized.includes(value) && !allowedFacts.has(value))
+    .filter(({ value }) => !sourceContainsFact(sourceNormalized, value) && !allowedFacts.has(value))
     .filter((claim, index, claims) => claims.findIndex(other => other.kind === claim.kind && other.value === claim.value) === index);
   const forbidden = config.forbidden_phrases
       .filter(Boolean)
