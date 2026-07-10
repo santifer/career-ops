@@ -75,7 +75,13 @@ Examples of legitimate reformulation:
 
 **Before generating: read `modes/_custom.md` (if it exists) and apply its formatting/content house rules to every CV in this session — including every item of a batch.** Rules recorded there (date formats, section-order preferences, content to always/never include) are persistent user instructions, not suggestions; if the user corrects the same thing twice in conversation, write it into `modes/_custom.md` so it stops drifting.
 
-Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
+Build a compact structured payload from the approved source-of-truth files, then run
+`node build-cv-html.mjs <payload.json> <output.html>`. The deterministic builder
+escapes candidate-controlled text and replaces the `cv-template.html` placeholders;
+do not spend model output reproducing the template's HTML/CSS. Review the generated
+HTML before passing it to `generate-pdf.mjs` in Step 17.
+
+The payload maps to these template placeholders:
 
 | Placeholder | Content |
 |-------------|-----------|

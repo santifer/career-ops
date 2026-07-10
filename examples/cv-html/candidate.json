@@ -1,0 +1,56 @@
+{
+  "lang": "en",
+  "page_width": "210mm",
+  "candidate": {
+    "name": "Alex Example",
+    "email": "alex@example.com",
+    "linkedin": {
+      "url": "https://linkedin.com/in/alex-example",
+      "display": "linkedin.com/in/alex-example"
+    },
+    "portfolio": {
+      "url": "https://example.com",
+      "display": "example.com"
+    },
+    "location": "Example City"
+  },
+  "summary": "Engineer who turns <unsafe> input into reliable products.",
+  "competencies": ["Workflow automation", "HTML & PDF"],
+  "experience": [
+    {
+      "company": "Example Labs",
+      "role": "Software Engineer",
+      "location": "Remote",
+      "dates": "2024 — Present",
+      "bullets": ["Built a deterministic renderer with 100% escaped input."]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Safe Renderer",
+      "badge": "Open source",
+      "description": "Converted structured data into ATS-safe output.",
+      "tech": "Node.js, HTML"
+    }
+  ],
+  "education": [
+    {
+      "degree": "BSc Computer Science",
+      "institution": "Example University",
+      "year": "2024"
+    }
+  ],
+  "certifications": [
+    {
+      "title": "Example Certification",
+      "organization": "Example Institute",
+      "year": "2025"
+    }
+  ],
+  "skills": [
+    {
+      "category": "Languages",
+      "items": ["JavaScript", "HTML"]
+    }
+  ]
+}

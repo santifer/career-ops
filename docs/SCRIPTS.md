@@ -12,6 +12,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
 | `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
+| `npm run build:html` | `build-cv-html.mjs` | Build HTML from a structured JSON payload |
 | `npm run build:latex` | `build-cv-latex.mjs` | Build .tex from structured JSON payload |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
 | `npm run patterns` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |
@@ -141,6 +142,26 @@ node build-cv-latex.mjs --test
 ```
 
 **Exit codes:** `0` file generated, `1` missing inputs, invalid JSON, unresolved placeholders, or template not found.
+
+---
+
+## build:html
+
+Builds an ATS-safe HTML CV from a structured JSON payload and
+`templates/cv-template.html`. The agent reads the approved source-of-truth files,
+selects and reformulates only supported content, then writes the compact payload;
+the script owns HTML structure, escaping, and template substitution.
+
+```bash
+npm run build:html -- examples/cv-html/candidate.json output/cv-example.html
+node generate-pdf.mjs output/cv-example.html output/cv-example.pdf --format=a4
+```
+
+`page_width` accepts only `210mm` or `8.5in`. Candidate text is HTML-escaped,
+contact links reject unsafe URL schemes, and profile photos remain opt-in.
+
+**Exit codes:** `0` HTML generated, `1` missing inputs, invalid JSON, unsafe
+values, unresolved placeholders, or a missing template.
 
 ---
 

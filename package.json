@@ -16,6 +16,7 @@
     "merge": "node merge-tracker.mjs",
     "reconcile": "node reconcile-pipeline.mjs",
     "pdf": "node generate-pdf.mjs",
+    "build:html": "node build-cv-html.mjs",
     "cover-letter": "node generate-cover-letter.mjs --payload",
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
