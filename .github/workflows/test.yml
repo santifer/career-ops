@@ -7,7 +7,7 @@ on:
 # A force-push supersedes the running matrix; cancel it instead of letting
 # stale legs occupy runners (3 jobs per push at this repo's PR volume).
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
