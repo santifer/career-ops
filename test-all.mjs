@@ -6135,6 +6135,22 @@ try {
     fail(`canonicalizer robustness wrong: empty=${emptyCanon('Intercom')} array=${arrayCanon('Intercom')} messy=${messyCanon('Intercom')}`);
   }
 
+  const canonicalCollisionA = buildCompanyCanonicalizer({ Fin: ['Intercom'], Intercom: [] });
+  const canonicalCollisionB = buildCompanyCanonicalizer({ Intercom: [], Fin: ['Intercom'] });
+  if (canonicalCollisionA('Intercom') === 'intercom' && canonicalCollisionB('Intercom') === 'intercom') {
+    pass('canonical company identities win alias collisions regardless of config order');
+  } else {
+    fail(`canonical alias collision is order-dependent: first=${canonicalCollisionA('Intercom')} second=${canonicalCollisionB('Intercom')}`);
+  }
+
+  const ambiguousAliasA = buildCompanyCanonicalizer({ Fin: ['Shared ATS'], Acme: ['Shared ATS'] });
+  const ambiguousAliasB = buildCompanyCanonicalizer({ Acme: ['Shared ATS'], Fin: ['Shared ATS'] });
+  if (ambiguousAliasA('Shared ATS') === 'shared ats' && ambiguousAliasB('Shared ATS') === 'shared ats') {
+    pass('ambiguous aliases fail open instead of merging companies by config order');
+  } else {
+    fail(`ambiguous alias should pass through: first=${ambiguousAliasA('Shared ATS')} second=${ambiguousAliasB('Shared ATS')}`);
+  }
+
   // -- Title normalization (location suffix + punctuation + requisition-agnostic) --
   if (normalizeRoleForDedup('AI Infrastructure Engineer (Berlin)') === normalizeRoleForDedup('AI Infrastructure Engineer')) {
     pass('normalizeRoleForDedup strips a trailing location tag "(Berlin)"');

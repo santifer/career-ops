@@ -608,6 +608,10 @@ function defaultCompanyNormalizer(name) {
  * Unknown names pass through as plain lowercased text, so behavior is unchanged
  * for companies with no alias entry.
  *
+ * Canonical names always keep their own identity when an alias collides with
+ * one. An alias claimed by multiple canonical companies also passes through
+ * unchanged so malformed config cannot silently merge unrelated companies.
+ *
  * @param {Record<string, unknown>|undefined|null} aliases - Optional canonical
  *   company name to alias list map.
  * @returns {(name: unknown) => string} Canonicalizer for tracker and scan-side
@@ -616,15 +620,34 @@ function defaultCompanyNormalizer(name) {
 export function buildCompanyCanonicalizer(aliases) {
   const map = new Map();
   if (aliases && typeof aliases === 'object' && !Array.isArray(aliases)) {
-    for (const [canonical, list] of Object.entries(aliases)) {
+    const entries = Object.entries(aliases);
+    const canonicalKeys = new Set();
+
+    // Canonical names always own their identity, independent of YAML key order.
+    for (const [canonical] of entries) {
       const canon = defaultCompanyNormalizer(canonical);
       if (!canon) continue;
       map.set(canon, canon);
+      canonicalKeys.add(canon);
+    }
+
+    const aliasTargets = new Map();
+    for (const [canonical, list] of entries) {
+      const canon = defaultCompanyNormalizer(canonical);
+      if (!canon) continue;
       const arr = Array.isArray(list) ? list : [list];
       for (const a of arr) {
         const alias = defaultCompanyNormalizer(a);
-        if (alias) map.set(alias, canon);
+        if (!alias || canonicalKeys.has(alias)) continue;
+        if (!aliasTargets.has(alias)) aliasTargets.set(alias, new Set());
+        aliasTargets.get(alias).add(canon);
       }
+    }
+
+    // Ambiguous aliases fail open as their raw normalized label. This may allow
+    // a duplicate through, but it cannot silently suppress another company.
+    for (const [alias, targets] of aliasTargets) {
+      if (targets.size === 1) map.set(alias, targets.values().next().value);
     }
   }
 
