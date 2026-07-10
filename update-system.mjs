@@ -175,6 +175,7 @@ const SYSTEM_PATHS = [
   'process-quality.test.mjs',
   'salary-gap.mjs',
   'funnel-velocity.mjs',
+  'assessment-log.mjs',
   'followup-cadence.mjs',
   'followup-cadence.test.mjs',
   'invite-match.mjs',
