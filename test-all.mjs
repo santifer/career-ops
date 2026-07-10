@@ -49,6 +49,29 @@ function readFile(path) {
   return content;
 }
 
+/**
+ * Normalize CRLF line endings to LF (#1771).
+ *
+ * On Windows checkouts with core.autocrlf=true, repo text files arrive with
+ * CRLF endings. Doc assertions that anchor on `\n` (JS `.` never matches `\r`)
+ * then fail on pristine main. Normalizing at read time keeps the assertions
+ * byte-ending agnostic without touching any regex.
+ *
+ * @param {string} text - Raw file contents.
+ * @returns {string} Contents with LF-only line endings.
+ */
+const normalizeEol = (text) => text.replace(/\r\n/g, '\n');
+
+/**
+ * Read a repo text file with line endings normalized to LF (#1771).
+ * Use for doc-content reads that feed `\n`-anchored regex assertions.
+ * Do NOT use where byte-exact content matters.
+ *
+ * @param {string} path - Path relative to the career-ops repository root.
+ * @returns {string} File contents with LF-only line endings.
+ */
+const readTextLF = (path) => normalizeEol(readFile(path));
+
 // ── Auto-discovered test files (issue #1440) ─────────────────────────────
 // Deterministic: recursive readdirSync with default lexicographic sort of
 // entry names — same order on every run and OS. No glob library, no
@@ -1020,16 +1043,29 @@ try {
 
 console.log('\n7d. Output language contract');
 
-const profileExample = readFile('config/profile.example.yml');
-const outputLanguageAgentsDoc = readFile('AGENTS.md');
-const outputLanguageClaudeDoc = readFile('CLAUDE.md');
-const careerOpsSkill = readFile('.agents/skills/career-ops/SKILL.md');
-const batchPrompt = readFile('batch/batch-prompt.md');
+const profileExample = readTextLF('config/profile.example.yml');
+const outputLanguageAgentsDoc = readTextLF('AGENTS.md');
+const outputLanguageClaudeDoc = readTextLF('CLAUDE.md');
+const careerOpsSkill = readTextLF('.agents/skills/career-ops/SKILL.md');
+const batchPrompt = readTextLF('batch/batch-prompt.md');
 
 if (/language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(profileExample)) {
   pass('profile.example.yml documents language.output default');
 } else {
   fail('profile.example.yml is missing language.output default');
+}
+
+// Regression guard (#1771): doc assertions must survive CRLF checkouts
+// (Windows core.autocrlf=true) once reads are normalized to LF.
+const crlfLanguageSnippet = normalizeEol('language:\r\n  # Output language for human-facing prose\r\n  output: en\r\n');
+const crlfBatchSnippet = normalizeEol('Write HTML to `output/cv-x.html`\r\n\r\n```bash\r\nnode generate-pdf.mjs \\\r\n  output/cv-x.html \\\r\n  output/cv-x.pdf\r\n```\r\n');
+if (
+  /language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(crlfLanguageSnippet) &&
+  crlfBatchSnippet.match(/node generate-pdf\.mjs \\\n\s+([^\s\\]+) \\/)?.[1] === 'output/cv-x.html'
+) {
+  pass('doc assertions tolerate CRLF checkouts via read-time normalization');
+} else {
+  fail('doc assertions break on CRLF checkouts — read-time normalization regressed');
 }
 
 if (
