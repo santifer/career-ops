@@ -39,3 +39,11 @@ it means the job description text of two listings from **different companies** i
 3. If the two listings turn out to be genuinely different roles that happen to share boilerplate text (e.g. a generic engineering role template), the warning is a false positive — you can ignore it and apply to both.
 
 **Technical note:** the scanner computes a 64-bit SimHash fingerprint of each JD body and stores it in the 8th column of `data/scan-history.tsv` (`jd_fingerprint`). Fingerprints are computed locally from text already returned by the ATS API — no extra network request is made. Postings without a usable description never receive a fingerprint and are never flagged. See [docs/SCRIPTS.md](SCRIPTS.md#cross-listing-detection) for the full column reference.
+
+## 6. How do I stop a company from showing up in scans?
+
+Create a `data/blacklist.md` file by copying `templates/blacklist.example.md`, then list one company per line. During scans and evaluations, postings from those companies are skipped using the same company normalization as the tracker scripts. Skips are never silent—the run summary reports the number of skipped companies, and the count is recorded in `data/scan-runs.tsv` as `filtered_blacklist`.
+
+If you want to include blacklisted companies for auditing, run the command with `--include-blacklisted`. Nothing is added to the blacklist automatically, and if `data/blacklist.md` does not exist, no filtering is applied.
+
+For more details, see the [blacklist section in SCRIPTS.md](SCRIPTS.md#company-blacklist).
