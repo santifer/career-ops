@@ -26,7 +26,7 @@
 
 import { execSync, execFileSync, spawn } from 'child_process';
 import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
-import { join, dirname, delimiter } from 'path';
+import { join, dirname, basename, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
@@ -1056,16 +1056,32 @@ if (/language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(profileExample))
 }
 
 // Regression guard (#1771): doc assertions must survive CRLF checkouts
-// (Windows core.autocrlf=true) once reads are normalized to LF.
-const crlfLanguageSnippet = normalizeEol('language:\r\n  # Output language for human-facing prose\r\n  output: en\r\n');
-const crlfBatchSnippet = normalizeEol('Write HTML to `output/cv-x.html`\r\n\r\n```bash\r\nnode generate-pdf.mjs \\\r\n  output/cv-x.html \\\r\n  output/cv-x.pdf\r\n```\r\n');
-if (
-  /language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(crlfLanguageSnippet) &&
-  crlfBatchSnippet.match(/node generate-pdf\.mjs \\\n\s+([^\s\\]+) \\/)?.[1] === 'output/cv-x.html'
-) {
-  pass('doc assertions tolerate CRLF checkouts via read-time normalization');
-} else {
-  fail('doc assertions break on CRLF checkouts — read-time normalization regressed');
+// (Windows core.autocrlf=true). Exercises the real read path: a CRLF fixture
+// is written to disk and read back through readTextLF, so stripping the
+// normalization out of readTextLF fails this check on every platform. The
+// fixture lives under ROOT because readFile resolves ROOT-relative paths.
+try {
+  const crlfGuardTmp = mkdtempSync(join(ROOT, 'crlf-guard-'));
+  try {
+    writeFileSync(
+      join(crlfGuardTmp, 'crlf-fixture.md'),
+      'language:\r\n  # Output language for human-facing prose\r\n  output: en\r\n\r\nWrite HTML to `output/cv-x.html`\r\n\r\n```bash\r\nnode generate-pdf.mjs \\\r\n  output/cv-x.html \\\r\n  output/cv-x.pdf\r\n```\r\n'
+    );
+    const crlfGuardContent = readTextLF(`${basename(crlfGuardTmp)}/crlf-fixture.md`);
+    if (
+      !crlfGuardContent.includes('\r') &&
+      /language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(crlfGuardContent) &&
+      crlfGuardContent.match(/node generate-pdf\.mjs \\\n\s+([^\s\\]+) \\/)?.[1] === 'output/cv-x.html'
+    ) {
+      pass('doc assertions tolerate CRLF checkouts via readTextLF normalization');
+    } else {
+      fail('doc assertions break on CRLF checkouts — readTextLF normalization regressed');
+    }
+  } finally {
+    rmSync(crlfGuardTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`CRLF regression guard crashed: ${e.message}`);
 }
 
 if (
