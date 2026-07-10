@@ -30,7 +30,7 @@ export function tokenize(text) {
     String(text ?? '')
       .toLowerCase()
       .match(/[\p{L}\p{N}+#./-]+/gu)
-      ?.map(token => token.replace(/^[+#./-]+|[+#./-]+$/g, ''))
+      ?.map(token => token.replace(/^[./-]+|[./-]+$/g, ''))
       .filter(token => token && (token.length > 1 || /\d/.test(token)) && !STOP_WORDS.has(token)) || [],
   );
 }
@@ -47,7 +47,11 @@ export function jaccardSimilarity(left, right) {
 
 function levelOf(text) {
   const normalized = String(text ?? '').toLowerCase();
-  return LEVELS.findIndex(words => words.some(word => normalized.includes(word)));
+  return LEVELS.findIndex(words => words.some(word => {
+    if (/^[\p{Script=Han}]+$/u.test(word)) return normalized.includes(word);
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?:^|[^a-z0-9])${escaped}(?=$|[^a-z0-9])`, 'i').test(normalized);
+  }));
 }
 
 export function hardMismatch(newJd, previousText) {
@@ -74,6 +78,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error('Usage: node jd-similarity.mjs <new-jd.txt> <previous-jd-or-cv.txt>');
     process.exit(1);
   }
-  const result = recommendCvReuse(readFileSync(newJdPath, 'utf8'), readFileSync(previousPath, 'utf8'));
-  console.log(JSON.stringify(result, null, 2));
+  try {
+    const result = recommendCvReuse(readFileSync(newJdPath, 'utf8'), readFileSync(previousPath, 'utf8'));
+    console.log(JSON.stringify(result, null, 2));
+  } catch (error) {
+    console.error(`Unable to read input files: ${error.message}`);
+    process.exit(1);
+  }
 }
