@@ -84,10 +84,13 @@ are defined:
   (`offer.postedAt`). The scanner writes it so freshness is visible at triage time
   without re-fetching the ATS. Rows from providers with no posting date simply omit
   the segment.
-- `| trust: {score} {flag,flag}` — the scanner's legitimacy signal, written **only
-  when a posting is flagged** (`offer.trustScore < 100`): the 0–100 trust score,
-  then a space, then the comma-separated reasons (e.g. `missing_apply_url`,
-  `invalid_url`, `suspicious_domain`). Example: `… | trust: 60 missing_apply_url,suspicious_domain`.
+- `| trust: {score}` — optionally `| trust: {score} {flag,flag}` — the scanner's
+  legitimacy signal, written **only when a posting is flagged** (`offer.trustScore
+  < 100`): the 0–100 trust score, followed (when the validator recorded any
+  reasons) by a space and the comma-separated flags (e.g. `missing_apply_url`,
+  `invalid_url`, `suspicious_domain`). The flag suffix is omitted when there are
+  none, so a score-only segment like `… | trust: 80` is valid. Example with flags:
+  `… | trust: 60 missing_apply_url,suspicious_domain`.
   A clean posting (or a scan with `trust_filter` disabled) omits the segment. Treat
   a low score as a ghost/scam-posting warning and weigh it in Block G legitimacy
   before spending an evaluation. The same score + flags are also written to the
