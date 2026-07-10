@@ -806,9 +806,11 @@ search_queries:
 #
 # Format: `CanonicalName: [alias, ...]`. Every alias AND the canonical name
 # resolve to the canonical label (case-insensitive). Companies with no entry are
-# unaffected. Combined with title normalization, this also collapses reposts
-# (same role re-listed under a new requisition ID / URL) and per-location splits
-# ("Engineer (Berlin)" vs "Engineer") onto one dedup key.
+# unaffected. Combined with title normalization, this suppresses URL-new
+# duplicates caused by requisition URL changes and per-location title splits
+# ("Engineer (Berlin)" vs "Engineer"). It does not classify repost patterns or
+# produce `postingChurn` evidence; detect-reposts.mjs and company-history.mjs own
+# that post-tracking layer.
 #
 # company_aliases:
 #   Fin: [Intercom]

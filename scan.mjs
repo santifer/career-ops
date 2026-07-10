@@ -768,17 +768,20 @@ function isRoleLocationSuffix(tag) {
 }
 
 /**
- * Normalize a role title for repost-tolerant dedupe.
+ * Normalize a role title for stable scan-time duplicate identity.
  *
- * Two postings of the same role should collapse to one key even when the
- * company re-lists it under a new requisition ID or splits it per location with
- * a trailing tag like "(Berlin)". The requisition ID lives in the URL, never the
- * title, so keying on the normalized title is requisition-ID agnostic.
+ * Equivalent tracker/provider titles should collapse to one key when a company
+ * splits a role per location with a trailing tag like "(Berlin)". Requisition
+ * IDs live in URLs rather than titles, so this identity remains URL-agnostic.
  *
  * The normalizer lowercases the title, strips trailing location/remote
  * parenthetical/bracketed tags such as "(Berlin)" and "[Remote]", then
  * collapses punctuation and whitespace so em dash vs hyphen or double spaces do
  * not split a key.
+ *
+ * This helper does not infer posting churn or detect repost clusters. Those
+ * post-tracking facts remain the responsibility of detect-reposts.mjs and the
+ * company-history `postingChurn` axis.
  *
  * @param {unknown} role - Raw role title from a tracker row or provider job.
  * @returns {string} Normalized role key.
@@ -814,7 +817,7 @@ export function companyRoleDedupKey(company, role, canonicalize = defaultCompany
  *
  * Existing tracker rows are canonicalized with the same company aliasing and
  * role-title normalization used for freshly scanned jobs. That lets URL-new
- * reposts match older tracker entries instead of being evaluated again.
+ * duplicates match older tracker entries instead of being evaluated again.
  *
  * @param {string} [appsPath=APPLICATIONS_PATH] - Applications tracker path.
  * @param {(name: unknown) => string} [canonicalize=defaultCompanyNormalizer] -

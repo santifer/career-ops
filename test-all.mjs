@@ -6100,14 +6100,14 @@ try {
 }
 
 
-// ── 45b. SCAN COMPANY+ROLE DEDUP (alias + repost normalization) ──────
-// Guards the fix for ATS repost churn: the scanner keys company+role dedup on
+// ── 45b. SCAN COMPANY+ROLE DEDUP (alias + title normalization) ───────
+// Guards scan-time duplicate identity: the scanner keys company+role dedup on
 // the provider's company name (often the ATS org, e.g. "Intercom") which may
 // differ from the tracker brand ("Fin"), and on a title that a company mutates
 // per requisition/location ("Engineer (Berlin)"). buildCompanyCanonicalizer +
 // normalizeRoleForDedup collapse both so the same role is not re-evaluated.
 
-console.log('\n45b. Scan company+role dedup (alias + repost)');
+console.log('\n45b. Scan company+role dedup (alias + title normalization)');
 try {
   const {
     buildCompanyCanonicalizer,
@@ -6169,7 +6169,7 @@ try {
     fail('mid-title parentheticals over-merged distinct roles');
   }
 
-  // -- End-to-end: the exact real-world repost pairs that leaked before --
+  // -- End-to-end: the exact URL-new duplicate pairs that leaked before --
   const cases = [
     ['Intercom', 'AI Infrastructure Engineer (Berlin)', 'Fin', 'AI Infrastructure Engineer'],
     ['Intercom', 'Engineering Manager, AI Models Infrastructure', 'Fin', 'Engineering Manager, AI Models Infrastructure'],
@@ -6181,8 +6181,8 @@ try {
     const trackKey = companyRoleDedupKey(trackCo, trackTitle, canon);
     if (scanKey !== trackKey) { allMatch = false; break; }
   }
-  if (allMatch) pass('companyRoleDedupKey matches scan-side (Intercom + churned title) to tracker-side (Fin) across repost pairs');
-  else fail('companyRoleDedupKey failed to unify a real-world repost pair');
+  if (allMatch) pass('companyRoleDedupKey matches scan-side (Intercom + location-suffixed title) to tracker-side (Fin) across URL-new duplicate pairs');
+  else fail('companyRoleDedupKey failed to unify a real-world URL-new duplicate pair');
 
   // Without an alias, distinct companies must still stay distinct.
   if (companyRoleDedupKey('Acme', 'Engineer', canon) !== companyRoleDedupKey('Globex', 'Engineer', canon)) {
