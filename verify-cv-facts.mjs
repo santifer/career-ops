@@ -35,6 +35,31 @@ export function normalizeClaim(claim) {
   return claim.toLowerCase().replace(/[,\s]+/g, ' ').trim();
 }
 
+function normalizeFact(value) {
+  return normalizeClaim(value).replace(/[.;:,]+$/g, '').trim();
+}
+
+/** Extract only explicitly asserted non-metric facts, not every noun in prose. */
+export function factClaims(text) {
+  const clean = stripMarkup(text);
+  const claims = [];
+  const patterns = [
+    ['employer', /\b(?:worked at|joined|employer\s*:\s*|company\s*:\s*)\s*([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4})/g],
+    ['title', /\b(?:served as|worked as|\bas|title\s*:\s*|role\s*:\s*)\s*(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})/g],
+    ['tool', /\b(?:using|built with|worked with|technologies?\s*:\s*|tech stack\s*:\s*)([^.;\n]+)/gi],
+  ];
+  for (const [kind, pattern] of patterns) {
+    for (const match of clean.matchAll(pattern)) {
+      const rawValues = kind === 'tool' ? match[1].split(/,|\band\b/i) : [match[1]];
+      for (const raw of rawValues) {
+        const value = normalizeFact(raw);
+        if (value) claims.push({ kind, value });
+      }
+    }
+  }
+  return claims;
+}
+
 export function metricClaims(text) {
   const clean = stripMarkup(text);
   const patterns = [
@@ -51,9 +76,9 @@ export function metricClaims(text) {
 }
 
 function loadConfig(path) {
-  if (!existsSync(path)) return { allow_metrics: [], forbidden_phrases: [] };
+  if (!existsSync(path)) return { allow_metrics: [], allow_facts: [], forbidden_phrases: [] };
   const config = JSON.parse(readFileSync(path, 'utf-8'));
-  for (const key of ['allow_metrics', 'forbidden_phrases']) {
+  for (const key of ['allow_metrics', 'allow_facts', 'forbidden_phrases']) {
     if (config[key] == null) config[key] = [];
     else if (!Array.isArray(config[key])) throw new Error(`${key} must be an array in ${path}`);
   }
@@ -67,7 +92,7 @@ function resolveInputPath(path, cwd = process.cwd()) {
 /**
  * @param {string} targetText generated candidate-facing HTML/Markdown/text
  * @param {{ sourcePaths?: string[], configPath?: string, cwd?: string }} options
- * @returns {{ verdict: 'pass'|'block', invented: string[], forbidden: string[], warnings: string[] }}
+ * @returns {{ verdict: 'pass'|'block', invented: string[], unsupportedFacts: object[], forbidden: string[], warnings: string[] }}
  * @throws when the config is invalid
  */
 export function verifyFacts(targetText, {
@@ -83,12 +108,18 @@ export function verifyFacts(targetText, {
   ]);
   const targetClaims = metricClaims(targetText);
   const invented = [...targetClaims].filter(claim => !allowed.has(claim));
+  const sourceNormalized = normalizeFact(stripMarkup(sourceText));
+  const allowedFacts = new Set(config.allow_facts.map(normalizeFact));
+  const unsupportedFacts = factClaims(targetText)
+    .filter(({ value }) => !sourceNormalized.includes(value) && !allowedFacts.has(value))
+    .filter((claim, index, claims) => claims.findIndex(other => other.kind === claim.kind && other.value === claim.value) === index);
   const forbidden = config.forbidden_phrases
       .filter(Boolean)
       .filter(phrase => stripMarkup(targetText).toLowerCase().includes(String(phrase).toLowerCase()));
   return {
-    verdict: invented.length || forbidden.length ? 'block' : 'pass',
+    verdict: invented.length || unsupportedFacts.length || forbidden.length ? 'block' : 'pass',
     invented,
+    unsupportedFacts,
     forbidden,
     warnings: [],
   };
@@ -99,6 +130,7 @@ export function assertFacts(targetText, options = {}) {
   if (result.verdict === 'block') {
     const details = [];
     if (result.invented.length) details.push(`metric-like claims absent from sources: ${result.invented.join(', ')}`);
+    if (result.unsupportedFacts.length) details.push(`non-metric facts absent from sources: ${result.unsupportedFacts.map(({ kind, value }) => `${kind}=${value}`).join(', ')}`);
     if (result.forbidden.length) details.push(`forbidden phrases found: ${result.forbidden.join(', ')}`);
     throw new Error(`Fact check failed${options.label ? ` for ${options.label}` : ''}: ${details.join('; ')}`);
   }
@@ -134,7 +166,8 @@ function parseCliArgs(args) {
 function usage() {
   return `Usage: node verify-cv-facts.mjs <generated-document> [--source path] [--config path] [--json]
 
-Checks generated candidate-facing text for metric-like claims absent from source files.
+Checks generated candidate-facing text for unsupported metrics and explicitly asserted
+non-metric facts (employers, titles, and tools) absent from source files.
 Default sources: cv.md, article-digest.md
 Default config:  config/cv-facts.json (optional)`;
 }
@@ -174,6 +207,10 @@ export function runCli(args = process.argv.slice(2)) {
       console.error('\nMetric-like claims absent from sources:');
       for (const claim of result.invented) console.error(`  - ${claim}`);
     }
+    if (result.unsupportedFacts.length) {
+      console.error('\nNon-metric facts absent from sources:');
+      for (const { kind, value } of result.unsupportedFacts) console.error(`  - ${kind}: ${value}`);
+    }
     if (result.forbidden.length) {
       console.error('\nForbidden phrases found:');
       for (const phrase of result.forbidden) console.error(`  - ${phrase}`);
@@ -182,7 +219,7 @@ export function runCli(args = process.argv.slice(2)) {
     return 1;
   } catch (err) {
     if (parsed.json) {
-      console.log(JSON.stringify({ verdict: 'block', invented: [], forbidden: [], warnings: [], errors: [err.message] }));
+      console.log(JSON.stringify({ verdict: 'block', invented: [], unsupportedFacts: [], forbidden: [], warnings: [], errors: [err.message] }));
       return 1;
     }
     console.error(`ERROR: ${err.message}`);
