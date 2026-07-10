@@ -1139,12 +1139,38 @@ async function main() {
         let activeTenants = 0;
         let discoveryJobsFound = 0;
         let discoveryNewCount = 0;
+        let discoveryErrors = 0;
+        let discoveryRetries = 0;
+
+        const DISCOVERY_CONCURRENCY = Math.min(CONCURRENCY, 3);
+        const DISCOVERY_RETRY_MAX = 2;
+        const DISCOVERY_RETRY_BASE_MS = 2000;
+        let discoveryThrottleMs = 200;
 
         const discoveryTasks = untracked.map(slug => async () => {
+          if (discoveryThrottleMs > 0) {
+            await new Promise(r => setTimeout(r, discoveryThrottleMs));
+          }
           let result;
-          try {
-            result = await fetchTenantJobs(slug);
-          } catch { return; }
+          let lastErr;
+          for (let attempt = 0; attempt <= DISCOVERY_RETRY_MAX; attempt++) {
+            try {
+              result = await fetchTenantJobs(slug);
+              lastErr = null;
+              break;
+            } catch (err) {
+              lastErr = err;
+              if (attempt < DISCOVERY_RETRY_MAX) {
+                discoveryRetries++;
+                const backoff = DISCOVERY_RETRY_BASE_MS * Math.pow(2, attempt) + Math.random() * 500;
+                await new Promise(r => setTimeout(r, backoff));
+              }
+              if (err.rateLimited) {
+                discoveryThrottleMs = Math.min(discoveryThrottleMs * 2, 5000);
+              }
+            }
+          }
+          if (lastErr) { discoveryErrors++; return; }
           if (!result || result.jobs.length === 0) return;
 
           activeTenants++;
@@ -1184,15 +1210,24 @@ async function main() {
           }
         });
 
-        await parallelFetch(discoveryTasks, CONCURRENCY);
+        await parallelFetch(discoveryTasks, DISCOVERY_CONCURRENCY);
 
         discoveryStats = {
           slugsScanned: untracked.length,
           activeTenants,
           totalJobs: discoveryJobsFound,
           newOffers: discoveryNewCount,
+          errors: discoveryErrors,
+          retries: discoveryRetries,
         };
         console.log(`  Active: ${activeTenants} tenants, ${discoveryJobsFound} jobs, ${discoveryNewCount} new offers`);
+        if (discoveryErrors > 0) {
+          const errorRate = Math.round((discoveryErrors / untracked.length) * 100);
+          console.log(`  ⚠️  ${discoveryErrors} tenants failed (${errorRate}% error rate, ${discoveryRetries} retries)`);
+          if (errorRate > 50) {
+            console.log(`  ⚠️  High error rate — Personio may be rate-limiting. Try again later or use --throttle.`);
+          }
+        }
       }
     } catch (err) {
       console.error(`⚠️  Personio discovery failed: ${err.message}`);
@@ -1255,7 +1290,11 @@ async function main() {
   console.log(`Companies scanned:     ${summaryCompanies}`);
   if (summaryBoards > 0) console.log(`Job boards scanned:    ${summaryBoards}`);
   if (discoveryStats) {
-    console.log(`Discovery tenants:     ${discoveryStats.slugsScanned} scanned (${discoveryStats.activeTenants} active, ${discoveryStats.totalJobs} jobs, ${discoveryStats.newOffers} new)`);
+    let discoverySuffix = `${discoveryStats.activeTenants} active, ${discoveryStats.totalJobs} jobs, ${discoveryStats.newOffers} new`;
+    if (discoveryStats.errors > 0) {
+      discoverySuffix += `, ${discoveryStats.errors} failed`;
+    }
+    console.log(`Discovery tenants:     ${discoveryStats.slugsScanned} scanned (${discoverySuffix})`);
   }
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);

@@ -239,6 +239,11 @@ export async function fetchTenantJobs(slug) {
         signal: AbortSignal.timeout(TENANT_TIMEOUT_MS),
         headers: { Accept: 'application/json' },
       });
+      if (res.status === 429) {
+        const err = new Error(`Rate limited (429) for ${slug}.jobs.personio.${tld}`);
+        err.rateLimited = true;
+        throw err;
+      }
       if (!res.ok) continue;
       const text = await res.text();
       if (!text.trim()) continue;
@@ -258,7 +263,8 @@ export async function fetchTenantJobs(slug) {
           department: job.department || '',
         })),
       };
-    } catch {
+    } catch (err) {
+      if (err.rateLimited) throw err;
       continue;
     }
   }
@@ -401,8 +407,29 @@ async function main() {
   /** @type {Map<string, {company:string, slug:string, tld:string, totalJobs:number, matchingJobs:number, jobs:Array, location:string}>} */
   const discoveredCompanies = new Map();
 
+  let discoveryErrors = 0;
+  let discoveryRetries = 0;
+  const RETRY_MAX = 2;
+  const RETRY_BASE_MS = 2000;
+
   await parallelRun(newSlugs, async (slug) => {
-    const result = await fetchTenantJobs(slug);
+    let result;
+    let lastErr;
+    for (let attempt = 0; attempt <= RETRY_MAX; attempt++) {
+      try {
+        result = await fetchTenantJobs(slug);
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        if (attempt < RETRY_MAX) {
+          discoveryRetries++;
+          const backoff = RETRY_BASE_MS * Math.pow(2, attempt) + Math.random() * 500;
+          await new Promise(r => setTimeout(r, backoff));
+        }
+      }
+    }
+    if (lastErr) { discoveryErrors++; return; }
     if (!result || result.jobs.length === 0) return;
 
     activeTenants++;
@@ -446,6 +473,10 @@ async function main() {
   console.log(`Filtered by location:  ${filteredLocation} removed`);
   console.log(`Filtered by content:   ${filteredContent} removed`);
   console.log(`Duplicates:            ${dupes} skipped`);
+  if (discoveryErrors > 0) {
+    const errorRate = Math.round((discoveryErrors / newSlugs.length) * 100);
+    console.log(`Errors (rate-limited): ${discoveryErrors} (${errorRate}%, ${discoveryRetries} retries)`);
+  }
   console.log(`New companies found:   ${discoveredCompanies.size}`);
   console.log(`New offers matched:    ${newOffers.length}`);
 
