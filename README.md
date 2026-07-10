@@ -129,7 +129,7 @@ This clones the latest release into `./career-ops` and installs dependencies. Th
 
 ```bash
 cd career-ops
-claude   # or gemini / codex / qwen / opencode / agy / grok — open your AI CLI here
+claude   # or codex / qwen / opencode / agy / grok — open your AI CLI here
 ```
 
 **On first launch, career-ops walks you through setup — your CV, profile and target roles — just by chatting. Nothing to edit by hand.**
@@ -153,7 +153,7 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # Create cv.md in the project root with your CV in markdown
 
 # 5. Open your AI CLI in this directory
-claude   # or codex / opencode / gemini / qwen / agy / grok
+claude   # or codex / opencode / qwen / agy / grok
 
 # Then ask your CLI to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
