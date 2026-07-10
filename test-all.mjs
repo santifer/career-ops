@@ -6402,6 +6402,30 @@ try {
   fail(`openrouter-runner portals drift guard crashed: ${e.message}`);
 }
 
+// ── 44b. openrouter-runner — prompt-cache breakpoint (#1709) ────
+console.log('\n44b. openrouter-runner — prompt-cache breakpoint (#1709)');
+try {
+  const { buildCachedSystemMessage } = await import(pathToFileURL(join(ROOT, 'openrouter-runner.mjs')).href);
+  const prefix = 'STATIC SYSTEM PREFIX — shared + profile + mode + cv';
+  const msg = buildCachedSystemMessage(prefix);
+  const block = msg?.content?.[0];
+  // The static prefix must ride as a structured content block carrying an
+  // ephemeral cache_control breakpoint, with the prompt text preserved verbatim
+  // (caching must never alter what the model reads).
+  if (
+    msg.role === 'system' &&
+    Array.isArray(msg.content) && msg.content.length === 1 &&
+    block.type === 'text' && block.text === prefix &&
+    block.cache_control && block.cache_control.type === 'ephemeral'
+  ) {
+    pass('buildCachedSystemMessage marks the static prefix with an ephemeral cache_control breakpoint, text unchanged (#1709)');
+  } else {
+    fail(`buildCachedSystemMessage shape wrong: ${JSON.stringify(msg)}`);
+  }
+} catch (e) {
+  fail(`openrouter-runner prompt-cache test crashed: ${e.message}`);
+}
+
 // ── 45. SCAN COOLDOWN FILTER ──────────────────────────────────
 
 console.log('\n45. Scan cooldown filter');
