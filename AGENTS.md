@@ -246,37 +246,58 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **Turkish (Turkey market):** `modes/tr/` — native Turkish translations with Turkey-specific vocabulary (SGK, kıdem tazminatı, ihbar süresi, brüt/net maaş, AGİ, BES, yemek kartı, yol yardımı, TÜFE zammı, etc.). Includes `_shared.md`, `is-ilani.md` (evaluation), `basvuru.md` (apply), `pipeline.md`.
 - **Hindi (India market):** `modes/hi/` — native Hindi (Devanagari) translations with India-specific vocabulary (CTC vs. in-hand salary, PF/EPF, Gratuity, Notice period/buyout, Bond clause, ESOPs, HRA/LTA, moonlighting policy, Labour Codes 2020, etc.). Includes `_shared.md`, `naukri.md` (evaluation), `aavedan.md` (apply), `pipeline.md`.
 
-**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
+### Output Language vs Market Modes
+
+`config/profile.yml` may set:
+
+```yaml
+language:
+  output: en
+  modes_dir: modes/de
+```
+
+These are two separate axes:
+
+- `language.output` controls human-facing output: reports, tracker notes, PDFs, cover letters, outreach, interview prep, form answers, and any user-visible prose. Default: `en` when absent.
+- `language.modes_dir` controls market vocabulary and local evaluation rules. For example, `modes/de` supplies DACH-specific concepts like 13. Monatsgehalt and Probezeit.
+
+**Composition rule:** `language.output` is authoritative for prose. `modes_dir` only supplies market context. A user can request English output with DACH market vocabulary, French output with Japan-market vocabulary, etc.
+
+**Agent rule:** After loading the mode instructions and user profile, inject this directive into every mode and subagent prompt:
+
+> Write all human-facing output in `{language.output}` regardless of the language of these instructions or the job description. Keep market-specific terms from `language.modes_dir` when they are relevant, but explain them in the output language when needed.
+
+**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or explicitly asks for German market modes. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
 2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
 3. You detect a German JD → suggest switching to German modes
 
-**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
+**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or explicitly asks for French market modes. Either:
 1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
 2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
 3. You detect a French JD → suggest switching to French modes
 
-**When to use Arabic modes:** If the user is targeting Arabic-language job postings, lives in the Middle East / Arab region, or asks for Arabic output. Either:
+**When to use Arabic modes:** If the user is targeting Arabic-language job postings, lives in the Middle East / Arab region, or explicitly asks for Arabic market modes. Either:
 1. User says "use Arabic modes" → read from `modes/ar/` instead of `modes/`
 2. User sets `language.modes_dir: modes/ar` in `config/profile.yml` → always use Arabic modes
 3. You detect an Arabic JD → suggest switching to Arabic modes
 
-**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or asks for Japanese output. Either:
+**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or explicitly asks for Japanese market modes. Either:
 1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
 2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
 3. You detect a Japanese JD → suggest switching to Japanese modes
 
-**When to use Turkish modes:** If the user is targeting Turkish-language job postings, lives in Turkey, or asks for Turkish output. Either:
+**When to use Turkish modes:** If the user is targeting Turkish-language job postings, lives in Turkey, or explicitly asks for Turkish market modes. Either:
 1. User says "use Turkish modes" → read from `modes/tr/` instead of `modes/`
 2. User sets `language.modes_dir: modes/tr` in `config/profile.yml` → always use Turkish modes
 3. You detect a Turkish JD → suggest switching to Turkish modes
 
-**When to use Hindi modes:** If the user is targeting Indian job postings, lives in India, or asks for Hindi output. Either:
+**When to use Hindi modes:** If the user is targeting Indian job postings, lives in India, or explicitly asks for Hindi market modes. Either:
 1. User says "use Hindi modes" → read from `modes/hi/` instead of `modes/`
 2. User sets `language.modes_dir: modes/hi` in `config/profile.yml` → always use Hindi modes
 3. You detect a Hindi JD → suggest switching to Hindi modes
 
-**When NOT to:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, Turkish, or Indian companies, use the default English modes — *unless* the user has explicitly requested another mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection).
+**When NOT to switch market modes:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, Turkish, or Indian companies, use the default English market modes — *unless* the user has explicitly requested another market mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection). This does not override `language.output`; prose still follows `language.output`.
 
 ### Skill Modes
 
@@ -304,6 +325,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Receives an offer/contract and wants help understanding it before signing | `offer-prep` — clause walk with neutral tags + lawyer question list; describes, never judges; no verdicts, no online research; optional draft-only negotiation reply email from the "Items to raise" list |
 | Wants to broaden the search with adjacent job titles suggested from the CV | `titles` |
+| Maintains their own hand-tuned `.tex` CV and wants it tailored in place (opt-in; cv.md stays the default) | `latex-tex` |
 | Asks what skills to learn, wants a skill-gap analysis of their pipeline | `upskill` |
 | Asks about follow-ups or application cadence | `followup` |
 | Wants to classify application replies and review updates | `reply-watch` — classifies candidate replies, matches them to applications, and suggests tracker updates |

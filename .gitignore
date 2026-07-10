@@ -9,6 +9,7 @@ data/scan-history.tsv
 data/scan-runs.tsv
 data/pdf-index.tsv
 data/agent-inbox.md
+data/active-interviews.md
 data/reply-candidates.json
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep
@@ -56,6 +57,7 @@ writing-samples/*
 
 # User config and customization (never auto-updated)
 config/profile.yml
+config/cv-facts.json
 portals.yml
 modes/_profile.md
 modes/_custom.md

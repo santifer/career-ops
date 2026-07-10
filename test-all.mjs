@@ -166,6 +166,42 @@ for (const { name, allowFail } of scripts) {
   }
 }
 
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'career-ops-cv-facts-'));
+  const hiddenScriptMetric = join(tmp, 'hidden-script-metric.html');
+  const visibleMetric = join(tmp, 'visible-metric.html');
+  writeFileSync(
+    hiddenScriptMetric,
+    '<html><body><script>const claim = "500 users";</script\t\n bar><p>Generated CV</p></body></html>'
+  );
+  writeFileSync(
+    visibleMetric,
+    '<html><body><p>Improved onboarding for 500 users.</p></body></html>'
+  );
+
+  const hiddenResult = run(NODE, ['verify-cv-facts.mjs', hiddenScriptMetric], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  if (hiddenResult !== null) {
+    pass('verify-cv-facts strips script tags with irregular closing tags');
+  } else {
+    fail('verify-cv-facts treated script contents as visible CV facts');
+  }
+
+  const visibleResult = run(NODE, ['verify-cv-facts.mjs', visibleMetric], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  if (visibleResult === null) {
+    pass('verify-cv-facts still flags visible unsupported metrics');
+  } else {
+    fail('verify-cv-facts missed a visible unsupported metric');
+  }
+
+  rmSync(tmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`verify-cv-facts regression tests crashed: ${e.message}`);
+}
+
 // ── 3. LIVENESS CLASSIFICATION ──────────────────────────────────
 
 console.log('\n3. Liveness classification');
@@ -690,12 +726,16 @@ const allowedFiles = [
 // untracked files (debate artifacts, AI tool scratch, local plans/) and
 // gitignored files can't trigger false positives because they were never
 // going to reach a commit anyway.
-const grepPathspec = scanExtensions.map(e => `'*.${e}'`).join(' ');
+// Argument vector for git grep — no shell involved, so the pathspecs and
+// pattern reach git verbatim (no quoting layer, nothing interpolated).
+const grepPathspecs = scanExtensions.map(e => `*.${e}`);
 
 let leakFound = false;
 for (const pattern of leakPatterns) {
   const result = run(
-    `git grep -n "${pattern}" -- ${grepPathspec} 2>/dev/null`
+    'git',
+    ['grep', '-n', pattern, '--', ...grepPathspecs],
+    { stdio: ['pipe', 'pipe', 'ignore'] }
   );
   if (result) {
     for (const line of result.split('\n')) {
@@ -717,13 +757,21 @@ console.log('\n7. Absolute path check');
 
 // Same git grep approach: only scans tracked files. Untracked AI tool
 // outputs, local debate artifacts, etc. can't false-positive here.
-const absPathResult = run(
-  `git grep -n "/Users/" -- '*.mjs' '*.sh' '*.md' '*.go' '*.yml' 2>/dev/null | grep -v README.md | grep -v LICENSE | grep -v CLAUDE.md | grep -v test-all.mjs`
+const absPathRaw = run(
+  'git',
+  ['grep', '-n', '/Users/', '--', '*.mjs', '*.sh', '*.md', '*.go', '*.yml'],
+  { stdio: ['pipe', 'pipe', 'ignore'] }
 );
-if (!absPathResult) {
+// The old shell pipeline's `grep -v` exclusions, now as a JS filter.
+const ABS_PATH_EXCLUDE = ['README.md', 'LICENSE', 'CLAUDE.md', 'test-all.mjs'];
+const absPathLines = (absPathRaw || '')
+  .split('\n')
+  .filter(Boolean)
+  .filter(line => !ABS_PATH_EXCLUDE.some(x => line.includes(x)));
+if (absPathLines.length === 0) {
   pass('No absolute paths in code files');
 } else {
-  for (const line of absPathResult.split('\n').filter(Boolean)) {
+  for (const line of absPathLines) {
     fail(`Absolute path: ${line.slice(0, 100)}`);
   }
 }
@@ -967,6 +1015,131 @@ try {
   fail(`update-system timeout helper test crashed: ${e.message}`);
 }
 
+// ── 7d. OUTPUT LANGUAGE CONTRACT ─────────────────────────────────
+
+console.log('\n7d. Output language contract');
+
+const profileExample = readFile('config/profile.example.yml');
+const outputLanguageAgentsDoc = readFile('AGENTS.md');
+const outputLanguageClaudeDoc = readFile('CLAUDE.md');
+const careerOpsSkill = readFile('.agents/skills/career-ops/SKILL.md');
+const batchPrompt = readFile('batch/batch-prompt.md');
+
+if (/language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(profileExample)) {
+  pass('profile.example.yml documents language.output default');
+} else {
+  fail('profile.example.yml is missing language.output default');
+}
+
+if (
+  /language\.output/.test(outputLanguageAgentsDoc) &&
+  /human-facing output/i.test(outputLanguageAgentsDoc) &&
+  /modes_dir/.test(outputLanguageAgentsDoc)
+) {
+  pass('AGENTS.md documents output language separately from market modes');
+} else {
+  fail('AGENTS.md does not document the language.output vs modes_dir contract');
+}
+
+const marketModeDocs = [
+  ['AGENTS.md', outputLanguageAgentsDoc],
+  ['CLAUDE.md', outputLanguageClaudeDoc],
+];
+
+const outputRequestSwitchesMarketMode = (text) => text.split('\n').some((line) =>
+  /asks? for (German|French|Arabic|Japanese|Turkish) output/i.test(line) &&
+  /(?:switch(?:es|ing)?|use|read from)[^\n]*(?:language\.modes_dir|modes\/(?:de|fr|ar|ja|tr))/i.test(line)
+);
+
+const validOutputLanguageGuidance = 'If the user asks for French output, set language.output to fr.';
+const invalidOutputLanguageGuidance = 'If the user asks for French output, switch to language.modes_dir: modes/fr.';
+if (
+  !outputRequestSwitchesMarketMode(validOutputLanguageGuidance) &&
+  outputRequestSwitchesMarketMode(invalidOutputLanguageGuidance)
+) {
+  pass('output-language mentions do not imply a market-mode switch');
+} else {
+  fail('output-language mentions are incorrectly treated as market-mode switches');
+}
+
+for (const [docName, docText] of marketModeDocs) {
+  if (outputRequestSwitchesMarketMode(docText)) {
+    fail(`${docName} treats output-language requests as market-mode selection`);
+  } else {
+    pass(`${docName} keeps output language separate from market-mode selection`);
+  }
+}
+
+if (/language\.output/.test(careerOpsSkill) && /human-facing output/i.test(careerOpsSkill)) {
+  pass('career-ops skill injects the output language rule');
+} else {
+  fail('career-ops skill does not inject the output language rule');
+}
+
+if (/Language Rule/i.test(batchPrompt) && /language\.output/.test(batchPrompt) && /write all human-facing output/i.test(batchPrompt)) {
+  pass('batch prompt honors language.output for worker prose');
+} else {
+  fail('batch prompt does not honor language.output for worker prose');
+}
+
+const batchEvaluationInputs = batchPrompt.match(/### Step 2 \u2014 Evaluate A-G([\s\S]*?)#### Step 0 \u2014 Archetype Detection/)?.[1] ?? '';
+if (/`llms\.txt`/.test(batchEvaluationInputs)) {
+  pass('batch evaluation step loads llms.txt');
+} else {
+  fail('batch evaluation step does not load llms.txt');
+}
+
+if (/Canonical base language:\s*English\./.test(batchPrompt)) {
+  pass('batch prompt uses an English canonical base');
+} else {
+  fail('batch prompt canonical base is not English');
+}
+
+if (!/Antes de interpretar|clasifica el|salario p\u00fablico|promesa contractual/i.test(batchPrompt)) {
+  pass('batch prompt keeps system instructions in its canonical English base');
+} else {
+  fail('batch prompt contains Spanish system instructions despite its English canonical base');
+}
+
+const batchHtmlWritePath = batchPrompt.match(/Write HTML to `([^`]+)`/)?.[1];
+const batchPdfInputPath = batchPrompt.match(/node generate-pdf\.mjs \\\n\s+([^\s\\]+) \\/)?.[1];
+if (batchHtmlWritePath && batchHtmlWritePath === batchPdfInputPath) {
+  pass('batch prompt renders the HTML path it writes');
+} else {
+  fail(`batch prompt HTML path mismatch: writes ${batchHtmlWritePath ?? 'unknown'}, renders ${batchPdfInputPath ?? 'unknown'}`);
+}
+
+const batchFinalJson = batchPrompt.match(/### Step 6 \u2014 Final JSON([\s\S]*?)\n---/)?.[1] ?? '';
+if (
+  /JSON\.stringify|JSON serializer/i.test(batchFinalJson) &&
+  /"pdf":\s*\{pdf_path_json_string_or_null\}/.test(batchFinalJson) &&
+  /dynamic string[\s\S]{0,160}escap/i.test(batchFinalJson)
+) {
+  pass('batch final JSON preserves native types and escapes dynamic strings');
+} else {
+  fail('batch final JSON does not require typed, escaped serialization');
+}
+
+const batchTrackerStep = batchPrompt.match(/### Step 5 \u2014 Tracker TSV Line[\s\S]*?### Step 6 \u2014 Final JSON/)?.[0] ?? '';
+if (/\{\{REPORT_NUM\}\}\\t\{\{DATE\}\}/.test(batchTrackerStep) && !/Compute `\{next_num\}`/.test(batchTrackerStep)) {
+  pass('batch workers use the coordinator-reserved tracker number');
+} else {
+  fail('batch workers still compute tracker numbers independently');
+}
+
+const batchMachineSummary = batchPrompt.match(/#### Machine Summary[\s\S]*?### Step 3 \u2014 Save the Report/)?.[0] ?? '';
+const patternsMachineFields = readFile('analyze-patterns.mjs').match(/const MACHINE_SUMMARY_FIELDS = new Set\(\[([\s\S]*?)\]\);/)?.[1] ?? '';
+if (
+  /^via:/m.test(batchMachineSummary) &&
+  /^company_confidential:/m.test(batchMachineSummary) &&
+  /['"]via['"]/.test(patternsMachineFields) &&
+  /['"]company_confidential['"]/.test(patternsMachineFields)
+) {
+  pass('batch Machine Summary fields are preserved by the downstream parser');
+} else {
+  fail('batch Machine Summary and downstream parser fields are misaligned');
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');
@@ -975,7 +1148,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md', 'email.md', 'add.md', 'titles.md',
+  'interview.md', 'latex.md', 'latex-tex.md', 'email.md', 'add.md', 'titles.md',
   'regional/eu-swe.md',
 ];
 
@@ -5807,6 +5980,99 @@ try {
   fail(`LaTeX validator i18n test crashed: ${e.message}`);
 }
 
+// ── 20b. LATEX-TEX IN-PLACE TAILORING ───────────────────────────
+
+console.log('\n20b. LaTeX-tex in-place tailoring (extract / patch / compile-only)');
+
+try {
+  const { detectFamily, buildManifest, applyPatches } = await import(pathToFileURL(join(ROOT, 'lib/latex-content.mjs')).href);
+  const { validateLatexContent } = await import(pathToFileURL(join(ROOT, 'generate-latex.mjs')).href);
+
+  const resumeFixture = readFileSync(join(ROOT, 'examples/latex-tex/resume-subheading.tex'), 'utf-8');
+  const tabularFixture = readFileSync(join(ROOT, 'examples/latex-tex/tabularx-itemize.tex'), 'utf-8');
+
+  if (detectFamily(resumeFixture) === 'resumeSubheading') {
+    pass('resume-subheading fixture detected as resumeSubheading family');
+  } else {
+    fail('resume-subheading fixture family detection failed');
+  }
+
+  if (detectFamily(tabularFixture) === 'tabularx-itemize') {
+    pass('tabularx-itemize fixture detected as tabularx-itemize family');
+  } else {
+    fail('tabularx-itemize fixture family detection failed');
+  }
+
+  if (detectFamily('\\documentclass{article}\\begin{document}Hello\\end{document}') === null) {
+    pass('unknown LaTeX layout returns null family');
+  } else {
+    fail('unknown LaTeX layout should not match a supported family');
+  }
+
+  const manifest = buildManifest('resume-subheading.tex', resumeFixture);
+  if (manifest.supported && manifest.slots.length >= 3) {
+    pass(`resume-subheading manifest exposes editable slots (${manifest.slots.length})`);
+  } else {
+    fail(`resume-subheading manifest missing slots: ${JSON.stringify(manifest)}`);
+  }
+
+  const tabManifest = buildManifest('tabularx-itemize.tex', tabularFixture);
+  if (tabManifest.supported && tabManifest.slots.length >= 2) {
+    pass(`tabularx-itemize manifest exposes item slots (${tabManifest.slots.length})`);
+  } else {
+    fail(`tabularx-itemize manifest missing slots: ${JSON.stringify(tabManifest)}`);
+  }
+
+  const firstBullet = manifest.slots.find(s => s.kind === 'bullet');
+  if (firstBullet) {
+    const patched = applyPatches(resumeFixture, [{ id: firstBullet.id, text: 'Tailored summary bullet for testing.' }], manifest.slots);
+    if (patched.includes('Tailored summary bullet for testing.')) {
+      pass('applyPatches rewrites a resumeItem bullet in place');
+    } else {
+      fail('applyPatches did not insert tailored bullet text');
+    }
+  } else {
+    fail('resume-subheading manifest has no bullet slot to patch');
+  }
+
+  const compileOnlyTex = `\\documentclass{article}\\begin{document}Minimal user CV\\end{document}`;
+  const compileOnlyValidation = validateLatexContent(compileOnlyTex, true);
+  if (compileOnlyValidation.issues.length === 0) {
+    pass('--compile-only validation accepts minimal user .tex without career-ops macros');
+  } else {
+    fail(`compile-only validation too strict: ${compileOnlyValidation.issues.join('; ')}`);
+  }
+
+  const strictValidation = validateLatexContent(compileOnlyTex, false);
+  if (strictValidation.issues.some(i => /section|resumeSubheading|pdfgentounicode/i.test(i))) {
+    pass('default validation still enforces career-ops template checks');
+  } else {
+    fail('default validation should reject non-template .tex');
+  }
+
+  const extractDir = mkdtempSync(join(tmpdir(), 'latex-tex-'));
+  const extractOut = join(extractDir, 'manifest.json');
+  execFileSync(NODE, ['extract-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), '--out', extractOut], { cwd: ROOT, encoding: 'utf-8' });
+  const extracted = JSON.parse(readFileSync(extractOut, 'utf-8'));
+  const patchPayload = {
+    slots: extracted.slots,
+    patches: [{ id: extracted.slots[0].id, text: 'CLI patch path works.' }],
+  };
+  const patchJson = join(extractDir, 'patches.json');
+  const patchedTex = join(extractDir, 'out.tex');
+  writeFileSync(patchJson, JSON.stringify(patchPayload));
+  execFileSync(NODE, ['patch-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), patchJson, patchedTex], { cwd: ROOT, encoding: 'utf-8' });
+  const patchedContent = readFileSync(patchedTex, 'utf-8');
+  if (patchedContent.includes('CLI patch path works.')) {
+    pass('extract-latex-content.mjs + patch-latex-content.mjs CLI round-trip');
+  } else {
+    fail('CLI patch round-trip did not update the .tex file');
+  }
+  rmSync(extractDir, { recursive: true, force: true });
+} catch (e) {
+  fail(`LaTeX-tex tailoring test crashed: ${e.message}`);
+}
+
 // ── 21. CJK CV RENDERING (lang="ja" font fallback) ──────────────
 
 console.log('\n21. CJK CV rendering (lang="ja" font fallback)');
@@ -6172,6 +6438,116 @@ try {
   fail(`cooldown filter tests crashed: ${e.message}`);
 }
 
+
+// ── 45b. SCAN COMPANY+ROLE DEDUP (alias + title normalization) ───────
+// Guards scan-time duplicate identity: the scanner keys company+role dedup on
+// the provider's company name (often the ATS org, e.g. "Intercom") which may
+// differ from the tracker brand ("Fin"), and on a title that a company mutates
+// per requisition/location ("Engineer (Berlin)"). buildCompanyCanonicalizer +
+// normalizeRoleForDedup collapse both so the same role is not re-evaluated.
+
+console.log('\n45b. Scan company+role dedup (alias + title normalization)');
+try {
+  const {
+    buildCompanyCanonicalizer,
+    normalizeRoleForDedup,
+    companyRoleDedupKey,
+  } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // -- Company alias canonicalization --
+  const canon = buildCompanyCanonicalizer({ Fin: ['Intercom', 'Intercom Inc'] });
+  if (canon('Intercom') === 'fin' && canon('intercom inc') === 'fin' && canon('Fin') === 'fin') {
+    pass('buildCompanyCanonicalizer maps every alias and the canonical name to the canonical label');
+  } else {
+    fail(`alias canonicalization wrong: Intercom=${canon('Intercom')} "Intercom Inc"=${canon('intercom inc')} Fin=${canon('Fin')}`);
+  }
+  if (canon('Acme Corp') === 'acme corp') pass('unknown company passes through as lowercased text (unchanged behavior)');
+  else fail(`unknown company should pass through: got ${canon('Acme Corp')}`);
+
+  // Malformed / empty alias maps must not crash and must degrade to plain lowercase.
+  const emptyCanon = buildCompanyCanonicalizer(undefined);
+  const arrayCanon = buildCompanyCanonicalizer(['not', 'a', 'map']);
+  const messyCanon = buildCompanyCanonicalizer({ '': ['x'], Fin: [null, 'Intercom', 42] });
+  if (emptyCanon('Intercom') === 'intercom' && arrayCanon('Intercom') === 'intercom' && messyCanon('Intercom') === 'fin') {
+    pass('canonicalizer tolerates undefined/array/messy alias config without crashing');
+  } else {
+    fail(`canonicalizer robustness wrong: empty=${emptyCanon('Intercom')} array=${arrayCanon('Intercom')} messy=${messyCanon('Intercom')}`);
+  }
+
+  const canonicalCollisionA = buildCompanyCanonicalizer({ Fin: ['Intercom'], Intercom: [] });
+  const canonicalCollisionB = buildCompanyCanonicalizer({ Intercom: [], Fin: ['Intercom'] });
+  if (canonicalCollisionA('Intercom') === 'intercom' && canonicalCollisionB('Intercom') === 'intercom') {
+    pass('canonical company identities win alias collisions regardless of config order');
+  } else {
+    fail(`canonical alias collision is order-dependent: first=${canonicalCollisionA('Intercom')} second=${canonicalCollisionB('Intercom')}`);
+  }
+
+  const ambiguousAliasA = buildCompanyCanonicalizer({ Fin: ['Shared ATS'], Acme: ['Shared ATS'] });
+  const ambiguousAliasB = buildCompanyCanonicalizer({ Acme: ['Shared ATS'], Fin: ['Shared ATS'] });
+  if (ambiguousAliasA('Shared ATS') === 'shared ats' && ambiguousAliasB('Shared ATS') === 'shared ats') {
+    pass('ambiguous aliases fail open instead of merging companies by config order');
+  } else {
+    fail(`ambiguous alias should pass through: first=${ambiguousAliasA('Shared ATS')} second=${ambiguousAliasB('Shared ATS')}`);
+  }
+
+  // -- Title normalization (location suffix + punctuation + requisition-agnostic) --
+  if (normalizeRoleForDedup('AI Infrastructure Engineer (Berlin)') === normalizeRoleForDedup('AI Infrastructure Engineer')) {
+    pass('normalizeRoleForDedup strips a trailing location tag "(Berlin)"');
+  } else {
+    fail(`trailing location tag not stripped: "${normalizeRoleForDedup('AI Infrastructure Engineer (Berlin)')}"`);
+  }
+  if (normalizeRoleForDedup('Platform Engineer [Remote]') === normalizeRoleForDedup('Platform Engineer')) {
+    pass('normalizeRoleForDedup strips a trailing remote tag "[Remote]"');
+  } else {
+    fail(`trailing remote tag not stripped: "${normalizeRoleForDedup('Platform Engineer [Remote]')}"`);
+  }
+  if (normalizeRoleForDedup('Senior Engineer (Senior) (Berlin, Germany)') === 'senior engineer senior') {
+    pass('normalizeRoleForDedup strips location suffixes while preserving level qualifiers');
+  } else {
+    fail(`location suffix/level qualifier handling wrong: "${normalizeRoleForDedup('Senior Engineer (Senior) (Berlin, Germany)')}"`);
+  }
+  if (normalizeRoleForDedup('Engineer (Senior)') !== normalizeRoleForDedup('Engineer (Junior)')) {
+    pass('normalizeRoleForDedup keeps trailing seniority variants distinct');
+  } else {
+    fail('trailing seniority variants over-merged distinct roles');
+  }
+  if (normalizeRoleForDedup('Engineering Manager, AI Models  Infrastructure') === normalizeRoleForDedup('Engineering Manager — AI Models Infrastructure')) {
+    pass('normalizeRoleForDedup collapses punctuation/whitespace (comma vs em-dash, double space)');
+  } else {
+    fail('punctuation/whitespace not normalized');
+  }
+  // A mid-title parenthetical is NOT a trailing tag; its words are kept so two
+  // genuinely different disciplines don't collapse.
+  if (normalizeRoleForDedup('Engineer (Backend), Platform') !== normalizeRoleForDedup('Engineer (Frontend), Platform')) {
+    pass('normalizeRoleForDedup keeps mid-title parentheticals distinct (no over-merge)');
+  } else {
+    fail('mid-title parentheticals over-merged distinct roles');
+  }
+
+  // -- End-to-end: the exact URL-new duplicate pairs that leaked before --
+  const cases = [
+    ['Intercom', 'AI Infrastructure Engineer (Berlin)', 'Fin', 'AI Infrastructure Engineer'],
+    ['Intercom', 'Engineering Manager, AI Models Infrastructure', 'Fin', 'Engineering Manager, AI Models Infrastructure'],
+    ['Intercom', 'Senior Product Engineer', 'Fin', 'Senior Product Engineer'],
+  ];
+  let allMatch = true;
+  for (const [scanCo, scanTitle, trackCo, trackTitle] of cases) {
+    const scanKey = companyRoleDedupKey(scanCo, scanTitle, canon);
+    const trackKey = companyRoleDedupKey(trackCo, trackTitle, canon);
+    if (scanKey !== trackKey) { allMatch = false; break; }
+  }
+  if (allMatch) pass('companyRoleDedupKey matches scan-side (Intercom + location-suffixed title) to tracker-side (Fin) across URL-new duplicate pairs');
+  else fail('companyRoleDedupKey failed to unify a real-world URL-new duplicate pair');
+
+  // Without an alias, distinct companies must still stay distinct.
+  if (companyRoleDedupKey('Acme', 'Engineer', canon) !== companyRoleDedupKey('Globex', 'Engineer', canon)) {
+    pass('companyRoleDedupKey keeps unrelated companies distinct');
+  } else {
+    fail('companyRoleDedupKey collapsed two unrelated companies');
+  }
+} catch (e) {
+  fail(`scan company+role dedup tests crashed: ${e.message}`);
+}
 
 // ── Plugin engine (contract + sandbox + firewall) ────────────────
 console.log('\n49. Plugin engine (contract + sandbox + firewall)');

@@ -4,7 +4,7 @@ description: AI job search command center -- evaluate offers, generate CVs, scan
 arguments: mode
 user_invocable: true
 user-invocable: true
-argument-hint: "[scan | deep | pdf | latex | cover | email | add | eu-swe | oferta | ofertas | apply | batch | tracker | agent-inbox | pipeline | contacto | training | project | interview-prep | interview | interview/plan | interview/practice | interview/debrief | patterns | offer-prep | titles | upskill | followup | update]"
+argument-hint: "[scan | deep | pdf | latex | latex-tex | cover | email | add | eu-swe | oferta | ofertas | apply | batch | tracker | agent-inbox | pipeline | contacto | training | project | interview-prep | interview | interview/plan | interview/practice | interview/debrief | patterns | offer-prep | titles | upskill | followup | update]"
 license: MIT
 ---
 
@@ -49,6 +49,7 @@ Determine the mode from `$mode`:
 | `interview/debrief` | `interview/debrief` |
 | `pdf` | `pdf` |
 | `latex` | `latex` |
+| `latex-tex` | `latex-tex` |
 | `email` | `email` |
 | `training` | `training` |
 | `project` | `project` |
@@ -71,6 +72,21 @@ Determine the mode from `$mode`:
 **Auto-pipeline detection:** If `$mode` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
 
 If `$mode` is not a sub-command AND doesn't look like a JD, show discovery.
+
+---
+
+## Output Language Directive
+
+Before executing any mode, read `config/profile.yml` if it exists and resolve:
+
+- `language.output` → ISO language code for human-facing output. Default: `en`.
+- `language.modes_dir` → optional market-mode directory. This controls market vocabulary and local evaluation rules only.
+
+Inject this directive after loading the mode instructions and before producing any user-visible content:
+
+> Write all human-facing output in `{language.output}` regardless of the language of these instructions or of the job description. This includes reports, tracker notes, PDFs, cover letters, outreach, interview prep, form answers, and summaries. If `language.modes_dir` supplies market-specific vocabulary, keep the market logic but explain terms in `{language.output}` when needed.
+
+`language.output` is authoritative for prose. `modes_dir` is market context; it must not force the prose language.
 
 ---
 
@@ -109,6 +125,7 @@ Available commands:
   /career-ops interview/debrief → Post-interview debrief: close gaps, predict next round
   /career-ops pdf       → PDF only, ATS-optimized CV
   /career-ops latex     → Export CV as LaTeX/Overleaf .tex
+  /career-ops latex-tex → Tailor your own resume.tex in place (opt-in; cv.md stays default)
   /career-ops cover     → Cover letter: standalone JD paste or /career-ops cover {slug}
   /career-ops email     → Formal application email draft (draft-only; never sends, submits, or clicks)
   /career-ops add       → Add a project/paper/role to your CV (fetch + preview + confirm)
@@ -148,7 +165,7 @@ Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `p
 
 Read `modes/_profile.md` (if exists) + `modes/_custom.md` (if exists) + `modes/{mode}.md`
 
-Applies to: `tracker`, `agent-inbox`, `deep`, `interview-prep`, `interview`, `regional/eu-swe`, `interview/plan`, `interview/practice`, `interview/debrief`, `latex`, `training`, `project`, `patterns`, `titles`, `upskill`, `followup`, `cover`, `email`, `add`, `offer-prep`
+Applies to: `tracker`, `agent-inbox`, `deep`, `interview-prep`, `interview`, `regional/eu-swe`, `interview/plan`, `interview/practice`, `interview/debrief`, `latex`, `latex-tex`, `training`, `project`, `patterns`, `titles`, `upskill`, `followup`, `cover`, `email`, `add`, `offer-prep`
 
 ### Modes delegated to subagent
 
@@ -157,7 +174,7 @@ For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as a wor
 ```python
 Agent(
   subagent_type="general-purpose",
-  prompt="[content of modes/_shared.md]\n\n[content of modes/_profile.md if exists]\n\n[content of modes/_custom.md if exists]\n\n[content of modes/{mode}.md]\n\n[invocation-specific data]",
+  prompt="[output language directive]\n\n[content of modes/_shared.md]\n\n[content of modes/_profile.md if exists]\n\n[content of modes/_custom.md if exists]\n\n[content of modes/{mode}.md]\n\n[invocation-specific data]",
   description="career-ops {mode}"
 )
 ```
