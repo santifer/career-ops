@@ -107,9 +107,10 @@ async function loadProviderIds() {
     for (const manifest of manifests) {
       if (manifest.hooks.includes('provider')) ids.add(manifest.id);
     }
-  } catch {
+  } catch (err) {
     // A stripped-down checkout may not include plugin infrastructure. Core
     // provider validation should continue to work in that environment.
+    if (err?.code !== 'ERR_MODULE_NOT_FOUND') throw err;
   }
   return ids;
 }
