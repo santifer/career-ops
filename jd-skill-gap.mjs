@@ -49,7 +49,16 @@ const BULLET_LINE_RE = /^\s*[-*•]\s*(.+)$/;
 // A conservative skill-token extractor: pulls comma/slash/and-separated
 // technical-looking tokens out of a requirement bullet, rather than treating
 // the whole bullet as one skill string (JD bullets are often full sentences).
-const SKILL_TOKEN_RE = /\b([A-Z][A-Za-z0-9+.#]{1,30}(?:\.[a-z]{2,4})?)\b/g;
+//
+// Trailing boundary: \b fails at symbol edges (\bC\+\+\b needs a word char
+// AFTER the +), so C++/C#/F# would never match standalone — same bug and fix
+// as upskill.mjs's SKILL_PATTERN, where (?!\w) is equivalent to \b for
+// word-char edges and correct for symbol edges. Because the char class here
+// is greedy and contains ".", the last token char is additionally pinned to
+// a word char / # / + so a sentence-ending period is never swallowed into
+// the token ("Docker." still extracts as "Docker"). The leading \b stays:
+// tokens start with [A-Z], a word char, where \b and (?<!\w) are equivalent.
+const SKILL_TOKEN_RE = /\b([A-Z][A-Za-z0-9+.#]{0,29}[A-Za-z0-9+#](?:\.[a-z]{2,4})?)(?!\w)/g;
 
 // Deliberately broad: this list exists specifically to stop generic
 // capitalized nouns/adjectives from JD bullets (e.g. "Bachelor's degree
@@ -278,6 +287,26 @@ Python, Docker, Zookeeper
   eq('does not extract "Experience" as a skill', boilerplateSkills.includes('Experience'), false);
   eq('does not extract "Communication" as a skill', boilerplateSkills.includes('Communication'), false);
   eq('does not extract "Ability" as a skill', boilerplateSkills.includes('Ability'), false);
+
+  // Regression: tokens ending in a symbol (C#, C++, F#). The original trailing
+  // \b needs a word char AFTER the symbol, so these never matched standalone —
+  // same bug upskill.mjs's SKILL_PATTERN fixed with a (?!\w) lookahead. The
+  // sentence-ending "Docker." assertion guards the other edge of the fix: the
+  // greedy char class contains ".", so the lookahead alone would swallow the
+  // trailing period into the token.
+  const symbolEdgeJd = `
+# Role
+
+## Requirements
+- C#, C++ or F# for backend services
+- Familiarity with Docker.
+`;
+  const symbolEdgeSkills = extractJdSkills(symbolEdgeJd);
+  eq('extracts C# standalone (symbol-edge boundary)', symbolEdgeSkills.includes('C#'), true);
+  eq('extracts C++ standalone (symbol-edge boundary)', symbolEdgeSkills.includes('C++'), true);
+  eq('extracts F# standalone (symbol-edge boundary)', symbolEdgeSkills.includes('F#'), true);
+  eq('sentence-ending token stays clean ("Docker", not "Docker.")', symbolEdgeSkills.includes('Docker'), true);
+  eq('trailing period is not swallowed into the token', symbolEdgeSkills.includes('Docker.'), false);
 
   console.log(`\njd-skill-gap self-test: ${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
