@@ -415,6 +415,8 @@ career-ops/
 
 I'm Santiago -- Head of Applied AI, former founder (built and sold a business that still runs with my name on it). I built career-ops to manage my own job search. It worked: I used it to land my current role.
 
+Curious how this repo is maintained in ~4 hours a week? Read [Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet).
+
 My portfolio and other open source projects → [santifer.io](https://santifer.io)
 
 ## Disclaimer
