@@ -177,6 +177,8 @@ const SYSTEM_PATHS = [
   'ollama-eval.mjs',
   'openai-eval.mjs',
   'openrouter-runner.mjs',
+  'jd-similarity.mjs',
+  'jd-similarity.test.mjs',
   'test-all.mjs',
   'detect-reposts.test.mjs',
   'test-salary-filter.mjs',
