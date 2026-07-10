@@ -34,7 +34,7 @@ benchmarks:
     denominator: per-application-with-response   # censored: ghosted applications never enter this metric
     range_days: [5, 14]                   # typical ~5 days; 40% of recruiters take >2 weeks
     typical_days: 7
-    source: "Career platform aggregate 2025"
+    source: "estimate (no citable published aggregate for this window; conservative midpoint of recruiter-survey reporting)"
     year: 2025
     caveat: "Among applications that got a response at all (61% of candidates report post-interview ghosting)."
 
