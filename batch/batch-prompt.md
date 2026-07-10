@@ -131,7 +131,7 @@ Cover:
 
 Use WebSearch for salary bands, company compensation reputation, funding/hiring signals, and market demand. Cite sources when available. If data is missing, say so.
 
-Antes de interpretar cualquier salario, clasifica el **tipo de empresa / hiring entity**. El salario público es una señal, no una promesa contractual.
+Before interpreting any salary, classify the **company type / hiring entity**. A public salary figure is a signal, not a contractual promise.
 
 **Company type classification (required):**
 

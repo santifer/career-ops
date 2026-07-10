@@ -1047,6 +1047,12 @@ if (/Canonical base language:\s*English\./.test(batchPrompt)) {
   fail('batch prompt canonical base is not English');
 }
 
+if (!/Antes de interpretar|clasifica el|salario p\u00fablico|promesa contractual/i.test(batchPrompt)) {
+  pass('batch prompt keeps system instructions in its canonical English base');
+} else {
+  fail('batch prompt contains Spanish system instructions despite its English canonical base');
+}
+
 const batchHtmlWritePath = batchPrompt.match(/Write HTML to `([^`]+)`/)?.[1];
 const batchPdfInputPath = batchPrompt.match(/node generate-pdf\.mjs \\\n\s+([^\s\\]+) \\/)?.[1];
 if (batchHtmlWritePath && batchHtmlWritePath === batchPdfInputPath) {
