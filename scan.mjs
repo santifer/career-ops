@@ -1141,7 +1141,7 @@ export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
 
 // ── Portal health persistence (#1744) ───────────────────────────────
 
-const PORTAL_HEALTH_PATH = 'data/portal-health.tsv';
+const PORTAL_HEALTH_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'portal-health.tsv');
 export const PORTAL_HEALTH_HEADER = 'timestamp\tcompany\tstatus\n';
 
 export function appendPortalHealth(healthRecords, filePath = PORTAL_HEALTH_PATH) {
@@ -1761,8 +1761,8 @@ async function main() {
   const unreachableTargets = errors.filter((e) => e.kind === 'slug_gone');
   const networkTargets = errors.filter((e) => e.kind === 'network');
   const otherErrors = errors.filter((e) => e.kind !== 'slug_gone' && e.kind !== 'network');
-
-  const STREAK_THRESHOLD = 3;
+  
+  const STREAK_THRESHOLD = config.portal_health_threshold || 3;
   const nowStr = new Date().toISOString();
   const healthRecords = [];
   
@@ -1800,7 +1800,7 @@ async function main() {
       if (!persistentlyDead.includes(e.company)) persistentlyDead.push(e.company);
     } else {
       if (e.kind === 'slug_gone') {
-        if (!newlyDeadSlug.includes(e.company)) newlyDeadSlug.push(e.company);
+        if (!newlyDeadSlug.some(x => x.company === e.company)) newlyDeadSlug.push(e);
       } else {
         newlyDeadNetwork.push(e);
       }
@@ -1813,7 +1813,8 @@ async function main() {
     console.log(`   Run: node verify-portals.mjs to check if the ATS migrated, or update their board slugs.`);
   }
   if (newlyDeadSlug.length > 0) {
-    console.log(`\n⚠️  ${newlyDeadSlug.length} target(s) unreachable (slug?): ${newlyDeadSlug.join(', ')} — run: node verify-portals.mjs`);
+    const names = newlyDeadSlug.map(x => x.company).join(', ');
+    console.log(`\n⚠️  ${newlyDeadSlug.length} target(s) unreachable (slug?): ${names} — run: node verify-portals.mjs`);
   }
   if (emptyTargets.length > 0) {
     console.log(`🟡 ${emptyTargets.length} target(s) live but empty: ${emptyTargets.join(', ')}`);

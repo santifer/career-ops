@@ -251,23 +251,28 @@ export function computePortalStats(portalsYmlContent, scanStats, producingCompan
   let persistentlyDead = 0;
   if (portalHealthContent) {
     const lines = portalHealthContent.split('\n');
-    const streaks = new Map();
+    const healthRecords = [];
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
       const parts = line.split('\t');
       if (parts.length >= 3) {
-        const company = parts[1];
-        const status = parts[2];
-        if (status === 'slug_gone' || status === 'network') {
-          streaks.set(company, (streaks.get(company) || 0) + 1);
-        } else if (status === 'reachable' || status === 'empty') {
-          streaks.set(company, 0);
-        }
+        healthRecords.push({ company: parts[1], status: parts[2] });
       }
     }
-    for (const streak of streaks.values()) {
-      if (streak >= 3) persistentlyDead++;
+    const streaks = new Map();
+    for (const r of healthRecords) {
+      if (r.status === 'slug_gone' || r.status === 'network') {
+        streaks.set(r.company, (streaks.get(r.company) || 0) + 1);
+      } else if (r.status === 'reachable' || r.status === 'empty') {
+        streaks.set(r.company, 0);
+      }
+    }
+    const threshold = cfg.portal_health_threshold || 3;
+    for (const [company, streak] of streaks.entries()) {
+      if (streak >= threshold && configuredNames.has(String(company).toLowerCase())) {
+        persistentlyDead++;
+      }
     }
   }
 
