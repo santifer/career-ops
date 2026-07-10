@@ -965,6 +965,11 @@ export function formatPipelineOffer(offer) {
   // 1/3/4/5-column contract in modes/pipeline.md intact.
   const posted = postedAtIsoDate(offer.postedAt);
   if (posted) line = `${line} | posted: ${posted}`;
+  // Labeled trust/legitimacy segment (#1743) — rides like posted:/note:, emitted
+  // only when the scanner flagged the posting (score < 100). Ordered after
+  // posted:, before note:, for a stable serialization.
+  const trust = formatTrustSegment(offer);
+  if (trust) line = `${line} | ${trust}`;
   // Optional free-text ranking signal (e.g. a curated-list flag an importer
   // attaches). Labeled — not positional like location/compensation — so it can
   // ride on any row shape (bare URL, 3-, 4-, or 5-column) without a reader

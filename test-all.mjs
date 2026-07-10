@@ -3389,6 +3389,44 @@ try {
     fail(`pipeline postedAt segment wrong: dated="${datedPipeline}" / noDate="${noDatePipeline}" / bad="${badDatePipeline}" / nan="${nanDatePipeline}"`);
   }
 
+  // ── trust/legitimacy signal persistence (#1743) ──
+  // The scanner computes offer.trustScore/trustFlags on every job; surface it only
+  // when flagged (score < 100). scan-history gets trailing score+flags columns
+  // (after postedAt); pipeline.md gets a labeled `trust:` segment. Clean/unset
+  // trust stays byte-identical (empty column / no segment).
+  const trustBase = { url: 'https://jobs.example.com/77', source: 'lever-api', title: 'SRE', company: 'Acme', location: 'Remote', description: '' };
+  const flaggedOffer = { ...trustBase, trustScore: 60, trustFlags: ['missing_apply_url', 'suspicious_domain'] };
+  const cleanOffer = { ...trustBase, trustScore: 100, trustFlags: [] };
+  const untrustedOffer = { ...trustBase }; // no trust fields (trust_filter disabled)
+  const flaggedHist = formatScanHistoryRow(flaggedOffer, '2026-07-09').split('\t');
+  const cleanHist = formatScanHistoryRow(cleanOffer, '2026-07-09').split('\t');
+  if (
+    flaggedHist.length === 11 &&
+    flaggedHist[9] === '60' && flaggedHist[10] === 'missing_apply_url,suspicious_domain' &&
+    cleanHist.length === 11 && cleanHist[9] === '' && cleanHist[10] === '' // score 100 → not flagged → empty
+  ) {
+    pass('scan-history writer appends trust score + flags trailing columns when flagged, empty otherwise (#1743)');
+  } else {
+    fail(`scan-history trust columns wrong: flagged=${JSON.stringify(flaggedHist)} / clean=${JSON.stringify(cleanHist)}`);
+  }
+
+  const flaggedPipeline = formatPipelineOffer(flaggedOffer);
+  const cleanPipeline = formatPipelineOffer(cleanOffer);
+  const untrustedPipeline = formatPipelineOffer(untrustedOffer);
+  const flaggedNoFlags = formatPipelineOffer({ ...trustBase, trustScore: 80, trustFlags: [] });
+  const withDateAndTrust = formatPipelineOffer({ ...trustBase, postedAt: Date.parse('2026-06-18T00:00:00Z'), trustScore: 70, trustFlags: ['invalid_url'], note: 'pick' });
+  if (
+    flaggedPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 60 missing_apply_url,suspicious_domain' &&
+    cleanPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote' && // score 100 → no segment
+    untrustedPipeline === cleanPipeline && // no trust fields → byte-identical
+    flaggedNoFlags === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 80' && // score-only when no flags
+    withDateAndTrust === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | posted: 2026-06-18 | trust: 70 invalid_url | note: pick' // stable order posted→trust→note
+  ) {
+    pass('pipeline writer appends a labeled trust: segment ordered posted→trust→note, byte-identical when clean/unset (#1743)');
+  } else {
+    fail(`pipeline trust segment wrong: flagged="${flaggedPipeline}" / clean="${cleanPipeline}" / untrusted="${untrustedPipeline}" / noFlags="${flaggedNoFlags}" / combo="${withDateAndTrust}"`);
+  }
+
   // ── content_filter (#734) ──
   // Absent config → all jobs pass.
   const noContentFilter = buildContentFilter(null);
