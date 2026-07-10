@@ -335,7 +335,7 @@ If score is greater than or equal to the threshold:
 8. Reorder experience bullets by relevance.
 9. Build a 6-8 item competency grid.
 10. Inject keywords ethically into existing achievements; never invent skills or metrics.
-11. Write HTML to `/tmp/cv-candidate-{company-slug}.html`.
+11. Write HTML to `output/cv-candidate-{company-slug}.html`.
 12. Run:
 
 ```bash
@@ -374,7 +374,7 @@ batch/tracker-additions/{{ID}}.tsv
 Format, no header, 9 tab-separated columns:
 
 ```text
-{next_num}\t{{DATE}}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{{REPORT_NUM}}](reports/{{REPORT_NUM}}-{company-slug}-{{DATE}}.md)\t{one_sentence_note}
+{{REPORT_NUM}}\t{{DATE}}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{{REPORT_NUM}}](reports/{{REPORT_NUM}}-{company-slug}-{{DATE}}.md)\t{one_sentence_note}
 ```
 
 Column order is important:
@@ -397,11 +397,11 @@ Column order is important:
 
 Valid canonical statuses are defined in `templates/states.yml`: `Evaluated`, `Applied`, `Responded`, `Interview`, `Offer`, `Rejected`, `Discarded`, `SKIP`.
 
-Compute `{next_num}` by reading the current max application number from `data/applications.md`.
+Use `{{REPORT_NUM}}` as the tracker `num`. The batch coordinator reserves this number before launching the worker, so do not calculate a local `max+1`.
 
 ### Step 6 — Final JSON
 
-Print a final JSON summary to stdout.
+Build the final payload as an object and print it with `JSON.stringify` (or an equivalent JSON serializer). Never assemble JSON by interpolating raw strings. Every dynamic string value, including company, role, paths, and error text, must be escaped by the serializer.
 
 Success:
 
@@ -414,11 +414,13 @@ Success:
   "role": "{role}",
   "score": {score_num},
   "legitimacy": "{High Confidence|Proceed with Caution|Suspicious}",
-  "pdf": "{pdf_path_or_null}",
+  "pdf": {pdf_path_json_string_or_null},
   "report": "{report_path}",
   "error": null
 }
 ```
+
+`pdf_path_json_string_or_null` means either a properly JSON-encoded path string or the native JSON value `null`; never emit the string `"null"`.
 
 Failure:
 
@@ -432,10 +434,12 @@ Failure:
   "score": null,
   "legitimacy": null,
   "pdf": null,
-  "report": "{report_path_if_any}",
+  "report": {report_path_json_string_or_null},
   "error": "{error_description}"
 }
 ```
+
+`report_path_json_string_or_null` means either a properly JSON-encoded path string or the native JSON value `null` when no report exists.
 
 ---
 
