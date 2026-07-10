@@ -126,6 +126,7 @@ const scripts = [
   { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'reconcile-pipeline.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
+  { name: 'upskill.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
   { name: 'salary-gap.mjs --self-test', expectExit: 0 },
@@ -1381,6 +1382,27 @@ if (
   fail('Chinese modes missing company-type compensation reliability checks');
 }
 
+const batchPromptDoc = readFile('batch/batch-prompt.md');
+if (
+  batchPromptDoc.includes('Company type classification (required)') &&
+  batchPromptDoc.includes('actual contract / hiring entity') &&
+  batchPromptDoc.includes('default compensation reliability to the conservative canonical tier: `Low`') &&
+  batchPromptDoc.includes('Compensation reliability (required)') &&
+  batchPromptDoc.includes('If no advertised number exists, collapse this section to exactly two concise lines') &&
+  batchPromptDoc.includes('skip component split, detailed market rows, and HR verification questions') &&
+  batchPromptDoc.includes('Advertised range') &&
+  batchPromptDoc.includes('Likely guaranteed base') &&
+  batchPromptDoc.includes('Variable / conditional cash components') &&
+  batchPromptDoc.includes('Expected stable cash') &&
+  batchPromptDoc.includes('Non-cash benefits') &&
+  batchPromptDoc.includes('When a salary figure exists, include 3-6 HR verification questions') &&
+  batchPromptDoc.includes('Do not present advertised compensation as real take-home pay')
+) {
+  pass('batch workers inherit company-type compensation reliability checks');
+} else {
+  fail('batch prompt missing company-type compensation reliability checks');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
@@ -1397,8 +1419,6 @@ if (
 // --- salary tracking mode wiring (#1656 PR-2) ---
 const trackerModeDoc = readFile('modes/tracker.md');
 const patternsModeDoc = readFile('modes/patterns.md');
-const batchPromptDoc = readFile('batch/batch-prompt.md');
-
 if (
   ofertaMode.includes('Advertised (JD)') &&
   ofertaMode.includes('salary-observations.tsv') &&
@@ -4994,6 +5014,171 @@ try {
   try { rmSync(tmp, { recursive: true, force: true }); } catch {}
 } catch (e) {
   fail(`Batch rate-limit pause test crashed: ${e.message}`);
+}
+
+// ── 14. BATCH SPEND TIER MODEL ROUTING ───────────────────────────
+
+console.log('\n14. Batch spend_tier model routing');
+
+// Helper: create a fully isolated tmp fixture for one spend_tier sub-test.
+// Each sub-test gets its own mkdtempSync so no batch-state.tsv from a prior
+// sub-test can bleed in, regardless of OS-level I/O ordering on CI runners.
+function makeTierFixture(profileYml) {
+  const tmp = mkdtempSync(join(tmpdir(), 'co-batch-tier-'));
+  const batchDir = join(tmp, 'batch');
+  const fakeBin = join(tmp, 'bin');
+  const configDir = join(tmp, 'config');
+  mkdirSync(batchDir, { recursive: true });
+  mkdirSync(configDir, { recursive: true });
+  mkdirSync(join(tmp, 'reports'), { recursive: true });
+  mkdirSync(join(tmp, 'data'), { recursive: true });
+  mkdirSync(fakeBin, { recursive: true });
+
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
+  if (process.platform === 'win32') {
+    try { execFileSync(getBash(), ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+  } else {
+    execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  }
+  writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
+  writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
+  writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
+  writeFileSync(join(batchDir, 'batch-input.tsv'), [
+    'id\turl\tsource\tnotes',
+    '1\thttps://example.com/one\tfixture\t-',
+  ].join('\n') + '\n');
+  writeFileSync(join(configDir, 'profile.yml'), profileYml);
+  writeFileSync(join(fakeBin, 'claude'), [
+    '#!/usr/bin/env bash',
+    'printf "%s\\n" "$@" > "$BATCH_ARG_FILE"',
+    'exit 0',
+  ].join('\n') + '\n');
+  if (process.platform === 'win32') {
+    try { execFileSync(getBash(), ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+  } else {
+    execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+  }
+  return { tmp, batchDir, fakeBin };
+}
+
+// economy tier
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: economy\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const out = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const argv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (argv.includes('--model') && argv.includes('claude-haiku-4-5') && out.includes('spend_tier=economy')) {
+    pass('economy spend_tier resolves to claude-haiku-4-5');
+  } else {
+    fail(`economy spend_tier did not route to haiku: argv=${JSON.stringify(argv)}, out=${JSON.stringify(out.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (economy): ${e.message}`); }
+
+// premium tier
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: premium\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const premiumOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const premiumArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (premiumArgv.includes('--model') && premiumArgv.includes('claude-opus-4-8') && premiumOut.includes('spend_tier=premium')) {
+    pass('premium spend_tier resolves to claude-opus-4-8');
+  } else {
+    fail(`premium spend_tier did not route to opus: argv=${JSON.stringify(premiumArgv)}, out=${JSON.stringify(premiumOut.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (premium): ${e.message}`); }
+
+// --model override takes precedence over spend_tier
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: premium\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const overrideOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--model', 'claude-sonnet-4-6'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const overrideArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (overrideArgv.includes('--model') && overrideArgv.includes('claude-sonnet-4-6') && !overrideArgv.includes('claude-opus-4-8') && overrideOut.includes('explicit --model override')) {
+    pass('--model override takes precedence over spend_tier');
+  } else {
+    fail(`--model override did not win: argv=${JSON.stringify(overrideArgv)}, out=${JSON.stringify(overrideOut.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (--model override): ${e.message}`); }
+
+// missing spend_tier key defaults to standard
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('# no spend_tier key\nname: test\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const standardDefaultOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const standardDefaultArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (standardDefaultArgv.includes('--model') && standardDefaultArgv.includes('claude-sonnet-4-6') && standardDefaultOut.includes('spend_tier=standard')) {
+    pass('missing spend_tier key defaults to standard tier (claude-sonnet-4-6)');
+  } else {
+    fail(`missing spend_tier did not default to standard: argv=${JSON.stringify(standardDefaultArgv)}, out=${JSON.stringify(standardDefaultOut.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (missing key): ${e.message}`); }
+
+// invalid spend_tier value falls back to standard with a warning
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: turbo\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const invalidTierOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const invalidTierArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (invalidTierArgv.includes('--model') && invalidTierArgv.includes('claude-sonnet-4-6') && invalidTierOut.includes('spend_tier=standard')) {
+    pass('invalid spend_tier value falls back to standard tier (claude-sonnet-4-6)');
+  } else {
+    fail(`invalid spend_tier did not fall back to standard: argv=${JSON.stringify(invalidTierArgv)}, out=${JSON.stringify(invalidTierOut.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (invalid value): ${e.message}`); }
+
+// ── 14b. BATCH PRE-SCREEN DISCARD LOG ────────────────────────────
+
+console.log('\n14b. Batch pre-screen discard log (log_discard helper)');
+
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'co-batch-discard-'));
+  const batchDir = join(tmp, 'batch');
+  mkdirSync(batchDir, { recursive: true });
+
+  const runnerSrc = readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n');
+  if (!runnerSrc.includes('log_discard()')) {
+    fail('batch-runner.sh is missing the log_discard() helper required for the auditable discard log');
+  } else {
+    // Source only the function definitions (guard against `main "$@"` running)
+    // by stripping the trailing invocation line, then call log_discard directly.
+    const sourceable = runnerSrc.replace(/\nmain "\$@"\s*$/, '\n');
+    writeFileSync(join(batchDir, 'batch-runner.lib.sh'), sourceable);
+    const script = [
+      'set -euo pipefail',
+      `source "${toBashPath(join(batchDir, 'batch-runner.lib.sh'))}"`,
+      'log_discard "7" "https://example.com/mismatch" "wrong seniority band"',
+      `cat "${toBashPath(join(batchDir, 'logs', 'discard.log'))}"`,
+    ].join('\n');
+    const out = run(getBash(), ['-c', script], { cwd: tmp, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+    const line = out.trim().split('\n').pop() || '';
+    const cols = line.split('\t');
+
+    if (
+      cols.length === 4 &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(cols[0]) &&
+      cols[1] === '7' &&
+      cols[2] === 'https://example.com/mismatch' &&
+      cols[3] === 'wrong seniority band'
+    ) {
+      pass('log_discard appends a one-line, auditable {timestamp, id, url, reason} record to batch/logs/discard.log');
+    } else {
+      fail(`log_discard output malformed: ${JSON.stringify(out)}`);
+    }
+  }
+
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) {
+  fail(`Batch pre-screen discard log test crashed: ${e.message}`);
 }
 
 // ── 15. BATCH RUNNER MCP ISOLATION (#506) ───────────────────────
