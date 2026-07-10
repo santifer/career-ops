@@ -329,9 +329,10 @@ export function analyze({ trackerContent, logContent, benchmarks, states, todayS
   const velocity = computeVelocity(timelines, todayStr);
   // The one hop with a candidate-side day benchmark gets it attached, so the
   // renderer can show market context next to the own-median (same denominator:
-  // per-successful-process).
+  // per-successful-process). Gated on an existing median: with insufficientData
+  // the JSON output would otherwise leak a benchmark next to a null median.
   const io = benchmarks.days_interview_to_offer;
-  if (io && Array.isArray(io.range_days)) {
+  if (io && Array.isArray(io.range_days) && velocity.interviewToOffer.median !== null) {
     velocity.interviewToOffer.benchmark = {
       rangeDays: io.range_days,
       typicalDays: io.typical_days ?? null,
@@ -597,6 +598,9 @@ function selfTest() {
   const ioSummary = renderSummary(ioResult, TODAY);
   check(ioSummary.includes('vs 20–28d typical (2019, directional)'), 'io-benchmark: summary carries the benchmark with year + directional');
   check(!renderSummary(analyze({ trackerContent: waitTracker, logContent: '', benchmarks: bm, states, todayStr: TODAY }), TODAY).includes('20–28d typical'), 'io-benchmark: no benchmark context without a median (claims stay gated)');
+  // n=1 I→O hop → insufficientData, median null → benchmark must not leak into JSON output
+  const ioInsufficient = analyze({ trackerContent: waitTracker, logContent: LOG_FIXTURE, benchmarks: bm, states, todayStr: TODAY });
+  check(ioInsufficient.velocity.interviewToOffer.insufficientData === true && !('benchmark' in ioInsufficient.velocity.interviewToOffer), 'io-benchmark: not attached when median is null (JSON output stays gated)');
 
   // -- missing year in a user-override benchmark file must render n/a, not null --
   const bmNoYear = JSON.parse(JSON.stringify(bm));
