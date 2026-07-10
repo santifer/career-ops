@@ -6035,21 +6035,20 @@ try {
   // CLAUDE.md inherits this via its @AGENTS.md wrapper.
   const agentsMd = readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8');
   const claudeMd = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf-8');
+  const sourceBoundaryStart = agentsMd.indexOf('## Source-of-Truth Boundary');
+  const sourceBoundaryEnd = agentsMd.indexOf('Anything not in this list', sourceBoundaryStart);
+  const sourceBoundary = agentsMd.slice(sourceBoundaryStart, sourceBoundaryEnd);
   if (
     agentsMd.includes('modes/_custom.md') &&
     agentsMd.includes('modes/_custom.template.md') &&
+    sourceBoundary.includes('modes/_custom.md') &&
+    sourceBoundary.includes('procedural/style rules only') &&
+    sourceBoundary.includes('never introduces factual claims') &&
     claudeMd.trim().startsWith('@AGENTS.md')
   ) {
-    pass('AGENTS.md routes custom rules to modes/_custom.md + CLAUDE.md inherits via wrapper');
+    pass('AGENTS.md routes procedural custom rules without making them factual sources + CLAUDE.md inherits via wrapper');
   } else {
-    fail('AGENTS.md does not reference modes/_custom.md / its template, or CLAUDE.md does not inherit it (#1198)');
-  }
-
-  const agentsMd = readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8');
-  if (agentsMd.includes('modes/_custom.md') && agentsMd.includes('modes/_custom.template.md')) {
-    pass('AGENTS.md routes procedural customizations to modes/_custom.md');
-  } else {
-    fail('AGENTS.md does not document modes/_custom.md as a user-layer customization file (#1736)');
+    fail('AGENTS.md custom-rule source boundary or CLAUDE.md inheritance is incomplete (#1198, #1736)');
   }
 
   const noUserData = readFileSync(join(ROOT, '.github/workflows/no-user-data.yml'), 'utf-8');
