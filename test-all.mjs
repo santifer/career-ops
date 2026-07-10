@@ -126,6 +126,7 @@ const scripts = [
   { name: 'merge-tracker.mjs --dry-run', expectExit: 0 },
   { name: 'reconcile-pipeline.mjs --dry-run', expectExit: 0 },
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
+  { name: 'upskill.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
   { name: 'salary-gap.mjs --self-test', expectExit: 0 },
@@ -251,6 +252,32 @@ try {
     pass('Polish "Aplikuj" apply control marks a loaded posting active');
   } else {
     fail(`Polish apply control not recognized: ${activePolishPosting.result} (${activePolishPosting.code})`);
+  }
+
+  const redirectedOffPosting = classifyLiveness({
+    status: 200,
+    requestedUrl: 'https://jobs.careers.microsoft.com/professionals/us/en/job/1399802/Intune-Support-Engineer',
+    finalUrl: 'https://apply.careers.microsoft.com/careers?start=0&sort_by=timestamp',
+    bodyText: 'Search jobs. Partner Marketing Manager. Software Engineer II. Browse all open positions at Microsoft. '.repeat(6),
+    applyControls: ['Apply now', 'Apply now', 'Apply now'],
+  });
+  if (redirectedOffPosting.result === 'uncertain' && redirectedOffPosting.code === 'redirected_off_posting') {
+    pass('Dead permalink 301 to a generic listing is uncertain, not revived by other jobs\' Apply buttons');
+  } else {
+    fail(`Off-posting redirect misclassified as ${redirectedOffPosting.result} (${redirectedOffPosting.code})`);
+  }
+
+  const redirectKeepingJobId = classifyLiveness({
+    status: 200,
+    requestedUrl: 'https://boards.greenhouse.io/acme/jobs/4567890',
+    finalUrl: 'https://job-boards.greenhouse.io/acme/jobs/4567890',
+    bodyText: 'Senior AI Engineer. Own delivery across evaluation, deployment, and reliability at Acme. '.repeat(6),
+    applyControls: ['Apply for this Job'],
+  });
+  if (redirectKeepingJobId.result === 'active') {
+    pass('Redirect that keeps the job id (board migration) still classifies active');
+  } else {
+    fail(`Same-job redirect misclassified as ${redirectKeepingJobId.result} (${redirectKeepingJobId.code})`);
   }
 
   // Liveness API rung (liveness-api.mjs) — the zero-token ATS first rung. We test the
@@ -1369,6 +1396,96 @@ if (
   fail('offer-prep missing from data contract / gitignore / SYSTEM_PATHS');
 }
 
+if (
+  ofertaMode.includes('Company type classification (required)') &&
+  ofertaMode.includes('Growth-stage startup / VC-backed startup') &&
+  ofertaMode.includes('Early-stage startup / pre-revenue startup') &&
+  ofertaMode.includes('Open-source community / education community') &&
+  ofertaMode.includes('actual contract / hiring entity') &&
+  ofertaMode.includes('default compensation reliability to the conservative canonical tier: `Low`') &&
+  ofertaMode.includes('Compensation reliability (required)') &&
+  ofertaMode.includes('If no advertised number exists, collapse this section to exactly two concise lines') &&
+  ofertaMode.includes('skip component split, detailed market rows, and HR verification questions') &&
+  ofertaMode.includes('Advertised range') &&
+  ofertaMode.includes('Likely guaranteed base') &&
+  ofertaMode.includes('Variable / conditional cash components') &&
+  ofertaMode.includes('Expected stable cash') &&
+  ofertaMode.includes('Non-cash benefits') &&
+  ofertaMode.includes('Required HR verification questions when a salary figure exists') &&
+  ofertaMode.includes('Do not present advertised compensation as real take-home pay')
+) {
+  pass('oferta requires company-type-driven compensation reliability checks');
+} else {
+  fail('oferta missing durable company-type compensation reliability instructions');
+}
+
+if (
+  shared.includes('## Company Type and Compensation Reliability') &&
+  shared.includes('Company type taxonomy') &&
+  shared.includes('Growth-stage startup / VC-backed startup') &&
+  shared.includes('Early-stage startup / pre-revenue startup') &&
+  shared.includes('Open-source community / education community') &&
+  shared.includes('actual contract / hiring entity') &&
+  shared.includes('default compensation reliability to the conservative canonical tier: `Low`') &&
+  shared.includes('Compensation reliability tiers') &&
+  shared.includes('collapse compensation analysis to two concise lines: company type and reliability tier') &&
+  shared.includes('advertised range, likely guaranteed base, variable / conditional cash components, expected stable cash, and non-cash benefits') &&
+  shared.includes('Never present advertised compensation as real take-home pay')
+) {
+  pass('_shared.md defines the canonical company-type compensation reliability framework');
+} else {
+  fail('_shared.md missing canonical company-type compensation reliability framework');
+}
+
+const zhShared = readFile('modes/zh/_shared.md');
+const zhOferta = readFile('modes/zh/oferta.md');
+if (
+  zhShared.includes('## 公司类型与薪资可信度') &&
+  zhShared.includes('成长期创业公司 / 已融资创业公司') &&
+  zhShared.includes('早期初创企业 / 未盈利创业公司') &&
+  zhShared.includes('开源社区 / 教育社区') &&
+  zhShared.includes('实际合同主体 / 用工主体') &&
+  zhShared.includes('薪资可信度默认使用保守的正式等级：`低`') &&
+  zhShared.includes('薪资分析压缩为两行：公司类型和薪资可信度') &&
+  zhShared.includes('浮动 / 条件性现金组成') &&
+  zhOferta.includes('公司类型分类（必填）') &&
+  zhOferta.includes('薪资可信度（必填）') &&
+  zhOferta.includes('没有任何公开薪资数字，也没有“综合薪资”“底薪+提成”“含绩效”“含全勤”“最高可达”等模糊补偿表述') &&
+  zhOferta.includes('JD 未提供薪资 / 补偿信息；跳过薪资组成拆分、详细市场数据表和 HR 核验问题') &&
+  zhOferta.includes('出现“综合薪资”“底薪+提成”“含绩效”“含全勤”“最高可达”“上不封顶”等模糊补偿表述时，进入完整薪资可信度路径') &&
+  zhOferta.includes('公开薪资区间') &&
+  zhOferta.includes('可能的合同固定 base') &&
+  zhOferta.includes('浮动 / 条件性现金组成') &&
+  zhOferta.includes('非现金福利') &&
+  zhOferta.includes('当 JD 明确写出薪资数字，或出现模糊补偿表述时，必须给出 3-6 个 HR 核验问题') &&
+  zhOferta.includes('不要把招聘广告薪资当作真实到手')
+) {
+  pass('Chinese modes include company-type compensation reliability checks');
+} else {
+  fail('Chinese modes missing company-type compensation reliability checks');
+}
+
+const batchPromptDoc = readFile('batch/batch-prompt.md');
+if (
+  batchPromptDoc.includes('Company type classification (required)') &&
+  batchPromptDoc.includes('actual contract / hiring entity') &&
+  batchPromptDoc.includes('default compensation reliability to the conservative canonical tier: `Low`') &&
+  batchPromptDoc.includes('Compensation reliability (required)') &&
+  batchPromptDoc.includes('If no advertised number exists, collapse this section to exactly two concise lines') &&
+  batchPromptDoc.includes('skip component split, detailed market rows, and HR verification questions') &&
+  batchPromptDoc.includes('Advertised range') &&
+  batchPromptDoc.includes('Likely guaranteed base') &&
+  batchPromptDoc.includes('Variable / conditional cash components') &&
+  batchPromptDoc.includes('Expected stable cash') &&
+  batchPromptDoc.includes('Non-cash benefits') &&
+  batchPromptDoc.includes('When a salary figure exists, include 3-6 HR verification questions') &&
+  batchPromptDoc.includes('Do not present advertised compensation as real take-home pay')
+) {
+  pass('batch workers inherit company-type compensation reliability checks');
+} else {
+  fail('batch prompt missing company-type compensation reliability checks');
+}
+
 const pipelineMode = readFile('modes/pipeline.md');
 if (
   pipelineMode.includes('## Liveness sweep') &&
@@ -1385,8 +1502,6 @@ if (
 // --- salary tracking mode wiring (#1656 PR-2) ---
 const trackerModeDoc = readFile('modes/tracker.md');
 const patternsModeDoc = readFile('modes/patterns.md');
-const batchPromptDoc = readFile('batch/batch-prompt.md');
-
 if (
   ofertaMode.includes('Advertised (JD)') &&
   ofertaMode.includes('salary-observations.tsv') &&
@@ -1558,6 +1673,17 @@ if (
   pass('scan.md skips expensive levels after successful local parser');
 } else {
   fail('scan.md missing local_parser_ok skip rules for agent scan');
+}
+
+// Guard against scan.md's manual-parse conventions drifting from what providers/*.mjs
+// emit and scan.mjs's filters consume (location/salary/description). We assert the two
+// most specific, consumed-field tokens: Ashby `secondaryLocations` (location_filter) and
+// Lever `descriptionPlain` (content_filter + #1597 cross-listing dedup). Raw API
+// identifiers → language-neutral, low-brittleness.
+if (scanMode.includes('secondaryLocations') && scanMode.includes('descriptionPlain')) {
+  pass('scan.md parse conventions document consumed provider fields (ashby secondaryLocations, lever descriptionPlain)');
+} else {
+  fail('scan.md parse conventions drifted from providers/*.mjs — missing secondaryLocations (ashby) or descriptionPlain (lever) that scan.mjs filters consume');
 }
 
 if (!fileExists('scripts/parsers/cohere_jobs.py')) {
@@ -2352,8 +2478,8 @@ console.log('\n12a. Skill entrypoint materialization');
     writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
     writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
 
-    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-    const materialized = updater.materializeSkillEntrypoints(fixtureRoot).sort();
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const materialized = skills.materializeSkillEntrypoints(fixtureRoot).sort();
     const expected = [
       '.claude/skills/career-ops/SKILL.md',
       '.opencode/skills/career-ops/SKILL.md',
@@ -2451,14 +2577,44 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
       fail(`relativeImportSpecifiers mismatch: got ${JSON.stringify(specs)}`);
     }
 
+    // #1706: update-system.mjs must be SELF-LOADING — no static (top-level)
+    // relative imports. A pre-#1245 client's apply() self-reexec checks out
+    // ONLY update-system.mjs before re-execing it, so a static top-level
+    // relative import crashes that re-exec with ERR_MODULE_NOT_FOUND on the
+    // old→new jump. Relative modules must be pulled in lazily instead. Matched
+    // line-anchored (not via relativeImportSpecifiers, whose loose regex also
+    // matches such specifiers inside prose/comments) so only real top-level
+    // import/export statements count.
     const liveSource = readFileSync(join(ROOT, 'update-system.mjs'), 'utf-8');
-    if (updater.relativeImportSpecifiers(liveSource).includes('./scaffolder/bin/skill-entrypoints.mjs')) {
-      pass('relativeImportSpecifiers picks up the live skill-entrypoints import (#1245)');
+    const staticRelativeImport = /^\s*(?:import|export)\b[^\n]*?\bfrom\s*['"]\.[^'"]*['"]|^\s*import\s*['"]\.[^'"]*['"]/m;
+    if (!staticRelativeImport.test(liveSource)) {
+      pass('update-system.mjs has no static relative imports — self-loading (#1706)');
     } else {
-      fail('relativeImportSpecifiers missed the live skill-entrypoints import');
+      fail('update-system.mjs has a static relative import that breaks old→new re-exec (#1706)');
     }
   } catch (e) {
     fail(`relativeImportSpecifiers test crashed: ${e.message}`);
+  }
+}
+
+{
+  // #1706 end-to-end regression: reproduce the old→new re-exec by checking out
+  // ONLY update-system.mjs into an otherwise-empty dir (no scaffolder/) and
+  // importing it. Before the lazy-import fix this threw ERR_MODULE_NOT_FOUND at
+  // module load; it must now load standalone.
+  const isolatedRoot = mkdtempSync(join(tmpdir(), 'career-ops-updater-standalone-'));
+  try {
+    const updaterSource = readFileSync(join(ROOT, 'update-system.mjs'), 'utf-8');
+    const isolatedUpdater = join(isolatedRoot, 'update-system.mjs');
+    writeFileSync(isolatedUpdater, updaterSource);
+    try {
+      await import(pathToFileURL(isolatedUpdater).href);
+      pass('update-system.mjs imports standalone without scaffolder/ present (#1706)');
+    } catch (err) {
+      fail(`update-system.mjs failed to import standalone (old→new re-exec crash, #1706): ${err.code || err.message}`);
+    }
+  } finally {
+    rmSync(isolatedRoot, { recursive: true, force: true });
   }
 }
 
@@ -2474,8 +2630,8 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
     mkdirSync(join(canonicalDir, 'SKILL.md'));
     writeFileSync(join(claudeDir, 'SKILL.md'), pointer);
 
-    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const materialized = skills.materializeSkillEntrypoints(fixtureRoot);
     const claudeSkill = readFileSync(join(claudeDir, 'SKILL.md'), 'utf-8');
     if (materialized.length === 0 && claudeSkill === pointer) {
       pass('update-system skips skill materialization when canonical entrypoint is unreadable');
@@ -2505,8 +2661,8 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
     mkdirSync(join(claudeDir, 'SKILL.md'));
     writeFileSync(join(opencodeDir, 'SKILL.md'), pointer);
 
-    const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const materialized = skills.materializeSkillEntrypoints(fixtureRoot);
     const opencodeSkill = readFileSync(join(opencodeDir, 'SKILL.md'), 'utf-8');
     if (JSON.stringify(materialized) === JSON.stringify(['.opencode/skills/career-ops/SKILL.md']) && opencodeSkill === fixtureSkill) {
       pass('update-system skips non-file skill entrypoints while materializing valid pointers');
@@ -2562,7 +2718,8 @@ console.log('\n12c. Materialized skill index mode');
     gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.opencode/skills/career-ops/SKILL.md`]);
 
     const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-    const materialized = updater.materializeSkillEntrypoints(fixtureRoot);
+    const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
+    const materialized = skills.materializeSkillEntrypoints(fixtureRoot);
     updater.prepareMaterializedSkillEntrypointsForStage(materialized, fixtureRoot);
     gitRun(['add', '--', '.claude/skills/', '.opencode/skills/']);
 
@@ -3711,6 +3868,75 @@ try {
   fail(`verify-pipeline report checks crashed: ${e.message}`);
 }
 
+// ── VERIFY-PIPELINE DUPLICATE TRACKER NUMBER (#1704) ────────────
+// A tracker # must be a unique row id. Two rows sharing a # is never
+// legitimate (unlike Check 2's company+role dedup, which can false-positive
+// on a genuine re-application) — verify-pipeline must flag it as an error.
+console.log('\n🧪 Testing verify-pipeline duplicate tracker # check (#1704)...');
+try {
+  const dupNumTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-dupnum-'));
+  try {
+    const dupNumTracker = join(dupNumTmp, 'applications.md');
+    const dupNumEnv = { ...process.env, CAREER_OPS_TRACKER: dupNumTracker };
+
+    writeFileSync(dupNumTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 698 | 2026-05-29 | University of Alberta | Curriculum Coordinator | 3.8/5 | Evaluated | ❌ | — | — |\n' +
+      '| 698 | 2026-06-03 | Esri Canada | Manager Talent and Organizational Development | 4.1/5 | Evaluated | ❌ | — | — |\n' +
+      '| 700 | 2026-06-10 | Shopify | Staff Engineer | 4.5/5 | Evaluated | ❌ | — | — |\n');
+
+    let dupNumOut;
+    try {
+      dupNumOut = execFileSync(NODE, ['verify-pipeline.mjs'], { cwd: ROOT, env: dupNumEnv, encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] });
+      fail('verify-pipeline should exit non-zero on a duplicate tracker number');
+    } catch (e) {
+      dupNumOut = (e.stdout || '').toString();
+      if (e.status === 1) {
+        pass('verify-pipeline exits 1 on a duplicate tracker number');
+      } else {
+        fail(`verify-pipeline: expected exit 1, got ${e.status}`);
+      }
+    }
+    if (dupNumOut.includes('Duplicate tracker number #698')
+        && dupNumOut.includes('University of Alberta') && dupNumOut.includes('Esri Canada')) {
+      pass('duplicate tracker number #698 flagged with both colliding rows named');
+    } else {
+      fail(`duplicate tracker number not flagged with both rows\n${dupNumOut}`);
+    }
+    if (/Duplicate tracker number #700/.test(dupNumOut)) {
+      fail('unique #700 row falsely flagged as a duplicate tracker number');
+    } else {
+      pass('unique tracker number not falsely flagged');
+    }
+  } finally {
+    rmSync(dupNumTmp, { recursive: true, force: true });
+  }
+
+  // Clean fixture: no duplicate numbers — must pass green.
+  const cleanTmp = mkdtempSync(join(tmpdir(), 'career-ops-verify-dupnum-clean-'));
+  try {
+    const cleanTracker = join(cleanTmp, 'applications.md');
+    writeFileSync(cleanTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-01-01 | Acme | Engineer | 4.0/5 | Evaluated | ❌ | — | — |\n' +
+      '| 2 | 2026-01-02 | Globex | Analyst | 3.9/5 | Evaluated | ❌ | — | — |\n');
+    const cleanOut = run(NODE, ['verify-pipeline.mjs'], { env: { ...process.env, CAREER_OPS_TRACKER: cleanTracker }, stdio: ['pipe', 'pipe', 'pipe'] });
+    if (cleanOut !== null && cleanOut.includes('No duplicate tracker numbers')) {
+      pass('clean tracker with unique numbers passes the duplicate-number check');
+    } else {
+      fail('clean fixture did not pass the duplicate tracker number check');
+    }
+  } finally {
+    rmSync(cleanTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`verify-pipeline duplicate tracker number test crashed: ${e.message}`);
+}
+
 // ── SHARED ROLE MATCHER + DEDUP-TRACKER SAFETY (#947) ───────────
 // dedup-tracker.mjs used to ship an older fuzzy role matcher than
 // merge-tracker.mjs. That weaker matcher collapsed sibling roles at the same
@@ -4334,6 +4560,83 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker report-number collision test crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER STALE-NUMBER COLLISION WITH AN EXISTING ROW (#1704) ────
+// Different from the #912 test above: that one is a same-run collision where
+// the incoming TSV's num equals an EXISTING row's num (addition.num <= maxNum,
+// already handled by the old ++maxNum fallback). This one exercises the actual
+// #1704 gap: an existing row's number is invisible to the plain maxNum scan
+// (merge-tracker's own header/separator-skip heuristic excludes any row whose
+// company/role text happens to contain "Empresa" or "---" — a real Spanish-
+// market company name is a realistic trigger), so the naive
+// `addition.num > maxNum` check trusted a colliding number as free. The fix
+// builds a Set of every number actually on the tracker (independent of that
+// heuristic) and refuses to trust a number already in it.
+console.log('\n🧪 Testing merge-tracker stale-number collision with a hidden existing row (#1704)...');
+try {
+  const staleNumTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-1704-'));
+  try {
+    mkdirSync(join(staleNumTmp, 'data'));
+    const staleNumAdditions = join(staleNumTmp, 'additions');
+    mkdirSync(staleNumAdditions);
+
+    const staleNumTracker = join(staleNumTmp, 'data', 'applications.md');
+    // Row #9's company text contains "Empresa" — merge-tracker's existingApps
+    // loop skips this line entirely (the same heuristic it uses to skip the
+    // Spanish-locale header row), so its number is NOT counted toward the old
+    // plain maxNum scan.
+    writeFileSync(staleNumTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 9 | 2026-01-02 | Empresa Digital SA | Analyst | 3.5/5 | Evaluated | ❌ | — | original |\n');
+
+    // Stale TSV for an unrelated company also embeds num=9 — numerically
+    // "ahead" of the naive maxNum(0) computed from the hidden row, but already
+    // used.
+    writeFileSync(join(staleNumAdditions, '001-newco.tsv'),
+      '9\t2026-01-10\tNewCo\tFresh Role\tEvaluated\t2.9/5\t❌\t—\tstale number\n');
+
+    const staleNumResult = run(NODE, ['merge-tracker.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: staleNumTracker, CAREER_OPS_ADDITIONS: staleNumAdditions },
+    });
+    if (staleNumResult === null) {
+      fail('merge-tracker crashed during stale-number collision test (#1704)');
+    } else {
+      const staleNumMerged = readFileSync(staleNumTracker, 'utf-8');
+      const staleNumRows = staleNumMerged.split('\n').filter(l => l.startsWith('| ') && !l.startsWith('| #') && !l.startsWith('|---'));
+
+      if (staleNumRows.length === 2) {
+        pass('stale-number collision (#1704): merged tracker has exactly 2 rows');
+      } else {
+        fail(`stale-number collision (#1704): expected 2 rows, got ${staleNumRows.length}`);
+      }
+
+      const numsUsed = staleNumRows.map(r => parseInt(r.split('|')[1].trim(), 10));
+      if (new Set(numsUsed).size === numsUsed.length) {
+        pass('stale-number collision (#1704): no two rows share a tracker number');
+      } else {
+        fail(`stale-number collision (#1704): duplicate tracker number produced — ${numsUsed.join(', ')}`);
+      }
+
+      if (staleNumRows.some(r => r.includes('Empresa Digital SA') && /^\| 9 \|/.test(r))) {
+        pass('stale-number collision (#1704): hidden existing row #9 (Empresa Digital SA) untouched');
+      } else {
+        fail(`stale-number collision (#1704): existing #9 row was overwritten\n${staleNumMerged}`);
+      }
+
+      if (staleNumRows.some(r => r.includes('NewCo') && !/^\| 9 \|/.test(r))) {
+        pass('stale-number collision (#1704): NewCo bumped to a truly free number instead of reusing #9');
+      } else {
+        fail(`stale-number collision (#1704): NewCo was not bumped off the colliding number\n${staleNumMerged}`);
+      }
+    }
+  } finally {
+    rmSync(staleNumTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker stale-number collision test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER REQ/JOB-NUMBER DEDUP GUARD (#1524) ─────────────────────
@@ -4971,6 +5274,171 @@ try {
   try { rmSync(tmp, { recursive: true, force: true }); } catch {}
 } catch (e) {
   fail(`Batch rate-limit pause test crashed: ${e.message}`);
+}
+
+// ── 14. BATCH SPEND TIER MODEL ROUTING ───────────────────────────
+
+console.log('\n14. Batch spend_tier model routing');
+
+// Helper: create a fully isolated tmp fixture for one spend_tier sub-test.
+// Each sub-test gets its own mkdtempSync so no batch-state.tsv from a prior
+// sub-test can bleed in, regardless of OS-level I/O ordering on CI runners.
+function makeTierFixture(profileYml) {
+  const tmp = mkdtempSync(join(tmpdir(), 'co-batch-tier-'));
+  const batchDir = join(tmp, 'batch');
+  const fakeBin = join(tmp, 'bin');
+  const configDir = join(tmp, 'config');
+  mkdirSync(batchDir, { recursive: true });
+  mkdirSync(configDir, { recursive: true });
+  mkdirSync(join(tmp, 'reports'), { recursive: true });
+  mkdirSync(join(tmp, 'data'), { recursive: true });
+  mkdirSync(fakeBin, { recursive: true });
+
+  writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
+  if (process.platform === 'win32') {
+    try { execFileSync(getBash(), ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
+  } else {
+    execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
+  }
+  writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
+  writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
+  writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
+  writeFileSync(join(batchDir, 'batch-input.tsv'), [
+    'id\turl\tsource\tnotes',
+    '1\thttps://example.com/one\tfixture\t-',
+  ].join('\n') + '\n');
+  writeFileSync(join(configDir, 'profile.yml'), profileYml);
+  writeFileSync(join(fakeBin, 'claude'), [
+    '#!/usr/bin/env bash',
+    'printf "%s\\n" "$@" > "$BATCH_ARG_FILE"',
+    'exit 0',
+  ].join('\n') + '\n');
+  if (process.platform === 'win32') {
+    try { execFileSync(getBash(), ['-c', 'chmod +x bin/claude'], { cwd: tmp }); } catch {}
+  } else {
+    execFileSync('chmod', ['+x', join(fakeBin, 'claude')]);
+  }
+  return { tmp, batchDir, fakeBin };
+}
+
+// economy tier
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: economy\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const out = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const argv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (argv.includes('--model') && argv.includes('claude-haiku-4-5') && out.includes('spend_tier=economy')) {
+    pass('economy spend_tier resolves to claude-haiku-4-5');
+  } else {
+    fail(`economy spend_tier did not route to haiku: argv=${JSON.stringify(argv)}, out=${JSON.stringify(out.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (economy): ${e.message}`); }
+
+// premium tier
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: premium\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const premiumOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const premiumArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (premiumArgv.includes('--model') && premiumArgv.includes('claude-opus-4-8') && premiumOut.includes('spend_tier=premium')) {
+    pass('premium spend_tier resolves to claude-opus-4-8');
+  } else {
+    fail(`premium spend_tier did not route to opus: argv=${JSON.stringify(premiumArgv)}, out=${JSON.stringify(premiumOut.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (premium): ${e.message}`); }
+
+// --model override takes precedence over spend_tier
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: premium\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const overrideOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--model', 'claude-sonnet-4-6'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const overrideArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (overrideArgv.includes('--model') && overrideArgv.includes('claude-sonnet-4-6') && !overrideArgv.includes('claude-opus-4-8') && overrideOut.includes('explicit --model override')) {
+    pass('--model override takes precedence over spend_tier');
+  } else {
+    fail(`--model override did not win: argv=${JSON.stringify(overrideArgv)}, out=${JSON.stringify(overrideOut.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (--model override): ${e.message}`); }
+
+// missing spend_tier key defaults to standard
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('# no spend_tier key\nname: test\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const standardDefaultOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const standardDefaultArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (standardDefaultArgv.includes('--model') && standardDefaultArgv.includes('claude-sonnet-4-6') && standardDefaultOut.includes('spend_tier=standard')) {
+    pass('missing spend_tier key defaults to standard tier (claude-sonnet-4-6)');
+  } else {
+    fail(`missing spend_tier did not default to standard: argv=${JSON.stringify(standardDefaultArgv)}, out=${JSON.stringify(standardDefaultOut.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (missing key): ${e.message}`); }
+
+// invalid spend_tier value falls back to standard with a warning
+try {
+  const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: turbo\n');
+  const argFile = join(tmp, 'claude-argv.txt');
+  const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
+  const invalidTierOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const invalidTierArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
+  if (invalidTierArgv.includes('--model') && invalidTierArgv.includes('claude-sonnet-4-6') && invalidTierOut.includes('spend_tier=standard')) {
+    pass('invalid spend_tier value falls back to standard tier (claude-sonnet-4-6)');
+  } else {
+    fail(`invalid spend_tier did not fall back to standard: argv=${JSON.stringify(invalidTierArgv)}, out=${JSON.stringify(invalidTierOut.slice(-240))}`);
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) { fail(`Batch spend_tier routing test crashed (invalid value): ${e.message}`); }
+
+// ── 14b. BATCH PRE-SCREEN DISCARD LOG ────────────────────────────
+
+console.log('\n14b. Batch pre-screen discard log (log_discard helper)');
+
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'co-batch-discard-'));
+  const batchDir = join(tmp, 'batch');
+  mkdirSync(batchDir, { recursive: true });
+
+  const runnerSrc = readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n');
+  if (!runnerSrc.includes('log_discard()')) {
+    fail('batch-runner.sh is missing the log_discard() helper required for the auditable discard log');
+  } else {
+    // Source only the function definitions (guard against `main "$@"` running)
+    // by stripping the trailing invocation line, then call log_discard directly.
+    const sourceable = runnerSrc.replace(/\nmain "\$@"\s*$/, '\n');
+    writeFileSync(join(batchDir, 'batch-runner.lib.sh'), sourceable);
+    const script = [
+      'set -euo pipefail',
+      `source "${toBashPath(join(batchDir, 'batch-runner.lib.sh'))}"`,
+      'log_discard "7" "https://example.com/mismatch" "wrong seniority band"',
+      `cat "${toBashPath(join(batchDir, 'logs', 'discard.log'))}"`,
+    ].join('\n');
+    const out = run(getBash(), ['-c', script], { cwd: tmp, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+    const line = out.trim().split('\n').pop() || '';
+    const cols = line.split('\t');
+
+    if (
+      cols.length === 4 &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(cols[0]) &&
+      cols[1] === '7' &&
+      cols[2] === 'https://example.com/mismatch' &&
+      cols[3] === 'wrong seniority band'
+    ) {
+      pass('log_discard appends a one-line, auditable {timestamp, id, url, reason} record to batch/logs/discard.log');
+    } else {
+      fail(`log_discard output malformed: ${JSON.stringify(out)}`);
+    }
+  }
+
+  try { rmSync(tmp, { recursive: true, force: true }); } catch {}
+} catch (e) {
+  fail(`Batch pre-screen discard log test crashed: ${e.message}`);
 }
 
 // ── 15. BATCH RUNNER MCP ISOLATION (#506) ───────────────────────

@@ -477,6 +477,29 @@ for (const line of appLines) {
   }
 }
 
+// Full set of numbers already on the tracker (#1704). This is a separate,
+// deliberately narrower pass than the existingApps loop above: it reads only
+// the numeric # cell and skips a row via the same NaN check verify-pipeline.mjs
+// uses, instead of the `.includes('---') / .includes('Empresa')` heuristic —
+// so a company or role field that happens to CONTAIN "Empresa" or "---" (e.g.
+// a Spanish-market company name, or an em-dash-style separator in a title)
+// can't hide that row's number the way it can hide the row from existingApps
+// (which stays as-is; it drives duplicate detection, not numbering). Used
+// below so a new entry's number is checked against every number actually on
+// the tracker, not just the largest one the existingApps loop happened to see.
+const usedNumbers = new Set();
+const MAX_COL_IDX = Math.max(...Object.values(COLMAP));
+for (const line of appLines) {
+  if (!line.startsWith('|')) continue;
+  const parts = line.split('|').map(s => s.trim());
+  if (parts.length <= MAX_COL_IDX) continue;
+  const n = parseInt(parts[COLMAP.num]);
+  if (!isNaN(n) && n !== 0) {
+    usedNumbers.add(n);
+    if (n > maxNum) maxNum = n;
+  }
+}
+
 console.log(`📊 Existing: ${existingApps.length} entries, max #${maxNum}`);
 
 // Read tracker additions
@@ -610,9 +633,24 @@ for (const file of tsvFiles) {
       skipped++;
     }
   } else {
-    // New entry — use the number from the TSV
-    const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
-    if (addition.num > maxNum) maxNum = addition.num;
+    // New entry — trust the TSV's own number only when it is BOTH ahead of
+    // this run's max AND not already claimed by any row on the tracker.
+    // `addition.num > maxNum` alone is not proof the number is free: a stale,
+    // precomputed number (e.g. carried by a batch worker's TSV that sat
+    // unmerged while other unrelated evaluations were merged in the
+    // meantime) can still collide with a row already on the tracker even
+    // though it's numerically ahead of a naive maxNum snapshot (#1704).
+    // usedNumbers already includes every number this run has assigned so
+    // far (added below), so same-run collisions are covered too.
+    let entryNum;
+    if (addition.num > maxNum && !usedNumbers.has(addition.num)) {
+      entryNum = addition.num;
+    } else {
+      entryNum = maxNum + 1;
+      while (usedNumbers.has(entryNum)) entryNum++;
+    }
+    usedNumbers.add(entryNum);
+    if (entryNum > maxNum) maxNum = entryNum;
 
     const newLine = buildRow({
       num: entryNum, date: addition.date, company: addition.company, role: addition.role,

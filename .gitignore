@@ -17,6 +17,7 @@ data/cache/ats-companies/
 # Received offers/contracts, promise notes, prep reports (PII — never commit)
 data/offers/*
 !data/offers/.gitkeep
+data/upskill/
 reports/*.md
 !reports/.gitkeep
 output/*
@@ -107,3 +108,6 @@ package-lock.json
 
 # Planning (local scratchpad)
 plan/
+
+# Web
+.career-ops-web/logo-cache/
