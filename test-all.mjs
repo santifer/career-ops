@@ -1316,12 +1316,12 @@ if (
 const claudeMdDoc = readFile('CLAUDE.md');
 const agentsMdDoc = readFile('AGENTS.md');
 if (
-  claudeMdDoc.includes('`offer-prep`') &&
+  /^@(?:\.\/)?AGENTS\.md/m.test(claudeMdDoc) &&
   agentsMdDoc.includes('`offer-prep`')
 ) {
-  pass('CLAUDE.md and AGENTS.md document the offer-prep mode');
+  pass('AGENTS.md documents offer-prep and CLAUDE.md imports it');
 } else {
-  fail('agent docs missing offer-prep mode row');
+  fail('AGENTS.md missing offer-prep mode row or CLAUDE.md is not importing AGENTS.md');
 }
 
 const dataContractDoc = readFile('DATA_CONTRACT.md');
@@ -2405,6 +2405,35 @@ if (
   fail('docs/CODEX.md is missing required content');
 }
 
+const claudeWrapperLines = readFile('CLAUDE.md').trim().split(/\r?\n/);
+const claudeWrapperBody = claudeWrapperLines.slice(1).filter(line => line.trim());
+if (
+  claudeWrapperLines[0] === '@AGENTS.md' &&
+  claudeWrapperBody.length <= 1 &&
+  claudeWrapperBody.every(line => { const t = line.trim(); return t.startsWith('<!--') && t.endsWith('-->'); })
+) {
+  pass('CLAUDE.md is a thin AGENTS.md wrapper (#1088)');
+} else {
+  fail('CLAUDE.md must contain only @AGENTS.md plus an optional Claude-only placeholder comment (#1088)');
+}
+
+const criticalRoutingContracts = [
+  ['paste-a-JD auto-pipeline', /Pastes JD or URL\s*\|\s*auto-pipeline/],
+  ['PDF mode', /generate CV\/PDF\s*\|\s*`pdf`/i],
+  ['language modes_dir override', /language\.modes_dir:\s*modes\/(?:\{lang\}|de)/],
+  ['doctor --json onboarding', /node doctor\.mjs --json/],
+];
+for (const [name, marker] of criticalRoutingContracts) {
+  if (marker.test(agents)) pass(`AGENTS.md preserves ${name} routing for Claude`);
+  else fail(`AGENTS.md is missing ${name} routing required by the Claude wrapper`);
+}
+const claudeSkillEntrypoint = readFile('.claude/skills/career-ops/SKILL.md');
+if (/\.agents\/skills\/career-ops\/SKILL\.md/.test(claudeSkillEntrypoint) || claudeSkillEntrypoint === readFile('.agents/skills/career-ops/SKILL.md')) {
+  pass('Claude skill invocation resolves to the canonical career-ops router');
+} else {
+  fail('Claude skill invocation does not resolve to the canonical career-ops router');
+}
+
 // ── 12. SKILL SYMLINK INTEGRITY ─────────────────────────────
 
 console.log('\n12. Skill symlink integrity');
@@ -2917,10 +2946,40 @@ try {
   const {
     buildLocationFilter,
     buildContentFilter,
+    buildPostingAgeFilter,
     shouldDedupScanHistoryRow,
     formatPipelineOffer,
     formatScanHistoryRow,
   } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // ── posting-age filter (max_posting_age_days) ──
+  // Opt-in freshness gate. `now` is injected so the boundary math is deterministic.
+  const NOW = Date.parse('2026-07-09T00:00:00Z');
+  const DAY = 24 * 60 * 60 * 1000;
+  const ageFilter = buildPostingAgeFilter(45, NOW);
+  if (
+    ageFilter(NOW - 10 * DAY) === true && // fresh → pass
+    ageFilter(NOW - 60 * DAY) === false && // older than 45d → skip
+    ageFilter(NOW - 45 * DAY) === true && // exactly at the cutoff → kept (>=)
+    ageFilter(undefined) === true && // no provider date → pass (don't penalize missing data)
+    ageFilter(Number.NaN) === true && // malformed date → pass
+    ageFilter('2026-01-01') === true // non-number → pass
+  ) {
+    pass('posting-age filter skips only dated offers older than N days; missing/invalid dates pass');
+  } else {
+    fail('posting-age filter did not gate on age / missing-date correctly');
+  }
+  // Absent or non-positive config → pass-all (opt-in, disabled by default).
+  if (
+    buildPostingAgeFilter(undefined, NOW)(NOW - 9999 * DAY) === true &&
+    buildPostingAgeFilter(0, NOW)(NOW - 9999 * DAY) === true &&
+    buildPostingAgeFilter(-5, NOW)(NOW - 9999 * DAY) === true &&
+    buildPostingAgeFilter(3.5, NOW)(NOW - 9999 * DAY) === true // non-integer → disabled
+  ) {
+    pass('posting-age filter is opt-in: absent / 0 / negative / non-integer config disables it');
+  } else {
+    fail('posting-age filter should be a pass-all no-op when unconfigured or misconfigured');
+  }
 
   const filter = buildLocationFilter({
     always_allow: ['belgium', 'brussels'],
@@ -5015,16 +5074,18 @@ try {
 
   const claudeDoc = readFile('CLAUDE.md');
   const agentsDoc = readFile('AGENTS.md');
+  const claudeWrapperLines = claudeDoc.trim().split(/\r?\n/).filter(Boolean);
   if (
-    /node\s+doctor\.mjs\s+--json/.test(claudeDoc) &&
-    /"warnings"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
-    /"autoCopied"\s*:\s*\[\.\.\.\]/.test(claudeDoc) &&
+    /node\s+doctor\.mjs\s+--json/.test(agentsDoc) &&
+    /"warnings"\s*:\s*\[\.\.\.\]/.test(agentsDoc) &&
     /"autoCopied"\s*:\s*\[\.\.\.\]/.test(agentsDoc) &&
+    claudeWrapperLines[0] === '@AGENTS.md' &&
+    claudeWrapperLines.length <= 8 &&
     !/Does\s+`cv\.md`\s+exist\?/i.test(claudeDoc)
   ) {
-    pass('CLAUDE.md and AGENTS.md delegate onboarding state and autoCopied to doctor --json');
+    pass('AGENTS.md delegates onboarding state and autoCopied to doctor --json; CLAUDE.md stays thin');
   } else {
-    fail('CLAUDE.md or AGENTS.md still duplicates onboarding prerequisite checks or misses autoCopied doc');
+    fail('AGENTS.md misses onboarding state docs or CLAUDE.md is not a thin wrapper');
   }
 } catch (e) {
   fail(`Cold-start trigger test crashed: ${e.message}`);
@@ -6014,12 +6075,18 @@ try {
     fail('modes/_custom.template.md is NOT in SYSTEM_PATHS — the seed never updates (#1198)');
   }
 
-  // CLAUDE.md MUST route custom rules to the file AND seed it on onboarding.
+  // AGENTS.md MUST route custom rules to the file AND seed it on onboarding.
+  // CLAUDE.md inherits this via its @AGENTS.md wrapper.
+  const agentsMd = readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8');
   const claudeMd = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf-8');
-  if (claudeMd.includes('modes/_custom.md') && claudeMd.includes('modes/_custom.template.md')) {
-    pass('CLAUDE.md routes custom rules to modes/_custom.md + seeds it from the template');
+  if (
+    agentsMd.includes('modes/_custom.md') &&
+    agentsMd.includes('modes/_custom.template.md') &&
+    claudeMd.trim().startsWith('@AGENTS.md')
+  ) {
+    pass('AGENTS.md routes custom rules to modes/_custom.md + CLAUDE.md inherits via wrapper');
   } else {
-    fail('CLAUDE.md does not reference modes/_custom.md / its template — agents will not use it (#1198)');
+    fail('AGENTS.md does not reference modes/_custom.md / its template, or CLAUDE.md does not inherit it (#1198)');
   }
 } catch (e) {
   fail(`custom instructions test crashed: ${e.message}`);
@@ -7198,10 +7265,10 @@ try {
   const claudeMdDoc = readFile('CLAUDE.md');
   const agentsMdDoc = readFile('AGENTS.md');
   const titlesRow = '| Wants to broaden the search with adjacent job titles suggested from the CV | `titles` |';
-  if (claudeMdDoc.includes('* `titles` —') && claudeMdDoc.includes(titlesRow)) {
-    pass('CLAUDE.md registers the titles subcommand and Skill Modes row');
+  if (/^@(?:\.\/)?AGENTS\.md/m.test(claudeMdDoc)) {
+    pass('CLAUDE.md imports AGENTS.md for titles documentation');
   } else {
-    fail('CLAUDE.md missing the titles subcommand bullet or Skill Modes row');
+    fail('CLAUDE.md does not import AGENTS.md for titles documentation');
   }
   if (agentsMdDoc.includes(titlesRow)) {
     pass('AGENTS.md registers the titles Skill Modes row');
@@ -7245,7 +7312,7 @@ try {
   const runsFile = join(runsTmp, 'scan-runs.tsv');
   const counters = {
     timestamp: '2026-07-03T14:02:11Z', status: 'completed', companies: 45, boards: 3, found: 120,
-    filteredTitle: 40, filteredTier: 5, filteredLocation: 20, filteredSalary: 2,
+    filteredTitle: 40, filteredTier: 5, filteredLocation: 20, filteredPostingAge: 3, filteredSalary: 2,
     filteredContent: 6, filteredCooldown: 1, dupes: 38, newAdded: 8, errors: 0,
   };
   appendScanRunSummary(counters, runsFile);
