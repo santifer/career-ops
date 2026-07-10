@@ -28,6 +28,7 @@
  *   node scan.mjs --verify --headed-fallback  # retry anti-bot-blocked URLs in a headed browser (needs a display)
  *   node scan.mjs --verify --throttle          # jittered ~5-10s gap between checks (stay under rate limits)
  *   node scan.mjs --verify --throttle=8000     # custom base gap in ms (waits base..2*base)
+ *   node scan.mjs --no-discovery               # skip Personio tenant discovery (slug cache scan)
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
@@ -49,6 +50,7 @@ const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
 const APPLICATIONS_PATH = 'data/applications.md';
 const PROVIDERS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'providers');
+const PERSONIO_CACHE_PATH = 'data/personio-tenants.json';
 
 // Ensure required directories exist (fresh setup)
 mkdirSync('data', { recursive: true });
@@ -876,6 +878,7 @@ async function main() {
   // --rediscover-404: when a tracked company's URL 404/410s, search for the
   // moved role and re-verify before marking it expired. Opt-in; rides on --verify.
   const rediscover = args.includes('--rediscover-404');
+  const noDiscovery = args.includes('--no-discovery');
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
 
@@ -1114,6 +1117,88 @@ async function main() {
     }
   }
 
+  // 5.6. Personio discovery — scan untracked tenants from the slug cache.
+  // The cache is populated by `node discover-personio.mjs --slugs-only`.
+  // Skipped when: cache is missing, --no-discovery is passed, or --company
+  // narrows the scan to a specific tracked company.
+  let discoveryStats = null;
+  if (!noDiscovery && !filterCompany && existsSync(PERSONIO_CACHE_PATH)) {
+    try {
+      const { fetchTenantJobs, loadTrackedPersonioSlugs } = await import('./discover-personio.mjs');
+
+      const cache = JSON.parse(readFileSync(PERSONIO_CACHE_PATH, 'utf-8'));
+      const cachedSlugs = cache.slugs || [];
+      const cacheAgeDays = Math.round((Date.now() - new Date(cache.fetchedAt).getTime()) / 86_400_000);
+
+      const trackedSlugs = loadTrackedPersonioSlugs(PORTALS_PATH);
+      const untracked = cachedSlugs.filter(s => !trackedSlugs.has(s));
+
+      if (untracked.length > 0) {
+        console.log(`\nPersonio discovery: ${untracked.length} untracked tenants (cache: ${cachedSlugs.length} slugs, age: ${cacheAgeDays}d)`);
+
+        let activeTenants = 0;
+        let discoveryJobsFound = 0;
+        let discoveryNewCount = 0;
+
+        const discoveryTasks = untracked.map(slug => async () => {
+          let result;
+          try {
+            result = await fetchTenantJobs(slug);
+          } catch { return; }
+          if (!result || result.jobs.length === 0) return;
+
+          activeTenants++;
+          discoveryJobsFound += result.jobs.length;
+          totalFound += result.jobs.length;
+
+          for (const job of result.jobs) {
+            const trustResult = trustValidator(job);
+            job.trustScore = trustResult.score;
+            job.trustFlags = trustResult.flags;
+            job.trustLevel = trustResult.level;
+
+            if (!titleFilter(job.title)) { totalFilteredTitle++; continue; }
+            if (classifyTier && skipTiers.includes(classifyTier(job.title))) { totalFilteredTier++; continue; }
+            if (!locationFilter(job.location)) { totalFilteredLocation++; continue; }
+            if (!salaryFilter(job.salary)) { totalFilteredSalary++; continue; }
+            if (!contentFilter(job.description)) { totalFilteredContent++; continue; }
+            if (seenUrls.has(job.url)) { totalDupes++; continue; }
+            const key = `${job.company.toLowerCase()}::${job.title.toLowerCase()}`;
+            if (seenCompanyRoles.has(key)) { totalDupes++; continue; }
+            const cooldownResult = cooldownFilter(job);
+            if (cooldownResult.skip) {
+              totalFilteredCooldown++;
+              cooldownOffers.push({ job: { ...job, source: 'personio-discovery' }, status: cooldownResult.reason });
+              continue;
+            }
+
+            seenUrls.add(job.url);
+            seenCompanyRoles.add(key);
+            verifiedOffers.push({
+              ...job,
+              source: 'personio-discovery',
+              tracked: false,
+              careersUrlDomain: null,
+            });
+            discoveryNewCount++;
+          }
+        });
+
+        await parallelFetch(discoveryTasks, CONCURRENCY);
+
+        discoveryStats = {
+          slugsScanned: untracked.length,
+          activeTenants,
+          totalJobs: discoveryJobsFound,
+          newOffers: discoveryNewCount,
+        };
+        console.log(`  Active: ${activeTenants} tenants, ${discoveryJobsFound} jobs, ${discoveryNewCount} new offers`);
+      }
+    } catch (err) {
+      console.error(`⚠️  Personio discovery failed: ${err.message}`);
+    }
+  }
+
   // 6. Write results
   if (!dryRun && verifiedOffers.length > 0) {
     appendToPipeline(verifiedOffers);
@@ -1169,6 +1254,9 @@ async function main() {
   const summaryBoards = targets.filter(t => t._isBoard).length;
   console.log(`Companies scanned:     ${summaryCompanies}`);
   if (summaryBoards > 0) console.log(`Job boards scanned:    ${summaryBoards}`);
+  if (discoveryStats) {
+    console.log(`Discovery tenants:     ${discoveryStats.slugsScanned} scanned (${discoveryStats.activeTenants} active, ${discoveryStats.totalJobs} jobs, ${discoveryStats.newOffers} new)`);
+  }
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   if (skipTiers.length > 0) {

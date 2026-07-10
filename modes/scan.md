@@ -141,6 +141,16 @@ For companies with a public API or structured feed **that are not in `local_pars
 - `workday`: `jobPostings[]`/`jobPostings` (based on tenant) → `title`, `externalPath` or URL built from the host
 - `breezy`: top-level array `[]` → `name`, `url` (absolute), `location.name` (or city/state/country + `is_remote`), `published_date`
 
+### Level 2.5 — Personio Discovery (AUTOMATIC)
+
+When a Personio slug cache exists at `data/personio-tenants.json` (populated by `node discover-personio.mjs --slugs-only`), the scanner automatically scans untracked Personio tenants for matching jobs. This runs after the tracked company scan and before WebSearch.
+
+- **No extra setup:** If the cache file exists, discovery runs automatically. Pass `--no-discovery` to skip it.
+- **No API tokens:** Uses Personio's public `search.json` feed (same as the Personio provider for tracked companies).
+- **Same filters:** Title, location, content, salary, cooldown, and dedup filters all apply.
+- **Source tag:** Discovery offers appear in scan-history.tsv with source `personio-discovery`.
+- **Cache refresh:** Run `node discover-personio.mjs --refresh --slugs-only` periodically to expand the slug cache with new tenants from Common Crawl and other web-intelligence sources.
+
 ### Level 3 — WebSearch Queries (BROAD DISCOVERY)
 
 The `search_queries` with `site:` filters cover portals transversally (all Ashby, all Greenhouse, etc.). Useful for discovering NEW companies that are not yet in `tracked_companies`, but results might be outdated. After filtering out hits from companies in `local_parser_ok`, the remaining results are deduplicated with Levels 0–2.

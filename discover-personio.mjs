@@ -218,7 +218,7 @@ export async function enumerateSlugs({ refresh = false } = {}) {
 
 // ── Tenant job scanner ──────────────────────────────────────────────
 
-function humanizeSlug(slug) {
+export function humanizeSlug(slug) {
   return slug
     .split('-')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
