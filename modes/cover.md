@@ -213,14 +213,16 @@ Wait for all four answers before proceeding to Step 7.
 
 ## Step 7 — Achievement selection (from cv.md only)
 
-Select 4-5 achievement bullets from `cv.md` only (`article-digest.md` may be read for context but is not a source of achievement bullets):
+Select 3-4 achievement areas from `cv.md` only (`article-digest.md` may be read for context but is not a source of achievement bullets):
 1. Read all bullet points across all roles in cv.md
 2. Score each against the JD's top 3-4 required competencies
-3. Pick the 4-5 highest-scoring, with at least one metric per bullet
-4. Use the exact wording and metrics from cv.md — never paraphrase or invent
-5. Apply keyword mirroring from Step 4 to the vocabulary around each bullet (not the metrics)
+3. Pick the 3-4 highest-scoring areas
+4. For each: identify the employer's specific need from the JD, then bridge to the candidate's matching experience from cv.md
+5. Apply keyword mirroring from Step 4 to the vocabulary
 
-Format: `**Bold lead phrase,** one sentence of impact with metric.`
+**IMPORTANT:** The cover letter does NOT repeat CV metrics verbatim. The CV shows WHAT was achieved (numbers, systems, scale). The cover letter shows WHY those skills matter for THIS employer. Each bullet leads with the company's need, then bridges to the candidate's proof.
+
+Format: `**Employer need,** how the candidate's experience solves it.`
 
 ---
 
@@ -241,9 +243,9 @@ Cover Letter: [Role Title]
 [Salutation — optional]
 Address the named hiring manager if known, e.g. "Dear Jane Smith,". Omit if no name.
 
-[1. Hook — 2-3 sentences max]
-Direct, value-first opening. Strongest argument first.
-Company challenge → bridge to candidate.
+[1. Hook — 2-4 sentences max]
+Direct, value-first opening. Company context or current challenge →
+bridge to candidate's experience. Strongest argument first.
 Derived from Angle A + company research (Step 3).
 
     Strong: "Over the past three years, I cut operational costs by 15%
@@ -253,23 +255,41 @@ Derived from Angle A + company research (Step 3).
     Strong: "Your new product launch strategy caught my attention —
     having scaled two similar market entries, this is a natural fit."
 
-[2. Evidence bullets — 2-4 quantified milestones]
-Brief transition line, then bullet points:
+[2. Why THIS employer — 2-4 sentences]
+What specifically convinces about this company — culture, philosophy,
+product, mission, growth trajectory. Then bridge: how your work style,
+domain ownership, or team dynamics mirror what they do.
+This block answers "Why us?" before the reader can ask it.
+Derived from company research (Step 3) + Angle A.
 
-  • **Lead phrase,** impact sentence with metric from cv.md.
-  • **Lead phrase,** impact sentence with metric from cv.md.
-  • **Lead phrase,** impact sentence with metric from cv.md.
-  • **Lead phrase,** optional fourth.
+    Strong: "Your focus on building from within rather than acquiring
+    resonates with how I operate — at [Company X], I owned the entire
+    data strategy for two business units and know the dynamics when
+    different teams need different things from the same data foundation."
 
-Each bullet: active verb + specific outcome + number.
-Apply keyword mirroring from Step 4.
+[3. Value-match bullets — 2-4 items]
+Brief transition ("Three areas where I can add immediate value:"),
+then bullet points. Each bullet leads with the EMPLOYER'S specific
+need and bridges to your experience as the solution. Schema:
+  [Company need] → [your skill/experience as the solution]
 
-[3. How you work + adaptability — 2-3 sentences]
-Show HOW you work, not just WHAT. Concrete example of learning agility
-or adapting to new tools/structures/challenges.
-Derived from Angle B + C. Specific to company's situation.
+The CV shows WHAT you achieved (metrics, numbers). The cover letter
+shows WHY it matters for THIS role. Do NOT repeat CV bullets verbatim.
 
-[4. Committed close — 2-3 sentences]
+  • **Their need,** how your experience solves it.
+  • **Their need,** how your experience solves it.
+  • **Their need,** how your experience solves it.
+
+Apply keyword mirroring from Step 4 to the vocabulary.
+
+[4. Personal proof / anecdote — 2-3 sentences (recommended)]
+A looser, personal touch: side project, private interest, competition
+result, or anecdote that proves domain fit or passion beyond the day
+job. Especially valuable for domain switches (e.g. healthcare → sport,
+academia → industry). Keep it brief and concrete — one proof point,
+not a life story. Skip only if there is genuinely nothing to add.
+
+[5. Committed close — 2-3 sentences]
 Availability (specific date or "immediately").
 Salary expectation only if requested (precise number, not round).
 Confident call to action — no hedging, no subjunctive mood.
