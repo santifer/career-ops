@@ -10,6 +10,8 @@ data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
 data/cache/ats-companies/
+data/personio-tenants.json
+data/discovery-report.md
 reports/*.md
 !reports/.gitkeep
 output/*

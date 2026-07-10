@@ -363,6 +363,37 @@ search_queries:
     query: 'site:jobs.personio.de "Data" OR "Daten" OR "Analyst" OR "Scouting" Fußball OR Sport OR Bundesliga'
     enabled: true
 
+  # ══════════════════════════════════════════════
+  # Personio (broad DACH Data/AI discovery)
+  # Catches tenants not in tracked_companies.
+  # ══════════════════════════════════════════════
+  - name: Personio — Data Engineer
+    query: 'site:jobs.personio.de "Data Engineer" OR "Data Platform" OR "Dateningenieur" OR "Analytics Engineer"'
+    enabled: true
+
+  - name: Personio — Data Scientist / ML
+    query: 'site:jobs.personio.de "Data Scientist" OR "Machine Learning" OR "ML Engineer" OR "MLOps"'
+    enabled: true
+
+  - name: Personio — AI Engineer / GenAI
+    query: 'site:jobs.personio.de "AI Engineer" OR "KI Engineer" OR "GenAI" OR "LLM" OR "NLP"'
+    enabled: true
+
+  - name: Personio — Data Analyst / BI
+    query: 'site:jobs.personio.de "Data Analyst" OR "Business Intelligence" OR "BI Analyst" OR "Datenanalyst"'
+    enabled: true
+
+  - name: Personio — Data Architect / Governance
+    query: 'site:jobs.personio.de "Data Architect" OR "Data Governance" OR "Data Warehouse" OR "Data Quality"'
+    enabled: true
+
+  # ══════════════════════════════════════════════
+  # Softgarden (broad DACH Data/AI — same gap as Personio)
+  # ══════════════════════════════════════════════
+  - name: Softgarden — Data Engineer / AI
+    query: 'site:career.softgarden.de "Data Engineer" OR "Data Scientist" OR "AI Engineer" OR "Analytics" OR "ML"'
+    enabled: true
+
   - name: Spobis Jobs — Sport Analytics
     query: 'site:spobis.com "Analyst" OR "Data" OR "Analytics" OR "Scouting" OR "Performance" OR "Digital"'
     enabled: true
