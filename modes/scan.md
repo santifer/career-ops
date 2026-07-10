@@ -275,7 +275,7 @@ If a non-publicly accessible URL is found:
 
 ## Scan History
 
-`data/scan-history.tsv` tracks ALL seen URLs. Each row has eight tab-separated columns:
+`data/scan-history.tsv` tracks ALL seen URLs. Each row has nine tab-separated columns:
 
 | # | Column | Example | Notes |
 |---|--------|---------|-------|
@@ -287,10 +287,11 @@ If a non-publicly accessible URL is found:
 | 6 | `status` | `added` | `added`, `skipped_dup`, `skipped_title`, `skipped_expired` |
 | 7 | `location` | `Remote — Europe` | Location string (may be empty); persisted for later auditing |
 | 8 | `jd_fingerprint` | `a3f1c8d2e4b70592` | 64-bit SimHash of the JD text (16 hex chars); empty when no usable body was available |
+| 9 | `postedAt` | `2026-02-08` | ISO date the role was originally posted (as reported by the ATS); empty when not available |
 
 ```tsv
-url	first_seen	portal	title	company	status	location	jd_fingerprint
-https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added	Remote	a3f1c8d2e4b70592
+url	first_seen	portal	title	company	status	location	jd_fingerprint	postedAt
+https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added	Remote	a3f1c8d2e4b70592	2026-02-08
 ```
 
 ### Cross-listing detection
