@@ -18,13 +18,22 @@
  */
 
 import { execFileSync } from 'child_process';
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, utimesSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, utimesSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const NODE = process.execPath;
+
+// web/ lives deliberately OUTSIDE the auto-updater's world (its own
+// release-please component; see validate-system-paths-coverage.mjs
+// EXCLUDE_PREFIXES), so installs updated via `update-system.mjs apply` have
+// the core WITHOUT the web/ tree. The web-reader tests below exercise the
+// real alias chain on fresh clones and CI, and skip cleanly on core-only
+// installs instead of crashing the whole suite with ERR_MODULE_NOT_FOUND.
+const HAS_WEB = existsSync(join(ROOT, 'web', 'src', 'lib', 'tracker-table.mjs'));
+function skipWeb(m) { console.log(`SKIP ${m} — web/ not present (core-only install; web/ is excluded from the auto-updater by design)`); }
 
 let passed = 0;
 let failed = 0;
@@ -249,7 +258,9 @@ const TSV_NO_LOCATION = '2\t2026-02-02\tGlobex\tManager\tApplied\tN/A\t✅\t—\
 // HEADER_ALIASES — instead of mirroring it. Passing ROOT here exercises the
 // REAL alias file, so an alias added/renamed there is either honored by the
 // web reader too or fails this test; a second drifting table can't come back.
-{
+if (!HAS_WEB) {
+  skipWeb('web reader: shared alias table tests');
+} else {
   const { parseApplications, loadHeaderAliases } = await import('./web/src/lib/tracker-table.mjs');
   const { HEADER_ALIASES } = await import('./tracker-parse.mjs');
   const WEB_10COL = `# Applications Tracker
@@ -488,7 +499,9 @@ const HEADER_VIA = `# Applications Tracker
 // mtime-keyed: a missing/corrupt file is NEVER cached — recovery is picked up
 // without a server restart — and a rewritten file (system update changing the
 // alias table) is re-read on the next call.
-{
+if (!HAS_WEB) {
+  skipWeb('web reader: alias cache refresh tests');
+} else {
   const { loadHeaderAliases } = await import('./web/src/lib/tracker-table.mjs');
   const dir = mkdtempSync(join(tmpdir(), 'co-alias-'));
   const aliasFile = join(dir, 'tracker-aliases.json');
