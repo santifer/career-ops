@@ -19,12 +19,16 @@ import { execFile, execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname, posix as pathPosix } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import {
-  ensureSkillEntrypoints,
-  materializeSkillEntrypoints,
-} from './scaffolder/bin/skill-entrypoints.mjs';
 
-export { materializeSkillEntrypoints, ensureSkillEntrypoints };
+// NOTE: this file must stay *self-loading* — no static (top-level) relative
+// imports. A pre-#1245 client's apply() self-reexec checks out ONLY
+// update-system.mjs before re-execing the target updater, so a static top-level
+// relative import here crashes that re-exec with ERR_MODULE_NOT_FOUND on the
+// old→new jump, before the fuller checkout that would materialize the imported
+// module ever runs (#1706). Local modules (e.g. the skill-entrypoints helper
+// under scaffolder/) are instead pulled in lazily at their point of use, by
+// which time the full update stage has already checked them out. The
+// updater-migration and test-all suites enforce this invariant.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -54,6 +58,7 @@ export const REEXEC_BUFFER_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
+  'modes/README.md',
   'modes/_shared.md',
   'modes/_profile.template.md',
   'modes/_custom.template.md',
@@ -84,6 +89,7 @@ const SYSTEM_PATHS = [
   'interview-prep/sessions/README.md',
   'modes/patterns.md',
   'modes/titles.md',
+  'modes/upskill.md',
   'modes/update.md',
   'modes/agent-inbox.md',
   'modes/reply-watch.md',
@@ -153,6 +159,7 @@ const SYSTEM_PATHS = [
   'liveness-browser.mjs',
   'browser-extract.mjs',
   'analyze-patterns.mjs',
+  'upskill.mjs',
   'stats.mjs',
   'detect-reposts.mjs',
   'fingerprint-core.mjs',
@@ -823,6 +830,10 @@ async function apply() {
       console.error(`Stale-test prune step failed: ${err.message}`);
     }
 
+    // Lazy import: keep update-system.mjs self-loading (see the top-of-file
+    // note). scaffolder/ was just checked out by the update stage above, so the
+    // module resolves here even on a pre-#1245 old→new re-exec.
+    const { ensureSkillEntrypoints } = await import('./scaffolder/bin/skill-entrypoints.mjs');
     const materializedSkillEntrypoints = ensureSkillEntrypoints(ROOT);
     if (materializedSkillEntrypoints.length > 0) {
       for (const path of materializedSkillEntrypoints) {

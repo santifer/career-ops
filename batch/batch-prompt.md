@@ -135,6 +135,49 @@ Sección de **gaps** con estrategia de mitigación para cada uno:
 
 Usar WebSearch para salarios actuales (Glassdoor, Levels.fyi, Blind), reputación comp de la empresa, tendencia demanda. Tabla con datos y fuentes citadas. Si no hay datos, decirlo.
 
+Antes de interpretar cualquier salario, clasifica el **tipo de empresa / hiring entity**. El salario público es una señal, no una promesa contractual.
+
+**Company type classification (required):**
+
+| Company type | Typical comp reliability | Signals |
+|--------------|--------------------------|---------|
+| Public big tech / mature tech | High to medium | Public company, structured levels, large engineering org, repeatable hiring process |
+| Growth-stage startup / VC-backed startup | Medium | Funded startup, competitive hiring market, may mix base + equity + bonus |
+| Early-stage startup / pre-revenue startup | Medium to low | Small team, vague role scope, equity-heavy promises, unclear bands |
+| Enterprise / traditional corporate | Medium | Formal HR process, stable base, slower bands, bonus may be discretionary |
+| Agency / outsourcing / consulting vendor | Medium to low | Client allocation, project-based work, billability pressure, variable bonus |
+| Local SMB / service business | Low | Small company, broad role, informal HR, "comprehensive salary" language |
+| Sales / commission-heavy org | Low unless base is explicit | OTE, uncapped commission, performance bonus, target-based pay |
+| Recruiter / staffing listing | Low to medium | Third-party posting, range may reflect client budget rather than offer terms |
+| Government / academic / nonprofit | Medium to high | Published grades/bands, but lower market competitiveness |
+| Open-source community / education community | Medium to low | Community-led org, foundation/association sponsor, campus/community operations, unclear employment entity |
+
+If the brand differs from the legal employer or posting entity, classify the **actual contract / hiring entity** first and mention the brand relationship separately. If the company type is uncertain, mark it as `Unknown` and default compensation reliability to the conservative canonical tier: `Low` until evidence improves it.
+
+**Compensation reliability (required):**
+
+First check whether the JD itself states a salary figure. If no advertised number exists, collapse this section to exactly two concise lines after the demand trend:
+
+- **Company type:** {category or `Unknown`} — {confidence + one evidence phrase}
+- **Compensation reliability:** {tier} — no advertised salary figure; skip component split, detailed market rows, and HR verification questions
+
+When an advertised salary figure exists, split compensation into:
+- **Advertised range:** the JD's own salary/range, copied verbatim
+- **Likely guaranteed base:** conservative estimate of fixed contract salary
+- **Variable / conditional cash components:** bonus, commission, allowance, attendance bonus, KPI bonus, overtime, 13th salary, sign-on, or other cash tied to conditions
+- **Expected stable cash:** what is likely recurring and reliable in cash, before tax unless local data supports a net estimate; exclude benefits
+- **Non-cash benefits:** equity, insurance, pension, meals, transport, wellness, learning budget, equipment, or other benefits that are not guaranteed cash
+
+Reliability tier:
+- **High:** salary is stated as base or backed by structured public bands / multiple consistent sources
+- **Medium:** range is plausible but components are not fully separated
+- **Low:** public number likely includes variable, attendance, commission, subsidy, or "up to" components
+- **Unknown:** no usable salary data
+
+Treat "comprehensive salary", "total package", "up to", "OTE", "uncapped", "allowances included", "attendance bonus", "KPI bonus", "base + variable", "base + commission", and unusually wide ranges as low-reliability unless fixed base is separated.
+
+When a salary figure exists, include 3-6 HR verification questions tailored to the company type. Do not present advertised compensation as real take-home pay unless the source explicitly supports that interpretation.
+
 Score de comp (1-5): 5=top quartile, 4=above market, 3=median, 2=slightly below, 1=well below.
 
 #### Bloque E — Plan de Personalización

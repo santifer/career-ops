@@ -13,6 +13,8 @@
  * 8. Stale report-number reservation sentinels are garbage-collected
  * 9. No two report files cover the same company+role (warning — see #1425)
  * 10. Every report file has a tracker row referencing it (warning — see #1425)
+ * 11. Via channel consistency (see #1596)
+ * 12. No # value reused across 2+ tracker rows (error — see #1704)
  *
  * Run: node career-ops/verify-pipeline.mjs
  */
@@ -382,6 +384,30 @@ for (const [key, vias] of channelsByRole) {
   }
 }
 if (viaIssues === 0) ok('Via channels consistent');
+
+// --- Check 12: Duplicate tracker numbers (#1704) ---
+// The # column is a row id and must be unique. Unlike Check 2 (company+role
+// dedup, which can false-positive on a legitimate re-application), the SAME
+// number appearing on 2+ rows is never legitimate: it means set-status.mjs
+// can't tell the rows apart, and any external reference to "application #N"
+// (interview-prep notes, memory, cross-links) becomes ambiguous. Pure
+// addition, no existing check covers this — see #1704 for the 124-row sweep
+// that found this in the wild (merge-tracker.mjs trusted a stale TSV number
+// as-is whenever it exceeded that run's max, without checking it wasn't
+// already used by an unrelated row merged in a separate, earlier invocation).
+const numGroups = new Map();
+for (const e of entries) {
+  if (!numGroups.has(e.num)) numGroups.set(e.num, []);
+  numGroups.get(e.num).push(e);
+}
+let dupeNums = 0;
+for (const [num, group] of numGroups) {
+  if (group.length > 1) {
+    error(`Duplicate tracker number #${num} used by ${group.length} rows: ${group.map(e => `${e.company} — ${e.role}`).join(' | ')}`);
+    dupeNums++;
+  }
+}
+if (dupeNums === 0) ok('No duplicate tracker numbers');
 
 // --- Summary ---
 console.log('\n' + '='.repeat(50));
