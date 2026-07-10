@@ -105,6 +105,12 @@ Choose one of four variants from user wording or context:
 
 If unclear, default to `hr_application`.
 
+**Precedence:** any process-failure signal (a broken step, an error message, a
+dead link, failed scheduling) selects `process_stuck` over the other variants.
+If a failure is hinted at but the intent is ambiguous, ask for confirmation —
+do not fall through to `hr_application`. The `hr_application` default applies
+only when there is no failure indication at all.
+
 For `process_stuck`, skip Step 3 (fit points) and Step 4 (attachment checklist)
 — the reader already has the application; this email exists to unblock a
 process, not to sell — and follow the dedicated section below instead of the
@@ -279,26 +285,29 @@ never click, never submit. Additionally, the stuck-email draft must:
 
 ### Example (generic)
 
+All values below are placeholders — fill them only with details the user
+actually provides. Never invent error text, timestamps, or retry steps.
+
 ```text
-Subject: Application to Product Analyst (REQ-4821) — scheduling page error
+Subject: Application to {Role} ({REQ-ID}) — {broken step} error
 
-Hi Acme Recruiting team,
+Hi {Company} Recruiting team,
 
-I'm partway through the application process for Product Analyst (REQ-4821)
-and hit a technical issue I can't get past: the interview scheduling page
-fails on every available slot. Selecting any slot returns "Something went
-wrong" after confirming (tried 2026-03-14, 09:40-10:05 EDT, on two browsers
-and after clearing my session). A screenshot is available if useful.
+I'm partway through the application process for {Role} ({REQ-ID}) and hit a
+technical issue I can't get past: {broken step} fails on every attempt.
+{Exact observed behavior, quoting error text verbatim if any} (tried
+{date + time + timezone}, {what was retried}). A screenshot is available if
+useful.
 
-Could someone schedule the interview manually, or let me know an alternative
-way to book it? Happy to take any slot that works for the team.
+Could someone schedule the interview manually? Happy to take any slot that
+works for the team.
 
-I remain very interested in the role and don't want a scheduling glitch to
+I remain very interested in the role and don't want a technical glitch to
 stall the process.
 
 Best regards,
-Jane Doe
-jane.doe@example.com
+{Candidate Name}
+{email}
 ```
 
 ---
