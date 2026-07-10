@@ -10,18 +10,19 @@
    - US/Canada → `letter`
    - Rest of the world → `a4`
 6. Detect role archetype → adapt framing
-7. Build an internal recruiter-side risk map from the JD using `modes/heuristics/recruiter-side.md`: likely doubts, matching evidence, and which document section should address each doubt
-8. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
-9. Select top 3-4 most relevant projects for the job
-10. Reorder experience bullets by JD relevance and by the risk map: strongest matching evidence first
-11. Build competency grid from JD requirements (6-8 keyword phrases)
-12. Inject keywords naturally into existing achievements (NEVER invent)
-13. Apply the six-second clarity gate from `modes/heuristics/recruiter-side.md`: top third must make target role, strongest fit, and proof obvious
-14. Generate full HTML from template + personalized content
-15. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-16. Write HTML to `output/cv-{candidate}-{company}.html` (NOT a temp dir — the recorded HTML is what the dashboard's `D` hotkey regenerates from, so it must survive temp cleanup)
-17. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number}` — `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry.
-18. Report: PDF path, number of pages, keyword coverage %
+7. Before tailoring, optionally compare the new JD with the latest tailored CV or JD: `npm run jd:similarity -- {new-jd.txt} {previous-jd-or-cv.txt}`. Reuse the existing CV only when the recommendation supports it; otherwise continue with the normal tailoring flow.
+8. Build an internal recruiter-side risk map from the JD using `modes/heuristics/recruiter-side.md`: likely doubts, matching evidence, and which document section should address each doubt
+9. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
+10. Select top 3-4 most relevant projects for the job
+11. Reorder experience bullets by JD relevance and by the risk map: strongest matching evidence first
+12. Build competency grid from JD requirements (6-8 keyword phrases)
+13. Inject keywords naturally into existing achievements (NEVER invent)
+14. Apply the six-second clarity gate from `modes/heuristics/recruiter-side.md`: top third must make target role, strongest fit, and proof obvious
+15. Generate full HTML from template + personalized content
+16. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
+17. Write HTML to `output/cv-{candidate}-{company}.html` (NOT a temp dir — the recorded HTML is what the dashboard's `D` hotkey regenerates from, so it must survive temp cleanup)
+18. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number}` — `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry.
+19. Report: PDF path, number of pages, keyword coverage %
 
 ## ATS Rules (clean parsing)
 

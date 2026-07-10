@@ -12,6 +12,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
 | `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
+| `npm run jd:similarity` | `jd-similarity.mjs` | Compare a new JD with a previous JD/CV and recommend reuse, edits, or regeneration |
 | `npm run build:latex` | `build-cv-latex.mjs` | Build .tex from structured JSON payload |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
 | `npm run patterns` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |

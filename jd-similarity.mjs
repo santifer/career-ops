@@ -25,6 +25,7 @@ const LEVELS = [
   ['staff', 'principal', 'lead', '负责人'],
 ];
 
+/** Tokenize JD/CV text into normalized, stop-word-filtered terms. */
 export function tokenize(text) {
   return new Set(
     String(text ?? '')
@@ -35,6 +36,7 @@ export function tokenize(text) {
   );
 }
 
+/** Calculate Jaccard similarity between two texts or token sets. */
 export function jaccardSimilarity(left, right) {
   const a = left instanceof Set ? left : tokenize(left);
   const b = right instanceof Set ? right : tokenize(right);
@@ -45,6 +47,7 @@ export function jaccardSimilarity(left, right) {
   return intersection / (a.size + b.size - intersection);
 }
 
+/** Detect the first recognized seniority level in text, or -1 when absent. */
 function levelOf(text) {
   const normalized = String(text ?? '').toLowerCase();
   return LEVELS.findIndex(words => words.some(word => {
@@ -54,12 +57,14 @@ function levelOf(text) {
   }));
 }
 
+/** Return whether the new JD and previous document have different seniority levels. */
 export function hardMismatch(newJd, previousText) {
   const newLevel = levelOf(newJd);
   const previousLevel = levelOf(previousText);
   return newLevel >= 0 && previousLevel >= 0 && newLevel !== previousLevel;
 }
 
+/** Recommend CV reuse, reuse with edits, or regeneration for a new JD. */
 export function recommendCvReuse(newJd, previousText, options = {}) {
   const score = jaccardSimilarity(newJd, previousText);
   const high = Number(options.highThreshold ?? 0.72);
