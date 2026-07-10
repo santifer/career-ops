@@ -7832,6 +7832,13 @@ console.log('\n59. CV template resolver (cv-templates.mjs)');
   else fail(`CLI: resolve cv (unset) unexpected: ${resolved}`);
 }
 
+console.log('\n60. Cover-letter template resolver (generate-cover-letter.mjs)');
+{
+  const unit = run(NODE, ['--test', 'test/cover-resolver.test.mjs']);
+  if (unit !== null) pass('cover-resolver unit tests pass');
+  else fail('cover-resolver unit tests failed (run: node --test test/cover-resolver.test.mjs)');
+}
+
 console.log('\nTest layout guard (provider tests live in tests/providers/)');
 try {
   const src = readFileSync(join(ROOT, 'test-all.mjs'), 'utf-8');

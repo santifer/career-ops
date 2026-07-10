@@ -259,6 +259,7 @@ const SYSTEM_PATHS = [
   'build-cv-latex.mjs',
   'cv-templates.mjs',
   'test/cv-templates.test.mjs',
+  'test/cover-resolver.test.mjs',
   'scaffolder/',
   'Dockerfile',
   'docker-compose.yml',
