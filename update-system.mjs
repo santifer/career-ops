@@ -115,6 +115,7 @@ const SYSTEM_PATHS = [
   'modes/heuristics/',
   'modes/regional/',
   'modes/zh/',
+  'modes/zh-TW/',
   'CLAUDE.md',
   'CODEX.md',
   'OPENCODE.md',
