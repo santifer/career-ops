@@ -14,7 +14,7 @@ try {
   const source = join(tmp, 'cv.md');
   const config = join(tmp, 'cv-facts.json');
   writeFileSync(source, 'Improved reliability for 25 users.');
-  writeFileSync(config, JSON.stringify({ allow_metrics: [], forbidden_phrases: [] }));
+  writeFileSync(config, JSON.stringify({ allow_metrics: [], allow_facts: [], forbidden_phrases: [], warn_phrases: ['maybe'] }));
   const payload = {
     candidate: { name: 'Jane Doe' },
     letter: {
@@ -54,6 +54,13 @@ try {
   } catch (error) {
     if (/26 users/.test(error.message)) pass('cover letter fact gate rejects unsupported metrics');
     else fail(`cover letter fact gate failed with the wrong error: ${error.message}`);
+  }
+
+  const advisory = verifyFacts('Maybe this wording needs a human review.', { sourcePaths: [source], configPath: config });
+  if (advisory.verdict === 'warn' && advisory.warnings.includes('maybe')) {
+    pass('advisory phrases return a stable warn verdict without blocking');
+  } else {
+    fail(`advisory phrase returned the wrong verdict: ${JSON.stringify(advisory)}`);
   }
 } finally {
   rmSync(tmp, { recursive: true, force: true });

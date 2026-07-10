@@ -76,9 +76,9 @@ export function metricClaims(text) {
 }
 
 function loadConfig(path) {
-  if (!existsSync(path)) return { allow_metrics: [], allow_facts: [], forbidden_phrases: [] };
+  if (!existsSync(path)) return { allow_metrics: [], allow_facts: [], forbidden_phrases: [], warn_phrases: [] };
   const config = JSON.parse(readFileSync(path, 'utf-8'));
-  for (const key of ['allow_metrics', 'allow_facts', 'forbidden_phrases']) {
+  for (const key of ['allow_metrics', 'allow_facts', 'forbidden_phrases', 'warn_phrases']) {
     if (config[key] == null) config[key] = [];
     else if (!Array.isArray(config[key])) throw new Error(`${key} must be an array in ${path}`);
   }
@@ -92,7 +92,7 @@ function resolveInputPath(path, cwd = process.cwd()) {
 /**
  * @param {string} targetText generated candidate-facing HTML/Markdown/text
  * @param {{ sourcePaths?: string[], configPath?: string, cwd?: string }} options
- * @returns {{ verdict: 'pass'|'block', invented: string[], unsupportedFacts: object[], forbidden: string[], warnings: string[] }}
+ * @returns {{ verdict: 'pass'|'warn'|'block', invented: string[], unsupportedFacts: object[], forbidden: string[], warnings: string[] }}
  * @throws when the config is invalid
  */
 export function verifyFacts(targetText, {
@@ -116,12 +116,15 @@ export function verifyFacts(targetText, {
   const forbidden = config.forbidden_phrases
       .filter(Boolean)
       .filter(phrase => stripMarkup(targetText).toLowerCase().includes(String(phrase).toLowerCase()));
+  const warnings = config.warn_phrases
+      .filter(Boolean)
+      .filter(phrase => stripMarkup(targetText).toLowerCase().includes(String(phrase).toLowerCase()));
   return {
-    verdict: invented.length || unsupportedFacts.length || forbidden.length ? 'block' : 'pass',
+    verdict: invented.length || unsupportedFacts.length || forbidden.length ? 'block' : warnings.length ? 'warn' : 'pass',
     invented,
     unsupportedFacts,
     forbidden,
-    warnings: [],
+    warnings,
   };
 }
 
@@ -196,10 +199,15 @@ export function runCli(args = process.argv.slice(2)) {
     });
     if (parsed.json) {
       console.log(JSON.stringify(result));
-      return result.verdict === 'pass' ? 0 : 1;
+      return result.verdict === 'block' ? 1 : 0;
     }
     if (result.verdict === 'pass') {
       console.log(`CV fact check passed: ${basename(targetPath)}`);
+      return 0;
+    }
+    if (result.verdict === 'warn') {
+      console.error(`CV fact check warning: ${basename(targetPath)}`);
+      for (const phrase of result.warnings) console.error(`  - advisory phrase: ${phrase}`);
       return 0;
     }
     console.error(`CV fact check failed: ${basename(targetPath)}`);
