@@ -919,6 +919,31 @@ export function formatCompensation(salary) {
   return sanitizeMarkdownField(currency ? `${range} ${currency}` : range);
 }
 
+// Trust/legitimacy signal (#1743): the scanner sets offer.trustScore (0-100) +
+// offer.trustFlags on every job (see buildTrustValidator). Surface it only when
+// it's meaningful — a score below 100 means the validator penalized the posting
+// (e.g. missing_apply_url, invalid_url, suspicious_domain). A clean posting
+// (score 100) or a scan without trust_filter configured stays byte-identical
+// (empty), exactly like the posted:/note: segments.
+export function trustIsFlagged(offer) {
+  return typeof offer.trustScore === 'number' && Number.isFinite(offer.trustScore) && offer.trustScore < 100;
+}
+
+function trustFlagList(offer) {
+  return Array.isArray(offer.trustFlags)
+    ? offer.trustFlags.filter((f) => typeof f === 'string' && f.trim())
+    : [];
+}
+
+// Labeled pipeline segment, e.g. `trust: 60 missing_apply_url,suspicious_domain`.
+// '' when the posting isn't flagged, so an unflagged offer produces no segment.
+export function formatTrustSegment(offer) {
+  if (!trustIsFlagged(offer)) return '';
+  const flags = trustFlagList(offer);
+  const body = flags.length ? `${offer.trustScore} ${flags.join(',')}` : String(offer.trustScore);
+  return sanitizeMarkdownField(`trust: ${body}`);
+}
+
 export function formatPipelineOffer(offer) {
   const url = sanitizePipelineUrl(offer.url);
   const company = sanitizeMarkdownField(offer.company);
@@ -971,6 +996,12 @@ export function formatScanHistoryRow(offer, date, status = 'added') {
     // New trailing column: posting date. Existing readers index by position up to
     // col 7, so appending col 8 is backward-compatible.
     postedAtIsoDate(offer.postedAt),
+    // Trust/legitimacy signal (#1743): score (only when the scanner flagged the
+    // posting, i.e. < 100) + comma-joined flags. Trailing cols 9-10, so existing
+    // index-based readers (fingerprint@7, postedAt@8) are unaffected; a clean
+    // posting or a scan without trust_filter leaves both empty.
+    trustIsFlagged(offer) ? String(offer.trustScore) : '',
+    trustIsFlagged(offer) ? trustFlagList(offer).join(',') : '',
   ].map(sanitizeTsvField).join('\t');
 }
 

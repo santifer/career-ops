@@ -3333,8 +3333,9 @@ try {
   const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
   const historyColumns = historyRow.split('\t');
   if (
-    historyColumns.length === 9 && // 7 metadata + fingerprint (#1597) + postedAt
+    historyColumns.length === 11 && // 7 metadata + fingerprint (#1597) + postedAt + trust score/flags (#1743)
     historyColumns[8] === '' && // no postedAt on hostileOffer → empty trailing col
+    historyColumns[9] === '' && historyColumns[10] === '' && // no trust signal → empty trailing cols
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
@@ -3363,9 +3364,9 @@ try {
   const datedHistory = formatScanHistoryRow(datedOffer, '2026-07-09').split('\t');
   const noDateHistory = formatScanHistoryRow({ ...datedOffer, postedAt: undefined }, '2026-07-09').split('\t');
   if (
-    datedHistory.length === 9 &&
+    datedHistory.length === 11 &&
     datedHistory[8] === '2026-06-18' && // epoch ms → YYYY-MM-DD in the trailing column
-    noDateHistory.length === 9 &&
+    noDateHistory.length === 11 &&
     noDateHistory[8] === '' // missing postedAt → empty trailing column, never a bogus date
   ) {
     pass('scan-history writer appends postedAt as an ISO trailing column (empty when absent)');
@@ -7490,17 +7491,17 @@ try {
     '2026-07-06',
   );
   const cols = withBody.split('\t');
-  if (cols.length === 9 && /^[0-9a-f]{16}$/.test(cols[7])) {
+  if (cols.length === 11 && /^[0-9a-f]{16}$/.test(cols[7])) {
     pass('formatScanHistoryRow appends a fingerprint column for described offers');
   } else {
-    fail(`formatScanHistoryRow columns: ${cols.length}, last=${JSON.stringify(cols[7])}`);
+    fail(`formatScanHistoryRow columns: ${cols.length}, fingerprint=${JSON.stringify(cols[7])}`);
   }
   const withoutBody = formatScanHistoryRow(
     { url: 'https://x.example/j/2', source: 'greenhouse', title: 'Data Engineer', company: 'Acme', location: '' },
     '2026-07-06',
   );
   const cols2 = withoutBody.split('\t');
-  if (cols2.length === 9 && cols2[7] === '') {
+  if (cols2.length === 11 && cols2[7] === '') {
     pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
   } else {
     fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);
