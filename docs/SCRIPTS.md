@@ -288,8 +288,11 @@ Use `args` only for reusable parsers that intentionally accept runtime parameter
 
 If a parser writes full extraction artifacts for debugging or audit, store them under `data/parser-output/{company}/`. `scan.mjs` reads stdout and does not require those JSON files after parsing. Keep generated JSON artifacts out of git; `.gitkeep` placeholders are the only exception for preserving directory structure.
 
+**Company blacklist (#1742):** if `data/blacklist.md` exists (user layer, opt-in — see `templates/blacklist.example.md`), postings from listed companies are skipped, matched case- and punctuation-insensitively with the same company normalization the tracker scripts share. Skips are never silent: the run summary reports `N skipped (blacklist)` and the count is persisted to `data/scan-runs.tsv` as `filtered_blacklist`. Pass `--include-blacklisted` to bypass the filter for auditing — matching postings flow through annotated (`note: blacklisted: {reason}` in `data/pipeline.md`). No blacklist file = no filtering; nothing ever adds a company to the list automatically.
+
 ```bash
 npm run scan
+node scan.mjs --include-blacklisted   # audit: let blacklisted companies through, annotated
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.
@@ -427,5 +430,6 @@ Runs:       — no data (data/scan-runs.tsv missing; created by the next scan)
 * `dupes` — duplicate postings skipped
 * `new_added` — new postings actually added to the pipeline
 * `errors` — number of errors during the run
+* `filtered_blacklist` — skipped because the company is on your `data/blacklist.md` do-not-apply list (#1742)
 
 As the project is in continuous development, to parse for a stat we recommend doing it by column header instead of position.
