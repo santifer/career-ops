@@ -998,9 +998,22 @@ if (shared.includes('_profile.md')) {
 // --- _custom.md must be READ, not just written (#1388): Sources of Truth row +
 // honor rule in _shared.md, and an explicit pre-generation read in pdf.md ---
 const pdfModeCustom = readFile('modes/pdf.md');
+const markersAppearInOrder = (text, markers) => {
+  let cursor = -1;
+  for (const marker of markers) {
+    const idx = text.indexOf(marker, cursor + 1);
+    if (idx === -1 || idx <= cursor) return false;
+    cursor = idx;
+  }
+  return true;
+};
 if (
   shared.includes('| _custom.md | `modes/_custom.md` (if exists) |') &&
-  shared.includes('Read _custom.md (if it exists) AFTER _profile.md and honor its house rules in every mode') &&
+  markersAppearInOrder(shared, [
+    'Read _profile.md AFTER this file',
+    'Read _custom.md (if it exists) AFTER _profile.md',
+    'honor its house rules in every mode',
+  ]) &&
   shared.includes('does not expire between sessions or between items in a batch') &&
   pdfModeCustom.includes('read `modes/_custom.md` (if it exists) and apply its formatting/content house rules')
 ) {
@@ -1066,13 +1079,7 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
     if (start === -1) return false;
     const end = sectionEnd ? skill.indexOf(sectionEnd, start + sectionStart.length) : -1;
     const section = skill.slice(start, end === -1 ? undefined : end);
-    let cursor = -1;
-    for (const marker of markers) {
-      const idx = section.indexOf(marker, cursor + 1);
-      if (idx === -1 || idx <= cursor) return false;
-      cursor = idx;
-    }
-    return true;
+    return markersAppearInOrder(section, markers);
   };
 
   const sharedModeOrder = sectionOrder(
