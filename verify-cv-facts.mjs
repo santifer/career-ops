@@ -67,7 +67,7 @@ function resolveInputPath(path, cwd = process.cwd()) {
 /**
  * @param {string} targetText generated candidate-facing HTML/Markdown/text
  * @param {{ sourcePaths?: string[], configPath?: string, cwd?: string }} options
- * @returns {{ invented: string[], forbidden: string[] }}
+ * @returns {{ verdict: 'pass'|'block', invented: string[], forbidden: string[], warnings: string[] }}
  * @throws when the config is invalid
  */
 export function verifyFacts(targetText, {
@@ -82,17 +82,21 @@ export function verifyFacts(targetText, {
     ...config.allow_metrics.map(normalizeClaim),
   ]);
   const targetClaims = metricClaims(targetText);
-  return {
-    invented: [...targetClaims].filter(claim => !allowed.has(claim)),
-    forbidden: config.forbidden_phrases
+  const invented = [...targetClaims].filter(claim => !allowed.has(claim));
+  const forbidden = config.forbidden_phrases
       .filter(Boolean)
-      .filter(phrase => stripMarkup(targetText).toLowerCase().includes(String(phrase).toLowerCase())),
+      .filter(phrase => stripMarkup(targetText).toLowerCase().includes(String(phrase).toLowerCase()));
+  return {
+    verdict: invented.length || forbidden.length ? 'block' : 'pass',
+    invented,
+    forbidden,
+    warnings: [],
   };
 }
 
 export function assertFacts(targetText, options = {}) {
   const result = verifyFacts(targetText, options);
-  if (result.invented.length || result.forbidden.length) {
+  if (result.verdict === 'block') {
     const details = [];
     if (result.invented.length) details.push(`metric-like claims absent from sources: ${result.invented.join(', ')}`);
     if (result.forbidden.length) details.push(`forbidden phrases found: ${result.forbidden.join(', ')}`);
@@ -105,6 +109,7 @@ function parseCliArgs(args) {
   const sourcePaths = [];
   let targetArg = '';
   let configPath = DEFAULT_CONFIG;
+  let json = false;
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '--source' || arg === '--config') {
@@ -113,6 +118,8 @@ function parseCliArgs(args) {
       else configPath = args[++i];
     } else if (arg === '--help' || arg === '-h') {
       return { help: true };
+    } else if (arg === '--json') {
+      json = true;
     } else if (arg.startsWith('--')) {
       throw new Error(`unknown option: ${arg}`);
     } else if (!targetArg) {
@@ -121,11 +128,11 @@ function parseCliArgs(args) {
       throw new Error(`unexpected extra positional argument: ${arg}`);
     }
   }
-  return { targetArg, sourcePaths, configPath, help: false };
+  return { targetArg, sourcePaths, configPath, json, help: false };
 }
 
 function usage() {
-  return `Usage: node verify-cv-facts.mjs <generated-document> [--source path] [--config path]
+  return `Usage: node verify-cv-facts.mjs <generated-document> [--source path] [--config path] [--json]
 
 Checks generated candidate-facing text for metric-like claims absent from source files.
 Default sources: cv.md, article-digest.md
@@ -154,7 +161,11 @@ export function runCli(args = process.argv.slice(2)) {
       sourcePaths: parsed.sourcePaths.length ? parsed.sourcePaths : DEFAULT_SOURCES,
       configPath: parsed.configPath,
     });
-    if (!result.invented.length && !result.forbidden.length) {
+    if (parsed.json) {
+      console.log(JSON.stringify(result));
+      return result.verdict === 'pass' ? 0 : 1;
+    }
+    if (result.verdict === 'pass') {
       console.log(`CV fact check passed: ${basename(targetPath)}`);
       return 0;
     }
@@ -170,6 +181,10 @@ export function runCli(args = process.argv.slice(2)) {
     console.error('\nAdd real evidence to cv.md/article-digest.md, or allow a verified exception in config/cv-facts.json.');
     return 1;
   } catch (err) {
+    if (parsed.json) {
+      console.log(JSON.stringify({ verdict: 'block', invented: [], forbidden: [], warnings: [], errors: [err.message] }));
+      return 1;
+    }
     console.error(`ERROR: ${err.message}`);
     return 1;
   }

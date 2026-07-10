@@ -4,7 +4,7 @@ import { pass, fail, ROOT } from './helpers.mjs';
 import { mkdtempSync, writeFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { assertFacts } from '../verify-cv-facts.mjs';
+import { assertFacts, verifyFacts } from '../verify-cv-facts.mjs';
 import { buildHtml } from '../generate-cover-letter.mjs';
 
 console.log('\nCover letter fact gate');
@@ -26,6 +26,12 @@ try {
   const html = buildHtml(payload);
 
   try {
+    const result = verifyFacts(html, { sourcePaths: [source], configPath: config, label: 'cover letter' });
+    if (result.verdict !== 'pass' || !Array.isArray(result.warnings)) {
+      fail(`source-backed cover letter returned an unstable verdict: ${JSON.stringify(result)}`);
+    } else {
+      pass('source-backed cover letter returns a stable pass verdict');
+    }
     assertFacts(html, { sourcePaths: [source], configPath: config, label: 'cover letter' });
     pass('cover letter with source-backed metrics passes the shared fact gate');
   } catch (error) {
@@ -37,6 +43,12 @@ try {
     letter: { ...payload.letter, opening: 'I improved reliability for 26 users.' },
   });
   try {
+    const result = verifyFacts(invented, { sourcePaths: [source], configPath: config, label: 'cover letter' });
+    if (result.verdict !== 'block' || !Array.isArray(result.warnings)) {
+      fail(`unsupported cover letter returned an unstable verdict: ${JSON.stringify(result)}`);
+    } else {
+      pass('unsupported cover letter returns a stable block verdict');
+    }
     assertFacts(invented, { sourcePaths: [source], configPath: config, label: 'cover letter' });
     fail('cover letter fact gate allowed an unsupported metric');
   } catch (error) {
