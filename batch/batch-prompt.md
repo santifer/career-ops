@@ -298,11 +298,11 @@ via: {agency/recruiter firm as a quoted string, or null for direct applications}
 company_confidential: {true when the end employer is unknown (company is "?"), else false}
 advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"), or null when the JD states nothing}
 risk_summary:
-  legitimacy: {high_confidence | proceed_with_caution | suspicious}
-  classification: {clear | flagged | not_evaluated}
-  culture: {pass | caution | fail | not_evaluated}
-  interview_redflags: {none | caution | warning | not_evaluated}
-  ai_infra: {consistent | mismatch | not_evaluated}
+  legitimacy: "{high_confidence | proceed_with_caution | suspicious}"
+  classification: "{clear | flagged | not_evaluated}"
+  culture: "{pass | caution | fail | not_evaluated}"
+  interview_redflags: "{none | caution | warning | not_evaluated}"
+  ai_infra: "{consistent | mismatch | not_evaluated}"
 ```
 
 Rules:
@@ -363,11 +363,11 @@ via: {agency/recruiter firm as a quoted string, or null for direct applications}
 company_confidential: {true when the end employer is unknown (company is "?"), else false}
 advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"), or null when the JD states nothing}
 risk_summary:
-  legitimacy: {high_confidence | proceed_with_caution | suspicious}
-  classification: {clear | flagged | not_evaluated}
-  culture: {pass | caution | fail | not_evaluated}
-  interview_redflags: {none | caution | warning | not_evaluated}
-  ai_infra: {consistent | mismatch | not_evaluated}
+  legitimacy: "{high_confidence | proceed_with_caution | suspicious}"
+  classification: "{clear | flagged | not_evaluated}"
+  culture: "{pass | caution | fail | not_evaluated}"
+  interview_redflags: "{none | caution | warning | not_evaluated}"
+  ai_infra: "{consistent | mismatch | not_evaluated}"
 ```
 ```
 
