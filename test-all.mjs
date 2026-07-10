@@ -577,7 +577,7 @@ console.log('\n5. Data contract validation');
 // Check system files exist
 const systemFiles = [
   'CLAUDE.md', 'CODEX.md', 'OPENCODE.md', 'VERSION', 'DATA_CONTRACT.md', 'docs/CODEX.md',
-  'modes/_shared.md', 'modes/_profile.template.md', 'modes/_custom.template.md',
+  'modes/_shared.md', 'modes/_profile.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
   'modes/heuristics/recruiter-side.md',
   'templates/states.yml', 'templates/cv-template.html',
@@ -598,7 +598,7 @@ for (const f of systemFiles) {
 
 // Check user files are NOT tracked (gitignored)
 const userFiles = [
-  'config/profile.yml', 'modes/_profile.md', 'modes/_custom.md', 'portals.yml',
+  'config/profile.yml', 'modes/_profile.md', 'portals.yml',
 ];
 for (const f of userFiles) {
   const tracked = run('git', ['ls-files', f]);
@@ -972,7 +972,7 @@ try {
 console.log('\n8. Mode file integrity');
 
 const expectedModes = [
-  '_shared.md', '_profile.template.md', '_custom.template.md', 'oferta.md', 'pdf.md', 'scan.md',
+  '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md', 'email.md', 'add.md', 'titles.md',
@@ -1078,7 +1078,7 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
   const sharedModeOrder = sectionOrder(
     '### Modes that require `_shared.md` + their mode file',
     '### Standalone modes',
-    ['modes/_profile.md', 'modes/_custom.md', 'modes/{mode}.md'],
+    ['modes/_shared.md', 'modes/_profile.md', 'modes/_custom.md', 'modes/{mode}.md'],
   );
   const standaloneModeOrder = sectionOrder(
     '### Standalone modes',
@@ -1088,7 +1088,7 @@ for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/c
   const delegatedModeOrder = sectionOrder(
     '### Modes delegated to subagent',
     'Execute the instructions from the loaded mode file.',
-    ['content of modes/_profile.md if exists', 'content of modes/_custom.md if exists', 'content of modes/{mode}.md'],
+    ['content of modes/_shared.md', 'content of modes/_profile.md if exists', 'content of modes/_custom.md if exists', 'content of modes/{mode}.md'],
   );
 
   if (
@@ -5932,7 +5932,18 @@ try {
   if (agentsMd.includes('modes/_custom.md') && agentsMd.includes('modes/_custom.template.md')) {
     pass('AGENTS.md routes procedural customizations to modes/_custom.md');
   } else {
-    fail('AGENTS.md does not document modes/_custom.md as a user-layer customization file (#1388)');
+    fail('AGENTS.md does not document modes/_custom.md as a user-layer customization file (#1736)');
+  }
+
+  const noUserData = readFileSync(join(ROOT, '.github/workflows/no-user-data.yml'), 'utf-8');
+  const guardedPaths = (noUserData.match(/const USER_PATHS = \[([\s\S]*?)\];/) || [, ''])[1];
+  if (
+    guardedPaths.includes('/^modes\\/_custom\\.md$/') &&
+    guardedPaths.includes('/^voice-dna\\.md$/')
+  ) {
+    pass('no-user-data guard protects modes/_custom.md and voice-dna.md consistently with DATA_CONTRACT.md');
+  } else {
+    fail('no-user-data guard is missing modes/_custom.md or voice-dna.md from its user-layer paths (#1736)');
   }
 } catch (e) {
   fail(`custom instructions test crashed: ${e.message}`);
