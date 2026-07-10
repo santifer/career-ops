@@ -85,6 +85,13 @@ location:
 #   responded_subsequent_days: 3
 #   interview_thankyou_days: 1
 
+# Controls which model tier evaluates your offers. Valid values:
+#   economy  -- cheapest/fastest model, no extended thinking. Best for high-volume scanning.
+#   standard -- balanced model, no extended thinking. Default if this key is absent.
+#   premium  -- most capable model, adaptive extended thinking. Best for high-stakes offers.
+# See the tier -> model mapping table in modes/_shared.md.
+spend_tier: standard
+
 cv:
   output_format: "html" # "html" (default) or "latex"
   # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.

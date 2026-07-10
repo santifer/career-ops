@@ -15,6 +15,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run build:latex` | `build-cv-latex.mjs` | Build .tex from structured JSON payload |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
 | `npm run patterns` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |
+| `npm run upskill` | `upskill.mjs` | Aggregate skill-gap map from tracked reports |
 | `npm run add` | `add-entry.mjs` | Dedup + insert a `/career-ops add` entry into cv.md / article-digest.md |
 | `npm run update:check` | `update-system.mjs check` | Check for upstream updates |
 | `npm run update` | `update-system.mjs apply` | Apply upstream update |
@@ -26,6 +27,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run validate:portals` | `validate-portals.mjs` | Validate portals.yml shape before scanning |
 | `npm run tracker` | `tracker.mjs` | SQLite derived index over applications.md — sync/query/history/export |
 | `npm run find` | `find.mjs` | Resolve a report#/tracker#/company query to its full pipeline identity |
+| `npm run invite-match` | `invite-match.mjs` | Fuzzy-match a pasted interview-invite email against `data/applications.md` |
 
 ---
 
@@ -166,6 +168,21 @@ node analyze-patterns.mjs --self-test
 ```
 
 **Exit codes:** `0` analysis succeeded, `1` insufficient data or parser self-test failure.
+
+---
+
+## upskill
+
+Aggregates skill gaps across every tracked report (#1520, phase 1). Extracts skill tokens from each report's Machine Summary `hard_stops`/`soft_gaps` and Gap table, removes skills already present in `cv.md`/`config/profile.yml` (exact-alias matching only — an umbrella term never suppresses a specific skill), and weights each gap by inverse report score (`5.0 − score`, counted once per report). Tiers (Critical/High/Medium/Low) use fixed thresholds over the share of low-fit (score < 4.0) reports naming the gap. Output carries `schema_version` so the `upskill` mode's diff-vs-previous section never compares across extraction-rule changes, plus coverage stats (`reportsWithMachineSummary` vs `reportsRead`).
+
+```bash
+npm run upskill
+npm run upskill -- --summary
+npm run upskill -- --min-reports 3
+node upskill.mjs --self-test
+```
+
+**Exit codes:** `0` analysis succeeded (including graceful `{error}` JSON for insufficient data), `1` self-test failure.
 
 ---
 
@@ -343,3 +360,72 @@ node find.mjs acme --json       # machine-readable output
 Multiple matches print as a table; zero matches print a clean message.
 
 **Exit codes:** `0` at least one match, `1` no match, missing query, or no `applications.md`.
+
+---
+
+## stats.mjs
+
+Aggregates lifetime pipeline stats into one JSON report. Stats include tracker, scanner, portals, follow-ups and runs. Reads from data/applications.md, data/scan-history.tsv, portals.yml, data/follow-ups.md and data/scan-runs.tsv. If a file doesn't exist yet, the section turns into null.
+
+```bash
+node stats.mjs --summary             # returns human-readable table
+node stats.mjs                       # returns json
+```
+On a fresh clone, with no data yet, the JSON format is as follows:
+
+```
+{
+  "metadata": {
+    "generatedAt": "2026-07-07",
+    "sources": {
+      "tracker": false,
+      "scanHistory": false,
+      "followups": false,
+      "portals": false,
+      "scanRuns": false
+    }
+  },
+  "tracker": null,
+  "funnel": null,
+  "scan": null,
+  "portals": null,
+  "followups": null,
+  "runs": null
+}
+```
+
+With --summary it returns:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Pipeline Stats — 2026-07-07
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tracker:    — no data (data/applications.md missing)
+Scanner:    — no data (data/scan-history.tsv missing)
+Portals:    — no data (portals.yml missing)
+Follow-ups: — no data (data/follow-ups.md missing)
+Runs:       — no data (data/scan-runs.tsv missing; created by the next scan)
+```
+
+---
+
+## data/scan-runs.tsv
+
+`scan.mjs` appends one row to this file after each non-dry scan run, recording how many companies/boards it checked, how many postings it found vs. filtered out vs. flagged as duplicates vs. added, and how many errors occurred. `--dry-run` scans never write to this file. Stats appended include:
+
+* `timestamp` — ISO timestamp of the scan
+* `status` — always `completed` for now
+* `companies` — number of companies scanned this run
+* `boards` — number of job boards scanned this run
+* `found` — total postings found
+* `filtered_title` — filtered out by title mismatch
+* `filtered_tier` — filtered out by tier
+* `filtered_location` — filtered out by location
+* `filtered_salary` — filtered out by salary
+* `filtered_content` — filtered out by content
+* `filtered_cooldown` — skipped because you recently applied to the same company + role and are still in the waiting period
+* `dupes` — duplicate postings skipped
+* `new_added` — new postings actually added to the pipeline
+* `errors` — number of errors during the run
+
+As the project is in continuous development, to parse for a stat we recommend doing it by column header instead of position.
