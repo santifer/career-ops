@@ -17,6 +17,7 @@ import { readFileSync, existsSync, mkdirSync } from "fs";
 import { dirname, resolve, basename, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { parseArgs } from "util";
+import { assertFacts } from "./verify-cv-facts.mjs";
 
 const OUTPUT_ROOT = resolve("output");
 
@@ -195,6 +196,10 @@ Usage:
 
   try {
     const html = buildHtml(payload);
+    // Cover letters are candidate-facing documents too. Reuse the CV fact
+    // validator before importing Playwright or writing a PDF so a failed gate
+    // cannot leave behind a misleading artifact.
+    assertFacts(html, { label: "cover letter" });
     const outputPath = resolve(payload.output_path);
     await renderHtmlToPdf(html, outputPath, { format: "a4" });
     console.log(`\nCover letter PDF: ${payload.output_path}`);

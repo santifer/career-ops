@@ -269,6 +269,12 @@ End the draft with: "How does this read? Once you approve I'll generate the PDF.
 
 Only after explicit user approval.
 
+Before rendering, run the shared fact validator against the assembled cover
+letter HTML. It checks metric-like claims against `cv.md`,
+`article-digest.md`, and the optional `config/cv-facts.json` allowlist. If the
+check fails, stop and do not create a PDF; add the missing evidence or obtain a
+verified allowlist exception first.
+
 Assemble the JSON payload:
 
 ```json
