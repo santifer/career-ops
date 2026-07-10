@@ -91,6 +91,14 @@
 #   max: 0
 #   currency: "USD"
 
+# -- Posting-age filter (optional) --
+# Opt-in freshness gate. Skips offers whose posting date (postedAt, supplied by
+# the provider) is older than N days. Offers from providers that expose no date
+# are never skipped — same "don't penalize missing data" rule as location_filter.
+# Absent, 0, or non-positive → disabled (all ages pass).
+#
+# max_posting_age_days: 45
+
 # -- Trust filter (optional) --
 # Enriches each scanned job with a trust score (0-100) and flags.
 # Jobs are NEVER dropped — only annotated. The trust score helps you
