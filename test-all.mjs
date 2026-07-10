@@ -7745,6 +7745,20 @@ try {
   } else {
     fail('computeRunStats should return null for empty/unknown-schema input');
   }
+
+  const portalsYml = 'tracked_companies:\n  - name: Acme\n  - name: GlobalCorp\n  - name: DeadInc\njob_boards: []';
+  const portalHealthTsv = 'timestamp\tcompany\tstatus\n' +
+    '2026-07-01\tDeadInc\tslug_gone\n' +
+    '2026-07-02\tDeadInc\tslug_gone\n' +
+    '2026-07-03\tDeadInc\tslug_gone\n' +
+    '2026-07-01\tGlobalCorp\tnetwork\n' +
+    '2026-07-02\tGlobalCorp\treachable\n';
+  const p = stats.computePortalStats(portalsYml, null, [], portalHealthTsv);
+  if (p && p.persistentlyDead === 1) {
+    pass('computePortalStats tracks persistentlyDead count from portal-health.tsv streaks');
+  } else {
+    fail('computePortalStats failed to compute persistentlyDead streaks');
+  }
 } catch (e) {
   fail(`test layout guard: ${e.message}`);
 }
