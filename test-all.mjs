@@ -129,6 +129,7 @@ const scripts = [
   { name: 'upskill.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
+  { name: 'company-history.mjs --self-test', expectExit: 0 },
   { name: 'salary-gap.mjs --self-test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
@@ -143,6 +144,7 @@ const scripts = [
   { name: 'detect-reposts.test.mjs', expectExit: 0 },
   { name: 'followup-cadence.test.mjs', expectExit: 0 },
   { name: 'process-quality.test.mjs', expectExit: 0 },
+  { name: 'company-history.test.mjs', expectExit: 0 },
   { name: 'reply-matcher.test.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
@@ -1654,6 +1656,57 @@ if ((batchPromptDoc.match(/advertised_comp/g) || []).length >= 2) {
   pass('batch prompt carries advertised_comp in both Machine Summary fences');
 } else {
   fail('batch prompt missing advertised_comp in one or both Machine Summary fences');
+}
+
+// --- company-history.mjs wiring across mode docs (Task 6) ---
+const followupModeDoc = readFile('modes/followup.md');
+
+if (
+  ofertaMode.includes('company-history.mjs') &&
+  ofertaMode.includes('Prior-contact FYI') &&
+  ofertaMode.includes('Not a legitimacy signal')
+) {
+  pass('oferta mode wires company-history.mjs and keeps the prior-contact FYI out of the legitimacy tier');
+} else {
+  fail('oferta mode missing company-history.mjs reference, the "Prior-contact FYI" block, or the "Not a legitimacy signal" guardrail');
+}
+
+// Hygiene must not just be mentioned — it must be documented BEFORE the
+// aged-Applied cards are consumed (the documented precedence is the guard
+// against drawing conclusions from stale tracker rows). Anchor to the exact
+// cue line so an unrelated "hygiene" mention elsewhere cannot satisfy this.
+const patternsHygieneIdx = patternsModeDoc.indexOf('Hygiene first, always.');
+const patternsAgedIdx = patternsModeDoc.indexOf('aged-Applied');
+if (
+  patternsModeDoc.includes('company-history.mjs') &&
+  patternsHygieneIdx !== -1 && patternsAgedIdx !== -1 &&
+  patternsHygieneIdx < patternsAgedIdx
+) {
+  pass('patterns mode adds the company-history lens with hygiene documented before aged-Applied cards');
+} else {
+  fail('patterns mode missing company-history.mjs lens, the "Hygiene first, always." cue, aged-Applied mention, or hygiene-before-aged-Applied ordering');
+}
+
+if (followupModeDoc.includes('company-history.mjs') && followupModeDoc.includes('silent-on-you')) {
+  pass('followup mode references both company-history.mjs and the silent-on-you label when setting expectations');
+} else {
+  fail('followup mode must reference BOTH company-history.mjs and silent-on-you');
+}
+
+if (trackerModeDoc.includes('company-history.mjs') && trackerModeDoc.includes('silent-on-you')) {
+  pass('tracker mode offers company-history.mjs when a silent-on-you company is present');
+} else {
+  fail('tracker mode missing company-history.mjs reference or the silent-on-you trigger');
+}
+
+if (
+  shared.includes('company-history.mjs') &&
+  shared.includes('Reposting pattern') &&
+  shared.includes('postingChurn')
+) {
+  pass('_shared.md signals table joins the reposting signal through company-history.mjs');
+} else {
+  fail('_shared.md signals table missing the Reposting pattern row, postingChurn reference, or company-history.mjs join');
 }
 
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────

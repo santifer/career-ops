@@ -171,6 +171,8 @@ const SYSTEM_PATHS = [
   'fingerprint-core.mjs',
   'process-quality.mjs',
   'process-quality.test.mjs',
+  'company-history.mjs',
+  'company-history.test.mjs',
   'salary-gap.mjs',
   'followup-cadence.mjs',
   'followup-cadence.test.mjs',
