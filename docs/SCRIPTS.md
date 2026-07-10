@@ -4,27 +4,30 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 
 ## Quick Reference
 
-| Command                    | Script                       | Purpose                                                                 |
-| -------------------------- | ---------------------------- | ----------------------------------------------------------------------- |
-| `npm run doctor`           | `doctor.mjs`                 | Validate setup prerequisites                                            |
-| `npm run verify`           | `verify-pipeline.mjs`        | Check pipeline data integrity                                           |
-| `npm run normalize`        | `normalize-statuses.mjs`     | Fix non-canonical statuses                                              |
-| `npm run dedup`            | `dedup-tracker.mjs`          | Remove duplicate tracker entries                                        |
-| `npm run merge`            | `merge-tracker.mjs`          | Merge batch TSVs into applications.md                                   |
-| `npm run pdf`              | `generate-pdf.mjs`           | Convert HTML to ATS-optimized PDF                                       |
-| `npm run build:latex`      | `build-cv-latex.mjs`         | Build .tex from structured JSON payload                                 |
-| `npm run sync-check`       | `cv-sync-check.mjs`          | Validate CV/profile consistency                                         |
-| `npm run patterns`         | `analyze-patterns.mjs`       | Analyze tracker outcomes and report patterns                            |
-| `npm run add`              | `add-entry.mjs`              | Dedup + insert a `/career-ops add` entry into cv.md / article-digest.md |
-| `npm run update:check`     | `update-system.mjs check`    | Check for upstream updates                                              |
-| `npm run update`           | `update-system.mjs apply`    | Apply upstream update                                                   |
-| `npm run rollback`         | `update-system.mjs rollback` | Rollback last update                                                    |
-| `npm run liveness`         | `check-liveness.mjs`         | Test if job URLs are still active                                       |
-| `npm run scan`             | `scan.mjs`                   | Zero-token portal scanner                                               |
-| `npm run scan:full`        | `scan-ats-full.mjs`          | Reverse ATS discovery scanner                                           |
-| `npm run validate:portals` | `validate-portals.mjs`       | Validate portals.yml shape before scanning                              |
-| `npm run tracker`          | `tracker.mjs`                | SQLite derived index over applications.md — sync/query/history/export   |
-| `npm run find`             | `find.mjs`                   | Resolve a report#/tracker#/company query to its full pipeline identity  |
+| Command | Script | Purpose |
+|---------|--------|---------|
+| `npm run doctor` | `doctor.mjs` | Validate setup prerequisites |
+| `npm run verify` | `verify-pipeline.mjs` | Check pipeline data integrity |
+| `npm run normalize` | `normalize-statuses.mjs` | Fix non-canonical statuses |
+| `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
+| `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
+| `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
+| `npm run build:latex` | `build-cv-latex.mjs` | Build .tex from structured JSON payload |
+| `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
+| `npm run patterns` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |
+| `npm run upskill` | `upskill.mjs` | Aggregate skill-gap map from tracked reports |
+| `npm run add` | `add-entry.mjs` | Dedup + insert a `/career-ops add` entry into cv.md / article-digest.md |
+| `npm run update:check` | `update-system.mjs check` | Check for upstream updates |
+| `npm run update` | `update-system.mjs apply` | Apply upstream update |
+| `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
+| `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
+| `npm run extract` | `browser-extract.mjs` | Headless read-only page extractor (opt-in `scan.extractor: cli`) — compact JSON for scan/JD |
+| `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run scan:full` | `scan-ats-full.mjs` | Reverse ATS discovery scanner |
+| `npm run validate:portals` | `validate-portals.mjs` | Validate portals.yml shape before scanning |
+| `npm run tracker` | `tracker.mjs` | SQLite derived index over applications.md — sync/query/history/export |
+| `npm run find` | `find.mjs` | Resolve a report#/tracker#/company query to its full pipeline identity |
+| `npm run invite-match` | `invite-match.mjs` | Fuzzy-match a pasted interview-invite email against `data/applications.md` |
 
 ---
 
@@ -168,6 +171,21 @@ node analyze-patterns.mjs --self-test
 
 ---
 
+## upskill
+
+Aggregates skill gaps across every tracked report (#1520, phase 1). Extracts skill tokens from each report's Machine Summary `hard_stops`/`soft_gaps` and Gap table, removes skills already present in `cv.md`/`config/profile.yml` (exact-alias matching only — an umbrella term never suppresses a specific skill), and weights each gap by inverse report score (`5.0 − score`, counted once per report). Tiers (Critical/High/Medium/Low) use fixed thresholds over the share of low-fit (score < 4.0) reports naming the gap. Output carries `schema_version` so the `upskill` mode's diff-vs-previous section never compares across extraction-rule changes, plus coverage stats (`reportsWithMachineSummary` vs `reportsRead`).
+
+```bash
+npm run upskill
+npm run upskill -- --summary
+npm run upskill -- --min-reports 3
+node upskill.mjs --self-test
+```
+
+**Exit codes:** `0` analysis succeeded (including graceful `{error}` JSON for insufficient data), `1` self-test failure.
+
+---
+
 ## salary-gap
 
 Folds compensation observations into per-application desired/advertised/actual values and gap aggregates. Sources: `reports/*.md` Machine Summary `advertised_comp` (advertised, source `jd` — historical reports backfill automatically), `data/salary-observations.tsv` (desired/actual, append-only), and `config/profile.yml` `compensation.target_range` (desired default). Fold precedence: highest trust tier wins, then latest date (`actual`: contract > offer-letter > recruiter-verbal > user). Aggregates group by (company, role) and per currency — no FX conversion. Unparseable amounts, orphaned tracker numbers, sample sizes, and staleness are always reported.
@@ -190,6 +208,31 @@ Amounts: number + optional k/K suffix, ranges allowed ("80-90k"), annual gross u
 
 ---
 
+## funnel-velocity
+
+Funnel calibration vs market benchmarks + stage velocity. Three payloads, decreasing availability: **calibration** — your funnel rates (canonical `ever*` definition imported from `stats.mjs`) vs candidate-side benchmark ranges from `templates/benchmarks.yml` (override: `config/benchmarks.yml` or `--benchmarks <path>`); **waiting** — in-flight Applied rows and elapsed days vs the typical first-response window (per-row factual reporting; applied-date priority: status-log observation > `Applied YYYY-MM-DD` in tracker notes > unknown, never guessed); **velocity** — median/p75 days per stage hop (Applied→Responded→Interview→Offer, Applied→Rejected separate) folded from `data/status-log.tsv`.
+
+Statistical honesty is enforced in code: right-censored counts printed next to every median ("n still waiting, excluded"), same-day catch-up hops excluded and counted, no comparative multiplier claims below n=20 applied, above-range output carries a selection-bias note, every benchmark mention carries its year + "directional". Coverage, orphaned tracker numbers, unparseable lines, and unknown sources are always reported.
+
+```bash
+node funnel-velocity.mjs             # JSON
+node funnel-velocity.mjs --summary   # human-readable
+node funnel-velocity.mjs --self-test
+node funnel-velocity.mjs --benchmarks path/to/benchmarks.yml
+```
+
+Ledger line format (TSV, appended by `set-status.mjs`, `#`-prefixed lines are comments):
+
+```text
+{tracker#}\t{YYYY-MM-DD}\t{from}\t{to}\t{source}\t{note}
+```
+
+`from` may be `-` (unknown prior state); `to` = `-` retracts the row's latest observation; a later `correction`-source line with the same (tracker#, to) replaces the earlier observation's date. Sources: set-status | correction | backfill | manual (only set-status/correction feed day-math).
+
+**Exit codes:** `0` always (missing tracker/ledger produce an explanatory empty result), `1` self-test or benchmarks-load failure.
+
+---
+
 ## update:check
 
 Checks whether a newer version of career-ops is available upstream. Outputs JSON to stdout:
@@ -200,12 +243,12 @@ npm run update:check
 
 Possible JSON responses:
 
-| `status`           | Meaning                                                        |
-| ------------------ | -------------------------------------------------------------- |
-| `up-to-date`       | Local version matches remote                                   |
+| `status` | Meaning |
+|----------|---------|
+| `up-to-date` | Local version matches remote |
 | `update-available` | Newer version exists (includes `local`, `remote`, `changelog`) |
-| `dismissed`        | User dismissed the update prompt                               |
-| `offline`          | Could not reach GitHub                                         |
+| `dismissed` | User dismissed the update prompt |
+| `offline` | Could not reach GitHub |
 
 **Exit codes:** `0` always.
 
@@ -270,10 +313,13 @@ Use `args` only for reusable parsers that intentionally accept runtime parameter
 
 If a parser writes full extraction artifacts for debugging or audit, store them under `data/parser-output/{company}/`. `scan.mjs` reads stdout and does not require those JSON files after parsing. Keep generated JSON artifacts out of git; `.gitkeep` placeholders are the only exception for preserving directory structure.
 
-When the ATS provider's list API returns a description, each new offer is fingerprinted for cross-listing detection. See [Cross-listing detection](#cross-listing-detection-1) under `scan:full` for details.
+When the ATS provider's list API returns a description, each new offer is fingerprinted for cross-listing detection. See [Cross-listing detection](#cross-listing-detection) under `scan:full` for details.
+
+**Company blacklist (#1742):** if `data/blacklist.md` exists (user layer, opt-in — see `templates/blacklist.example.md`), postings from listed companies are skipped, matched case- and punctuation-insensitively with the same company normalization the tracker scripts share. Skips are never silent: the run summary reports `N skipped (blacklist)` and the count is persisted to `data/scan-runs.tsv` as `filtered_blacklist`. Pass `--include-blacklisted` to bypass the filter for auditing — matching postings flow through annotated (`note: blacklisted: {reason}` in `data/pipeline.md`). No blacklist file = no filtering; nothing ever adds a company to the list automatically.
 
 ```bash
 npm run scan
+node scan.mjs --include-blacklisted   # audit: let blacklisted companies through, annotated
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.
@@ -358,3 +404,73 @@ node find.mjs acme --json       # machine-readable output
 Multiple matches print as a table; zero matches print a clean message.
 
 **Exit codes:** `0` at least one match, `1` no match, missing query, or no `applications.md`.
+
+---
+
+## stats.mjs
+
+Aggregates lifetime pipeline stats into one JSON report. Stats include tracker, scanner, portals, follow-ups and runs. Reads from data/applications.md, data/scan-history.tsv, portals.yml, data/follow-ups.md and data/scan-runs.tsv. If a file doesn't exist yet, the section turns into null.
+
+```bash
+node stats.mjs --summary             # returns human-readable table
+node stats.mjs                       # returns json
+```
+On a fresh clone, with no data yet, the JSON format is as follows:
+
+```
+{
+  "metadata": {
+    "generatedAt": "2026-07-07",
+    "sources": {
+      "tracker": false,
+      "scanHistory": false,
+      "followups": false,
+      "portals": false,
+      "scanRuns": false
+    }
+  },
+  "tracker": null,
+  "funnel": null,
+  "scan": null,
+  "portals": null,
+  "followups": null,
+  "runs": null
+}
+```
+
+With --summary it returns:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Pipeline Stats — 2026-07-07
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tracker:    — no data (data/applications.md missing)
+Scanner:    — no data (data/scan-history.tsv missing)
+Portals:    — no data (portals.yml missing)
+Follow-ups: — no data (data/follow-ups.md missing)
+Runs:       — no data (data/scan-runs.tsv missing; created by the next scan)
+```
+
+---
+
+## data/scan-runs.tsv
+
+`scan.mjs` appends one row to this file after each non-dry scan run, recording how many companies/boards it checked, how many postings it found vs. filtered out vs. flagged as duplicates vs. added, and how many errors occurred. `--dry-run` scans never write to this file. Stats appended include:
+
+* `timestamp` — ISO timestamp of the scan
+* `status` — always `completed` for now
+* `companies` — number of companies scanned this run
+* `boards` — number of job boards scanned this run
+* `found` — total postings found
+* `filtered_title` — filtered out by title mismatch
+* `filtered_tier` — filtered out by tier
+* `filtered_location` — filtered out by location
+* `filtered_salary` — filtered out by salary
+* `filtered_content` — filtered out by content
+* `filtered_cooldown` — skipped because you recently applied to the same company + role and are still in the waiting period
+* `dupes` — duplicate postings skipped
+* `new_added` — new postings actually added to the pipeline
+* `errors` — number of errors during the run
+* `filtered_blacklist` — skipped because the company is on your `data/blacklist.md` do-not-apply list (#1742)
+
+As the project is in continuous development, to parse for a stat we recommend doing it by column header instead of position.

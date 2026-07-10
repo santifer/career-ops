@@ -28,6 +28,8 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 Before generating any application answers, verify that the form still points to the intended active job. This gate runs after the page has been detected, the company/role has been identified, and the matching report has been loaded.
 
+**Blacklist check (#1742):** before any form filling starts, if `data/blacklist.md` exists, check the visible company against it (case- and punctuation-insensitive). The file is the candidate's own do-not-apply list — on a hit, STOP and surface their own recorded decision: "{Company} is on your blacklist (since {Since}): *{Reason}*. Do you still want to apply?" Require an explicit yes before generating or filling anything — never silently refuse, never silently proceed; the candidate's call always wins. Absent file = skip this check.
+
 **Cross-channel check (#1596):** before drafting — and ALWAYS before the user authorizes an agency to submit on their behalf — check `data/applications.md` for an existing row with the same company+role under a different Via (agency vs direct, or two agencies). A double submission burns the candidate with both the agency and the employer. If found, stop and ask the user which channel owns the candidacy. If the end employer is still unknown (Company `?`), the check still runs in degraded form — it is never silently skipped:
 
 1. Ask the user (or the recruiter, via the user) for the client company name first — the reveal is the cheapest fix and unlocks the full check.
