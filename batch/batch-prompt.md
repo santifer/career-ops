@@ -87,7 +87,7 @@ Run these steps in order.
 
 ### Step 2 — Evaluate A-G
 
-Read `cv.md`, `article-digest.md`, `modes/_profile.md`, and `config/profile.yml`. Then complete every block below.
+Read `cv.md`, `article-digest.md`, `llms.txt`, `modes/_profile.md`, and `config/profile.yml`. Then complete every block below.
 
 #### Step 0 — Archetype Detection
 

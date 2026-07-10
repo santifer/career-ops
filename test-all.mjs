@@ -998,8 +998,24 @@ const marketModeDocs = [
   ['CLAUDE.md', outputLanguageClaudeDoc],
 ];
 
+const outputRequestSwitchesMarketMode = (text) => text.split('\n').some((line) =>
+  /asks? for (German|French|Arabic|Japanese|Turkish) output/i.test(line) &&
+  /(?:switch(?:es|ing)?|use|read from)[^\n]*(?:language\.modes_dir|modes\/(?:de|fr|ar|ja|tr))/i.test(line)
+);
+
+const validOutputLanguageGuidance = 'If the user asks for French output, set language.output to fr.';
+const invalidOutputLanguageGuidance = 'If the user asks for French output, switch to language.modes_dir: modes/fr.';
+if (
+  !outputRequestSwitchesMarketMode(validOutputLanguageGuidance) &&
+  outputRequestSwitchesMarketMode(invalidOutputLanguageGuidance)
+) {
+  pass('output-language mentions do not imply a market-mode switch');
+} else {
+  fail('output-language mentions are incorrectly treated as market-mode switches');
+}
+
 for (const [docName, docText] of marketModeDocs) {
-  if (/asks for (German|French|Arabic|Japanese|Turkish) output/i.test(docText)) {
+  if (outputRequestSwitchesMarketMode(docText)) {
     fail(`${docName} treats output-language requests as market-mode selection`);
   } else {
     pass(`${docName} keeps output language separate from market-mode selection`);
@@ -1016,6 +1032,13 @@ if (/Language Rule/i.test(batchPrompt) && /language\.output/.test(batchPrompt) &
   pass('batch prompt honors language.output for worker prose');
 } else {
   fail('batch prompt does not honor language.output for worker prose');
+}
+
+const batchEvaluationInputs = batchPrompt.match(/### Step 2 \u2014 Evaluate A-G([\s\S]*?)#### Step 0 \u2014 Archetype Detection/)?.[1] ?? '';
+if (/`llms\.txt`/.test(batchEvaluationInputs)) {
+  pass('batch evaluation step loads llms.txt');
+} else {
+  fail('batch evaluation step does not load llms.txt');
 }
 
 if (/Canonical base language:\s*English\./.test(batchPrompt)) {
