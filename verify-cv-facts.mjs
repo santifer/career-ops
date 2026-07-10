@@ -15,10 +15,12 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_SOURCES = ['cv.md', 'article-digest.md'];
 const DEFAULT_CONFIG = join(ROOT, 'config', 'cv-facts.json');
 
+/** Read a UTF-8 file when it exists, otherwise return an empty string. */
 function readIfExists(path) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
+/** Remove HTML, basic LaTeX commands, and excess whitespace from document text. */
 export function stripMarkup(text) {
   return text
     .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, ' ')
@@ -31,15 +33,18 @@ export function stripMarkup(text) {
     .trim();
 }
 
+/** Normalize a claim for case- and whitespace-insensitive comparison. */
 export function normalizeClaim(claim) {
   return claim.toLowerCase().replace(/[,\s]+/g, ' ').trim();
 }
 
+/** Normalize a non-metric fact and remove terminal punctuation. */
 function normalizeFact(value) {
   return normalizeClaim(value).replace(/[.;:,]+$/g, '').trim();
 }
 
 /** Extract only explicitly asserted non-metric facts, not every noun in prose. */
+/** Extract explicitly asserted employer, title, and tool claims from text. */
 export function factClaims(text) {
   const clean = stripMarkup(text);
   const claims = [];
@@ -62,6 +67,7 @@ export function factClaims(text) {
   return claims;
 }
 
+/** Extract metric-like claims that require source evidence. */
 export function metricClaims(text) {
   const clean = stripMarkup(text);
   const patterns = [
@@ -77,6 +83,7 @@ export function metricClaims(text) {
   return claims;
 }
 
+/** Load and validate the optional fact-gate configuration file. */
 function loadConfig(path) {
   if (!existsSync(path)) return { allow_metrics: [], allow_facts: [], forbidden_phrases: [], warn_phrases: [] };
   const config = JSON.parse(readFileSync(path, 'utf-8'));
@@ -87,6 +94,7 @@ function loadConfig(path) {
   return config;
 }
 
+/** Resolve a CLI or configuration path relative to the selected working directory. */
 function resolveInputPath(path, cwd = process.cwd()) {
   return isAbsolute(path) ? path : join(cwd, path);
 }
@@ -130,6 +138,7 @@ export function verifyFacts(targetText, {
   };
 }
 
+/** Verify a document and throw when it contains a blocking unsupported claim. */
 export function assertFacts(targetText, options = {}) {
   const result = verifyFacts(targetText, options);
   if (result.verdict === 'block') {
@@ -142,6 +151,7 @@ export function assertFacts(targetText, options = {}) {
   return result;
 }
 
+/** Parse the fact-validator command-line arguments. */
 function parseCliArgs(args) {
   const sourcePaths = [];
   let targetArg = '';
@@ -168,6 +178,7 @@ function parseCliArgs(args) {
   return { targetArg, sourcePaths, configPath, json, help: false };
 }
 
+/** Return the command-line usage text. */
 function usage() {
   return `Usage: node verify-cv-facts.mjs <generated-document> [--source path] [--config path] [--json]
 
@@ -177,6 +188,7 @@ Default sources: cv.md, article-digest.md
 Default config:  config/cv-facts.json (optional)`;
 }
 
+/** Run the fact validator CLI and return its process exit code. */
 export function runCli(args = process.argv.slice(2)) {
   let parsed;
   try {
