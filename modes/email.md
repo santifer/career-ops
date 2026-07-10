@@ -289,15 +289,16 @@ All values below are placeholders — fill them only with details the user
 actually provides. Never invent error text, timestamps, or retry steps.
 
 ```text
-Subject: Application to {Role} ({REQ-ID}) — {broken step} error
+Subject: Application to {Role} ({REQ-ID}) — {broken step} issue
 
 Hi {Company} Recruiting team,
 
 I'm partway through the application process for {Role} ({REQ-ID}) and hit a
 technical issue I can't get past: {broken step} fails on every attempt.
-{Exact observed behavior, quoting error text verbatim if any} (tried
-{date + time + timezone}, {what was retried}). A screenshot is available if
-useful.
+{Exact observed behavior — quote error text verbatim only if one exists;
+otherwise describe what happens: the page reloads, keeps spinning, shows no
+slots} (tried {date + time + timezone}, {what was retried}). A screenshot is
+available if useful.
 
 Could someone schedule the interview manually? Happy to take any slot that
 works for the team.
