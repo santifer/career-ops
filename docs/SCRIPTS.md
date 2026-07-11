@@ -128,7 +128,16 @@ Renders an HTML file to a print-quality, ATS-parseable PDF via headless Chromium
 npm run pdf -- input.html output.pdf
 npm run pdf -- input.html output.pdf --format=letter   # US letter
 npm run pdf -- input.html output.pdf --format=a4        # A4 (default)
+npm run pdf -- input.html output.pdf --max-pages=1      # strict one-page budget
+npm run pdf -- input.html output.pdf --allow-overflow   # deliberate exception
 ```
+
+The renderer checks the page count of the PDF Chromium actually produced. The
+default budget is two pages; `--max-pages=N` accepts a positive integer. An
+overflow leaves the rendered draft available for inspection but exits with an
+error and trimming guidance without registering the draft as successful.
+`--allow-overflow` explicitly downgrades that error to a warning without
+changing the deterministic render.
 
 **Exit codes:** `0` PDF generated, `1` missing arguments or generation failure.
 
