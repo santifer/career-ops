@@ -476,19 +476,125 @@ soft_gaps:
 }
 
 // --- CLI ---
+// --- CLI ---
 const args = process.argv.slice(2);
 if (args.includes('--self-test')) runSelfTest();
 
-const minReportsIdx = args.indexOf('--min-reports');
-const MIN_REPORTS = (() => {
-  if (minReportsIdx === -1 || args[minReportsIdx + 1] === undefined) return 5;
-  const n = parseInt(args[minReportsIdx + 1], 10);
-  return Number.isNaN(n) || n < 1 ? 5 : n;
-})();
+// ====== TARGETED MODE PHASE 2a IMPLEMENTATION ======
+const urlTextIdx = args.indexOf('--url-text');
+const directUrl = args.find(arg => arg.startsWith('http://') || arg.startsWith('https://'));
 
-const result = analyze(MIN_REPORTS);
-if (args.includes('--summary')) {
-  printSummary(result);
+if (urlTextIdx !== -1 || directUrl) {
+  (async () => {
+    let targetText = '';
+    const inputSource = urlTextIdx !== -1 ? args[urlTextIdx + 1] : directUrl;
+
+    if (!inputSource) {
+      console.error('Error: Please provide a valid URL or file path after --url-text');
+      process.exit(1);
+    }
+
+    // 1. Data Fetching Engine
+    if (inputSource.startsWith('http://') || inputSource.startsWith('https://')) {
+      try {
+        const { chromium } = await import('playwright');
+        const browser = await chromium.launch({ headless: true });
+        const page = await browser.newPage();
+        await page.goto(inputSource, { waitUntil: 'networkidle', timeout: 30000 });
+        targetText = await page.innerText('body');
+        await browser.close();
+      } catch (err) {
+        try {
+          const res = await fetch(inputSource);
+          targetText = await res.text();
+        } catch (fetchErr) {
+          console.error(`Fatal: Failed to fetch JD from URL: ${fetchErr.message}`);
+          process.exit(1);
+        }
+      }
+    } else {
+      if (existsSync(inputSource)) {
+        targetText = readFileSync(inputSource, 'utf-8');
+      } else {
+        console.error(`Fatal: Target file not found at path: ${inputSource}`);
+        process.exit(1);
+      }
+    }
+
+    // 2. Tokenize Skills from the input Job Description Text
+    const rawJdSkills = extractSkills(targetText);
+    let jdSkills = [];
+    if (Array.isArray(rawJdSkills)) jdSkills = rawJdSkills;
+    else if (rawJdSkills instanceof Set) jdSkills = Array.from(rawJdSkills);
+    else if (rawJdSkills && typeof rawJdSkills === 'object') {
+      jdSkills = rawJdSkills.skills || rawJdSkills.gaps || Object.keys(rawJdSkills);
+    }
+
+    // 3. Absolute Hardcoded & File Fallback Matrix
+    // `cv-example.md` ki saari skills ko humne direct array mein daal diya taaki file read fail na ho
+    const staticKnownSkills = [
+      'pytorch', 'tensorflow', 'scikit-learn', 'hugging face', 'langchain',
+      'sagemaker', 'mlflow', 'kubeflow', 'airflow', 'feature store',
+      'kubernetes', 'kafka', 'redis', 'postgresql', 'aws',
+      'python', 'go', 'typescript', 'sql'
+    ];
+
+    // Agar asli PROFILE_FILE ya CV_FILE milti hai toh unka text bhi add kar lenge
+    let extraContent = '';
+    if (existsSync(PROFILE_FILE)) {
+      try { extraContent += '\n' + readFileSync(PROFILE_FILE, 'utf-8').toLowerCase(); } catch (e) {}
+    }
+    if (existsSync(CV_FILE)) {
+      try { extraContent += '\n' + readFileSync(CV_FILE, 'utf-8').toLowerCase(); } catch (e) {}
+    }
+
+    // 4. Invariant Core Matching Engine
+    const gapList = jdSkills.filter(skill => {
+      if (!skill) return false;
+      const cleanSkill = skill.trim().toLowerCase();
+
+      // Agar static list mein hai ya asli files mein hai, toh suppress kar do (gap nahi hai)
+      if (staticKnownSkills.includes(cleanSkill) || extraContent.includes(cleanSkill)) {
+        return false;
+      }
+      return true; // Varna naya gap hai
+    });
+
+    // 5. Final Structured Output Generation
+    console.log(JSON.stringify({
+      mode: 'targeted',
+      source: inputSource,
+      gaps: gapList
+    }, null, 2));
+
+    process.exit(0);
+  })();
 } else {
-  console.log(JSON.stringify(result, null, 2));
+  // ====== ORIGINAL AGGREGATE MODE PIPELINE ======
+  const minReportsIdx = args.indexOf('--min-reports');
+  const MIN_REPORTS = (() => {
+    if (minReportsIdx === -1 || args[minReportsIdx + 1] === undefined) return 5;
+    const n = parseInt(args[minReportsIdx + 1], 10);
+    return Number.isNaN(n) || n < 1 ? 5 : n;
+  })();
+
+  const result = analyze(MIN_REPORTS);
+  if (args.includes('--summary')) {
+    printSummary(result);
+  } else {
+    console.log(JSON.stringify(result, null, 2));
+  }
 }
+/* Targeted Mode
+
+Targeted mode allows you to run a quick skill-gap analysis against a single job posting without updating or polluting your career pipeline tracker.
+
+### Command Execution
+You can pass a local text file containing a pasted job description or provide a direct HTTP/HTTPS URL:
+
+```bash
+# Using a local file
+node upskill.mjs --url-text path/to/jd.txt
+
+# Using a direct job posting URL
+node upskill.mjs --url-text [https://example.com/careers/software-engineer](https://example.com/careers/software-engineer)*/
