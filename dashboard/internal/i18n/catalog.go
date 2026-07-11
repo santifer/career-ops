@@ -598,28 +598,40 @@ var Es = Catalog{
 // Current points to the active language catalog. Defaults to English (&En).
 var Current = &En
 
-// SetLang sets the active catalog based on language code prefix (e.g., "tr", "tr_TR" -> &Tr).
+// SetLang sets the active catalog based on language code prefix
+// (e.g., "tr", "tr_TR" -> &Tr; "es", "es_ES" -> &Es; anything else -> &En).
 func SetLang(lang string) {
-	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(lang)), "tr") {
+	switch code := strings.ToLower(strings.TrimSpace(lang)); {
+	case strings.HasPrefix(code, "tr"):
 		Current = &Tr
-	} else {
+	case strings.HasPrefix(code, "es"):
+		Current = &Es
+	default:
 		Current = &En
 	}
 }
 
-// ToggleLang switches Current between &En and &Tr.
+// ToggleLang advances Current to the next catalog, cycling &En -> &Tr -> &Es -> &En.
 func ToggleLang() {
-	if Current == &En {
+	switch Current {
+	case &En:
 		Current = &Tr
-	} else {
+	case &Tr:
+		Current = &Es
+	default:
 		Current = &En
 	}
 }
 
-// GetLang returns the active language code ("tr" if Current == &Tr, else "en").
+// GetLang returns the active language code ("tr" if Current == &Tr, "es" if
+// Current == &Es, else "en").
 func GetLang() string {
-	if Current == &Tr {
+	switch Current {
+	case &Tr:
 		return "tr"
+	case &Es:
+		return "es"
+	default:
+		return "en"
 	}
-	return "en"
 }

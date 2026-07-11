@@ -122,6 +122,16 @@ func TestRuntimeLanguageManagement(t *testing.T) {
 		t.Errorf("after SetLang(\"tr_TR\"), GetLang() = %q; want \"tr\"", GetLang())
 	}
 
+	SetLang("es")
+	if Current != &Es || GetLang() != "es" {
+		t.Errorf("after SetLang(\"es\"), GetLang() = %q; want \"es\"", GetLang())
+	}
+
+	SetLang("es_ES")
+	if Current != &Es || GetLang() != "es" {
+		t.Errorf("after SetLang(\"es_ES\"), GetLang() = %q; want \"es\"", GetLang())
+	}
+
 	SetLang("en")
 	if Current != &En || GetLang() != "en" {
 		t.Errorf("after SetLang(\"en\"), GetLang() = %q; want \"en\"", GetLang())
@@ -132,15 +142,20 @@ func TestRuntimeLanguageManagement(t *testing.T) {
 		t.Errorf("after SetLang(\"fr\"), GetLang() = %q; want \"en\"", GetLang())
 	}
 
-	// Test ToggleLang
+	// ToggleLang cycles En -> Tr -> Es -> En.
 	ToggleLang()
 	if Current != &Tr || GetLang() != "tr" {
 		t.Errorf("after ToggleLang() from En, GetLang() = %q; want \"tr\"", GetLang())
 	}
 
 	ToggleLang()
+	if Current != &Es || GetLang() != "es" {
+		t.Errorf("after ToggleLang() from Tr, GetLang() = %q; want \"es\"", GetLang())
+	}
+
+	ToggleLang()
 	if Current != &En || GetLang() != "en" {
-		t.Errorf("after ToggleLang() from Tr, GetLang() = %q; want \"en\"", GetLang())
+		t.Errorf("after ToggleLang() from Es, GetLang() = %q; want \"en\"", GetLang())
 	}
 }
 
