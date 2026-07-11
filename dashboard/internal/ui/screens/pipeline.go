@@ -898,6 +898,36 @@ func (m PipelineModel) StartHiredFlow(app model.CareerApplication) (PipelineMode
 	return m, nil
 }
 
+func (m PipelineModel) StartDiscardReasonFlow(app model.CareerApplication, status string) (PipelineModel, tea.Cmd) {
+	predicted := data.LoadReportDiscardReasons(m.careerOpsPath, app.ReportPath)
+	seen := make(map[string]bool)
+	var opts []string
+	numPredicted := 0
+	for _, r := range predicted {
+		if !seen[r] {
+			opts = append(opts, r)
+			seen[r] = true
+			numPredicted++
+		}
+	}
+	for _, c := range canonicalDiscardReasons {
+		if !seen[c] {
+			opts = append(opts, c)
+			seen[c] = true
+		}
+	}
+	opts = append(opts, "Other…")
+	m.discardPicker = true
+	m.discardCursor = 0
+	m.discardOptions = opts
+	m.discardPredictedCount = numPredicted
+	m.discardCustomInput = false
+	m.discardCustomText = ""
+	m.discardPendingApp = app
+	m.discardPendingStatus = status
+	return m, nil
+}
+
 func (m PipelineModel) handleHiredFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch m.hiredStep {
 	case 1: // win screen
