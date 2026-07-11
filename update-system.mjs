@@ -157,6 +157,7 @@ const SYSTEM_PATHS = [
   'scan-ats-full.mjs',
   'match-star.mjs',
   'prepare-application.mjs',
+  'application-artifacts.mjs',
   'providers/',
   'seeds/',
   'tests/',
