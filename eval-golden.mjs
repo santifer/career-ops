@@ -2,20 +2,20 @@
 /**
  * eval-golden.mjs — golden-set eval harness for cheap-model routing (#1354)
  *
- * SCAFFOLDING. The *mechanism* in this file is design-invariant: load labeled
- * golden cases, obtain each candidate model's `---SCORE_SUMMARY---` block
- * (replayed from a recorded fixture for $0 deterministic CI, or live via
- * openai-eval.mjs), compare it to the reference label, and exit 0/1 on an
- * aggregate threshold. That part should hold regardless of the open design
- * questions on #1354.
+ * The *mechanism* in this file is design-invariant: load labeled golden cases,
+ * obtain each candidate model's `---SCORE_SUMMARY---` block (replayed from a
+ * recorded fixture for $0 deterministic CI, or live via openai-eval.mjs),
+ * compare it to the reference label, and exit 0/1 on an aggregate threshold.
  *
- * What is deliberately left as TODO(#1354) pending maintainer steer — these are
- * the four calls raised in the issue thread, surfaced as named constants /
- * placeholder data so they are trivial to tune once decided:
- *   - reference labels   → the `label` blocks in evals/golden/*.json
- *   - SCORE agreement     → SCORE_TOLERANCE (exact vs band)
+ * Labels are frozen reference (Claude-tier) verdicts — the metric is
+ * agreement-with-reference, not absolute correctness (see evals/README.md).
+ * ARCHETYPE agreement is the gate; SCORE is a secondary tolerance-banded signal.
+ *
+ * The remaining knobs are surfaced as named constants so they stay trivial to
+ * tune, with safe v1 defaults:
+ *   - SCORE agreement     → SCORE_TOLERANCE (±band; distance-to-reference)
  *   - CI gate threshold   → MIN_ARCHETYPE_AGREEMENT
- *   - per-model $/run      → COST_PER_RUN_USD
+ *   - per-model $/run      → COST_PER_RUN_USD (empty until routing rates agreed)
  *
  * Usage:
  *   node eval-golden.mjs --replay --model cheap-stub     # offline, deterministic ($0)
@@ -33,20 +33,20 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = join(ROOT, 'evals', 'golden');
 
 // ---------------------------------------------------------------------------
-// TODO(#1354): the four open design calls, surfaced as tunable constants.
+// Tunable knobs (#1354), with safe v1 defaults — see evals/README.md.
 // ---------------------------------------------------------------------------
 
 /** Max |candidate.score - label.score| still counted as agreement.
- *  TODO(#1354): maintainer to confirm exact-match (0) vs a tolerance band. */
+ *  v1: a ±band, per the distance-to-reference metric (not exact match). */
 const SCORE_TOLERANCE = 0.5;
 
 /** Fraction of cases whose ARCHETYPE must match the label for the gate to pass.
  *  ARCHETYPE exact-match is the clean 0/1 signal hinted at in the issue.
- *  TODO(#1354): maintainer to confirm the CI threshold. */
+ *  v1 default: 0.8 — tunable when this is wired into the CI job. */
 const MIN_ARCHETYPE_AGREEMENT = 0.8;
 
-/** Rough $/run per model id, for the cost column. Empty until rates are agreed.
- *  TODO(#1354): populate from the providers we actually want to route to. */
+/** Rough $/run per model id, for the cost column. Empty until the routing
+ *  provider rates are agreed (#1354). */
 const COST_PER_RUN_USD = {};
 
 // ---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ const COST_PER_RUN_USD = {};
 // ---------------------------------------------------------------------------
 const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
-  console.log(`eval-golden.mjs — golden-set eval harness (#1354, scaffolding)
+  console.log(`eval-golden.mjs — golden-set eval harness (#1354)
 
   --replay         Replay recorded fixtures (default; offline, $0, deterministic)
   --live           Call the model live via openai-eval.mjs (needs key + cv.md)
@@ -192,7 +192,8 @@ if (cases.length === 0) {
   process.exit(1);
 }
 
-console.log(`\ngolden-set eval — model "${model}" (${mode}), ${cases.length} case(s)\n`);
+console.log(`\ngolden-set eval — model "${model}" (${mode}), ${cases.length} case(s)`);
+console.log(`(row ✅ needs both archetype + score; the gate counts archetype agreement only)\n`);
 
 let archetypeHits = 0;
 const deltas = [];

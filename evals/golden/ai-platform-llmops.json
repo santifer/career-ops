@@ -5,6 +5,6 @@
   "label": {
     "archetype": "AI Platform / LLMOps",
     "score": 4.2,
-    "_note": "TODO(#1354): placeholder reference label. Pending maintainer decision on (a) freeze-Claude-verdict vs hand-curated labels, and (b) the score scale / tolerance band."
+    "provenance": "reference-frozen-v1"
   }
 }
