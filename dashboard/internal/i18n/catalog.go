@@ -469,6 +469,132 @@ var Tr = Catalog{
 	ViewFlat:     "düz",
 }
 
+// Es is the static Spanish translation catalog.
+var Es = Catalog{
+	// Screen banners & general
+	AppTitle:       "PIPELINE DE CARRERA",
+	OffersSummary:  "%d ofertas | Prom %s/5",
+	NoOffersMatch:  "Ninguna oferta coincide con este filtro",
+	LoadingPreview: "Cargando vista previa...",
+
+	// Tabs & filters
+	TabAll:       "TODAS",
+	TabEvaluated: "EVALUADAS",
+	TabApplied:   "POSTULADAS",
+	TabInterview: "ENTREVISTA",
+	TabTop:       "TOP ≥4",
+	TabSkip:      "OMITIR",
+	TabRejected:  "RECHAZADAS",
+	TabDiscarded: "DESCARTADAS",
+
+	// Table column headers
+	ColFit:      "AJUSTE",
+	ColApplied:  "FECHA",
+	ColCompany:  "EMPRESA",
+	ColRole:     "PUESTO",
+	ColStatus:   "ESTADO",
+	ColLocation: "UBICACIÓN",
+	ColPay:      "SALARIO",
+	ColLast:     "ÚLTIMO",
+
+	// Preview labels
+	LabelLoc:     "Ubic.: ",
+	LabelPay:     "Salario: ",
+	LabelLast:    "Último contacto: ",
+	LabelRemote:  "Modalidad: ",
+	LabelOutcome: "Resultado: ",
+
+	// Work modes
+	ModeRemote:     "Remoto",
+	ModeRemoteFlex: "Remoto flexible",
+	ModeHybrid:     "Híbrido",
+	ModeFull:       "Presencial",
+
+	// Progress screen
+	ProgressTitle:   "PROGRESO DE BÚSQUEDA",
+	ProgressSummary: "%d evaluadas | %.1f puntuación prom.",
+	FunnelTitle:     "Embudo del Pipeline",
+	ScoresTitle:     "Distribución de Puntuaciones",
+	RatesTitle:      "Tasas de Conversión",
+	WeeklyTitle:     "Actividad Semanal",
+	ActiveInfo:      "%d postulaciones activas | %d ofertas totales",
+
+	// Relative dates
+	TimeToday:     "hoy",
+	TimeYesterday: "ayer",
+	TimeDaysAgo:   "hace %dd",
+
+	// Status display names
+	StatusEvaluated: "Evaluada",
+	StatusApplied:   "Postulada",
+	StatusResponded: "Respondida",
+	StatusInterview: "Entrevista",
+	StatusOffer:     "Oferta",
+	StatusRejected:  "Rechazada",
+	StatusDiscarded: "Descartada",
+	StatusSkip:      "OMITIR",
+	StatusHired:     "Contratada",
+
+	// Additional UI strings
+	NoData:        "Sin datos",
+	EmptyFile:     "(archivo vacío)",
+	RateResponse:  "Tasa de Respuesta: ",
+	RateInterview: "Tasa de Entrevista: ",
+	RateOffer:     "Tasa de Oferta: ",
+
+	// Footer descriptions & hints
+	HelpNav:        " navegar  ",
+	HelpTabs:       " pestañas  ",
+	HelpSearch:     " buscar  ",
+	HelpSort:       " ordenar  ",
+	HelpRefresh:    " actualizar  ",
+	HelpReport:     " reporte  ",
+	HelpOpenURL:    " abrir URL  ",
+	HelpOpenPDF:    " abrir PDF  ",
+	HelpRegenPDF:   " regenerar PDF  ",
+	HelpChange:     " cambiar  ",
+	HelpColumns:    " columnas  ",
+	HelpView:       " vista  ",
+	HelpProgress:   " progreso  ",
+	HelpQuit:       " salir",
+	HelpScroll:     " desplazar  ",
+	HelpPage:       " página  ",
+	HelpTopEnd:     " inicio/fin  ",
+	HelpLanguage:   " idioma  ",
+	HelpBack:       " volver",
+	HelpNavigate:   " navegar  ",
+	HelpToggle:     " alternar  ",
+	HelpClose:      " cerrar",
+	HelpConfirm:    " confirmar  ",
+	HelpCancel:     " cancelar",
+	HelpFilterLive: " filtrar en vivo  ",
+	HelpKeep:       " guardar  ",
+	HelpClear:      " limpiar  ",
+
+	// Picker overlay titles & bar hints
+	PickerChangeStatus: "Cambiar estado:",
+	PickerColumnsTitle: "─── Columnas (SPACE alternar · ESC cerrar) ───",
+	SearchHintInput:    "   Enter: guardar   Esc: cancelar   Ctrl+U: limpiar",
+	SearchHintNormal:   "   Esc: limpiar   /: editar",
+	SearchMatching:     "  %d/%d coincidencias",
+	SortLabel:          "[Orden: %s]",
+	ViewLabel:          "[Vista: %s]",
+	ShownCount:         "%d mostradas",
+	ColReport:          "RPT",
+	ColPDF:             "PDF",
+
+	// Sort & view modes
+	SortScore:    "puntuación",
+	SortDate:     "fecha",
+	SortCompany:  "empresa",
+	SortStatus:   "estado",
+	SortLocation: "ubicación",
+	SortPay:      "salario",
+	SortLast:     "último",
+	ViewGrouped:  "agrupado",
+	ViewFlat:     "plano",
+}
+
 // Current points to the active language catalog. Defaults to English (&En).
 var Current = &En
 
