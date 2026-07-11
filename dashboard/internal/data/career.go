@@ -567,54 +567,7 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 	return
 }
 
-// LoadReportDiscardReasons parses the `discard_reasons` YAML list from a
-// report's ## Machine Summary fence and returns the predicted skip/discard
-// reasons so the dashboard picker can pre-populate its dropdown.
-// Returns nil (not an empty slice) when the field is absent or empty so
-// callers can distinguish "no report" from "report with no predicted reasons".
-func LoadReportDiscardReasons(careerOpsPath, reportPath string) []string {
-	if reportPath == "" {
-		return nil
-	}
-	fullPath := filepath.Join(careerOpsPath, reportPath)
-	content, err := os.ReadFile(fullPath)
-	if err != nil {
-		return nil
-	}
 
-	// Scope the search to the ## Machine Summary code fence to avoid false
-	// positives from other YAML blocks in the report.
-	var searchIn string
-	if fenceIdx := strings.Index(string(content), "## Machine Summary"); fenceIdx >= 0 {
-		block := string(content)[fenceIdx:]
-		// Grab the first fenced block after the heading.
-		if start := strings.Index(block, "```"); start >= 0 {
-			if end := strings.Index(block[start+3:], "```"); end >= 0 {
-				searchIn = block[start+3 : start+3+end]
-			}
-		}
-	}
-	if searchIn == "" {
-		return nil
-	}
-
-	m := reDiscardReasons.FindStringSubmatch(searchIn)
-	if m == nil {
-		return nil
-	}
-
-	var reasons []string
-	for _, line := range strings.Split(m[1], "\n") {
-		line = strings.TrimSpace(line)
-		line = strings.TrimPrefix(line, "- ")
-		line = strings.Trim(line, `"`)
-		line = strings.TrimSpace(line)
-		if line != "" && line != "[]" {
-			reasons = append(reasons, line)
-		}
-	}
-	return reasons
-}
 
 // splitTrackerRow splits a tracker table line into trimmed cell values, using
 // the same delimiter logic as ParseApplications: a mixed "| " + tab-separated

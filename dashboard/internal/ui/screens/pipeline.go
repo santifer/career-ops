@@ -1224,15 +1224,9 @@ func (m PipelineModel) View() string {
 		body = m.overlayPDFPicker(body)
 	}
 
-<<<<<<< HEAD
-	// Discard reason picker overlay (Issue 1380)
-	if m.discardPicker {
-		body = m.overlayDiscardPicker(body)
-=======
 	// Discard reason picker overlay
 	if m.discardStep > 0 {
 		body = m.overlayDiscardFlow(body)
->>>>>>> origin/main
 	}
 
 	sections := []string{header, tabs, metricsBar, sortBar}
