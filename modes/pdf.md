@@ -4,9 +4,9 @@
 
 ## Application-scoped artifacts
 
-When a CV is reused or lightly tailored for an existing application, initialize a bundle with `npm run application:init -- --report {report-number} --company "{company}" --role "{role}"`. Keep the current JD at `jd/current.md`, the comparison JD at `jd/previous.md`, the source CV at `cv/source.html`, the tailored CV at `cv/tailored.html`, the PDF at `cv/tailored.pdf`, and the reuse decision at `reuse-decision.json` under the printed bundle root. Resolve the application/report first with `node find.mjs {report-or-tracker-number}` so the bundle uses the report number, not an ambiguous tracker row.
+When a CV is reused or lightly tailored for an existing application, initialize a bundle with `npm run application:init -- --report {report-number} --company "{company}" --role "{role}" --version 1`. Keep the current JD at `jd/current.md`, the comparison JD at `jd/previous.md`, the source CV at `cv/source/original.html`, the tailored CV at `cv/tailored/v001/cv.html`, the PDF at `cv/tailored/v001/cv.pdf`, the change notes at `cv/tailored/v001/changes.md`, and the reuse decision at `decision/reuse.json` under the printed bundle root. Resolve the application/report first with `node find.mjs {report-or-tracker-number}` so the bundle uses the report number, not an ambiguous tracker row.
 
-Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previous.md` when both comparison sources exist. Record the visible decision (`reuse`, `reuse-with-edits`, or `regenerate`), score, source CV/JD paths, and changed sections in `reuse-decision.json`. Reuse only after a visible `reuse` result or an explicit user override; never silently reuse when a source is missing. The PDF manifest supports these nested paths and continues to link them to the report. Flat `output/` paths remain valid for one-off PDFs.
+Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previous.md` when both comparison sources exist. Record the visible decision (`reuse`, `reuse-with-edits`, or `regenerate`), score, source CV/JD paths, and changed sections in `decision/reuse.json`. Reuse only after a visible `reuse` result or an explicit user override; never silently reuse when a source is missing. The PDF manifest supports these nested paths and continues to link them to the report. Flat `output/` paths remain valid for one-off PDFs.
 
 1. Read `cv.md` as the source of truth
 2. Ask the user for the JD if it is not in context (text or URL)
@@ -25,8 +25,8 @@ Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previ
 13. Apply the six-second clarity gate from `modes/heuristics/recruiter-side.md`: top third must make target role, strongest fit, and proof obvious
 14. Generate full HTML from template + personalized content
 15. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-16. Write HTML to the application bundle's `cv/tailored.html` when a bundle is active; otherwise use `output/cv-{candidate}-{company}.html` (NOT a temp dir — the recorded HTML is what the dashboard's `D` hotkey regenerates from, so it must survive temp cleanup)
-17. Run the fact gate against the generated tailored HTML: `node verify-cv-facts.mjs {bundle-root}/cv/tailored.html` or the flat output path
+16. Write HTML to the application bundle's current `cv/tailored/vNNN/cv.html` when a bundle is active; otherwise use `output/cv-{candidate}-{company}.html` (NOT a temp dir — the recorded HTML is what the dashboard's `D` hotkey regenerates from, so it must survive temp cleanup)
+17. Run the fact gate against the generated tailored HTML: `node verify-cv-facts.mjs {bundle-root}/cv/tailored/vNNN/cv.html` or the flat output path
     - This is a hard gate before PDF rendering.
     - If it fails, stop and fix the generated HTML by removing invented metrics or adding verified evidence to `cv.md`, `article-digest.md`, or `config/cv-facts.json`.
 18. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number}` — `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry.

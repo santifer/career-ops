@@ -5,15 +5,20 @@ import { applicationArtifactPaths, ensureApplicationArtifactDirs, writeReuseDeci
 
 const root = mkdtempSync(join(tmpdir(), 'career-ops-application-artifacts-'));
 try {
-  const paths = applicationArtifactPaths({ reportNum: 7, company: 'Acme AI', role: 'Senior AI Engineer', root });
-  if (paths.key === '007-acme-ai-senior-ai-engineer' && paths.cv.pdf.endsWith('/cv/tailored.pdf')) {
+  const paths = applicationArtifactPaths({ reportNum: 7, company: 'Acme AI', role: 'Senior AI Engineer', version: 2, root });
+  if (paths.key === '007-acme-ai-senior-ai-engineer'
+      && paths.cv.source.html.endsWith('/cv/source/original.html')
+      && paths.cv.tailored.pdf.endsWith('/cv/tailored/v002/cv.pdf')) {
     console.log('  ✅ application artifacts use a stable report/company/role bundle');
   } else {
     throw new Error(`unexpected artifact paths: ${JSON.stringify(paths)}`);
   }
 
   ensureApplicationArtifactDirs(paths);
-  if (existsSync(join(paths.root, 'jd')) && existsSync(join(paths.root, 'cv'))) {
+  if (existsSync(join(paths.root, 'jd'))
+      && existsSync(join(paths.root, 'cv', 'source'))
+      && existsSync(join(paths.root, 'cv', 'tailored', 'v002'))
+      && existsSync(join(paths.root, 'decision'))) {
     console.log('  ✅ application artifact directories initialize together');
   } else {
     throw new Error('application artifact directories were not created');
@@ -22,12 +27,12 @@ try {
   writeReuseDecision(paths, {
     decision: 'reuse-with-edits',
     score: 0.81,
-    sourceCv: paths.cv.source,
+    sourceCv: paths.cv.source.html,
     currentJd: paths.jd.current,
     previousSource: paths.jd.previous,
     changedSections: ['Summary', 'Skills'],
   });
-  const decision = JSON.parse(readFileSync(paths.reuseDecision, 'utf8'));
+  const decision = JSON.parse(readFileSync(paths.decision.reuse, 'utf8'));
   if (decision.decision === 'reuse-with-edits' && decision.changed_sections.length === 2) {
     console.log('  ✅ reuse decisions are recorded beside the artifact bundle');
   } else {
@@ -36,4 +41,3 @@ try {
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
-

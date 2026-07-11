@@ -27,12 +27,16 @@ export function slugifySegment(value, fallback = 'application') {
 }
 
 /** Return all stable paths belonging to one application artifact bundle. */
-export function applicationArtifactPaths({ reportNum, company, role, root = DEFAULT_OUTPUT_ROOT }) {
+export function applicationArtifactPaths({ reportNum, company, role, version = 1, root = DEFAULT_OUTPUT_ROOT }) {
   if (!/^\d+$/.test(String(reportNum ?? ''))) {
     throw new Error('reportNum must be a numeric report number');
   }
+  if (!/^\d+$/.test(String(version ?? '')) || Number(version) < 1) {
+    throw new Error('version must be a positive integer');
+  }
   const key = `${String(reportNum).padStart(3, '0')}-${slugifySegment(company)}-${slugifySegment(role, 'role')}`;
   const applicationRoot = join(resolve(root), key);
+  const tailoredRoot = join(applicationRoot, 'cv', 'tailored', `v${String(version).padStart(3, '0')}`);
   return {
     key,
     root: applicationRoot,
@@ -41,18 +45,31 @@ export function applicationArtifactPaths({ reportNum, company, role, root = DEFA
       previous: join(applicationRoot, 'jd', 'previous.md'),
     },
     cv: {
-      source: join(applicationRoot, 'cv', 'source.html'),
-      tailored: join(applicationRoot, 'cv', 'tailored.html'),
-      pdf: join(applicationRoot, 'cv', 'tailored.pdf'),
+      source: {
+        html: join(applicationRoot, 'cv', 'source', 'original.html'),
+        pdf: join(applicationRoot, 'cv', 'source', 'original.pdf'),
+      },
+      tailored: {
+        root: tailoredRoot,
+        html: join(tailoredRoot, 'cv.html'),
+        pdf: join(tailoredRoot, 'cv.pdf'),
+        changes: join(tailoredRoot, 'changes.md'),
+      },
     },
-    reuseDecision: join(applicationRoot, 'reuse-decision.json'),
+    decision: {
+      reuse: join(applicationRoot, 'decision', 'reuse.json'),
+    },
   };
 }
 
 /** Create the JD and CV subdirectories for an application bundle. */
 export function ensureApplicationArtifactDirs(paths) {
-  mkdirSync(paths.jd.current.replace(/[/\\][^/\\]+$/, ''), { recursive: true });
-  mkdirSync(paths.cv.source.replace(/[/\\][^/\\]+$/, ''), { recursive: true });
+  for (const directory of [
+    join(paths.root, 'jd'),
+    join(paths.root, 'cv', 'source'),
+    paths.cv.tailored.root,
+    join(paths.root, 'decision'),
+  ]) mkdirSync(directory, { recursive: true });
   return paths;
 }
 
@@ -80,12 +97,12 @@ export function writeReuseDecision(paths, {
     user_override: Boolean(userOverride),
     recorded_at: new Date().toISOString(),
   };
-  writeFileSync(paths.reuseDecision, `${JSON.stringify(record, null, 2)}\n`);
+  writeFileSync(paths.decision.reuse, `${JSON.stringify(record, null, 2)}\n`);
   return record;
 }
 
 function usage() {
-  return 'Usage: node application-artifacts.mjs --report N --company NAME --role ROLE [--root output] [--init]';
+  return 'Usage: node application-artifacts.mjs --report N --company NAME --role ROLE [--version N] [--root output] [--init]';
 }
 
 async function main() {
@@ -94,6 +111,7 @@ async function main() {
       report: { type: 'string' },
       company: { type: 'string' },
       role: { type: 'string' },
+      version: { type: 'string', default: '1' },
       root: { type: 'string' },
       init: { type: 'boolean' },
     },
@@ -104,10 +122,9 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  const paths = applicationArtifactPaths({ reportNum: values.report, company: values.company, role: values.role, root: values.root });
+  const paths = applicationArtifactPaths({ reportNum: values.report, company: values.company, role: values.role, version: values.version, root: values.root });
   if (values.init) ensureApplicationArtifactDirs(paths);
   console.log(JSON.stringify(paths, null, 2));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main();
-
