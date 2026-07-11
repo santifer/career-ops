@@ -54,8 +54,9 @@ a rate-limit error; career-ops will pause and suggest retrying tomorrow.
 
 ## Batch Mode Behavior
 
-- `batch-runner.sh` spawns `claude -p` workers by default (Claude Code
-  specific). To use Antigravity CLI workers instead, invoke them manually:
+- `batch-runner.sh` uses Claude workers by default and also supports explicit
+  Codex workers (`--cli codex --model ... --reasoning-effort ...`). To use
+  Antigravity CLI workers instead, invoke them manually:
 
   ```bash
   agy -p "evaluate <URL>"

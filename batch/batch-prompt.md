@@ -398,7 +398,7 @@ Design rules:
 Write exactly one TSV line to:
 
 ```text
-batch/tracker-additions/{{ID}}.tsv
+batch/tracker-additions/{{REPORT_NUM}}-{company-slug}.tsv
 ```
 
 Format, no header, 9 tab-separated columns:

@@ -41,8 +41,26 @@ codex exec "Run career-ops email mode for the latest evaluated role. Draft only;
 codex exec "Run career-ops tracker mode and summarize the current statuses."
 ```
 
+## Batch runner
+
+Select Codex explicitly for resumable batch evaluation. The model and reasoning
+effort are required so a restarted run keeps the same worker configuration:
+
+```bash
+batch/batch-runner.sh \
+  --cli codex \
+  --model gpt-5.5 \
+  --reasoning-effort high \
+  --parallel 2
+```
+
+The runner sends Codex the same self-contained batch instructions and runtime
+profile context as the default Claude worker. Reports, tracker additions, state,
+retry handling, and the final tracker merge use the same canonical paths.
+
 ## Notes
 
 - If your Codex environment exposes slash commands, the shared `/career-ops` router semantics still apply.
 - If it does not, use the same mode names through prompts or `codex exec`.
 - Browser-heavy flows such as `scan`, `pipeline`, and `apply` still depend on Playwright browser tools being available in the active agent setup.
+- `batch-runner.sh` uses ephemeral Codex sessions and requires explicit `--model` and `--reasoning-effort` values for reproducible runs.

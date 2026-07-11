@@ -5748,6 +5748,7 @@ try {
   mkdirSync(fakeBin, { recursive: true });
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
+  writeFileSync(join(tmp, 'reserve-report-num.mjs'), readFileSync(join(ROOT, 'reserve-report-num.mjs'), 'utf-8'));
   if (process.platform === 'win32') {
     try { execFileSync(getBash(), ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
   } else {
@@ -5848,6 +5849,7 @@ function makeTierFixture(profileYml) {
   mkdirSync(fakeBin, { recursive: true });
 
   writeFileSync(join(batchDir, 'batch-runner.sh'), readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
+  writeFileSync(join(tmp, 'reserve-report-num.mjs'), readFileSync(join(ROOT, 'reserve-report-num.mjs'), 'utf-8'));
   if (process.platform === 'win32') {
     try { execFileSync(getBash(), ['-c', 'chmod +x batch/batch-runner.sh'], { cwd: tmp }); } catch {}
   } else {

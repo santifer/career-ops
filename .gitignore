@@ -29,7 +29,11 @@ output/*
 batch/logs/*
 !batch/logs/.gitkeep
 batch/batch-state.tsv
+batch/batch-state.tsv.tmp
 batch/batch-input.tsv
+batch/batch-runner.pid
+batch/batch-runner.paused
+batch/.batch-state.lock/
 batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 jds/*

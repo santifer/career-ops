@@ -97,6 +97,12 @@ node reserve-report-num.mjs --release 042-049
 
 ```bash
 batch/batch-runner.sh [OPTIONS]
+
+# Claude remains the default and resolves its model from spend_tier
+batch/batch-runner.sh --parallel 2
+
+# Codex selection is explicit so runs are reproducible
+batch/batch-runner.sh --cli codex --model gpt-5.5 --reasoning-effort high --parallel 2
 ```
 
 Options:
@@ -107,6 +113,9 @@ Options:
 - `--limit N` — max number of jobs to process in this run
 - `--parallel N` — N workers in parallel
 - `--max-retries N` — attempts per job (default: 2)
+- `--cli NAME` — worker CLI: `claude` (default) or `codex`
+- `--model NAME` — optional Claude model override; required for Codex
+- `--reasoning-effort LEVEL` — required for Codex: `minimal`, `low`, `medium`, `high`, or `xhigh`
 - `--rate-limit-sleep N` — seconds to wait before retrying a transient rate-limited worker (default: 300; use 0 to pause the batch immediately)
 
 ## batch-state.tsv Format
@@ -132,12 +141,12 @@ Valid statuses include `pending`, `processing`, `completed`, `failed`, `skipped`
 
 ## Workers (headless mode)
 
-Each worker receives `batch-prompt.md` as a system prompt. It is self-contained. Use your CLI's headless command — see the **Headless / Batch Mode** table in `AGENTS.md`.
+Each worker receives the self-contained `batch-prompt.md` plus runtime copies of `modes/_profile.md`, `config/profile.yml`, and `modes/_custom.md` when present. Claude receives that context through its system-prompt file; Codex receives the same content through stdin. Temporary resolved prompts, logs, state, and lock files remain local and gitignored.
 
 The worker produces:
 1. `.md` report in `reports/`
 2. PDF in `output/`
-3. Tracker line in `batch/tracker-additions/{id}.tsv`
+3. Tracker line in `batch/tracker-additions/{report_num}-{company-slug}.tsv`
 4. Result JSON via stdout
 
 ## Error handling
