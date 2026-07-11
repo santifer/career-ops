@@ -17,8 +17,46 @@ const sandbox = mkdtempSync(join(outputRoot, 'page-budget-test-'));
 const script = join(sandbox, 'generate-pdf.mjs');
 const input = join(sandbox, 'two-pages.html');
 const manifest = join(sandbox, 'data', 'pdf-index.tsv');
+const playwrightStub = join(sandbox, 'node_modules', 'playwright');
 
 copyFileSync(join(ROOT, 'generate-pdf.mjs'), script);
+mkdirSync(playwrightStub, { recursive: true });
+writeFileSync(join(playwrightStub, 'package.json'), JSON.stringify({
+  name: 'playwright',
+  type: 'module',
+  exports: './index.js',
+}), 'utf-8');
+writeFileSync(join(playwrightStub, 'index.js'), `
+const pdf = Buffer.from(\`%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 4 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R >>
+endobj
+%%EOF\`, 'latin1');
+
+export const chromium = {
+  async launch() {
+    return {
+      async newPage() {
+        return {
+          async goto() {},
+          async evaluate() {},
+          async pdf() { return pdf; },
+        };
+      },
+      async close() {},
+    };
+  },
+};
+`, 'utf-8');
 writeFileSync(input, `<!doctype html>
 <html>
   <body>
