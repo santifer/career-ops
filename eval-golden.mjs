@@ -84,6 +84,20 @@ function argValue(flag) {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
 }
 
+/**
+ * Flatten a model id into a filesystem-safe fixture token.
+ *
+ * Provider ids like "deepseek/deepseek-chat" contain slashes that would be read
+ * as path separators; collapse any non-[A-Za-z0-9._-] run to a single "-" so the
+ * fixture stays a single flat file.
+ *
+ * @param {string} m - The candidate model id.
+ * @returns {string} A path-safe token for the fixture filename.
+ */
+function fixtureModelId(m) {
+  return m.replace(/[^A-Za-z0-9._-]+/g, '-');
+}
+
 // ---------------------------------------------------------------------------
 // Shared SCORE_SUMMARY parser — same contract every *-eval.mjs already emits.
 // ---------------------------------------------------------------------------
@@ -123,7 +137,10 @@ function parseSummary(text) {
  */
 function getCompletion(testCase) {
   if (mode === 'replay') {
-    const fixture = join(fixtureDir, `${testCase.id}__${model}.txt`);
+    // Slash-form provider ids (e.g. "deepseek/deepseek-chat") must not become
+    // path separators, or the fixture lands in a phantom subdirectory. Sanitize
+    // to a flat filename — record fixtures under the same sanitized name.
+    const fixture = join(fixtureDir, `${testCase.id}__${fixtureModelId(model)}.txt`);
     if (!existsSync(fixture)) {
       throw new Error(`missing replay fixture: ${fixture} — record it or run --live`);
     }
@@ -231,11 +248,14 @@ for (const tc of cases) {
 const agreement = archetypeHits / cases.length;
 const finiteDeltas = deltas.filter(Number.isFinite);
 const meanDelta = finiteDeltas.length ? finiteDeltas.reduce((a, b) => a + b, 0) / finiteDeltas.length : NaN;
+// Cases whose SCORE was missing/malformed produce a NaN delta and drop out of
+// the mean — surface that count so a model can't hide failures behind a low mean.
+const unscored = cases.length - finiteDeltas.length;
 const cost = COST_PER_RUN_USD[model];
 
 console.log('\n  ── summary ──');
 console.log(`  archetype agreement : ${(agreement * 100).toFixed(0)}%  (gate ≥ ${(MIN_ARCHETYPE_AGREEMENT * 100).toFixed(0)}%)`);
-console.log(`  mean |Δscore|       : ${Number.isFinite(meanDelta) ? meanDelta.toFixed(2) : 'n/a'}  (tolerance ±${SCORE_TOLERANCE})`);
+console.log(`  mean |Δscore|       : ${Number.isFinite(meanDelta) ? meanDelta.toFixed(2) : 'n/a'}  over ${finiteDeltas.length}/${cases.length} scored${unscored ? ` (${unscored} unscored)` : ''}  (tolerance ±${SCORE_TOLERANCE})`);
 if (mode === 'live') console.log(`  median latency      : ${median(latencies)}ms`);
 console.log(`  est. $/run          : ${cost != null ? `$${cost}` : 'n/a — TODO(#1354)'}`);
 

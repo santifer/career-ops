@@ -72,7 +72,10 @@ harness only requires `archetype` (string) and `score` (number). All JDs are
 ### Fixture format (`evals/fixtures/<case-id>__<model>.txt`)
 
 A recorded candidate-model output containing a `---SCORE_SUMMARY---` block. Only
-that block is parsed; surrounding prose is illustrative and trimmed.
+that block is parsed; surrounding prose is illustrative and trimmed. Slash-form
+provider ids (`deepseek/deepseek-chat`) are flattened to a path-safe token for the
+filename (`<case>__deepseek-deepseek-chat.txt`), so a fixture never lands in a
+phantom subdirectory.
 
 ## Running
 
