@@ -201,6 +201,8 @@ const SYSTEM_PATHS = [
   'reply-matcher.mjs',
   'reply-matcher.test.mjs',
   'reply-watch.mjs',
+  'paste-reply.mjs',
+  'paste-reply-tests.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'batch/README.md',
