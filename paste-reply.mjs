@@ -51,23 +51,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CANDIDATES_PATH = process.env.CAREER_OPS_REPLY_CANDIDATES
   || path.join(__dirname, 'data', 'reply-candidates.json');
 
-function askQuestion(query) {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => rl.question(query, (ans) => {
-    rl.close();
-    resolve(ans);
-  }));
-}
-
-// Read the rest of stdin as a multi-line body, ending at EOF (Ctrl+D / Ctrl+Z+Enter).
-function readMultilineStdin() {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({ input: process.stdin });
-    const lines = [];
-    rl.on('line', (line) => lines.push(line));
-    rl.on('close', () => resolve(lines.join('\n').trim()));
-  });
-}
 
 /**
  * Parse the --file input format: optional "Subject:"/"From:" header lines,
@@ -144,16 +127,52 @@ export function appendCandidate(candidate, candidatesPath = CANDIDATES_PATH) {
     fs.mkdirSync(path.dirname(candidatesPath), { recursive: true });
   }
   candidates.push(candidate);
-  fs.writeFileSync(candidatesPath, JSON.stringify(candidates, null, 2), 'utf-8');
+  // Write-then-rename so an interrupted write (crash, signal, disk full)
+  // can never leave the real candidates file truncated/corrupted.
+  const tmpPath = `${candidatesPath}.tmp`;
+  fs.writeFileSync(tmpPath, JSON.stringify(candidates, null, 2), 'utf-8');
+  fs.renameSync(tmpPath, candidatesPath);
   return candidates.length;
 }
 
-async function collectInteractive() {
-  const subject = (await askQuestion('Subject: ')).trim();
-  const from = (await askQuestion('From (optional, press Enter to skip): ')).trim();
-  console.log('Paste the email body. Finish with EOF (Ctrl+D, or Ctrl+Z then Enter on Windows):');
-  const body = await readMultilineStdin();
-  return { subject, from, body };
+// Collect subject/from/body from stdin via a single readline.Interface and a
+// tiny manual state machine driven off its 'line' event.
+//
+// Earlier drafts chained `rl.question()` calls (one interface per prompt, or
+// repeated `.question()` on one interface). Both are unreliable on piped
+// (non-TTY) stdin: Node's readline resolves the FIRST `.question()` call
+// correctly, but a SECOND `.question()` on the same interface never fires its
+// callback when the input isn't a real TTY — confirmed directly against this
+// Node build, not assumed. A single 'line' listener with manual state
+// tracking works identically on both TTY and piped/non-interactive stdin.
+function collectInteractive() {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  let stage = 'subject';
+  let subject = '';
+  let from = '';
+  const bodyLines = [];
+
+  rl.setPrompt('Subject: ');
+  rl.prompt();
+
+  return new Promise((resolve) => {
+    rl.on('line', (line) => {
+      if (stage === 'subject') {
+        subject = line.trim();
+        stage = 'from';
+        rl.setPrompt('From (optional, press Enter to skip): ');
+        rl.prompt();
+      } else if (stage === 'from') {
+        from = line.trim();
+        stage = 'body';
+        console.log('Paste the email body. Finish with EOF (Ctrl+D, or Ctrl+Z then Enter on Windows):');
+        rl.setPrompt('');
+      } else {
+        bodyLines.push(line);
+      }
+    });
+    rl.on('close', () => resolve({ subject, from, body: bodyLines.join('\n').trim() }));
+  });
 }
 
 function printHelp() {

@@ -178,5 +178,32 @@ console.log('7. parseFileInput / normalizeCandidate as direct unit imports');
   check('normalizeCandidate: missing from defaults to empty string, not undefined', candNoFrom.from === '');
 }
 
+// ---------------------------------------------------------------------------
+console.log('8. interactive (stdin) mode — no --file flag');
+{
+  const dir = tmp('paste-reply-');
+  const candidates = join(dir, 'reply-candidates.json');
+  // collectInteractive() prompts Subject → From → multiline body (EOF-terminated).
+  // Piped stdin supplies all three in order; execFileSync closes stdin after
+  // writing `input`, which readMultilineStdin() reads as EOF.
+  const stdin = 'Interview invite from Acme\nrecruiter@acme.com\nWe would like to schedule a call.\nPlease pick a time.\n';
+  const out = execFileSync(NODE, [CLI], {
+    cwd: ROOT,
+    env: { ...process.env, CAREER_OPS_REPLY_CANDIDATES: candidates },
+    input: stdin,
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+
+  const arr = JSON.parse(readFileSync(candidates, 'utf8'));
+  check('interactive mode created exactly one candidate', arr.length === 1, `got ${arr.length}`);
+  const cand = arr[0];
+  check('interactive: subject parsed', cand.subject === 'Interview invite from Acme', cand.subject);
+  check('interactive: from parsed', cand.from === 'recruiter@acme.com', cand.from);
+  check('interactive: multiline body joined', cand.body_snippet === 'We would like to schedule a call.\nPlease pick a time.', JSON.stringify(cand.body_snippet));
+  check('interactive: signal is null', cand.signal === null);
+  check('interactive: CLI reports success', out.includes('Appended a new reply candidate'), out);
+}
+
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
