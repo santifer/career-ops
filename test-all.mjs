@@ -156,6 +156,7 @@ const scripts = [
   { name: 'funnel-velocity.mjs --self-test', expectExit: 0 },
   { name: 'img-to-pdf.mjs --self-test', expectExit: 0 },
   { name: 'assessment-log.mjs --self-test', expectExit: 0 },
+  { name: 'build-cv-html.mjs --test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'agent-inbox-tests.mjs', expectExit: 0 },
@@ -7830,6 +7831,13 @@ console.log('\n59. CV template resolver (cv-templates.mjs)');
   const resolved = run(NODE, ['cv-templates.mjs', 'resolve', 'cv'], noProfile);
   if (resolved && resolved.endsWith('cv-template.html')) pass('CLI: resolve cv (unset) -> base template');
   else fail(`CLI: resolve cv (unset) unexpected: ${resolved}`);
+}
+
+console.log('\n60. Cover-letter template resolver (generate-cover-letter.mjs)');
+{
+  const unit = run(NODE, ['--test', 'test/cover-resolver.test.mjs']);
+  if (unit !== null) pass('cover-resolver unit tests pass');
+  else fail('cover-resolver unit tests failed (run: node --test test/cover-resolver.test.mjs)');
 }
 
 console.log('\nTest layout guard (provider tests live in tests/providers/)');

@@ -155,6 +155,19 @@ test('resolveTemplate: fallback=true drops missing name to standard', () => {
   assert.ok(p.endsWith('cv-template.tex'));
 });
 
+test('resolveTemplate: rejects a path-traversal format (allowlist guard)', () => {
+  const { dir, profile } = fixtureWithProfile(null);
+  assert.throws(
+    () => resolveTemplate('cv', undefined, { dir, profilePath: profile, format: '../../../../etc/passwd' }),
+    /Unsupported template format/
+  );
+});
+
+test('listTemplates: rejects a path-traversal format (allowlist guard)', () => {
+  const dir = fixtureDir();
+  assert.throws(() => listTemplates('cv', { dir, format: '../../etc' }), /Unsupported template format/);
+});
+
 test('resolveTemplate: html validation failure throws', () => {
   const { dir, profile } = fixtureWithProfile(null);
   writeFileSync(join(dir, 'cv-template.broken.html'), '{{NAME}} only');

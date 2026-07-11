@@ -127,4 +127,9 @@ async function main() {
   console.log(JSON.stringify(paths, null, 2));
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+  main().catch((error) => {
+    console.error(`application-artifacts: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
