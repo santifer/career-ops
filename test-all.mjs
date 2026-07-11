@@ -1980,6 +1980,28 @@ if (
   }
 }
 
+// Opt-in CLI extractor wiring (#1449 Phase 2): every read-only JD-extraction
+// path must offer `browser-extract.mjs` behind `scan.extractor`, with a silent
+// MCP fallback — so the flag actually reaches the JD paths, not just scan/pipeline.
+{
+  const jdPathModes = ['modes/oferta.md', 'modes/auto-pipeline.md', 'modes/pipeline.md', 'modes/scan.md'];
+  const missing = jdPathModes.filter((m) => {
+    const src = readFile(m);
+    return !(src.includes('browser-extract.mjs') && src.includes('scan.extractor'));
+  });
+  if (missing.length === 0) {
+    pass('read-only JD paths wire the opt-in CLI extractor behind scan.extractor (#1449)');
+  } else {
+    fail(`JD paths missing browser-extract/scan.extractor wiring: ${missing.join(', ')}`);
+  }
+  // apply must stay on the MCP — the extractor is read-only and never fills forms.
+  if (!readFile('modes/apply.md').includes('browser-extract.mjs')) {
+    pass('apply mode does not route through the read-only extractor (#1449)');
+  } else {
+    fail('apply mode references browser-extract.mjs — the extractor must not touch the apply/form path');
+  }
+}
+
 if (readFile('DATA_CONTRACT.md').includes('data/blacklist.md')) {
   pass('DATA_CONTRACT.md registers data/blacklist.md as user layer (#1742)');
 } else {
