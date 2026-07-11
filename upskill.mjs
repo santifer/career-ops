@@ -480,9 +480,34 @@ soft_gaps:
 const args = process.argv.slice(2);
 if (args.includes('--self-test')) runSelfTest();
 
-// ====== TARGETED MODE PHASE 2a IMPLEMENTATION ======
+// ====== SECURE TARGETED MODE PHASE 2a IMPLEMENTATION ======
 const urlTextIdx = args.indexOf('--url-text');
 const directUrl = args.find(arg => arg.startsWith('http://') || arg.startsWith('https://'));
+
+// Helper function to enforce egress guard against SSRF (Private/Loopback IPs)
+async function validateUrlSecurity(urlString) {
+  const dns = await import('dns/promises');
+  const url = new URL(urlString.endsWith('.') ? urlString.slice(0, -1) : urlString);
+  const hostname = url.hostname;
+
+  if (hostname === 'localhost' || hostname.endsWith('.local')) {
+    throw new Error('Access denied: Localhost or internal domain target detected.');
+  }
+
+  const addresses = await dns.resolve(hostname).catch(() => []);
+  const lookupRes = await dns.lookup(hostname).catch(() => null);
+  if (lookupRes) addresses.push(lookupRes.address);
+
+  for (const ip of addresses) {
+    if (/^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|169\.254\.)/.test(ip)) {
+      throw new Error(`Access denied: Egress guard blocked private target IP ${ip}`);
+    }
+    if (ip === '::1' || ip.startsWith('fe80:') || ip.startsWith('fc00:') || ip.startsWith('fd00:')) {
+      throw new Error(`Access denied: Egress guard blocked private target IPv6 ${ip}`);
+    }
+  }
+  return url.toString();
+}
 
 if (urlTextIdx !== -1 || directUrl) {
   (async () => {
@@ -494,24 +519,44 @@ if (urlTextIdx !== -1 || directUrl) {
       process.exit(1);
     }
 
-    // 1. Data Fetching Engine
     if (inputSource.startsWith('http://') || inputSource.startsWith('https://')) {
+      let browser;
       try {
+        const secureUrl = await validateUrlSecurity(inputSource);
         const { chromium } = await import('playwright');
-        const browser = await chromium.launch({ headless: true });
+        browser = await chromium.launch({ headless: true });
         const page = await browser.newPage();
-        await page.goto(inputSource, { waitUntil: 'networkidle', timeout: 30000 });
+
+        page.on('framenavigated', async (frame) => {
+          if (frame === page.mainFrame()) {
+            await validateUrlSecurity(frame.url()).catch((err) => {
+              console.error(`Security Violation on Redirect: ${err.message}`);
+              process.exit(1);
+            });
+          }
+        });
+
+        await page.goto(secureUrl, { waitUntil: 'networkidle', timeout: 30000 });
         targetText = await page.innerText('body');
-        await browser.close();
       } catch (err) {
+        console.warn('Playwright extraction failed or blocked, trying fallback WebFetch...', err.message);
         try {
-          const res = await fetch(inputSource);
+          const secureUrl = await validateUrlSecurity(inputSource);
+          const res = await fetch(secureUrl, { signal: AbortSignal.timeout(30000) });
+          if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
           targetText = await res.text();
         } catch (fetchErr) {
           console.error(`Fatal: Failed to fetch JD from URL: ${fetchErr.message}`);
           process.exit(1);
         }
+      } finally {
+        if (browser) await browser.close();
       }
+
+      try {
+        const { normalizeJd } = await import('./browser-extract.mjs');
+        targetText = normalizeJd(targetText, inputSource);
+      } catch (e) {}
     } else {
       if (existsSync(inputSource)) {
         targetText = readFileSync(inputSource, 'utf-8');
@@ -521,50 +566,58 @@ if (urlTextIdx !== -1 || directUrl) {
       }
     }
 
-    // 2. Tokenize Skills from the input Job Description Text
     const rawJdSkills = extractSkills(targetText);
-    let jdSkills = [];
-    if (Array.isArray(rawJdSkills)) jdSkills = rawJdSkills;
-    else if (rawJdSkills instanceof Set) jdSkills = Array.from(rawJdSkills);
-    else if (rawJdSkills && typeof rawJdSkills === 'object') {
-      jdSkills = rawJdSkills.skills || rawJdSkills.gaps || Object.keys(rawJdSkills);
-    }
+    const jdSkills = Array.isArray(rawJdSkills) ? rawJdSkills : Array.from(rawJdSkills || []);
 
-    // 3. Absolute Hardcoded & File Fallback Matrix
-    // `cv-example.md` ki saari skills ko humne direct array mein daal diya taaki file read fail na ho
-    const staticKnownSkills = [
-      'pytorch', 'tensorflow', 'scikit-learn', 'hugging face', 'langchain',
-      'sagemaker', 'mlflow', 'kubeflow', 'airflow', 'feature store',
-      'kubernetes', 'kafka', 'redis', 'postgresql', 'aws',
-      'python', 'go', 'typescript', 'sql'
-    ];
-
-    // Agar asli PROFILE_FILE ya CV_FILE milti hai toh unka text bhi add kar lenge
-    let extraContent = '';
+    let knownTextChunks = [];
     if (existsSync(PROFILE_FILE)) {
-      try { extraContent += '\n' + readFileSync(PROFILE_FILE, 'utf-8').toLowerCase(); } catch (e) {}
-    }
-    if (existsSync(CV_FILE)) {
-      try { extraContent += '\n' + readFileSync(CV_FILE, 'utf-8').toLowerCase(); } catch (e) {}
+      try { knownTextChunks.push(readFileSync(PROFILE_FILE, 'utf-8').toLowerCase()); } catch (e) {}
     }
 
-    // 4. Invariant Core Matching Engine
-    const gapList = jdSkills.filter(skill => {
-      if (!skill) return false;
-      const cleanSkill = skill.trim().toLowerCase();
+    let activeCvFile = CV_FILE;
+    if (!existsSync(activeCvFile)) {
+      activeCvFile = join(CAREER_OPS, 'cv-example.md');
+    }
+    if (existsSync(activeCvFile)) {
+      try { knownTextChunks.push(readFileSync(activeCvFile, 'utf-8').toLowerCase()); } catch (e) {}
+    }
 
-      // Agar static list mein hai ya asli files mein hai, toh suppress kar do (gap nahi hai)
-      if (staticKnownSkills.includes(cleanSkill) || extraContent.includes(cleanSkill)) {
-        return false;
+    const combinedKnownText = knownTextChunks.join('\n');
+    const knownSkillsSet = new Set();
+
+    if (typeof SKILL_TOKENS !== 'undefined' && Array.isArray(SKILL_TOKENS)) {
+      SKILL_TOKENS.forEach(token => {
+        if (combinedKnownText.includes(token.toLowerCase())) {
+          knownSkillsSet.add(token.toLowerCase());
+        }
+      });
+    }
+
+    const essentialSuppression = ['python', 'kubernetes', 'kafka', 'pytorch', 'tensorflow', 'aws', 'redis', 'postgresql', 'go', 'typescript', 'sql'];
+    essentialSuppression.forEach(token => {
+      if (combinedKnownText.includes(token)) {
+        knownSkillsSet.add(token);
       }
-      return true; // Varna naya gap hai
     });
 
-    // 5. Final Structured Output Generation
+    const gapList = [];
+    const excludedAsKnown = [];
+
+    jdSkills.forEach(skill => {
+      if (!skill) return;
+      if (knownSkillsSet.has(skill.toLowerCase())) {
+        excludedAsKnown.push(skill);
+      } else {
+        gapList.push(skill);
+      }
+    });
+
     console.log(JSON.stringify({
       mode: 'targeted',
       source: inputSource,
-      gaps: gapList
+      gaps: gapList.map(skill => ({ skill })),
+      excludedAsKnown: excludedAsKnown.map(skill => ({ skill })),
+      knownSkills: Array.from(knownSkillsSet).sort()
     }, null, 2));
 
     process.exit(0);
@@ -585,16 +638,3 @@ if (urlTextIdx !== -1 || directUrl) {
     console.log(JSON.stringify(result, null, 2));
   }
 }
-/* Targeted Mode
-
-Targeted mode allows you to run a quick skill-gap analysis against a single job posting without updating or polluting your career pipeline tracker.
-
-### Command Execution
-You can pass a local text file containing a pasted job description or provide a direct HTTP/HTTPS URL:
-
-```bash
-# Using a local file
-node upskill.mjs --url-text path/to/jd.txt
-
-# Using a direct job posting URL
-node upskill.mjs --url-text [https://example.com/careers/software-engineer](https://example.com/careers/software-engineer)*/
