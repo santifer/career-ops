@@ -61,6 +61,15 @@ try {
     fail(`connector-separated tool claims were not extracted: ${JSON.stringify(connectorTools)}`);
   }
 
+  const proseTools = factClaims('I worked with the team in London.');
+  const contextualTool = factClaims('I built using React in production.');
+  if (contextualTool.some(claim => claim.value === 'react')
+      && proseTools.length === 0) {
+    pass('tool extraction filters ordinary prose around technology names');
+  } else {
+    fail(`ordinary prose was extracted as a tool: ${JSON.stringify({ proseTools, contextualTool })}`);
+  }
+
   const proseTitle = factClaims('The company was recognized as a Top Employer.');
   if (!proseTitle.some(claim => claim.kind === 'title')) {
     pass('ordinary as prose is not treated as a title claim');

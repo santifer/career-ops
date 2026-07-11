@@ -14,6 +14,18 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_SOURCES = ['cv.md', 'article-digest.md'];
 const DEFAULT_CONFIG = join(ROOT, 'config', 'cv-facts.json');
+const COMMON_LOWERCASE_TOOLS = new Set([
+  'agno', 'alpine', 'angular', 'astro', 'aws', 'docker', 'fastapi', 'flask',
+  'git', 'graphql', 'java', 'javascript', 'kotlin', 'mysql', 'nextjs', 'nginx',
+  'node', 'nuxt', 'ollama', 'pandas', 'php', 'postgresql', 'prisma', 'python',
+  'react', 'redis', 'ruby', 'rust', 'sqlite', 'svelte', 'swift', 'terraform',
+  'typescript', 'vue', 'webpack', 'whisper',
+]);
+const TOOL_PROSE_WORDS = new Set([
+  'a', 'an', 'and', 'at', 'built', 'by', 'containerized', 'deployment',
+  'deployments', 'for', 'from', 'in', 'of', 'on', 'production', 'project',
+  'team', 'the', 'to', 'using', 'with',
+]);
 
 /** Read a UTF-8 file when it exists, otherwise return an empty string. */
 function readIfExists(path) {
@@ -43,6 +55,16 @@ function normalizeFact(value) {
   return normalizeClaim(value).replace(/[.;:,]+$/g, '').trim();
 }
 
+/** Keep likely technology names while dropping ordinary prose fragments. */
+function isLikelyTool(value) {
+  const normalized = normalizeFact(value);
+  const words = normalized.split(' ');
+  if (!normalized || words.length > 3 || words.some(word => TOOL_PROSE_WORDS.has(word))) return false;
+  return words.some(word => COMMON_LOWERCASE_TOOLS.has(word)
+    || /^[A-Z][A-Za-z0-9+#./-]*$/.test(value.trim())
+    || /^[A-Z0-9][A-Za-z0-9+#./-]*$/.test(word));
+}
+
 /** Extract explicitly asserted employer, title, and tool claims from text. */
 export function factClaims(text) {
   const clean = stripMarkup(text);
@@ -54,12 +76,13 @@ export function factClaims(text) {
   ];
   for (const [kind, pattern] of patterns) {
     for (const match of clean.matchAll(pattern)) {
+      const rawText = kind === 'tool' ? match[1].trim() : '';
       const rawValues = kind === 'tool'
-        ? match[1].split(/,|\band\b|\bwith\b|\bin\b/i)
+        ? (/^the\s+/i.test(rawText) ? [] : rawText.split(/,|\band\b|\bwith\b|\bin\b/i))
         : [match[1] || match[2]];
       for (const raw of rawValues) {
         const value = normalizeFact(raw);
-        if (value) claims.push({ kind, value });
+        if (value && (kind !== 'tool' || isLikelyTool(raw))) claims.push({ kind, value });
       }
     }
   }
