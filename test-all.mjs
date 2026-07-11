@@ -4888,6 +4888,31 @@ try {
     fail('resolveScoreStatus should be undecidable for two statuses or two scores');
   }
 
+  // #1799: em dash / hyphen recognized as score-cell sentinels, matching the
+  // tracker's own "no data" convention used in every other column, alongside
+  // the pre-existing N/A / DUP sentinels — for backfilled no-score entries
+  // (e.g. a rejection email for a role never run through an evaluation).
+  if (looksLikeScoreCell('—') && looksLikeScoreCell('-')) {
+    pass('looksLikeScoreCell accepts em-dash and hyphen sentinels (#1799)');
+  } else {
+    fail('looksLikeScoreCell rejected the em-dash/hyphen sentinels');
+  }
+  const backfilled = resolveScoreStatus('—', 'Rejected');
+  const backfilledSwapped = resolveScoreStatus('Rejected', '—');
+  if (backfilled && backfilled.score === '—' && backfilled.status === 'Rejected' &&
+      backfilledSwapped && backfilledSwapped.score === '—' && backfilledSwapped.status === 'Rejected') {
+    pass('resolveScoreStatus resolves a backfilled em-dash score against a status in either order (#1799)');
+  } else {
+    fail(`resolveScoreStatus backfilled em-dash handling: std=${JSON.stringify(backfilled)} swp=${JSON.stringify(backfilledSwapped)}`);
+  }
+  // The #1427 guard must still refuse truly ambiguous rows: two sentinel-like
+  // cells give no way to tell score from status.
+  if (resolveScoreStatus('—', '-') === null && resolveScoreStatus('—', 'N/A') === null) {
+    pass('resolveScoreStatus still refuses two sentinel-like cells as ambiguous (#1427 guard intact)');
+  } else {
+    fail('resolveScoreStatus should stay undecidable for two sentinel-like cells');
+  }
+
   // End-to-end: a swapped-column TSV merges correctly; an undecidable one is skipped.
   const colTmp = mkdtempSync(join(tmpdir(), 'career-ops-colorder-'));
   try {
