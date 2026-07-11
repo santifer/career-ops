@@ -145,25 +145,23 @@ let bashCache = null;
 export function getBash() {
   if (bashCache !== null) return bashCache;
   if (process.platform !== 'win32') return (bashCache = 'bash');
-  try {
-    // Probe via argv vector — no shell string, nothing to interpolate.
-    execFileSync('wsl', ['-e', 'bash', '-c', 'true'], { stdio: 'ignore' });
-    return (bashCache = 'bash');
-  } catch {}
-  for (const cmd of [...WINDOWS_BASH_CANDIDATES, 'bash']) {
+  for (const cmd of WINDOWS_BASH_CANDIDATES) {
     try {
       execFileSync(cmd, ['-c', 'true'], { stdio: 'ignore' });
       return (bashCache = cmd);
     } catch {}
   }
   try {
-    execSync('wsl -e bash -c "true"', { stdio: 'ignore' });
+    // Probe via argv vector — no shell string, nothing to interpolate.
+    execFileSync('wsl', ['-e', 'bash', '-c', 'true'], { stdio: 'ignore' });
     return (bashCache = 'bash');
   } catch {}
-  try {
-    execSync('bash -c "true"', { stdio: 'ignore' });
-    return (bashCache = 'bash');
-  } catch {}
+  for (const cmd of ['bash']) {
+    try {
+      execFileSync(cmd, ['-c', 'true'], { stdio: 'ignore' });
+      return (bashCache = cmd);
+    } catch {}
+  }
   return (bashCache = 'bash');
 }
 
