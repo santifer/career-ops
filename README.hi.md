@@ -405,7 +405,9 @@ career-ops/
 
 ## Author के बारे में
 
-मैं Santiago हूँ -- Head of Applied AI, former founder (एक ऐसा business build किया और बेचा जो अभी भी मेरे नाम से चलता है)। मैंने career-ops अपनी खुद की job search manage करने के लिए बनाया। यह काम आया: मैंने इसे अपना current role land करने के लिए use किया।
+मैं [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) हूँ -- Head of Applied AI, former founder (एक ऐसा business build किया और बेचा जो अभी भी मेरे नाम से चलता है)। मैंने career-ops अपनी खुद की job search manage करने के लिए बनाया। यह काम आया: मैंने इसे अपना current role land करने के लिए use किया।
+
+क्या आप जानना चाहते हैं कि यह repo हफ्ते में सिर्फ ~4 घंटे में कैसे maintain होता है? पढ़ें [Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet)।
 
 मेरा portfolio और अन्य open source projects → [santifer.io](https://santifer.io)
 
