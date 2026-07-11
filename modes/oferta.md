@@ -261,6 +261,22 @@ If this combination is present, append a short, non-alarmist note to the report 
 
 This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is orthogonal to ghost-job detection and is reported separately.
 
+**7. AI-Buzzword vs. Infrastructure Mismatch** (from JD text, plus Block D research already gathered — no additional queries):
+
+Some JDs describe the company the org *wants to become*, not the org as it is: heavy "AI enablement / digital transformation / process innovation" language sitting on top of infrastructure that is nowhere near ready for it. The candidate finds out only after burning a prescreen (or more) that the "AI" role is really digitization and backlog-cleanup work first, AI work maybe eventually. That can still be a fine role — but the candidate should know before applying, not after.
+
+Check the JD for these three signal classes:
+
+- **Buzzword density vs. role scope:** AI/transformation/innovation/enablement language is prominent, but the actual seniority, title, or listed responsibilities don't match ownership of transformation outcomes (e.g., a mid-level individual-contributor role expected to "drive AI transformation across the organization").
+- **Team-size mismatch:** the JD mentions a small team (roughly 5 people or fewer) expected to own "transformation" outcomes for a large org — a common tell that the mandate outstrips the resourcing.
+- **Industry base rate:** the company is in a traditional/legacy-heavy industry (manufacturing, aerospace/defense, industrial, heavy logistics) where basic digitization is often still incomplete — AI is being bolted onto a foundation that may not exist yet. This is a base rate, not a verdict: plenty of legacy-industry roles are genuine; it only counts as a signal in combination with the others.
+
+**Only flag when 2+ of the three signal classes are present.** If flagged, append a short, non-alarmist note to the report (descriptive, never prescriptive — this can be exactly the kind of high-impact greenfield role some candidates want):
+
+> ⚠️ **Buzzword/infrastructure mismatch signal:** This JD leans on AI/transformation language ("{specific phrases found}") while {signals observed: small team owning transformation outcomes / scope-seniority mismatch / legacy-heavy industry}. The day-to-day may be foundational digitization and backlog cleanup before any AI work. If you proceed, probe the actual state of their systems directly in interviews — e.g. "What are the top 3 most urgent things this role needs to fix right now?", "Which systems would I be working with, and how mature are they?" — rather than relying on the JD's framing.
+
+This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — the posting can be entirely real and still oversell its AI maturity. It is orthogonal to ghost-job detection and is reported separately.
+
 ### Output format:
 
 **Assessment:** One of three tiers:
