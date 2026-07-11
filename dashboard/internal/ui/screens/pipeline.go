@@ -258,19 +258,11 @@ type PipelineModel struct {
 	// Hired win flow sub-state (Issue 1447)
 	hiredApp  model.CareerApplication
 	hiredStep int // 0 = inactive, 1 = celebration, 2 = story invite, 3 = anonymous stat
-
-	// Discard reason picker sub-state (Issue 1380)
-	discardApp      model.CareerApplication
-	discardStatus   string // "Discarded" or "SKIP"
-	discardStep     int    // 0 = inactive, 1 = pick reason, 2 = custom reason input
-	discardOptions  []string
-	discardCursor   int
-	discardInputVal string
 }
 
 // IsTextInputActive returns true if the search or any other text input is currently focused
 func (m PipelineModel) IsTextInputActive() bool {
-	return m.searchInput || m.discardStep == 2
+	return m.searchInput || m.discardCustomInput
 }
 
 // NewPipelineModel creates a new pipeline screen.
@@ -398,9 +390,6 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 		m.flash = ""
 		if m.hiredStep > 0 {
 			return m.handleHiredFlow(msg)
-		}
-		if m.discardStep > 0 {
-			return m.handleDiscardFlow(msg)
 		}
 		if m.colPicker {
 			return m.handleColPicker(msg)
@@ -1251,8 +1240,8 @@ func (m PipelineModel) View() string {
 	}
 
 	// Discard reason picker overlay
-	if m.discardStep > 0 {
-		body = m.overlayDiscardFlow(body)
+	if m.discardPicker {
+		body = m.overlayDiscardPicker(body)
 	}
 
 	sections := []string{header, tabs, metricsBar, sortBar}
@@ -1870,38 +1859,6 @@ func (m PipelineModel) overlayStatusPicker(body string) string {
 	return strings.Join(bodyLines, "\n")
 }
 
-func (m PipelineModel) overlayDiscardFlow(body string) string {
-	bodyLines := strings.Split(body, "\n")
-
-	pickerWidth := 50
-	padStyle := lipgloss.NewStyle().Padding(0, 2)
-	borderStyle := lipgloss.NewStyle().
-		Foreground(m.theme.Blue).
-		Bold(true)
-
-	var picker []string
-	if m.discardStep == 1 {
-		picker = append(picker, padStyle.Render(borderStyle.Render(fmt.Sprintf("Select %s Reason:", m.discardStatus))))
-		for i, opt := range m.discardOptions {
-			style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth)
-			if i == m.discardCursor {
-				style = style.Background(m.theme.Overlay).Bold(true)
-			}
-			prefix := "  "
-			if i == m.discardCursor {
-				prefix = "> "
-			}
-			picker = append(picker, padStyle.Render(style.Render(prefix+opt)))
-		}
-	} else if m.discardStep == 2 {
-		picker = append(picker, padStyle.Render(borderStyle.Render(fmt.Sprintf("Enter custom %s reason (ESC to cancel):", m.discardStatus))))
-		style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth).Background(m.theme.Overlay)
-		picker = append(picker, padStyle.Render(style.Render("> "+m.discardInputVal+"█")))
-	}
-
-	bodyLines = append(bodyLines, picker...)
-	return strings.Join(bodyLines, "\n")
-}
 
 func (m PipelineModel) overlayHiredFlow() string {
 	borderStyle := lipgloss.NewStyle().
