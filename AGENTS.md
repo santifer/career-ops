@@ -30,6 +30,7 @@ User-facing content (CV, cover letters, application emails, form answers, recrui
 - `article-digest.md`
 - `config/profile.yml`
 - `modes/_profile.md`
+- `modes/_custom.md` (procedural/style rules only — governs workflow and output preferences, never introduces factual claims)
 - `writing-samples/`
 - `voice-dna.md` (voice/style only — governs *how* text reads, never introduces factual claims)
 - `interview-prep/story-bank.md` and `interview-prep/{company}-{role}.md` (the user's own STAR stories and interview-prep notes — same trust level as `cv.md`; consumed by the `interview` and `apply`/`match-star` modes)
@@ -117,7 +118,10 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `process-quality.mjs` | Recruiting-process friction aggregator — parses `[process-friction]` tags candidates add to `data/active-interviews.md` Notes and reports per-company friction rate (JSON or `--summary` table output) |
 | `salary-gap.mjs` | Desired/advertised/actual compensation gap analyzer — folds report `advertised_comp` + `data/salary-observations.tsv` (JSON or `--summary`) |
 | `data/salary-observations.tsv` | Append-only salary observation log (user layer) |
+| `assessment-log.mjs` | Skills-assessment event logger — `add` appends platform/subject/threshold/score + candidate-observed staleness note to `data/assessments.tsv` (JSON or `--summary`) |
+| `data/assessments.tsv` | Append-only skills-assessment log (user layer, created on first `add`) |
 | `data/follow-ups.md` | Follow-up history tracker |
+| `data/blacklist.md` | Your do-not-apply company list (user layer, opt-in — never auto-populated; respected by `scan.mjs` and the `auto-pipeline`/`oferta`/`apply` gates) |
 | `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
 | `check-liveness.mjs` | Job posting liveness checker |
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
@@ -143,7 +147,7 @@ Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...], "auto
 
 If the user mentions cost, pricing, budget, or asks about free alternatives during onboarding, proactively surface the free path:
 
-> "career-ops works fully on Antigravity CLI's free tier — no API key or paid subscription needed. See [FREE_TIER.md](docs/FREE_TIER.md) for setup (`agy auth login`, daily limits, and batch tips)."
+> "career-ops works fully on Antigravity CLI's free tier — no API key or paid subscription needed. See [FREE_TIER.md](docs/FREE_TIER.md) for setup, daily limits, and batch tips."
 
 If the user is already on a paid plan (Claude Max, Google AI, etc.) or does not mention cost, skip this step silently.
 

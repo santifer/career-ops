@@ -28,6 +28,7 @@
  *   node scan.mjs --verify --headed-fallback  # retry anti-bot-blocked URLs in a headed browser (needs a display)
  *   node scan.mjs --verify --throttle          # jittered ~5-10s gap between checks (stay under rate limits)
  *   node scan.mjs --verify --throttle=8000     # custom base gap in ms (waits base..2*base)
+ *   node scan.mjs --include-blacklisted        # let data/blacklist.md matches through (annotated)
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
@@ -42,6 +43,7 @@ import { mergeProviderPlugins } from './plugins/_engine.mjs';
 import { classifyFetchError } from './verify-portals.mjs';
 import { fingerprintText, findCrossListings } from './fingerprint-core.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { normalizeCompany } from './tracker-utils.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -1062,6 +1064,55 @@ export function appendToScanHistory(offers, date, status = 'added') {
   appendFileSync(SCAN_HISTORY_PATH, lines, 'utf-8');
 }
 
+// ── Company blacklist (#1742) ───────────────────────────────────────
+
+const BLACKLIST_PATH = 'data/blacklist.md';
+
+/**
+ * Parse the user's do-not-apply list (data/blacklist.md, user layer, opt-in).
+ *
+ * The file is a small markdown table the user owns:
+ * `| Company | Since | Scope | Reason |`. Nothing here ever creates or writes
+ * it — an absent file means no filtering. Companies are keyed with the same
+ * normalization every tracker writer shares (normalizeCompany, #1460), so a
+ * blacklist row "Acme Corp." still catches an ATS feed that says "acme corp".
+ *
+ * @param {string} text - Raw data/blacklist.md content.
+ * @returns {Map<string, {company: string, since: string, scope: string, reason: string}>}
+ *          Normalized company key → entry. First row wins on duplicate keys.
+ */
+export function parseBlacklist(text) {
+  const entries = new Map();
+  for (const line of String(text ?? '').replace(/\r/g, '').split('\n')) {
+    if (!line.trim().startsWith('|')) continue;
+    const cells = line.split('|').map(s => s.trim());
+    const company = cells[1] || '';
+    if (!company || /^[-: ]+$/.test(company)) continue; // separator row
+    if (company.toLowerCase() === 'company') continue;  // header row
+    const key = normalizeCompany(company);
+    if (!key || entries.has(key)) continue;
+    entries.set(key, {
+      company,
+      since: cells[2] || '',
+      scope: cells[3] || '',
+      reason: cells[4] || '',
+    });
+  }
+  return entries;
+}
+
+/**
+ * Load data/blacklist.md if the user opted in. Absent file = empty Map = no
+ * filtering anywhere — the scan stays byte-identical to a pre-#1742 run.
+ *
+ * @param {string} [filePath] - Override for tests.
+ * @returns {Map<string, {company: string, since: string, scope: string, reason: string}>}
+ */
+export function loadBlacklist(filePath = BLACKLIST_PATH) {
+  if (!existsSync(filePath)) return new Map();
+  return parseBlacklist(readFileSync(filePath, 'utf-8'));
+}
+
 // ── Scan-run persistence (#1604) ────────────────────────────────────
 
 const SCAN_RUNS_PATH = 'data/scan-runs.tsv';
@@ -1072,7 +1123,7 @@ const SCAN_RUNS_PATH = 'data/scan-runs.tsv';
 // 'completed' in v1; a follow-up wires failure-path writes so trend stats can
 // exclude survivorship bias. Consumers MUST parse by header name, never by
 // position — columns may be appended in later versions.
-export const SCAN_RUNS_HEADER = 'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_posting_age\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors\n';
+export const SCAN_RUNS_HEADER = 'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_posting_age\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors\tfiltered_blacklist\n';
 
 export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
   if (!existsSync(filePath)) writeFileSync(filePath, SCAN_RUNS_HEADER, 'utf-8');
@@ -1080,6 +1131,10 @@ export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
     c.timestamp, c.status ?? 'completed', c.companies, c.boards, c.found,
     c.filteredTitle, c.filteredTier, c.filteredLocation, c.filteredPostingAge,
     c.filteredSalary, c.filteredContent, c.filteredCooldown, c.dupes, c.newAdded, c.errors,
+    // filtered_blacklist (#1742) appended at the END, per the header-name
+    // contract above: files created with an older header keep parsing (the
+    // extra trailing cell is simply not named there).
+    c.filteredBlacklist ?? 0,
   ].join('\t') + '\n';
   appendFileSync(filePath, row, 'utf-8');
 }
@@ -1241,6 +1296,9 @@ async function main() {
   // --rediscover-404: when a tracked company's URL 404/410s, search for the
   // moved role and re-verify before marking it expired. Opt-in; rides on --verify.
   const rediscover = args.includes('--rediscover-404');
+  // --include-blacklisted: bypass the data/blacklist.md filter for auditing.
+  // Matching postings flow through annotated instead of being counted out.
+  const includeBlacklisted = args.includes('--include-blacklisted');
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
 
@@ -1347,6 +1405,10 @@ async function main() {
   console.log(`Scanning ${parts.join('; ')} via providers`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
+  // 3.5. Load the user's do-not-apply list (#1742). Opt-in: absent file =
+  // empty Map = the filter below never fires.
+  const blacklist = loadBlacklist();
+
   // 4. Load dedup sets
   const historyPolicy = scanHistoryPolicy(config);
   const seenUrlState = loadSeenUrls(historyPolicy);
@@ -1367,6 +1429,8 @@ async function main() {
   let totalFilteredPostingAge = 0;
   let totalFilteredSalary = 0;
   let totalFilteredContent = 0;
+  let totalFilteredBlacklist = 0;
+  let annotatedBlacklisted = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [...resolveErrors];
@@ -1406,6 +1470,26 @@ async function main() {
         job.trustScore = trustResult.score;
         job.trustFlags = trustResult.flags;
         job.trustLevel = trustResult.level;
+
+        // Company blacklist (#1742) — the user's own do-not-apply decision,
+        // checked first: it's company-level, not a per-posting signal. Never
+        // silent: skips are counted and reported in the run summary, and
+        // --include-blacklisted lets the posting through annotated instead.
+        if (blacklist.size > 0) {
+          const blEntry = blacklist.get(normalizeCompany(job.company || company.name || ''));
+          if (blEntry) {
+            if (!includeBlacklisted) {
+              totalFilteredBlacklist++;
+              continue;
+            }
+            annotatedBlacklisted++;
+            job.blacklisted = true;
+            const label = `blacklisted${blEntry.reason ? `: ${blEntry.reason}` : ''}`;
+            job.note = typeof job.note === 'string' && job.note.trim()
+              ? `${label} — ${job.note}`
+              : label;
+          }
+        }
 
         if (!titleFilter(job.title)) {
           totalFilteredTitle++;
@@ -1574,6 +1658,13 @@ async function main() {
     console.log(`Filtered by cooldown:  ${totalFilteredCooldown} removed`);
   }
   console.log(`Duplicates:            ${totalDupes} skipped`);
+  if (blacklist.size > 0) {
+    if (includeBlacklisted) {
+      console.log(`Blacklisted:           ${annotatedBlacklisted} let through annotated (--include-blacklisted)`);
+    } else {
+      console.log(`Blacklisted:           ${totalFilteredBlacklist} skipped (blacklist)`);
+    }
+  }
   if (crossListings.length > 0) {
     console.log(`\n⚠️  Possible cross-listings (same JD text, different company) — warn only, nothing was dropped:`);
     for (const { offer, row, score } of crossListings) {
@@ -1656,7 +1747,8 @@ async function main() {
       const trustSuffix = o.trustScore != null && o.trustScore < 100
         ? ` [Trust: ${o.trustScore}/100${o.trustFlags?.length ? ' — ' + o.trustFlags.join(', ') : ''}]`
         : '';
-      console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}${trustSuffix}`);
+      const blacklistSuffix = o.blacklisted ? ' [BLACKLISTED — on your do-not-apply list]' : '';
+      console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}${trustSuffix}${blacklistSuffix}`);
     }
     if (dryRun) {
       console.log('\n(dry run — run without --dry-run to save results)');
@@ -1676,6 +1768,7 @@ async function main() {
       filteredSalary: totalFilteredSalary,
       filteredContent: totalFilteredContent, filteredCooldown: totalFilteredCooldown,
       dupes: totalDupes, newAdded: verifiedOffers.length, errors: errors.length,
+      filteredBlacklist: totalFilteredBlacklist,
     });
   }
 

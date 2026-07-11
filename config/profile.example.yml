@@ -106,6 +106,12 @@ cv:
   # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
   # The ID starts with "D" and is 11 characters long.
   # canva_resume_design_id: "DAxxxxxxxxx"
+  # Which CV template to use by default. Value is the kebab-case name of a file
+  # in templates/ named cv-template.<name>.html (e.g. "modern" ->
+  # templates/cv-template.modern.html). Leave unset/commented to use the built-in
+  # templates/cv-template.html. You can also pick per-generation just by asking
+  # (e.g. "use the modern template").
+  # template: modern
 
 # ── Culture Screen ───────────────────────────────────────────────────────────
 #
@@ -136,6 +142,10 @@ cover_letter:
   # JD requests an immediate start. The user confirms the actual value before it
   # appears in the letter.
   notice_period_days: 30
+  # Which cover-letter template to use by default. Kebab-case name of a file in
+  # templates/ named cover-letter-template.<name>.html. Unset -> built-in
+  # templates/cover-letter-template.html.
+  # template: modern
 
   # Your current professional domain (used to detect domain gaps vs the JD).
   # Plain English, e.g. "digital media", "fintech", "healthcare IT".
