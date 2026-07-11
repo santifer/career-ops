@@ -417,7 +417,13 @@ export async function inlineLocalFonts(html) {
  *
  * @param {string} html - Full HTML document to render.
  * @param {string} outputPath - Absolute path to write the PDF to.
- * @param {{format?: 'a4'|'letter', baseDir?: string, reportNum?: string, inputPath?: string}} [opts]
+ * @param {{
+ *   format?: 'a4'|'letter',
+ *   baseDir?: string,
+ *   reportNum?: string,
+ *   inputPath?: string,
+ *   launchBrowser?: (options: {headless: boolean}) => Promise<import('playwright').Browser>
+ * }} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
  */
 export async function renderHtmlToPdf(html, outputPath, opts = {}) {
@@ -437,8 +443,10 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const { writeFile, unlink } = await import('fs/promises');
   await writeFile(tmpHtmlPath, html, 'utf-8');
 
-  const browser = await chromium.launch({ headless: true });
+  const launchBrowser = opts.launchBrowser || ((options) => chromium.launch(options));
+  let browser = null;
   try {
+    browser = await launchBrowser({ headless: true });
     const page = await browser.newPage();
 
     // Load from file:// so the page origin allows local subresources
@@ -482,9 +490,17 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
 
     return { outputPath, pageCount, size: pdfBuffer.length };
   } finally {
-    await browser.close();
+    if (browser) {
+      await browser.close().catch((err) => {
+        console.warn(`⚠️  Browser cleanup failed: ${err.message}`);
+      });
+    }
     // Clean up temp file
-    await unlink(tmpHtmlPath).catch(() => {});
+    await unlink(tmpHtmlPath).catch((err) => {
+      if (err?.code !== 'ENOENT') {
+        console.warn(`⚠️  Temporary HTML cleanup failed: ${err.message}`);
+      }
+    });
   }
 }
 

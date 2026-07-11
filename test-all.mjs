@@ -974,6 +974,62 @@ try {
   fail(`PDF manifest path helper test crashed: ${e.message}`);
 }
 
+console.log('\n7b2. PDF renderer temporary-file cleanup');
+
+try {
+  const { renderHtmlToPdf } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-pdf-cleanup-launch-'));
+  const launchError = new Error('injected browser launch failure');
+  let caught;
+  try {
+    await renderHtmlToPdf('<html><body>PII_MARKER@example.com</body></html>', join(fixtureRoot, 'cv.pdf'), {
+      baseDir: fixtureRoot,
+      launchBrowser: async () => { throw launchError; },
+    });
+  } catch (error) {
+    caught = error;
+  }
+  const leftovers = readdirSync(fixtureRoot)
+    .filter((name) => name.startsWith('.career-ops-render-'));
+  if (caught === launchError && leftovers.length === 0) {
+    pass('PDF renderer removes temporary HTML when Chromium launch fails');
+  } else {
+    fail(`PDF renderer leaked temporary HTML after launch failure: ${leftovers.join(', ')}`);
+  }
+  rmSync(fixtureRoot, { recursive: true, force: true });
+} catch (error) {
+  fail(`PDF renderer launch-cleanup test crashed: ${error.message}`);
+}
+
+try {
+  const { renderHtmlToPdf } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-pdf-cleanup-page-'));
+  const pageError = new Error('injected newPage failure');
+  let closeCalls = 0;
+  let caught;
+  try {
+    await renderHtmlToPdf('<html><body>PRIVATE_CV_MARKER</body></html>', join(fixtureRoot, 'cv.pdf'), {
+      baseDir: fixtureRoot,
+      launchBrowser: async () => ({
+        newPage: async () => { throw pageError; },
+        close: async () => { closeCalls += 1; },
+      }),
+    });
+  } catch (error) {
+    caught = error;
+  }
+  const leftovers = readdirSync(fixtureRoot)
+    .filter((name) => name.startsWith('.career-ops-render-'));
+  if (caught === pageError && closeCalls === 1 && leftovers.length === 0) {
+    pass('PDF renderer closes Chromium and removes temporary HTML after launch');
+  } else {
+    fail(`PDF renderer post-launch cleanup mismatch: close=${closeCalls}, temp=${leftovers.join(', ')}`);
+  }
+  rmSync(fixtureRoot, { recursive: true, force: true });
+} catch (error) {
+  fail(`PDF renderer post-launch cleanup test crashed: ${error.message}`);
+}
+
 // ── 7c. UPDATER DASHBOARD REBUILD ─────────────────────────────────
 
 console.log('\n7c. Updater dashboard rebuild');
