@@ -26,7 +26,7 @@
 
 import { execSync, execFileSync, spawn } from 'child_process';
 import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
-import { join, dirname, delimiter } from 'path';
+import { join, dirname, basename, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
@@ -48,6 +48,29 @@ function readFile(path) {
   }
   return content;
 }
+
+/**
+ * Normalize CRLF line endings to LF (#1771).
+ *
+ * On Windows checkouts with core.autocrlf=true, repo text files arrive with
+ * CRLF endings. Doc assertions that anchor on `\n` (JS `.` never matches `\r`)
+ * then fail on pristine main. Normalizing at read time keeps the assertions
+ * byte-ending agnostic without touching any regex.
+ *
+ * @param {string} text - Raw file contents.
+ * @returns {string} Contents with LF-only line endings.
+ */
+const normalizeEol = (text) => text.replace(/\r\n/g, '\n');
+
+/**
+ * Read a repo text file with line endings normalized to LF (#1771).
+ * Use for doc-content reads that feed `\n`-anchored regex assertions.
+ * Do NOT use where byte-exact content matters.
+ *
+ * @param {string} path - Path relative to the career-ops repository root.
+ * @returns {string} File contents with LF-only line endings.
+ */
+const readTextLF = (path) => normalizeEol(readFile(path));
 
 // ── Auto-discovered test files (issue #1440) ─────────────────────────────
 // Deterministic: recursive readdirSync with default lexicographic sort of
@@ -130,6 +153,10 @@ const scripts = [
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
   { name: 'salary-gap.mjs --self-test', expectExit: 0 },
+  { name: 'funnel-velocity.mjs --self-test', expectExit: 0 },
+  { name: 'img-to-pdf.mjs --self-test', expectExit: 0 },
+  { name: 'assessment-log.mjs --self-test', expectExit: 0 },
+  { name: 'build-cv-html.mjs --test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
   { name: 'tracker-columns-tests.mjs', expectExit: 0 },
   { name: 'agent-inbox-tests.mjs', expectExit: 0 },
@@ -164,6 +191,42 @@ for (const { name, allowFail } of scripts) {
   } else {
     fail(`${name} crashed`);
   }
+}
+
+try {
+  const tmp = mkdtempSync(join(tmpdir(), 'career-ops-cv-facts-'));
+  const hiddenScriptMetric = join(tmp, 'hidden-script-metric.html');
+  const visibleMetric = join(tmp, 'visible-metric.html');
+  writeFileSync(
+    hiddenScriptMetric,
+    '<html><body><script>const claim = "500 users";</script\t\n bar><p>Generated CV</p></body></html>'
+  );
+  writeFileSync(
+    visibleMetric,
+    '<html><body><p>Improved onboarding for 500 users.</p></body></html>'
+  );
+
+  const hiddenResult = run(NODE, ['verify-cv-facts.mjs', hiddenScriptMetric], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  if (hiddenResult !== null) {
+    pass('verify-cv-facts strips script tags with irregular closing tags');
+  } else {
+    fail('verify-cv-facts treated script contents as visible CV facts');
+  }
+
+  const visibleResult = run(NODE, ['verify-cv-facts.mjs', visibleMetric], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  if (visibleResult === null) {
+    pass('verify-cv-facts still flags visible unsupported metrics');
+  } else {
+    fail('verify-cv-facts missed a visible unsupported metric');
+  }
+
+  rmSync(tmp, { recursive: true, force: true });
+} catch (e) {
+  fail(`verify-cv-facts regression tests crashed: ${e.message}`);
 }
 
 // ── 3. LIVENESS CLASSIFICATION ──────────────────────────────────
@@ -690,12 +753,16 @@ const allowedFiles = [
 // untracked files (debate artifacts, AI tool scratch, local plans/) and
 // gitignored files can't trigger false positives because they were never
 // going to reach a commit anyway.
-const grepPathspec = scanExtensions.map(e => `'*.${e}'`).join(' ');
+// Argument vector for git grep — no shell involved, so the pathspecs and
+// pattern reach git verbatim (no quoting layer, nothing interpolated).
+const grepPathspecs = scanExtensions.map(e => `*.${e}`);
 
 let leakFound = false;
 for (const pattern of leakPatterns) {
   const result = run(
-    `git grep -n "${pattern}" -- ${grepPathspec} 2>/dev/null`
+    'git',
+    ['grep', '-n', pattern, '--', ...grepPathspecs],
+    { stdio: ['pipe', 'pipe', 'ignore'] }
   );
   if (result) {
     for (const line of result.split('\n')) {
@@ -717,13 +784,21 @@ console.log('\n7. Absolute path check');
 
 // Same git grep approach: only scans tracked files. Untracked AI tool
 // outputs, local debate artifacts, etc. can't false-positive here.
-const absPathResult = run(
-  `git grep -n "/Users/" -- '*.mjs' '*.sh' '*.md' '*.go' '*.yml' 2>/dev/null | grep -v README.md | grep -v LICENSE | grep -v CLAUDE.md | grep -v test-all.mjs`
+const absPathRaw = run(
+  'git',
+  ['grep', '-n', '/Users/', '--', '*.mjs', '*.sh', '*.md', '*.go', '*.yml'],
+  { stdio: ['pipe', 'pipe', 'ignore'] }
 );
-if (!absPathResult) {
+// The old shell pipeline's `grep -v` exclusions, now as a JS filter.
+const ABS_PATH_EXCLUDE = ['README.md', 'LICENSE', 'CLAUDE.md', 'test-all.mjs'];
+const absPathLines = (absPathRaw || '')
+  .split('\n')
+  .filter(Boolean)
+  .filter(line => !ABS_PATH_EXCLUDE.some(x => line.includes(x)));
+if (absPathLines.length === 0) {
   pass('No absolute paths in code files');
 } else {
-  for (const line of absPathResult.split('\n').filter(Boolean)) {
+  for (const line of absPathLines) {
     fail(`Absolute path: ${line.slice(0, 100)}`);
   }
 }
@@ -967,6 +1042,160 @@ try {
   fail(`update-system timeout helper test crashed: ${e.message}`);
 }
 
+// ── 7d. OUTPUT LANGUAGE CONTRACT ─────────────────────────────────
+
+console.log('\n7d. Output language contract');
+
+const profileExample = readTextLF('config/profile.example.yml');
+const outputLanguageAgentsDoc = readTextLF('AGENTS.md');
+const outputLanguageClaudeDoc = readTextLF('CLAUDE.md');
+const careerOpsSkill = readTextLF('.agents/skills/career-ops/SKILL.md');
+const batchPrompt = readTextLF('batch/batch-prompt.md');
+
+if (/language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(profileExample)) {
+  pass('profile.example.yml documents language.output default');
+} else {
+  fail('profile.example.yml is missing language.output default');
+}
+
+// Regression guard (#1771): doc assertions must survive CRLF checkouts
+// (Windows core.autocrlf=true). Exercises the real read path: a CRLF fixture
+// is written to disk and read back through readTextLF, so stripping the
+// normalization out of readTextLF fails this check on every platform. The
+// fixture lives under ROOT because readFile resolves ROOT-relative paths.
+try {
+  const crlfGuardTmp = mkdtempSync(join(ROOT, 'crlf-guard-'));
+  try {
+    writeFileSync(
+      join(crlfGuardTmp, 'crlf-fixture.md'),
+      'language:\r\n  # Output language for human-facing prose\r\n  output: en\r\n\r\nWrite HTML to `output/cv-x.html`\r\n\r\n```bash\r\nnode generate-pdf.mjs \\\r\n  output/cv-x.html \\\r\n  output/cv-x.pdf\r\n```\r\n'
+    );
+    const crlfGuardContent = readTextLF(`${basename(crlfGuardTmp)}/crlf-fixture.md`);
+    if (
+      !crlfGuardContent.includes('\r') &&
+      /language:\s*\n(?:\s*#.*\n)*\s*output:\s*["']?en["']?/.test(crlfGuardContent) &&
+      crlfGuardContent.match(/node generate-pdf\.mjs \\\n\s+([^\s\\]+) \\/)?.[1] === 'output/cv-x.html'
+    ) {
+      pass('doc assertions tolerate CRLF checkouts via readTextLF normalization');
+    } else {
+      fail('doc assertions break on CRLF checkouts — readTextLF normalization regressed');
+    }
+  } finally {
+    rmSync(crlfGuardTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`CRLF regression guard crashed: ${e.message}`);
+}
+
+if (
+  /language\.output/.test(outputLanguageAgentsDoc) &&
+  /human-facing output/i.test(outputLanguageAgentsDoc) &&
+  /modes_dir/.test(outputLanguageAgentsDoc)
+) {
+  pass('AGENTS.md documents output language separately from market modes');
+} else {
+  fail('AGENTS.md does not document the language.output vs modes_dir contract');
+}
+
+const marketModeDocs = [
+  ['AGENTS.md', outputLanguageAgentsDoc],
+  ['CLAUDE.md', outputLanguageClaudeDoc],
+];
+
+const outputRequestSwitchesMarketMode = (text) => text.split('\n').some((line) =>
+  /asks? for (German|French|Arabic|Japanese|Turkish) output/i.test(line) &&
+  /(?:switch(?:es|ing)?|use|read from)[^\n]*(?:language\.modes_dir|modes\/(?:de|fr|ar|ja|tr))/i.test(line)
+);
+
+const validOutputLanguageGuidance = 'If the user asks for French output, set language.output to fr.';
+const invalidOutputLanguageGuidance = 'If the user asks for French output, switch to language.modes_dir: modes/fr.';
+if (
+  !outputRequestSwitchesMarketMode(validOutputLanguageGuidance) &&
+  outputRequestSwitchesMarketMode(invalidOutputLanguageGuidance)
+) {
+  pass('output-language mentions do not imply a market-mode switch');
+} else {
+  fail('output-language mentions are incorrectly treated as market-mode switches');
+}
+
+for (const [docName, docText] of marketModeDocs) {
+  if (outputRequestSwitchesMarketMode(docText)) {
+    fail(`${docName} treats output-language requests as market-mode selection`);
+  } else {
+    pass(`${docName} keeps output language separate from market-mode selection`);
+  }
+}
+
+if (/language\.output/.test(careerOpsSkill) && /human-facing output/i.test(careerOpsSkill)) {
+  pass('career-ops skill injects the output language rule');
+} else {
+  fail('career-ops skill does not inject the output language rule');
+}
+
+if (/Language Rule/i.test(batchPrompt) && /language\.output/.test(batchPrompt) && /write all human-facing output/i.test(batchPrompt)) {
+  pass('batch prompt honors language.output for worker prose');
+} else {
+  fail('batch prompt does not honor language.output for worker prose');
+}
+
+const batchEvaluationInputs = batchPrompt.match(/### Step 2 \u2014 Evaluate A-G([\s\S]*?)#### Step 0 \u2014 Archetype Detection/)?.[1] ?? '';
+if (/`llms\.txt`/.test(batchEvaluationInputs)) {
+  pass('batch evaluation step loads llms.txt');
+} else {
+  fail('batch evaluation step does not load llms.txt');
+}
+
+if (/Canonical base language:\s*English\./.test(batchPrompt)) {
+  pass('batch prompt uses an English canonical base');
+} else {
+  fail('batch prompt canonical base is not English');
+}
+
+if (!/Antes de interpretar|clasifica el|salario p\u00fablico|promesa contractual/i.test(batchPrompt)) {
+  pass('batch prompt keeps system instructions in its canonical English base');
+} else {
+  fail('batch prompt contains Spanish system instructions despite its English canonical base');
+}
+
+const batchHtmlWritePath = batchPrompt.match(/Write HTML to `([^`]+)`/)?.[1];
+const batchPdfInputPath = batchPrompt.match(/node generate-pdf\.mjs \\\n\s+([^\s\\]+) \\/)?.[1];
+if (batchHtmlWritePath && batchHtmlWritePath === batchPdfInputPath) {
+  pass('batch prompt renders the HTML path it writes');
+} else {
+  fail(`batch prompt HTML path mismatch: writes ${batchHtmlWritePath ?? 'unknown'}, renders ${batchPdfInputPath ?? 'unknown'}`);
+}
+
+const batchFinalJson = batchPrompt.match(/### Step 6 \u2014 Final JSON([\s\S]*?)\n---/)?.[1] ?? '';
+if (
+  /JSON\.stringify|JSON serializer/i.test(batchFinalJson) &&
+  /"pdf":\s*\{pdf_path_json_string_or_null\}/.test(batchFinalJson) &&
+  /dynamic string[\s\S]{0,160}escap/i.test(batchFinalJson)
+) {
+  pass('batch final JSON preserves native types and escapes dynamic strings');
+} else {
+  fail('batch final JSON does not require typed, escaped serialization');
+}
+
+const batchTrackerStep = batchPrompt.match(/### Step 5 \u2014 Tracker TSV Line[\s\S]*?### Step 6 \u2014 Final JSON/)?.[0] ?? '';
+if (/\{\{REPORT_NUM\}\}\\t\{\{DATE\}\}/.test(batchTrackerStep) && !/Compute `\{next_num\}`/.test(batchTrackerStep)) {
+  pass('batch workers use the coordinator-reserved tracker number');
+} else {
+  fail('batch workers still compute tracker numbers independently');
+}
+
+const batchMachineSummary = batchPrompt.match(/#### Machine Summary[\s\S]*?### Step 3 \u2014 Save the Report/)?.[0] ?? '';
+const patternsMachineFields = readFile('analyze-patterns.mjs').match(/const MACHINE_SUMMARY_FIELDS = new Set\(\[([\s\S]*?)\]\);/)?.[1] ?? '';
+if (
+  /^via:/m.test(batchMachineSummary) &&
+  /^company_confidential:/m.test(batchMachineSummary) &&
+  /['"]via['"]/.test(patternsMachineFields) &&
+  /['"]company_confidential['"]/.test(patternsMachineFields)
+) {
+  pass('batch Machine Summary fields are preserved by the downstream parser');
+} else {
+  fail('batch Machine Summary and downstream parser fields are misaligned');
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');
@@ -975,7 +1204,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md', 'email.md', 'add.md', 'titles.md',
+  'interview.md', 'latex.md', 'latex-tex.md', 'email.md', 'add.md', 'titles.md',
   'regional/eu-swe.md',
 ];
 
@@ -998,9 +1227,22 @@ if (shared.includes('_profile.md')) {
 // --- _custom.md must be READ, not just written (#1388): Sources of Truth row +
 // honor rule in _shared.md, and an explicit pre-generation read in pdf.md ---
 const pdfModeCustom = readFile('modes/pdf.md');
+const markersAppearInOrder = (text, markers) => {
+  let cursor = -1;
+  for (const marker of markers) {
+    const idx = text.indexOf(marker, cursor + 1);
+    if (idx === -1 || idx <= cursor) return false;
+    cursor = idx;
+  }
+  return true;
+};
 if (
   shared.includes('| _custom.md | `modes/_custom.md` (if exists) |') &&
-  shared.includes('Read _custom.md (if it exists) AFTER this file and honor its house rules in every mode') &&
+  markersAppearInOrder(shared, [
+    'Read _profile.md AFTER this file',
+    'Read _custom.md (if it exists) AFTER _profile.md',
+    'honor its house rules in every mode',
+  ]) &&
   shared.includes('does not expire between sessions or between items in a batch') &&
   pdfModeCustom.includes('read `modes/_custom.md` (if it exists) and apply its formatting/content house rules')
 ) {
@@ -1053,6 +1295,49 @@ if (
   pass('email mode covers formal drafts, no-send safety, variants, attachments, contact fields, and source boundaries');
 } else {
   fail('email mode missing required application-email behavior');
+}
+
+for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+  if (!fileExists(skillPath)) {
+    fail(`${skillPath} is missing`);
+    continue;
+  }
+  const skill = readFile(skillPath);
+  const sectionOrder = (sectionStart, sectionEnd, markers) => {
+    const start = skill.indexOf(sectionStart);
+    if (start === -1) return false;
+    const end = sectionEnd ? skill.indexOf(sectionEnd, start + sectionStart.length) : -1;
+    const section = skill.slice(start, end === -1 ? undefined : end);
+    return markersAppearInOrder(section, markers);
+  };
+
+  const sharedModeOrder = sectionOrder(
+    '### Modes that require `_shared.md` + their mode file',
+    '### Standalone modes',
+    ['modes/_shared.md', 'modes/_profile.md', 'modes/_custom.md', 'modes/{mode}.md'],
+  );
+  const standaloneModeOrder = sectionOrder(
+    '### Standalone modes',
+    '### Modes delegated to subagent',
+    ['modes/_profile.md', 'modes/_custom.md', 'modes/{mode}.md'],
+  );
+  const delegatedModeOrder = sectionOrder(
+    '### Modes delegated to subagent',
+    'Execute the instructions from the loaded mode file.',
+    ['content of modes/_shared.md', 'content of modes/_profile.md if exists', 'content of modes/_custom.md if exists', 'content of modes/{mode}.md'],
+  );
+
+  if (
+    skill.includes('modes/_custom.md') &&
+    skill.includes('[content of modes/_custom.md if exists]') &&
+    sharedModeOrder &&
+    standaloneModeOrder &&
+    delegatedModeOrder
+  ) {
+    pass(`${skillPath} loads modes/_custom.md after _profile.md and before the selected mode for direct and delegated modes`);
+  } else {
+    fail(`${skillPath} does not load modes/_custom.md in the required _profile → _custom → mode order (#1388)`);
+  }
 }
 
 const applyMode = readFile('modes/apply.md');
@@ -1607,6 +1892,106 @@ try {
   fail(`scan.mjs fresh-install pipeline test crashed: ${err.message}`);
 }
 
+// Company blacklist (#1742): data/blacklist.md is the user's do-not-apply
+// list. parseBlacklist keys rows by the shared normalizeCompany() so matching
+// is case- and punctuation-insensitive; loadBlacklist on an absent file is a
+// no-op (empty Map — the scan filter never fires).
+try {
+  const { parseBlacklist, loadBlacklist } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const bl = parseBlacklist([
+    '# Company Blacklist',
+    '',
+    '| Company | Since | Scope | Reason |',
+    '|---------|-------|-------|--------|',
+    '| Acme Corp. | 2026-01-15 | company | post-interview process signals |',
+    '| Globex | 2026-02-01 | company | zero conversion |',
+  ].join('\n'));
+  const exact = bl.get('acmecorp');
+  if (
+    bl.size === 2 &&
+    exact && exact.reason === 'post-interview process signals' && exact.since === '2026-01-15' &&
+    bl.has('globex') && !bl.has('company')
+  ) {
+    pass('scan.mjs parseBlacklist parses the table and keys by normalized company (#1742)');
+  } else {
+    fail(`scan.mjs parseBlacklist wrong: size=${bl.size} keys=${[...bl.keys()].join(',')}`);
+  }
+
+  // Normalization tier: the same key the tracker writers use, so an ATS feed
+  // variant ("ACME-CORP", "acme corp") hits the "Acme Corp." row.
+  const { normalizeCompany } = await import(pathToFileURL(join(ROOT, 'tracker-utils.mjs')).href);
+  if (bl.get(normalizeCompany('ACME-CORP')) === exact && bl.get(normalizeCompany('acme corp')) === exact) {
+    pass('scan.mjs blacklist matching is case/punctuation-insensitive via shared normalizeCompany (#1742)');
+  } else {
+    fail('scan.mjs blacklist matching misses case/punctuation company variants');
+  }
+
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-blacklist-'));
+  try {
+    const absent = loadBlacklist(join(fixtureRoot, 'data', 'blacklist.md'));
+    if (absent instanceof Map && absent.size === 0) {
+      pass('scan.mjs loadBlacklist with absent file is a no-op empty Map (opt-in, #1742)');
+    } else {
+      fail('scan.mjs loadBlacklist did not return an empty Map for an absent file');
+    }
+    mkdirSync(join(fixtureRoot, 'data'), { recursive: true });
+    writeFileSync(join(fixtureRoot, 'data', 'blacklist.md'), '| Company | Since | Scope | Reason |\n|---|---|---|---|\n| Initech | 2026-03-01 | company | example |\n', 'utf-8');
+    const present = loadBlacklist(join(fixtureRoot, 'data', 'blacklist.md'));
+    if (present.size === 1 && present.get('initech')?.reason === 'example') {
+      pass('scan.mjs loadBlacklist reads data/blacklist.md when present (#1742)');
+    } else {
+      fail('scan.mjs loadBlacklist did not parse a present blacklist file');
+    }
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+} catch (err) {
+  fail(`scan.mjs blacklist tests crashed: ${err.message}`);
+}
+
+// Blacklist wiring: skips are counted and reported (never silent), persisted to
+// scan-runs.tsv by header name, and --include-blacklisted bypasses the filter.
+if (
+  scanScript.includes("args.includes('--include-blacklisted')") &&
+  scanScript.includes('totalFilteredBlacklist') &&
+  scanScript.includes('skipped (blacklist)') &&
+  scanScript.includes('filtered_blacklist')
+) {
+  pass('scan.mjs wires blacklist counter, summary line, scan-runs column, and --include-blacklisted (#1742)');
+} else {
+  fail('scan.mjs missing blacklist counter/summary/scan-runs/--include-blacklisted wiring');
+}
+
+// Prompt-level gates (#1742): oferta + auto-pipeline stop before Block A on a
+// blacklist hit and require an explicit override; apply gates before form
+// filling. All three quote the user's own recorded reason.
+{
+  const ofertaGate = readFile('modes/oferta.md');
+  const autoGate = readFile('modes/auto-pipeline.md');
+  const applyGate = readFile('modes/apply.md');
+  if (
+    ofertaGate.includes('## Blacklist gate') && ofertaGate.includes('data/blacklist.md') &&
+    autoGate.includes('Blacklist gate') && autoGate.includes('data/blacklist.md') &&
+    applyGate.includes('Blacklist check') && applyGate.includes('data/blacklist.md')
+  ) {
+    pass('modes gate on data/blacklist.md before evaluation and form filling (#1742)');
+  } else {
+    fail('modes missing the data/blacklist.md gate (oferta/auto-pipeline/apply)');
+  }
+}
+
+if (readFile('DATA_CONTRACT.md').includes('data/blacklist.md')) {
+  pass('DATA_CONTRACT.md registers data/blacklist.md as user layer (#1742)');
+} else {
+  fail('DATA_CONTRACT.md does not register data/blacklist.md');
+}
+
+if (fileExists('templates/blacklist.example.md') && readFile('templates/blacklist.example.md').includes('| Company | Since | Scope | Reason |')) {
+  pass('templates/blacklist.example.md ships the blacklist table seed (#1742)');
+} else {
+  fail('templates/blacklist.example.md missing or lacks the table header');
+}
+
 const scanMode = fileExists('modes/scan.md') ? readFile('modes/scan.md') : '';
 if (
   scanMode.includes('local_parser_ok') &&
@@ -1941,6 +2326,7 @@ console.log('\n10. Portals config validator');
 try {
   const tmp = mkdtempSync(join(tmpdir(), 'career-ops-portals-validator-'));
   const validPath = join(tmp, 'valid.yml');
+  const validProviderPluginPath = join(tmp, 'valid-provider-plugin.yml');
   const invalidProviderPath = join(tmp, 'invalid-provider.yml');
   const emptyKeywordPath = join(tmp, 'empty-keyword.yml');
   const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
@@ -1954,6 +2340,14 @@ title_filter:
 tracked_companies:
   - name: "Acme"
     careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
+  writeFileSync(validProviderPluginPath, `
+title_filter:
+  positive: ["AI"]
+tracked_companies:
+  - name: "Apify Source"
+    provider: "apify"
 `, 'utf-8');
 
   writeFileSync(invalidProviderPath, `
@@ -2015,6 +2409,13 @@ tracked_companies:
     pass('validate-portals accepts a minimal valid portals file');
   } else {
     fail('validate-portals should accept a minimal valid portals file');
+  }
+
+  const validProviderPluginResult = run(NODE, ['validate-portals.mjs', '--file', validProviderPluginPath]);
+  if (validProviderPluginResult !== null && validProviderPluginResult.includes('0 errors')) {
+    pass('validate-portals accepts bundled provider-plugin ids');
+  } else {
+    fail('validate-portals should accept bundled provider-plugin ids');
   }
 
   const exampleResult = run(NODE, ['validate-portals.mjs', '--file', 'templates/portals.example.yml']);
@@ -5751,6 +6152,99 @@ try {
   fail(`LaTeX validator i18n test crashed: ${e.message}`);
 }
 
+// ── 20b. LATEX-TEX IN-PLACE TAILORING ───────────────────────────
+
+console.log('\n20b. LaTeX-tex in-place tailoring (extract / patch / compile-only)');
+
+try {
+  const { detectFamily, buildManifest, applyPatches } = await import(pathToFileURL(join(ROOT, 'lib/latex-content.mjs')).href);
+  const { validateLatexContent } = await import(pathToFileURL(join(ROOT, 'generate-latex.mjs')).href);
+
+  const resumeFixture = readFileSync(join(ROOT, 'examples/latex-tex/resume-subheading.tex'), 'utf-8');
+  const tabularFixture = readFileSync(join(ROOT, 'examples/latex-tex/tabularx-itemize.tex'), 'utf-8');
+
+  if (detectFamily(resumeFixture) === 'resumeSubheading') {
+    pass('resume-subheading fixture detected as resumeSubheading family');
+  } else {
+    fail('resume-subheading fixture family detection failed');
+  }
+
+  if (detectFamily(tabularFixture) === 'tabularx-itemize') {
+    pass('tabularx-itemize fixture detected as tabularx-itemize family');
+  } else {
+    fail('tabularx-itemize fixture family detection failed');
+  }
+
+  if (detectFamily('\\documentclass{article}\\begin{document}Hello\\end{document}') === null) {
+    pass('unknown LaTeX layout returns null family');
+  } else {
+    fail('unknown LaTeX layout should not match a supported family');
+  }
+
+  const manifest = buildManifest('resume-subheading.tex', resumeFixture);
+  if (manifest.supported && manifest.slots.length >= 3) {
+    pass(`resume-subheading manifest exposes editable slots (${manifest.slots.length})`);
+  } else {
+    fail(`resume-subheading manifest missing slots: ${JSON.stringify(manifest)}`);
+  }
+
+  const tabManifest = buildManifest('tabularx-itemize.tex', tabularFixture);
+  if (tabManifest.supported && tabManifest.slots.length >= 2) {
+    pass(`tabularx-itemize manifest exposes item slots (${tabManifest.slots.length})`);
+  } else {
+    fail(`tabularx-itemize manifest missing slots: ${JSON.stringify(tabManifest)}`);
+  }
+
+  const firstBullet = manifest.slots.find(s => s.kind === 'bullet');
+  if (firstBullet) {
+    const patched = applyPatches(resumeFixture, [{ id: firstBullet.id, text: 'Tailored summary bullet for testing.' }], manifest.slots);
+    if (patched.includes('Tailored summary bullet for testing.')) {
+      pass('applyPatches rewrites a resumeItem bullet in place');
+    } else {
+      fail('applyPatches did not insert tailored bullet text');
+    }
+  } else {
+    fail('resume-subheading manifest has no bullet slot to patch');
+  }
+
+  const compileOnlyTex = `\\documentclass{article}\\begin{document}Minimal user CV\\end{document}`;
+  const compileOnlyValidation = validateLatexContent(compileOnlyTex, true);
+  if (compileOnlyValidation.issues.length === 0) {
+    pass('--compile-only validation accepts minimal user .tex without career-ops macros');
+  } else {
+    fail(`compile-only validation too strict: ${compileOnlyValidation.issues.join('; ')}`);
+  }
+
+  const strictValidation = validateLatexContent(compileOnlyTex, false);
+  if (strictValidation.issues.some(i => /section|resumeSubheading|pdfgentounicode/i.test(i))) {
+    pass('default validation still enforces career-ops template checks');
+  } else {
+    fail('default validation should reject non-template .tex');
+  }
+
+  const extractDir = mkdtempSync(join(tmpdir(), 'latex-tex-'));
+  const extractOut = join(extractDir, 'manifest.json');
+  execFileSync(NODE, ['extract-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), '--out', extractOut], { cwd: ROOT, encoding: 'utf-8' });
+  const extracted = JSON.parse(readFileSync(extractOut, 'utf-8'));
+  const patchPayload = {
+    slots: extracted.slots,
+    patches: [{ id: extracted.slots[0].id, text: 'CLI patch path works.' }],
+  };
+  const patchJson = join(extractDir, 'patches.json');
+  const patchedTex = join(extractDir, 'out.tex');
+  writeFileSync(patchJson, JSON.stringify(patchPayload));
+  execFileSync(NODE, ['patch-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), patchJson, patchedTex], { cwd: ROOT, encoding: 'utf-8' });
+  const patchedContent = readFileSync(patchedTex, 'utf-8');
+  if (patchedContent.includes('CLI patch path works.')) {
+    pass('extract-latex-content.mjs + patch-latex-content.mjs CLI round-trip');
+  } else {
+    fail('CLI patch round-trip did not update the .tex file');
+  }
+  rmSync(extractDir, { recursive: true, force: true });
+} catch (e) {
+  fail(`LaTeX-tex tailoring test crashed: ${e.message}`);
+}
+
 // ── 21. CJK CV RENDERING (lang="ja" font fallback) ──────────────
 
 console.log('\n21. CJK CV rendering (lang="ja" font fallback)');
@@ -5979,14 +6473,31 @@ try {
   // CLAUDE.md inherits this via its @AGENTS.md wrapper.
   const agentsMd = readFileSync(join(ROOT, 'AGENTS.md'), 'utf-8');
   const claudeMd = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf-8');
+  const sourceBoundaryStart = agentsMd.indexOf('## Source-of-Truth Boundary');
+  const sourceBoundaryEnd = agentsMd.indexOf('Anything not in this list', sourceBoundaryStart);
+  const sourceBoundary = agentsMd.slice(sourceBoundaryStart, sourceBoundaryEnd);
   if (
     agentsMd.includes('modes/_custom.md') &&
     agentsMd.includes('modes/_custom.template.md') &&
+    sourceBoundary.includes('modes/_custom.md') &&
+    sourceBoundary.includes('procedural/style rules only') &&
+    sourceBoundary.includes('never introduces factual claims') &&
     claudeMd.trim().startsWith('@AGENTS.md')
   ) {
-    pass('AGENTS.md routes custom rules to modes/_custom.md + CLAUDE.md inherits via wrapper');
+    pass('AGENTS.md routes procedural custom rules without making them factual sources + CLAUDE.md inherits via wrapper');
   } else {
-    fail('AGENTS.md does not reference modes/_custom.md / its template, or CLAUDE.md does not inherit it (#1198)');
+    fail('AGENTS.md custom-rule source boundary or CLAUDE.md inheritance is incomplete (#1198, #1736)');
+  }
+
+  const noUserData = readFileSync(join(ROOT, '.github/workflows/no-user-data.yml'), 'utf-8');
+  const guardedPaths = (noUserData.match(/const USER_PATHS = \[([\s\S]*?)\];/) || [, ''])[1];
+  if (
+    guardedPaths.includes('/^modes\\/_custom\\.md$/') &&
+    !guardedPaths.includes('/^voice-dna\\.md$/')
+  ) {
+    pass('no-user-data guard protects modes/_custom.md without treating voice-dna.md as user data');
+  } else {
+    fail('no-user-data guard has the wrong custom/user-layer paths (#1736)');
   }
 } catch (e) {
   fail(`custom instructions test crashed: ${e.message}`);
@@ -6099,6 +6610,116 @@ try {
   fail(`cooldown filter tests crashed: ${e.message}`);
 }
 
+
+// ── 45b. SCAN COMPANY+ROLE DEDUP (alias + title normalization) ───────
+// Guards scan-time duplicate identity: the scanner keys company+role dedup on
+// the provider's company name (often the ATS org, e.g. "Intercom") which may
+// differ from the tracker brand ("Fin"), and on a title that a company mutates
+// per requisition/location ("Engineer (Berlin)"). buildCompanyCanonicalizer +
+// normalizeRoleForDedup collapse both so the same role is not re-evaluated.
+
+console.log('\n45b. Scan company+role dedup (alias + title normalization)');
+try {
+  const {
+    buildCompanyCanonicalizer,
+    normalizeRoleForDedup,
+    companyRoleDedupKey,
+  } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // -- Company alias canonicalization --
+  const canon = buildCompanyCanonicalizer({ Fin: ['Intercom', 'Intercom Inc'] });
+  if (canon('Intercom') === 'fin' && canon('intercom inc') === 'fin' && canon('Fin') === 'fin') {
+    pass('buildCompanyCanonicalizer maps every alias and the canonical name to the canonical label');
+  } else {
+    fail(`alias canonicalization wrong: Intercom=${canon('Intercom')} "Intercom Inc"=${canon('intercom inc')} Fin=${canon('Fin')}`);
+  }
+  if (canon('Acme Corp') === 'acme corp') pass('unknown company passes through as lowercased text (unchanged behavior)');
+  else fail(`unknown company should pass through: got ${canon('Acme Corp')}`);
+
+  // Malformed / empty alias maps must not crash and must degrade to plain lowercase.
+  const emptyCanon = buildCompanyCanonicalizer(undefined);
+  const arrayCanon = buildCompanyCanonicalizer(['not', 'a', 'map']);
+  const messyCanon = buildCompanyCanonicalizer({ '': ['x'], Fin: [null, 'Intercom', 42] });
+  if (emptyCanon('Intercom') === 'intercom' && arrayCanon('Intercom') === 'intercom' && messyCanon('Intercom') === 'fin') {
+    pass('canonicalizer tolerates undefined/array/messy alias config without crashing');
+  } else {
+    fail(`canonicalizer robustness wrong: empty=${emptyCanon('Intercom')} array=${arrayCanon('Intercom')} messy=${messyCanon('Intercom')}`);
+  }
+
+  const canonicalCollisionA = buildCompanyCanonicalizer({ Fin: ['Intercom'], Intercom: [] });
+  const canonicalCollisionB = buildCompanyCanonicalizer({ Intercom: [], Fin: ['Intercom'] });
+  if (canonicalCollisionA('Intercom') === 'intercom' && canonicalCollisionB('Intercom') === 'intercom') {
+    pass('canonical company identities win alias collisions regardless of config order');
+  } else {
+    fail(`canonical alias collision is order-dependent: first=${canonicalCollisionA('Intercom')} second=${canonicalCollisionB('Intercom')}`);
+  }
+
+  const ambiguousAliasA = buildCompanyCanonicalizer({ Fin: ['Shared ATS'], Acme: ['Shared ATS'] });
+  const ambiguousAliasB = buildCompanyCanonicalizer({ Acme: ['Shared ATS'], Fin: ['Shared ATS'] });
+  if (ambiguousAliasA('Shared ATS') === 'shared ats' && ambiguousAliasB('Shared ATS') === 'shared ats') {
+    pass('ambiguous aliases fail open instead of merging companies by config order');
+  } else {
+    fail(`ambiguous alias should pass through: first=${ambiguousAliasA('Shared ATS')} second=${ambiguousAliasB('Shared ATS')}`);
+  }
+
+  // -- Title normalization (location suffix + punctuation + requisition-agnostic) --
+  if (normalizeRoleForDedup('AI Infrastructure Engineer (Berlin)') === normalizeRoleForDedup('AI Infrastructure Engineer')) {
+    pass('normalizeRoleForDedup strips a trailing location tag "(Berlin)"');
+  } else {
+    fail(`trailing location tag not stripped: "${normalizeRoleForDedup('AI Infrastructure Engineer (Berlin)')}"`);
+  }
+  if (normalizeRoleForDedup('Platform Engineer [Remote]') === normalizeRoleForDedup('Platform Engineer')) {
+    pass('normalizeRoleForDedup strips a trailing remote tag "[Remote]"');
+  } else {
+    fail(`trailing remote tag not stripped: "${normalizeRoleForDedup('Platform Engineer [Remote]')}"`);
+  }
+  if (normalizeRoleForDedup('Senior Engineer (Senior) (Berlin, Germany)') === 'senior engineer senior') {
+    pass('normalizeRoleForDedup strips location suffixes while preserving level qualifiers');
+  } else {
+    fail(`location suffix/level qualifier handling wrong: "${normalizeRoleForDedup('Senior Engineer (Senior) (Berlin, Germany)')}"`);
+  }
+  if (normalizeRoleForDedup('Engineer (Senior)') !== normalizeRoleForDedup('Engineer (Junior)')) {
+    pass('normalizeRoleForDedup keeps trailing seniority variants distinct');
+  } else {
+    fail('trailing seniority variants over-merged distinct roles');
+  }
+  if (normalizeRoleForDedup('Engineering Manager, AI Models  Infrastructure') === normalizeRoleForDedup('Engineering Manager — AI Models Infrastructure')) {
+    pass('normalizeRoleForDedup collapses punctuation/whitespace (comma vs em-dash, double space)');
+  } else {
+    fail('punctuation/whitespace not normalized');
+  }
+  // A mid-title parenthetical is NOT a trailing tag; its words are kept so two
+  // genuinely different disciplines don't collapse.
+  if (normalizeRoleForDedup('Engineer (Backend), Platform') !== normalizeRoleForDedup('Engineer (Frontend), Platform')) {
+    pass('normalizeRoleForDedup keeps mid-title parentheticals distinct (no over-merge)');
+  } else {
+    fail('mid-title parentheticals over-merged distinct roles');
+  }
+
+  // -- End-to-end: the exact URL-new duplicate pairs that leaked before --
+  const cases = [
+    ['Intercom', 'AI Infrastructure Engineer (Berlin)', 'Fin', 'AI Infrastructure Engineer'],
+    ['Intercom', 'Engineering Manager, AI Models Infrastructure', 'Fin', 'Engineering Manager, AI Models Infrastructure'],
+    ['Intercom', 'Senior Product Engineer', 'Fin', 'Senior Product Engineer'],
+  ];
+  let allMatch = true;
+  for (const [scanCo, scanTitle, trackCo, trackTitle] of cases) {
+    const scanKey = companyRoleDedupKey(scanCo, scanTitle, canon);
+    const trackKey = companyRoleDedupKey(trackCo, trackTitle, canon);
+    if (scanKey !== trackKey) { allMatch = false; break; }
+  }
+  if (allMatch) pass('companyRoleDedupKey matches scan-side (Intercom + location-suffixed title) to tracker-side (Fin) across URL-new duplicate pairs');
+  else fail('companyRoleDedupKey failed to unify a real-world URL-new duplicate pair');
+
+  // Without an alias, distinct companies must still stay distinct.
+  if (companyRoleDedupKey('Acme', 'Engineer', canon) !== companyRoleDedupKey('Globex', 'Engineer', canon)) {
+    pass('companyRoleDedupKey keeps unrelated companies distinct');
+  } else {
+    fail('companyRoleDedupKey collapsed two unrelated companies');
+  }
+} catch (e) {
+  fail(`scan company+role dedup tests crashed: ${e.message}`);
+}
 
 // ── Plugin engine (contract + sandbox + firewall) ────────────────
 console.log('\n49. Plugin engine (contract + sandbox + firewall)');
@@ -7192,6 +7813,31 @@ try {
   }
 } catch (e) {
   fail(`titles mode registration checks crashed: ${e.message}`);
+}
+
+console.log('\n59. CV template resolver (cv-templates.mjs)');
+{
+  const unit = run(NODE, ['--test', 'test/cv-templates.test.mjs']);
+  if (unit !== null) pass('cv-templates.mjs unit tests pass');
+  else fail('cv-templates.mjs unit tests failed (run: node --test test/cv-templates.test.mjs)');
+
+  const listed = run(NODE, ['cv-templates.mjs', 'list', 'cv']);
+  if (listed && listed.includes('"name"')) pass('CLI: list cv returns JSON');
+  else fail('CLI: list cv did not return JSON');
+
+  // Hermetic: point at a nonexistent profile so this exercises the unset -> base
+  // fallback regardless of the developer's real config/profile.yml (cv.template).
+  const noProfile = { env: { ...process.env, CAREER_OPS_PROFILE: join(tmpdir(), 'career-ops-no-such-profile.yml') } };
+  const resolved = run(NODE, ['cv-templates.mjs', 'resolve', 'cv'], noProfile);
+  if (resolved && resolved.endsWith('cv-template.html')) pass('CLI: resolve cv (unset) -> base template');
+  else fail(`CLI: resolve cv (unset) unexpected: ${resolved}`);
+}
+
+console.log('\n60. Cover-letter template resolver (generate-cover-letter.mjs)');
+{
+  const unit = run(NODE, ['--test', 'test/cover-resolver.test.mjs']);
+  if (unit !== null) pass('cover-resolver unit tests pass');
+  else fail('cover-resolver unit tests failed (run: node --test test/cover-resolver.test.mjs)');
 }
 
 console.log('\nTest layout guard (provider tests live in tests/providers/)');

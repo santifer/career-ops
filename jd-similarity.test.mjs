@@ -19,6 +19,9 @@ ok('high similarity recommends reuse', recommendCvReuse('Vue React TypeScript No
 ok('medium similarity recommends edits', recommendCvReuse('Vue React TypeScript Node.js', 'React TypeScript Python Node.js').decision === 'reuse-with-edits');
 ok('low similarity recommends regeneration', recommendCvReuse('Flutter Android iOS', '法律 财务 审计').decision === 'regenerate');
 ok('level mismatch blocks reuse', hardMismatch('高级 React 工程师', '实习生 React 开发') === true);
+const mismatchedRecommendation = recommendCvReuse('Senior React TypeScript Node.js platform engineer', 'Junior React TypeScript Node.js platform engineer');
+ok('level mismatch overrides a high-similarity reuse recommendation', mismatchedRecommendation.decision === 'regenerate');
+ok('level mismatch reports its exact reason', mismatchedRecommendation.reason === 'level-mismatch');
 ok('level match does not block reuse', hardMismatch('远程 React 实习生', 'Flutter 实习生') === false);
 ok('seniority matching uses whole words', hardMismatch('International React Engineer', 'Intermediate React Engineer') === false);
 ok('leadership does not imply lead seniority', hardMismatch('Leadership platform role', 'Senior platform role') === false);
