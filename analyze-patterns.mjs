@@ -14,7 +14,7 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
 import { resolveColumns, parseTrackerRow, normalizeVia } from './tracker-parse.mjs';
@@ -46,6 +46,8 @@ const MACHINE_SUMMARY_FIELDS = new Set([
   // Issue 1380: predicted skip/discard reasons from the agent.
   'discard_reasons',
   'advertised_comp',
+  'via',
+  'company_confidential',
 ]);
 
 // --- CLI args ---
@@ -201,6 +203,8 @@ top_strengths:
 risk_level: "Medium"
 confidence: "High"
 next_action: "Follow up on ticket #42 with tailored CV"
+via: "Hays"
+company_confidential: true
 \`\`\`
 `);
 
@@ -210,6 +214,8 @@ next_action: "Follow up on ticket #42 with tailored CV"
   if (!Array.isArray(summary?.hard_stops) || summary.hard_stops.length !== 0) failures.push('empty list was not parsed');
   if (summary?.soft_gaps?.[0] !== 'No direct healthcare domain experience') failures.push('list item was not parsed');
   if (summary?.next_action !== 'Follow up on ticket #42 with tailored CV') failures.push('hash-containing scalar field was not parsed');
+  if (summary?.via !== 'Hays') failures.push('via was not preserved from Machine Summary');
+  if (summary?.company_confidential !== true) failures.push('company_confidential boolean was not preserved from Machine Summary');
 
   // Vendor detection (community ATS only; white-labeled → null)
   const vendorCases = [
@@ -508,7 +514,19 @@ function analyze() {
   // Enrich entries with report data and classification
   const enriched = entries.map(e => {
     const reportMatch = e.report.match(/\]\(([^)]+)\)/);
-    const reportPath = reportMatch ? join(CAREER_OPS, reportMatch[1]) : null;
+    // Tracker links are relative to the tracker file's own directory (see
+    // merge-tracker.mjs link normalization); fall back to repo root for
+    // legacy root-relative links.
+    let reportPath = null;
+    if (reportMatch) {
+      const fromTracker = join(dirname(APPS_FILE), reportMatch[1]);
+      const candidate = existsSync(fromTracker) ? fromTracker : join(CAREER_OPS, reportMatch[1]);
+      
+      const repoRelative = relative(CAREER_OPS, candidate).split(sep).join('/');
+      if (repoRelative.startsWith('reports/') && !repoRelative.includes('..')) {
+        reportPath = existsSync(candidate) ? candidate : null;
+      }
+    }
     const reportData = reportPath ? parseReport(reportPath) : null;
     const outcome = classifyOutcome(e.status);
     const trackerScore = parseFloat(e.score);

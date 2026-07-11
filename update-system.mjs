@@ -19,12 +19,16 @@ import { execFile, execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname, posix as pathPosix } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import {
-  ensureSkillEntrypoints,
-  materializeSkillEntrypoints,
-} from './scaffolder/bin/skill-entrypoints.mjs';
 
-export { materializeSkillEntrypoints, ensureSkillEntrypoints };
+// NOTE: this file must stay *self-loading* — no static (top-level) relative
+// imports. A pre-#1245 client's apply() self-reexec checks out ONLY
+// update-system.mjs before re-execing the target updater, so a static top-level
+// relative import here crashes that re-exec with ERR_MODULE_NOT_FOUND on the
+// old→new jump, before the fuller checkout that would materialize the imported
+// module ever runs (#1706). Local modules (e.g. the skill-entrypoints helper
+// under scaffolder/) are instead pulled in lazily at their point of use, by
+// which time the full update stage has already checked them out. The
+// updater-migration and test-all suites enforce this invariant.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -54,6 +58,7 @@ export const REEXEC_BUFFER_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
+  'modes/README.md',
   'modes/_shared.md',
   'modes/_profile.template.md',
   'modes/_custom.template.md',
@@ -76,6 +81,7 @@ const SYSTEM_PATHS = [
   'modes/interview.md',
   'modes/interview-redflag.md',
   'modes/latex.md',
+  'modes/latex-tex.md',
   'modes/followup.md',
   'modes/offer-prep.md',
   'modes/interview-prep.md',
@@ -84,6 +90,7 @@ const SYSTEM_PATHS = [
   'interview-prep/sessions/README.md',
   'modes/patterns.md',
   'modes/titles.md',
+  'modes/upskill.md',
   'modes/update.md',
   'modes/agent-inbox.md',
   'modes/reply-watch.md',
@@ -108,6 +115,7 @@ const SYSTEM_PATHS = [
   'modes/heuristics/',
   'modes/regional/',
   'modes/zh/',
+  'modes/zh-TW/',
   'CLAUDE.md',
   'CODEX.md',
   'OPENCODE.md',
@@ -117,6 +125,11 @@ const SYSTEM_PATHS = [
   'build-dashboard.mjs',
   'generate-pdf.mjs',
   'generate-latex.mjs',
+  'extract-latex-content.mjs',
+  'patch-latex-content.mjs',
+  'lib/latex-escape.mjs',
+  'lib/latex-content.mjs',
+  'img-to-pdf.mjs',
   'archive-posting.mjs',
   'application-answers.mjs',
   'generate-cover-letter.mjs',
@@ -136,6 +149,7 @@ const SYSTEM_PATHS = [
   'set-status-tests.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
+  'verify-cv-facts.mjs',
   'update-system.mjs',
   'reserve-report-num.mjs',
   'scan.mjs',
@@ -153,12 +167,15 @@ const SYSTEM_PATHS = [
   'liveness-browser.mjs',
   'browser-extract.mjs',
   'analyze-patterns.mjs',
+  'upskill.mjs',
   'stats.mjs',
   'detect-reposts.mjs',
   'fingerprint-core.mjs',
   'process-quality.mjs',
   'process-quality.test.mjs',
   'salary-gap.mjs',
+  'funnel-velocity.mjs',
+  'assessment-log.mjs',
   'followup-cadence.mjs',
   'followup-cadence.test.mjs',
   'invite-match.mjs',
@@ -169,6 +186,7 @@ const SYSTEM_PATHS = [
   'gemini-eval.mjs',
   'ollama-eval.mjs',
   'openai-eval.mjs',
+  'openai-tailor.mjs',
   'openrouter-runner.mjs',
   'test-all.mjs',
   'detect-reposts.test.mjs',
@@ -188,6 +206,7 @@ const SYSTEM_PATHS = [
   'batch/README.md',
   'dashboard/',
   'templates/',
+  'config/cv-facts.example.json',
   'fonts/',
   'examples/',
   'config/profile.example.yml',
@@ -238,6 +257,10 @@ const SYSTEM_PATHS = [
   '.github/',
   'package.json',
   'build-cv-latex.mjs',
+  'build-cv-html.mjs',
+  'cv-templates.mjs',
+  'test/cv-templates.test.mjs',
+  'test/cover-resolver.test.mjs',
   'scaffolder/',
   'Dockerfile',
   'docker-compose.yml',
@@ -823,6 +846,10 @@ async function apply() {
       console.error(`Stale-test prune step failed: ${err.message}`);
     }
 
+    // Lazy import: keep update-system.mjs self-loading (see the top-of-file
+    // note). scaffolder/ was just checked out by the update stage above, so the
+    // module resolves here even on a pre-#1245 old→new re-exec.
+    const { ensureSkillEntrypoints } = await import('./scaffolder/bin/skill-entrypoints.mjs');
     const materializedSkillEntrypoints = ensureSkillEntrypoints(ROOT);
     if (materializedSkillEntrypoints.length > 0) {
       for (const path of materializedSkillEntrypoints) {

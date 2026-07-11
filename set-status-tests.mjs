@@ -86,6 +86,18 @@ const TRACKER_10 = `# Applications Tracker
 | 1 | 2026-06-01 | Initech | AI Engineer | Remote | 4.5/5 | Evaluated | ✅ | [1](../reports/001-initech-2026-06-01.md) | — |
 `;
 
+// Two unrelated rows share tracker number 5 (the #1704 bug: merge-tracker.mjs
+// once trusted a stale TSV number as-is when it was numerically ahead of that
+// run's max, even though the number was already used by an unrelated row
+// merged in a separate, earlier invocation).
+const TRACKER_DUP_NUM = `# Applications Tracker
+
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|------|-------|--------|-----|--------|-------|
+| 5 | 2026-05-29 | University of Alberta | Curriculum Coordinator | 3.8/5 | Evaluated | ❌ | — | — |
+| 5 | 2026-06-03 | Esri Canada | Manager Talent and Organizational Development | 4.1/5 | Evaluated | ❌ | — | — |
+`;
+
 // ── 1. Update by report number ──────────────────────────────────
 {
   const sb = makeSandbox(TRACKER_9);
@@ -173,6 +185,49 @@ const TRACKER_10 = `# Applications Tracker
     pass('ambiguous: --role disambiguates to the right row');
   } else {
     fail(`ambiguous --role: code=${r2.code}\n${r2.stdout}${r2.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 6b. Duplicate tracker #: bare number refuses to guess (#1704) ─
+{
+  const sb = makeSandbox(TRACKER_DUP_NUM);
+  const before = readTracker(sb);
+  const r = runSetStatus(['5', 'Rejected'], sb);
+  if (r.code === 3 && readTracker(sb) === before
+      && r.stderr.includes('University of Alberta') && r.stderr.includes('Esri Canada')) {
+    pass('dup-num: bare #5 matching 2 rows exits 3, tracker untouched, both companies listed');
+  } else {
+    fail(`dup-num: code=${r.code} (want 3)\n${r.stdout}${r.stderr}`);
+  }
+  // --role disambiguates exactly like the company-selector ambiguous path.
+  const r2 = runSetStatus(['5', 'Rejected', '--role', 'Manager Talent and Organizational Development'], sb);
+  if (r2.code === 0 && /\| 5 \| 2026-06-03 \| Esri Canada \|.*\| Rejected \|/.test(readTracker(sb))) {
+    pass('dup-num: --role disambiguates to the right row');
+  } else {
+    fail(`dup-num --role: code=${r2.code}\n${r2.stdout}${r2.stderr}`);
+  }
+  // The OTHER row (University of Alberta) must stay untouched by the --role
+  // disambiguated write above.
+  if (readTracker(sb).includes('| 5 | 2026-05-29 | University of Alberta | Curriculum Coordinator | 3.8/5 | Evaluated |')) {
+    pass('dup-num: unrelated row with the same # untouched after disambiguation');
+  } else {
+    fail(`dup-num: unrelated row was modified\n${readTracker(sb)}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 6c. Duplicate tracker # + --json: structured candidates ─────
+{
+  const sb = makeSandbox(TRACKER_DUP_NUM);
+  const r = runSetStatus(['5', 'Rejected', '--json'], sb);
+  let parsed = null;
+  try { parsed = JSON.parse(r.stdout || r.stderr); } catch {}
+  if (r.code === 3 && parsed && parsed.code === 'ambiguous' && Array.isArray(parsed.candidates)
+      && parsed.candidates.length === 2) {
+    pass('dup-num json: structured ambiguous error with 2 candidates');
+  } else {
+    fail(`dup-num json: code=${r.code}\n${r.stdout}${r.stderr}`);
   }
   rmSync(sb.dir, { recursive: true, force: true });
 }

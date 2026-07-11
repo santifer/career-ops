@@ -91,6 +91,14 @@
 #   max: 0
 #   currency: "USD"
 
+# -- Posting-age filter (optional) --
+# Opt-in freshness gate. Skips offers whose posting date (postedAt, supplied by
+# the provider) is older than N days. Offers from providers that expose no date
+# are never skipped — same "don't penalize missing data" rule as location_filter.
+# Absent, 0, or non-positive → disabled (all ages pass).
+#
+# max_posting_age_days: 45
+
 # -- Trust filter (optional) --
 # Enriches each scanned job with a trust score (0-100) and flags.
 # Jobs are NEVER dropped — only annotated. The trust score helps you
@@ -510,6 +518,7 @@ search_queries:
 #   pinpoint        <slug>.pinpointhq.com
 #   rippling        ats.rippling.com/<slug>/jobs
 #   jibeapply       <slug>.jibeapply.com/jobs  (or provider: jibeapply + api: for a branded host's own /jobs path)
+#   tencent         careers.tencent.com  (zh-CN board; each keywords: entry queried server-side, results deduped)
 #   workday         <tenant>.wd<N>.myworkdayjobs.com[/<locale>]/<board>
 #   avature         <tenant>.avature.net  (branded host → provider: avature + api: the /careers/SearchJobs URL)
 #   amazon          amazon.jobs           (global board; provider: amazon + an amazon: filter block, see below)
@@ -554,6 +563,13 @@ search_queries:
 #   max_pages: 50          # optional page cap (10 jobs/page, default 50, max 500) —
 #                          # raise it for a tenant with 500+ open postings (a warning
 #                          # is logged if the cap truncates real results)
+#   enabled: true
+#
+# - name: 腾讯 (Tencent)
+#   careers_url: https://careers.tencent.com/search.html  # any https://careers.tencent.com URL
+#   keywords: ["AI", "大模型"]   # each keyword is a separate server-side query, results deduped;
+#                                # omit keywords to pull the whole board
+#   max_pages: 20          # optional per-keyword page cap (100 posts/page, default 20)
 #   enabled: true
 #
 # - name: Example Workday Co
@@ -779,6 +795,25 @@ search_queries:
 #     api: https://jobs.booking.com/api/jobs
 #     provider: jibeapply
 #     enabled: true
+
+# -- Company aliases (optional) --
+# Map alternate company names to a single canonical label so the scanner's
+# company+role dedup matches your tracker. The scanner keys dedup on the name a
+# provider returns — usually the ATS org (e.g. Greenhouse "Intercom") — which
+# may differ from the brand you track (e.g. "Fin"). Without an alias, the same
+# role is re-scanned and re-evaluated every run because "intercom::role" never
+# matches "fin::role" in data/applications.md.
+#
+# Format: `CanonicalName: [alias, ...]`. Every alias AND the canonical name
+# resolve to the canonical label (case-insensitive). Companies with no entry are
+# unaffected. Combined with title normalization, this suppresses URL-new
+# duplicates caused by requisition URL changes and per-location title splits
+# ("Engineer (Berlin)" vs "Engineer"). It does not classify repost patterns or
+# produce `postingChurn` evidence; detect-reposts.mjs and company-history.mjs own
+# that post-tracking layer.
+#
+# company_aliases:
+#   Fin: [Intercom]
 
 tracked_companies:
 
