@@ -561,10 +561,10 @@ if (!HAS_WEB) {
   } else {
     fail(`merge: empty PDF cell shifted columns (code ${res.code}) row: ${foo}\n${res.stdout}`);
   }
-  if (bazCells[5] === 'Singapore' && bazCells[10] === '') {
+  if (res.code === 0 && bazCells[5] === 'Singapore' && bazCells[10] === '') {
     pass('merge: empty Notes cell does not shift a later Location');
   } else {
-    fail(`merge: empty Notes cell shifted Location — row: ${baz}`);
+    fail(`merge: empty Notes cell shifted Location (code ${res.code}) row: ${baz}\n${res.stdout}`);
   }
   rmSync(sb.dir, { recursive: true, force: true });
 }
