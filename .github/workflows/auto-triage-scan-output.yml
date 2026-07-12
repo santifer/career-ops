@@ -44,6 +44,11 @@ jobs:
               /Scheduled Portal Scan/i,
               /Scheduled Run Report/i,
               /Automated [Ss]can( (Result|Failed))?/i,
+              // Machine body header `## Automated <adj> Scan` (one interposed
+              // adjective, e.g. "Weekly"). Header-anchored (`^#{1,6}\s+`,
+              // multiline) so a human title/prose that only mentions an
+              // "automated weekly scan" — with no leading `#` — stays open.
+              /^#{1,6}\s+Automated (?:\w+ )?[Ss]can\b/im,
               /Auto-scan Results/i,
               /Daily AI Job Scan/i,
               /Morning (Briefing|Automation Run)/i,
@@ -52,6 +57,11 @@ jobs:
               /onboarding (required|not complete)/i,
               /Gmail MCP token/i,
               /new offers added to pipeline/i,
+              // Emoji-led machine title, e.g. `🔍 Scan results — <date> — N new
+              // leads`. Anchored to the start of the title (`^\s*<emoji>\s*Scan`)
+              // so `feat(scan)`, `scan.md`, `improve weekly scan` and
+              // `🔎 Search UX …` are untouched.
+              /^\s*(?:🔍|🔎|📊|📋|🧭|📡|✨)\s*Scan\b/iu,
             ];
             if (!markers.some((re) => re.test(hay))) return;
 
