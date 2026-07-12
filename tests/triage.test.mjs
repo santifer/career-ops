@@ -263,18 +263,29 @@ eq('runTriage succeeds', result.ok, true);
 eq('runTriage counts', result.counts, { worth: 2, maybe: 3, skip: 1 });
 ok('shortlist file is written', existsSync(outPath));
 
+// Pull the trailing URL of every row in one shortlist section, in order.
+// Exact-equality assertions on these lists pin both membership and sort.
+function sectionUrls(text, heading) {
+  const start = text.indexOf(`## ${heading}`);
+  if (start === -1) return null;
+  const next = text.indexOf('\n## ', start);
+  const section = next === -1 ? text.slice(start) : text.slice(start, next);
+  return [...section.matchAll(/ {2}(\S+)$/gm)].map(m => m[1]);
+}
+
 const shortlist = readFileSync(outPath, 'utf-8');
-ok('shortlist has the three sections',
-  shortlist.includes('## Worth a look') && shortlist.includes('## Maybe') && shortlist.includes('## Skip'));
 // Newest posted first inside a bucket: j/2 (07-08) before j/1 (07-01).
-ok('worth bucket sorts newest posted first',
-  shortlist.indexOf('https://x.com/j/2') < shortlist.indexOf('https://x.com/j/1'));
-// Bare-URL row surfaces in Maybe instead of being silently dropped.
-ok('bare URL row lands in maybe', shortlist.includes('https://x.com/j/5'));
-// Strong title but wrong location -> Maybe, never Skip.
-const skipSection = shortlist.slice(shortlist.indexOf('## Skip'));
-ok('location mismatch does not reach skip', !skipSection.includes('https://x.com/j/6'));
-ok('off-target title reaches skip', skipSection.includes('https://x.com/j/4'));
+eq('worth bucket sorts newest posted first',
+  sectionUrls(shortlist, 'Worth a look'),
+  ['https://x.com/j/2', 'https://x.com/j/1']);
+// The adjacent-tier match, the bare pasted URL, and the strong-title location
+// mismatch all land in Maybe (never dropped, never demoted to Skip), in file order.
+eq('maybe holds adjacent match, bare URL and location mismatch',
+  sectionUrls(shortlist, 'Maybe'),
+  ['https://x.com/j/3', 'https://x.com/j/5', 'https://x.com/j/6']);
+eq('skip holds only the off-target title',
+  sectionUrls(shortlist, 'Skip'),
+  ['https://x.com/j/4']);
 
 // The triage must never touch the pipeline itself.
 eq('pipeline.md is left byte-identical',
@@ -286,8 +297,10 @@ writeFileSync(pipelinePath, '## Pending\n\n## Processed\n', 'utf-8');
 const emptyResult = runTriage({ pipelinePath, profilePath, outPath, quiet: true });
 eq('empty queue still succeeds', emptyResult.ok, true);
 eq('empty queue counts', emptyResult.counts, { worth: 0, maybe: 0, skip: 0 });
-ok('stale shortlist is overwritten on empty queue',
-  !readFileSync(outPath, 'utf-8').includes('https://x.com/j/1'));
+const rewritten = readFileSync(outPath, 'utf-8');
+eq('stale shortlist is overwritten on empty queue',
+  ['Worth a look', 'Maybe', 'Skip'].map(h => sectionUrls(rewritten, h)),
+  [[], [], []]);
 
 // Graceful degradation: missing pipeline is a no-op, missing profile is an error.
 const noPipeline = runTriage({ pipelinePath: join(tmp, 'nope.md'), profilePath, outPath, quiet: true });
