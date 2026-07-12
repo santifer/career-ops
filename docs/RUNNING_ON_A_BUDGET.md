@@ -104,6 +104,7 @@ When choosing a budget-friendly model, you need strong reasoning capabilities to
 > node openai-eval.mjs --file ./jds/job.txt
 > ```
 > Run `node openai-eval.mjs --help` for per-provider examples. For 100% local/private use, point `--url` at a local server (LM Studio / llama.cpp / vLLM) or use `node ollama-eval.mjs`.
+> NVIDIA NIM works too (hosted `https://integrate.api.nvidia.com/v1` or a self-hosted NIM container's `/v1`) — e.g. `--model meta/llama-3.3-70b-instruct`; on the hosted free tier raise `OPENAI_TIMEOUT_MS` (queue latency regularly exceeds the 300s default).
 
 ---
 
