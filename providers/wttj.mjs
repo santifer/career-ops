@@ -65,7 +65,12 @@ export function parseEnvPayload(text) {
   // App ids are short alphanumerics; validating keeps the derived Algolia
   // hostname from being attacker-shaped if the env payload ever changes.
   if (!/^[A-Z0-9]{6,16}$/i.test(appId)) throw new Error(`wttj: unexpected Algolia app id "${appId}"`);
-  if (!/^[a-f0-9]{16,64}$/i.test(apiKey)) throw new Error('wttj: unexpected Algolia api key shape');
+  // The key is only ever sent as a request header (never used to build a
+  // host), so don't over-constrain its format — WTTJ may rotate to a longer
+  // or non-hex (e.g. secured/base64) client key. Length bounds only.
+  if (!apiKey || apiKey.length < 16 || apiKey.length > 500) {
+    throw new Error('wttj: unexpected Algolia api key shape');
+  }
   return { appId, apiKey };
 }
 
