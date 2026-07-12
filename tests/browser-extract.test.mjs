@@ -57,6 +57,9 @@ try {
   const badChars = parseArgs(['https://x/1', '--max-chars', '0']);
   if (badChars.maxChars === 12000) pass('parseArgs ignores a non-positive --max-chars (keeps the default cap)');
   else fail(`parseArgs --max-chars 0 => ${badChars.maxChars}`);
+  const nonIntChars = parseArgs(['https://x/1', '--max-chars', '1.5']);
+  if (nonIntChars.maxChars === 12000) pass('parseArgs ignores a non-integer --max-chars (keeps the default cap)');
+  else fail(`parseArgs --max-chars 1.5 => ${nonIntChars.maxChars}`);
 
   // compactText — collapse whitespace + cap length
   if (compactText('a   b\t\tc') === 'a b c') pass('compactText collapses runs of whitespace');
