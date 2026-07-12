@@ -11,6 +11,8 @@
 // "Posted 5 Days Ago", "Posted 30+ Days Ago"); postedAt is derived from it
 // and omitted for the unbounded "30+ Days Ago" form.
 
+import { BROWSER_LIKE_USER_AGENT } from './_http.mjs';
+
 const PAGE_SIZE = 20;
 
 // Safety cap on pagination — applied regardless of what the upstream reports
@@ -201,7 +203,7 @@ export default {
       headers: {
         'content-type': 'application/json',
         accept: 'application/json',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'user-agent': BROWSER_LIKE_USER_AGENT,
         'accept-language': 'en-US,en;q=0.9',
         origin: ep.origin,
         referer: `${ep.jobBase}/`,
