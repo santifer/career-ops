@@ -34,6 +34,8 @@ function assertAgenticUrl(url) {
   return url;
 }
 
+const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+
 /**
  * Convert a two-letter regional-indicator flag emoji (e.g. 🇩🇪) into an
  * English country name ("Germany"). Returns '' when the input isn't a flag or
@@ -49,7 +51,7 @@ export function flagToCountry(s) {
   });
   if (codes.some((c) => !c)) return '';
   try {
-    const name = new Intl.DisplayNames(['en'], { type: 'region' }).of(codes.join(''));
+    const name = regionNames.of(codes.join(''));
     return name && name !== codes.join('') ? name : '';
   } catch {
     return '';
