@@ -187,16 +187,25 @@ export default {
     return ep ? { url: ep.api } : null;
   },
 
+  /**
+   * Fetch all job postings for a Workday-backed entry, paginating through
+   * the tenant's CXS API.
+   *
+   * Some tenants front their CXS API with Cloudflare bot management (seen
+   * live: geico) that 500s requests missing ordinary browser headers — the
+   * default UA/accept-language-less request trips it even over plain HTTPS
+   * with no other red flags. A real Chrome UA + accept-language + matching
+   * origin/referer clears it without needing per-tenant config (same fix
+   * as providers/glints.mjs's firewall).
+   *
+   * @param {{ name?: string, api?: string, careers_url?: string, max_pages?: number }} entry
+   * @param {{ fetchJson: (url: string, opts?: object) => Promise<any>, sinceMs?: number, maxPages?: number }} ctx
+   * @returns {Promise<Array<{title: string, url: string, company: string, location: string, postedAt?: number}>>}
+   */
   async fetch(entry, ctx) {
     const ep = resolveEndpoint(entry);
     if (!ep) throw new Error(`workday: cannot derive CXS endpoint for ${entry.name}`);
 
-    // Some tenants front their CXS API with Cloudflare bot management (seen
-    // live: geico) that 500s requests missing ordinary browser headers —
-    // the default UA/accept-language-less request trips it even over plain
-    // HTTPS with no other red flags. A real Chrome UA + accept-language +
-    // matching origin/referer clears it without needing per-tenant config
-    // (same fix as providers/glints.mjs's firewall).
     const postOpts = {
       method: 'POST',
       redirect: 'error',
