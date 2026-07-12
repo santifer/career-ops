@@ -16,6 +16,7 @@ mkdirSync(outputRoot, { recursive: true });
 const sandbox = mkdtempSync(join(outputRoot, 'page-budget-test-'));
 const script = join(sandbox, 'generate-pdf.mjs');
 const input = join(sandbox, 'two-pages.html');
+const defaultOverflowInput = join(sandbox, 'three-pages.html');
 const manifest = join(sandbox, 'data', 'pdf-index.tsv');
 const playwrightStub = join(sandbox, 'node_modules', 'playwright');
 
@@ -27,7 +28,9 @@ writeFileSync(join(playwrightStub, 'package.json'), JSON.stringify({
   exports: './index.js',
 }), 'utf-8');
 writeFileSync(join(playwrightStub, 'index.js'), `
-const pdf = Buffer.from(\`%PDF-1.7
+import { readFile } from 'fs/promises';
+
+const twoPagePdf = Buffer.from(\`%PDF-1.7
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
 endobj
@@ -42,14 +45,36 @@ endobj
 endobj
 %%EOF\`, 'latin1');
 
+const threePagePdf = Buffer.from(\`%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 4 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R >>
+endobj
+%%EOF\`, 'latin1');
+
 export const chromium = {
   async launch() {
+    let renderedPdf = twoPagePdf;
     return {
       async newPage() {
         return {
-          async goto() {},
+          async goto(url) {
+            const html = await readFile(new URL(url), 'utf-8');
+            renderedPdf = html.includes('THREE_PAGE_FIXTURE') ? threePagePdf : twoPagePdf;
+          },
           async evaluate() {},
-          async pdf() { return pdf; },
+          async pdf() { return renderedPdf; },
         };
       },
       async close() {},
@@ -62,6 +87,15 @@ writeFileSync(input, `<!doctype html>
   <body>
     <main style="break-after: page">First page</main>
     <main>Second page</main>
+  </body>
+</html>
+`, 'utf-8');
+writeFileSync(defaultOverflowInput, `<!doctype html>
+<html>
+  <body>
+    <main>First page</main>
+    <main>Second page</main>
+    <main>Third page — THREE_PAGE_FIXTURE</main>
   </body>
 </html>
 `, 'utf-8');
@@ -125,6 +159,25 @@ try {
     pass('changing an accepted page budget does not change deterministic PDF rendering');
   } else {
     fail('an accepted page budget changed the rendered PDF instead of acting only as a post-render decision');
+  }
+
+  const defaultOverflowPdf = join(sandbox, 'default-overflow.pdf');
+  const manifestBeforeDefaultOverflow = readFileSync(manifest, 'utf-8');
+  const defaultOverflow = runPdf([defaultOverflowInput, defaultOverflowPdf]);
+  if (
+    defaultOverflow.status !== 0 &&
+    existsSync(defaultOverflowPdf) &&
+    countPages(defaultOverflowPdf) === 3 &&
+    defaultOverflow.output.includes('📐 Page budget: 2') &&
+    defaultOverflow.output.includes('CV is 3 pages') &&
+    defaultOverflow.output.includes('allowed maximum is 2 pages') &&
+    !defaultOverflow.output.includes('✅ PDF generated') &&
+    !defaultOverflow.output.includes('Manifest:') &&
+    readFileSync(manifest, 'utf-8') === manifestBeforeDefaultOverflow
+  ) {
+    pass('generate-pdf enforces the default two-page budget without publishing overflow');
+  } else {
+    fail(`generate-pdf default page budget regressed: ${defaultOverflow.output.trim()}`);
   }
 
   const overflowPdf = join(sandbox, 'overflow.pdf');

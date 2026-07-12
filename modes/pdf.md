@@ -27,7 +27,11 @@
 18. Run the fact gate: `node verify-cv-facts.mjs output/cv-{candidate}-{company}.html`
     - This is a hard gate before PDF rendering.
     - If it fails, stop and fix the generated HTML by removing invented metrics or adding verified evidence to `cv.md`, `article-digest.md`, or `config/cv-facts.json`.
-19. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number}` — `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry. Rendering enforces a two-page maximum by default; pass `--max-pages=1` when the user or market requires a one-page CV. If the rendered PDF exceeds its budget, trim lower-priority content and rerun. Use `--allow-overflow` only when the user deliberately approves a longer CV for this role.
+19. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number}`
+    - `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry.
+    - The rendered PDF has a two-page maximum by default. `--max-pages=N` accepts a positive integer; pass `--max-pages=1` when the user or market requires a one-page CV.
+    - If the rendered PDF exceeds its budget, the draft remains available for inspection but is not reported or indexed as successful. Trim lower-priority content and rerun.
+    - Use `--allow-overflow` only when the user deliberately approves a longer CV for this role; it emits a warning and accepts the unchanged render.
 20. Report: PDF path, number of pages, keyword coverage %, and any skill gaps from Step 4 still unaddressed
 
 ## ATS Rules (clean parsing)
