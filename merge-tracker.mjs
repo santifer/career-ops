@@ -312,7 +312,9 @@ function parseTsvContent(content, filename) {
 
   // Detect pipe-delimited (markdown table row)
   if (content.startsWith('|')) {
-    parts = content.split('|').map(s => s.trim()).filter(Boolean);
+    parts = content.split('|').map(s => s.trim());
+    if (parts[0] === '') parts.shift();
+    if (parts[parts.length - 1] === '') parts.pop();
     if (parts.length < 8) {
       console.warn(`⚠️  Skipping malformed pipe-delimited ${filename}: ${parts.length} fields`);
       return null;
