@@ -248,6 +248,11 @@ try {
     /--model/,
     'Codex model must be selected explicitly',
   );
+  expectRunnerFailure(
+    ['--rate-limit-sleep', '--parallel', '2', '--dry-run'],
+    /--rate-limit-sleep requires an argument/,
+    'rate-limit sleep cannot consume the next option as its value',
+  );
 } catch (error) {
   fail(`Codex batch fixture crashed: ${error.message}`);
 } finally {

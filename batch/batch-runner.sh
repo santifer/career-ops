@@ -119,7 +119,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --rate-limit-sleep)
-      [[ $# -ge 2 ]] || { echo "ERROR: --rate-limit-sleep requires an argument"; exit 1; }
+      [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "ERROR: --rate-limit-sleep requires an argument"; exit 1; }
       RATE_LIMIT_SLEEP="$2"
       shift 2
       ;;
