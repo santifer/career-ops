@@ -132,6 +132,7 @@ function resolveEndpoint(entry) {
       // externalPath is relative to the site, not the host root — without the
       // site segment the URL 404s.
       jobBase: `${origin}/${site}`,
+      origin,
     };
   }
   return null;
@@ -188,7 +189,24 @@ export default {
     const ep = resolveEndpoint(entry);
     if (!ep) throw new Error(`workday: cannot derive CXS endpoint for ${entry.name}`);
 
-    const postOpts = { method: 'POST', redirect: 'error', headers: { 'content-type': 'application/json', accept: 'application/json' } };
+    // Some tenants front their CXS API with Cloudflare bot management (seen
+    // live: geico) that 500s requests missing ordinary browser headers —
+    // the default UA/accept-language-less request trips it even over plain
+    // HTTPS with no other red flags. A real Chrome UA + accept-language +
+    // matching origin/referer clears it without needing per-tenant config
+    // (same fix as providers/glints.mjs's firewall).
+    const postOpts = {
+      method: 'POST',
+      redirect: 'error',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'accept-language': 'en-US,en;q=0.9',
+        origin: ep.origin,
+        referer: `${ep.jobBase}/`,
+      },
+    };
     const makeBody = (offset) => JSON.stringify({ limit: PAGE_SIZE, offset, searchText: '', appliedFacets: {} });
     const sinceMs = typeof ctx?.sinceMs === 'number' ? ctx.sinceMs : null;
 
