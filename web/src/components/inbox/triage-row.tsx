@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bookmark, BookmarkCheck, Loader2, X } from "lucide-react";
+import { Bookmark, BookmarkCheck, ExternalLink, Loader2, X } from "lucide-react";
 import type { InboxJob } from "@/lib/career-ops";
 import type { AtsSource } from "@/lib/explore";
 import { ATS_LABEL } from "@/lib/explore";
@@ -68,8 +68,19 @@ export function TriageRow({
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm">
-          <span className="font-medium text-foreground">{job.company}</span>
-          <span className="text-muted"> · {job.role}</span>
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noreferrer"
+            title="Open job posting"
+            className="group/link inline-flex max-w-full items-center gap-1 align-bottom"
+          >
+            <span className="truncate">
+              <span className="font-medium text-foreground group-hover/link:text-brand group-hover/link:underline">{job.company}</span>
+              <span className="text-muted"> · {job.role}</span>
+            </span>
+            <ExternalLink className="size-3 shrink-0 text-faint opacity-0 transition-opacity group-hover/link:opacity-100" />
+          </a>
         </p>
         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-faint">
           {job.location && <span className="truncate">{job.location}</span>}
