@@ -7896,6 +7896,59 @@ console.log('\n60. Cover-letter template resolver (generate-cover-letter.mjs)');
   else fail('cover-resolver unit tests failed (run: node --test test/cover-resolver.test.mjs)');
 }
 
+// ── 61. INTERVIEW-PREP URL ENTRY (#1816) ────────────────────────
+// Prompt-level slice: prep for a role that was never evaluated. Pins the
+// disambiguation rule (bare URL still routes to auto-pipeline), the
+// report-stays-authoritative rule, the oferta fetch ladder, and the
+// read-only-on-the-pipeline scope guard.
+
+console.log('\n61. Interview-prep URL entry (#1816)');
+
+try {
+  const prepMode = readFile('modes/interview-prep.md');
+  // Whitespace-normalized view so pinned phrases survive markdown re-wrapping.
+  const prepFlat = prepMode.replace(/\s+/g, ' ');
+
+  if (prepMode.includes('## URL entry — prep for a role that was never evaluated')) {
+    pass('interview-prep mode has the URL entry section (#1816)');
+  } else {
+    fail('interview-prep mode missing the "URL entry — prep for a role that was never evaluated" section');
+  }
+
+  if (
+    prepFlat.includes('If a report DOES exist, ignore the URL fetch and use the report — the report stays authoritative') &&
+    prepFlat.includes('a bare URL routes to `auto-pipeline`, not here')
+  ) {
+    pass('interview-prep URL entry: report stays authoritative, bare URL still routes to auto-pipeline');
+  } else {
+    fail('interview-prep URL entry missing the report-stays-authoritative rule or the auto-pipeline disambiguation rule');
+  }
+
+  if (
+    prepMode.includes('browser_navigate') &&
+    prepMode.includes('browser_snapshot') &&
+    prepFlat.includes('WebFetch **only** as the headless/batch fallback') &&
+    prepMode.includes('**JD source:** unconfirmed (fetched without browser)') &&
+    prepMode.includes('Never fabricate JD content')
+  ) {
+    pass('interview-prep URL entry quotes the oferta fetch ladder (Playwright first, WebFetch fallback marks JD source unconfirmed)');
+  } else {
+    fail('interview-prep URL entry missing the canonical fetch ladder (browser_navigate/browser_snapshot first, marked WebFetch fallback, no fabricated JD)');
+  }
+
+  if (
+    prepFlat.includes('read-only on the pipeline') &&
+    prepMode.includes('`pdf` mode') &&
+    prepMode.includes('`contacto`')
+  ) {
+    pass('interview-prep URL entry scope guard: no tracker writes, CV generation stays in pdf, contact automation stays in contacto');
+  } else {
+    fail('interview-prep URL entry missing the out-of-scope guard (tracker read-only / pdf / contacto)');
+  }
+} catch (e) {
+  fail(`modes/interview-prep.md missing or unreadable: ${e.message}`);
+}
+
 console.log('\nTest layout guard (provider tests live in tests/providers/)');
 try {
   const src = readFileSync(join(ROOT, 'test-all.mjs'), 'utf-8');
