@@ -2306,6 +2306,73 @@ try {
   fail(`scan-ats-full blacklist test crashed: ${e.message}`);
 }
 
+// Reverse-scan content_filter wiring (#1846) — scan-ats-full.mjs previously
+// imported only buildTitleFilter/buildLocationFilter, so portals.yml's
+// content_filter (incl. #1638's per-title-keyword scoping) had zero effect
+// on reverse scans. passesFilters() is the shared gate runSeedScan() uses;
+// exercise it directly with buildContentFilter/matchedTitleKeywords from
+// scan.mjs the same way scan-ats-full.mjs wires them.
+try {
+  const { passesFilters } = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+  const { buildTitleFilter, buildLocationFilter, buildContentFilter } =
+    await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  const titleFilterConfig = { positive: ['AI Engineer', 'Instructional Designer'] };
+  const titleFilter = buildTitleFilter(titleFilterConfig);
+  const locationFilter = buildLocationFilter(null);
+
+  // (a) A posting that fails the GLOBAL content_filter is rejected.
+  const globalCf = buildContentFilter({ positive: ['gpt', 'llm'] });
+  const failsGlobal = passesFilters(
+    { title: 'AI Engineer', location: '', description: 'Kubernetes and Terraform all day' },
+    { titleFilter, locationFilter, contentFilter: globalCf, titleFilterConfig },
+  );
+  if (failsGlobal === false) {
+    pass('scan-ats-full passesFilters rejects a posting failing the global content_filter');
+  } else {
+    fail('scan-ats-full passesFilters should reject postings failing the global content_filter');
+  }
+
+  // (b) A posting that fails a PER-TITLE-KEYWORD content_filter override is rejected.
+  const scopedCf = buildContentFilter({
+    by_title_keyword: { 'AI Engineer': { positive: ['gpt', 'llm', 'claude'] } },
+  });
+  const failsScoped = passesFilters(
+    { title: 'Senior AI Engineer', location: '', description: 'Build internal tools, no ML involved' },
+    { titleFilter, locationFilter, contentFilter: scopedCf, titleFilterConfig },
+  );
+  if (failsScoped === false) {
+    pass('scan-ats-full passesFilters rejects a posting failing its by_title_keyword override');
+  } else {
+    fail('scan-ats-full passesFilters should reject postings failing a by_title_keyword override');
+  }
+
+  // (c) Regression for #1636: a posting matched via a DIFFERENT title keyword
+  // with no content_filter override for it must NOT be wrongly rejected.
+  const passesUnrelated = passesFilters(
+    { title: 'Instructional Designer II', location: '', description: 'Designs onboarding curricula' },
+    { titleFilter, locationFilter, contentFilter: scopedCf, titleFilterConfig },
+  );
+  if (passesUnrelated === true) {
+    pass('scan-ats-full passesFilters does not leak an unrelated by_title_keyword override onto a different title match');
+  } else {
+    fail('scan-ats-full passesFilters wrongly rejected a posting whose matched keyword has no override (#1636 regression)');
+  }
+
+  // No content_filter configured at all → behaves exactly as before (title/location only).
+  const noCf = passesFilters(
+    { title: 'AI Engineer', location: '', description: 'Kubernetes and Terraform all day' },
+    { titleFilter, locationFilter, contentFilter: null, titleFilterConfig },
+  );
+  if (noCf === true) {
+    pass('scan-ats-full passesFilters passes everything through when content_filter is absent');
+  } else {
+    fail('scan-ats-full passesFilters should pass all postings when content_filter is absent');
+  }
+} catch (e) {
+  fail(`scan-ats-full content_filter wiring test crashed: ${e.message}`);
+}
+
 // ── VC Portfolio Seed Fetcher ────────────────────────────────────────
 // Tests the pure (no-network) parseSeedEntries(), parseYCPayload(),
 // parseA16zPayload(), toPortalEntry(), and the SEED_SOURCES registry.
