@@ -14,6 +14,7 @@ Given a job description and interview date/time, build a structured, time-blocke
 6. **Profile** at `config/profile.yml` + `modes/_profile.md` — read for narrative, archetypes, and targets
 7. **Story bank** at `interview-prep/story-bank.md` — existing STAR+R stories
 8. **Question bank** at `interview-prep/question-bank.md` — existing gaps (if file exists)
+9. **Prior stated compensation** — if the tracker# is known, run `node salary-gap.mjs --stated-for <tracker#>` (zero tokens). Any prior `stated` observation is a number the candidate already committed to, in an earlier round, to a specific interviewer — feed it into Step 4's quick-reference so the candidate stays consistent instead of accidentally renegotiating.
 
 ---
 
@@ -126,6 +127,8 @@ At the end of the plan, produce a one-page quick-reference the candidate can ski
 1. [most important message to leave the interviewer with]
 2. [most likely question and your first sentence of the answer]
 3. [the connection between your history and their domain]
+
+**Compensation — already discussed:** [only if `--stated-for` returned prior observations] "You stated {amount} {currency} to {interviewer} on {date} in {round}. Stay consistent unless something material changed." Omit this block entirely if there are no prior `stated` observations for this tracker# — don't invent a number that was never said.
 
 **Your questions to ask:**
 1. [question 1]

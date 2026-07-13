@@ -8084,6 +8084,47 @@ try {
   fail(`test layout guard: ${e.message}`);
 }
 
+// ── STATED-COMP TRACKING (#1852) ────────────────────────────────
+// salary-gap.mjs's own --self-test (invoked above via the CLI-check table)
+// covers stated-observation parsing, backward compatibility, and the
+// getStatedObservations() lookup. This section pins the mode-doc wiring:
+// interview/plan reads it back before generating prep, interview-prep does
+// the same for the initial pass, and interview/debrief writes it.
+
+console.log('\n62. Stated-comp tracking wired into interview modes (#1852)');
+
+try {
+  const planMode = readFile('modes/interview/plan.md');
+  const prepModeDoc = readFile('modes/interview-prep.md');
+  const debriefMode = readFile('modes/interview/debrief.md');
+
+  if (planMode.includes('--stated-for') && planMode.includes('salary-gap.mjs')) {
+    pass('interview/plan reads prior stated-comp observations via salary-gap.mjs --stated-for');
+  } else {
+    fail('interview/plan missing --stated-for lookup for prior stated-comp observations');
+  }
+
+  if (planMode.includes('Compensation — already discussed')) {
+    pass('interview/plan quick-reference carries the "already discussed" comp callout');
+  } else {
+    fail('interview/plan quick-reference missing the "already discussed" comp callout');
+  }
+
+  if (prepModeDoc.includes('--stated-for') && prepModeDoc.includes('salary-gap.mjs')) {
+    pass('interview-prep reads prior stated-comp observations via salary-gap.mjs --stated-for');
+  } else {
+    fail('interview-prep missing --stated-for lookup for prior stated-comp observations');
+  }
+
+  if (debriefMode.includes('stated') && debriefMode.includes('salary-observations.tsv')) {
+    pass('interview/debrief appends a stated observation when a comp number is verbally given');
+  } else {
+    fail('interview/debrief missing the stated-observation append rule');
+  }
+} catch (e) {
+  fail(`stated-comp tracking wiring check: ${e.message}`);
+}
+
 await runDiscovered();
 
 finish();
