@@ -8,7 +8,7 @@ Given a job description and interview date/time, build a structured, time-blocke
 
 1. **Job description** (required) — paste inline or provide URL
 2. **Interview date and time** (required) — to calculate hours available
-3. **Interviewer name and role** (if known) — shapes depth and tone of prep
+3. **Interviewer name and role** (if known) — shapes depth and tone of prep. Later rounds (panel / onsite loop) often name several interviewers at once — from the user directly, a pasted calendar invite, or a pasted scheduling email. When more than one panelist is named, see the Panel Intel note in Step 2.
 4. **Round type** (if known) — screening, technical/domain-specific, design/case study, behavioral panel
 5. **CV** at `cv.md` + `article-digest.md` (if present) — read for experience, skills, proof points
 6. **Profile** at `config/profile.yml` + `modes/_profile.md` — read for narrative, archetypes, and targets
@@ -60,6 +60,8 @@ Identify what this round is actually evaluating based on:
 - Senior-level: set constraints, ask clarifying questions, drive the conversation
 
 Calibrate the plan to the round. Over-preparing depth for a screening wastes time and creates the wrong mindset.
+
+**Panel Intel (when panelists are named).** If two or more interviewers are named for this round — from the user directly, a pasted calendar invite, or a pasted scheduling email — build the Panel Intel table before moving to Step 3. See `modes/interview-prep.md` § "Panel Intel table" (under Step 4 → `panel-mixed`) for the full table format and the three sub-behaviors (decision-maker weighting against the JD's reporting line, career-trajectory signal reading, per-panelist tailored closing question) — apply that same logic here, then use the resulting audience tags to size Step 3's blocks per panelist instead of prepping one generic pack. A single named interviewer doesn't need the table; go straight to Step 3 calibrated to that person's round type above.
 
 ---
 
