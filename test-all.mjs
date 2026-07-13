@@ -6136,6 +6136,14 @@ try {
   } else {
     fail('Single-pass substitution left a known token unreplaced');
   }
+
+  // CLI arguments: --help prints custom --format and --report usage guidelines
+  const usageOut = execFileSync(process.execPath, [join(ROOT, 'generate-cover-letter.mjs'), '--help'], { encoding: 'utf-8' });
+  if (usageOut.includes('--format') && usageOut.includes('--report') && usageOut.includes('[--format letter|a4]')) {
+    pass('Cover letter CLI --help documents format and report options');
+  } else {
+    fail('Cover letter CLI --help does not document format and report options');
+  }
 } catch (e) {
   fail(`Cover letter single-pass substitution test crashed: ${e.message}`);
 }
