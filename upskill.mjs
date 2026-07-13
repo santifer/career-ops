@@ -493,6 +493,27 @@ soft_gaps:
   if (!/Kafka/.test(parsed.gapText)) failures.push('Gap table row not captured');
   if (!/Airflow/.test(parsed.gapText)) failures.push('soft_gaps not captured');
 
+  // Targeted mode (#1851): known-skill suppression must be canonical-to-canonical,
+  // never raw-token substring matching. The old inline path inverted every skill —
+  // CV skills shown as gaps, real gaps hidden. This is the exact reproduction from
+  // the bug report.
+  {
+    const { gaps, excludedAsKnown } = computeTargetedGaps(
+      'Kubernetes, C++, .NET, Java, SQL, Go, LLMs',        // JD asks for
+      'k8s, C++, .NET, JavaScript, PostgreSQL, MongoDB, LLMs' // CV already has
+    );
+    const gapSet = new Set(gaps);
+    const exSet = new Set(excludedAsKnown);
+    for (const g of ['Java', 'SQL', 'Go']) {
+      if (!gapSet.has(g)) failures.push(`targeted: ${g} should be a gap (got ${gaps.join(',')})`);
+      if (exSet.has(g)) failures.push(`targeted: real gap ${g} wrongly suppressed as known`);
+    }
+    for (const k of ['Kubernetes', 'C++', '.NET', 'LLMs']) {
+      if (!exSet.has(k)) failures.push(`targeted: ${k} should be excluded as known (got ${excludedAsKnown.join(',')})`);
+      if (gapSet.has(k)) failures.push(`targeted: known skill ${k} wrongly reported as gap`);
+    }
+  }
+
   if (failures.length > 0) {
     console.error(`upskill self-test failed: ${failures.join('; ')}`);
     process.exit(1);
