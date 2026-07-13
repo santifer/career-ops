@@ -155,7 +155,7 @@ Signals:
 
 If the warning level is `🚩 Reconsider`, add one line noting the suggestion is in the file — do not repeat the full blacklist row in the console summary:
 
-```
+```text
 → Blacklist entry suggested — see interview-prep/{company-slug}-redflags.md
 ```
 
