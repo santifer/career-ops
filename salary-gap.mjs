@@ -663,9 +663,13 @@ function main() {
   if (selfTestMode) { selfTest(); return; }
 
   if (statedForFlagIdx !== -1) {
+    if (!statedForNum) {
+      console.error('Usage: node salary-gap.mjs --stated-for <tracker#>');
+      process.exit(1);
+    }
     const { observations } = collectSources();
-    const stated = getStatedObservations(observations, statedForNum ?? '');
-    console.log(JSON.stringify({ num: statedForNum ?? null, stated }, null, 2));
+    const stated = getStatedObservations(observations, statedForNum);
+    console.log(JSON.stringify({ num: statedForNum, stated }, null, 2));
     return;
   }
 
