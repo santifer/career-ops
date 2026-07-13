@@ -13,14 +13,25 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **User Layer (NEVER auto-updated, personalization goes HERE):**
-- `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
+- `cv.md`, `config/profile.yml`, `modes/_profile.md`, `modes/_custom.md`, `article-digest.md`, `portals.yml`
 - `data/*`, `reports/*`, `output/*`, `interview-prep/*`
 
 **System Layer (auto-updatable, DON'T put user data here):**
 - `modes/_shared.md`, `modes/oferta.md`, all other modes
 - `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `OPENCODE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
 
-**THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
+**THE RULE: When the user asks to customize facts or targeting (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. When they ask for procedural house rules, custom workflows, output preferences, or automations, write to `modes/_custom.md` (copy it from `modes/_custom.template.md` if missing). NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
+
+**Path Resolution Override & Precedence:**
+The User Layer location (Data Root) is resolved dynamically using the following precedence order:
+1. **Environment Variables:** `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR` overrides the root path (resolved relative to the repository root if it is a relative path).
+2. **Marker File:** If no environment variable is set, a `.career-ops-data` file in the repository root containing an absolute or relative path to the user data directory is used.
+3. **Repository Default:** If neither is present, the repository root directory itself is used.
+
+**Tracker Path & Canonical Writes:**
+- **Explicit override:** `CAREER_OPS_TRACKER` environment variable overrides the applications tracker file path. Relative paths are resolved relative to the repository root directory.
+- **Reading:** If no override is set, reading resolves to `{DATA_ROOT}/data/applications.md` if it exists; otherwise falls back to `{DATA_ROOT}/applications.md`.
+- **Writing:** All write operations (first-run creation or merge operations) target the canonical location `{DATA_ROOT}/data/applications.md` (or the explicit `CAREER_OPS_TRACKER` override).
 
 ## Source-of-Truth Boundary (CRITICAL)
 
@@ -30,6 +41,7 @@ User-facing content (CV, cover letters, application emails, form answers, recrui
 - `article-digest.md`
 - `config/profile.yml`
 - `modes/_profile.md`
+- `modes/_custom.md` (procedural/style rules only — governs workflow and output preferences, never introduces factual claims)
 - `writing-samples/`
 - `voice-dna.md` (voice/style only — governs *how* text reads, never introduces factual claims)
 - `interview-prep/story-bank.md` and `interview-prep/{company}-{role}.md` (the user's own STAR stories and interview-prep notes — same trust level as `cv.md`; consumed by the `interview` and `apply`/`match-star` modes)
@@ -106,17 +118,23 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output). Includes ATS channel analysis (per-vendor advance rate; motivated by Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026). |
+| `upskill.mjs` | Aggregate skill-gap analyzer — weighted gap map from tracked reports, known skills from `cv.md`/`config/profile.yml` excluded (JSON output) |
 | `stats.mjs` | Lifetime pipeline stats aggregator (JSON or `--summary`) — tracker roll-up, canonical `ever*` funnel, lifetime scan totals, portal coverage, follow-up compliance, scan-run trends |
 | `data/scan-runs.tsv` | Per-run scan counters (appended by `scan.mjs`, read by `stats.mjs`) |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `followup-seed.mjs` | Seeds `data/follow-ups.md` with a pinned first follow-up date when a row turns Applied (JSON output) |
 | `set-status.mjs` | Canonical CLI to update a tracker row: `node set-status.mjs <report#\|company> <State> [--note]` — strict states.yml validation, shared tracker lock, atomic write |
 | `invite-match.mjs` | Fuzzy-matches a pasted interview-invite email (company name, date, req ID) against `data/applications.md`, ranking candidates when a company has multiple tracker entries (JSON or `--summary` table output) |
+| `paste-reply.mjs` | Manual/no-Gmail input path into `reply-watch.mjs`'s classification pipeline — normalizes a pasted or file-provided email's subject/from/body into a candidate object and appends it to `data/reply-candidates.json` (never overwrites existing entries; never classifies or touches the tracker itself) |
 | `detect-reposts.mjs` | Repost detector — flags roles re-listed 2+ times in 90 days from scan-history.tsv (JSON or `--summary` table output) |
 | `process-quality.mjs` | Recruiting-process friction aggregator — parses `[process-friction]` tags candidates add to `data/active-interviews.md` Notes and reports per-company friction rate (JSON or `--summary` table output) |
 | `salary-gap.mjs` | Desired/advertised/actual compensation gap analyzer — folds report `advertised_comp` + `data/salary-observations.tsv` (JSON or `--summary`) |
 | `data/salary-observations.tsv` | Append-only salary observation log (user layer) |
+| `assessment-log.mjs` | Skills-assessment event logger — `add` appends platform/subject/threshold/score + candidate-observed staleness note to `data/assessments.tsv` (JSON or `--summary`) |
+| `data/assessments.tsv` | Append-only skills-assessment log (user layer, created on first `add`) |
+| `jd-skill-gap.mjs` | Zero-LLM JD skill-gap checker — classifies a JD's required skills against `cv.md` into existing / supportedByResume / gap so a CV can be tailored honestly (JSON or `--summary` output); never auto-adds a claim to `cv.md` |
 | `data/follow-ups.md` | Follow-up history tracker |
+| `data/blacklist.md` | Your do-not-apply company list (user layer, opt-in — never auto-populated; respected by `scan.mjs` and the `auto-pipeline`/`oferta`/`apply` gates) |
 | `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
 | `check-liveness.mjs` | Job posting liveness checker |
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
@@ -134,7 +152,7 @@ Some users enable plugins (external integrations). If an enabled plugin ships a 
 node doctor.mjs --json
 ```
 
-Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...], "autoCopied": [...]}`, where `missing` lists whichever of `cv.md`, `config/profile.yml`, `modes/_profile.md`, `portals.yml` are absent. `warnings` is reserved for non-blocking setup signals, and `autoCopied` lists user customization files (`modes/_profile.md` or `modes/_custom.md`) that `doctor.mjs` automatically copied from their `.template.md` equivalents during the check.
+Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...], "autoCopied": [...]}`, where `missing` lists whichever of `cv.md`, `config/profile.yml`, `modes/_profile.md`, `portals.yml` are absent. `warnings` is reserved for non-blocking setup signals, and `autoCopied` lists user customization files (`modes/_profile.md` or `modes/_custom.md`) that `doctor.mjs` automatically copied from their template equivalents (`modes/_profile.template.md` or `modes/_custom.template.md`) during the check.
 
 - **If `onboardingNeeded` is true (any of `cv.md` / `config/profile.yml` / `modes/_profile.md` / `portals.yml` is missing), enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
 
@@ -142,7 +160,7 @@ Output: `{"onboardingNeeded": <bool>, "missing": [...], "warnings": [...], "auto
 
 If the user mentions cost, pricing, budget, or asks about free alternatives during onboarding, proactively surface the free path:
 
-> "career-ops works fully on Antigravity CLI's free tier — no API key or paid subscription needed. See [FREE_TIER.md](docs/FREE_TIER.md) for setup (`agy auth login`, daily limits, and batch tips)."
+> "career-ops works fully on Antigravity CLI's free tier — no API key or paid subscription needed. See [FREE_TIER.md](docs/FREE_TIER.md) for setup, daily limits, and batch tips."
 
 If the user is already on a paid plan (Claude Max, Google AI, etc.) or does not mention cost, skip this step silently.
 
@@ -164,10 +182,14 @@ If `config/profile.yml` is missing, copy from `config/profile.example.yml` and t
 > - Your location and timezone
 > - What roles are you targeting? (e.g., 'Senior Backend Engineer', 'AI Product Manager')
 > - Your salary target range
+> - How much do you want to spend on model usage per evaluation? Three options:
+>   - **economy** — cheapest and fastest, good for scanning lots of offers quickly
+>   - **standard** — balanced cost and quality (default if you're not sure)
+>   - **premium** — most capable model, best for offers you really care about
 >
 > I'll set everything up for you."
 
-Fill in `config/profile.yml` with their answers. For archetypes and targeting narrative, store the user-specific mapping in `modes/_profile.md` or `config/profile.yml` rather than editing `modes/_shared.md`.
+Fill in `config/profile.yml` with their answers, including `spend_tier` (defaults to `standard` if they skip the question). For archetypes and targeting narrative, store the user-specific mapping in `modes/_profile.md` or `config/profile.yml` rather than editing `modes/_shared.md`.
 
 #### Step 3: Portals (recommended)
 If `portals.yml` is missing:
@@ -240,37 +262,58 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **Turkish (Turkey market):** `modes/tr/` — native Turkish translations with Turkey-specific vocabulary (SGK, kıdem tazminatı, ihbar süresi, brüt/net maaş, AGİ, BES, yemek kartı, yol yardımı, TÜFE zammı, etc.). Includes `_shared.md`, `is-ilani.md` (evaluation), `basvuru.md` (apply), `pipeline.md`.
 - **Hindi (India market):** `modes/hi/` — native Hindi (Devanagari) translations with India-specific vocabulary (CTC vs. in-hand salary, PF/EPF, Gratuity, Notice period/buyout, Bond clause, ESOPs, HRA/LTA, moonlighting policy, Labour Codes 2020, etc.). Includes `_shared.md`, `naukri.md` (evaluation), `aavedan.md` (apply), `pipeline.md`.
 
-**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
+### Output Language vs Market Modes
+
+`config/profile.yml` may set:
+
+```yaml
+language:
+  output: en
+  modes_dir: modes/de
+```
+
+These are two separate axes:
+
+- `language.output` controls human-facing output: reports, tracker notes, PDFs, cover letters, outreach, interview prep, form answers, and any user-visible prose. Default: `en` when absent.
+- `language.modes_dir` controls market vocabulary and local evaluation rules. For example, `modes/de` supplies DACH-specific concepts like 13. Monatsgehalt and Probezeit.
+
+**Composition rule:** `language.output` is authoritative for prose. `modes_dir` only supplies market context. A user can request English output with DACH market vocabulary, French output with Japan-market vocabulary, etc.
+
+**Agent rule:** After loading the mode instructions and user profile, inject this directive into every mode and subagent prompt:
+
+> Write all human-facing output in `{language.output}` regardless of the language of these instructions or the job description. Keep market-specific terms from `language.modes_dir` when they are relevant, but explain them in the output language when needed.
+
+**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or explicitly asks for German market modes. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
 2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
 3. You detect a German JD → suggest switching to German modes
 
-**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
+**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or explicitly asks for French market modes. Either:
 1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
 2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
 3. You detect a French JD → suggest switching to French modes
 
-**When to use Arabic modes:** If the user is targeting Arabic-language job postings, lives in the Middle East / Arab region, or asks for Arabic output. Either:
+**When to use Arabic modes:** If the user is targeting Arabic-language job postings, lives in the Middle East / Arab region, or explicitly asks for Arabic market modes. Either:
 1. User says "use Arabic modes" → read from `modes/ar/` instead of `modes/`
 2. User sets `language.modes_dir: modes/ar` in `config/profile.yml` → always use Arabic modes
 3. You detect an Arabic JD → suggest switching to Arabic modes
 
-**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or asks for Japanese output. Either:
+**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or explicitly asks for Japanese market modes. Either:
 1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
 2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
 3. You detect a Japanese JD → suggest switching to Japanese modes
 
-**When to use Turkish modes:** If the user is targeting Turkish-language job postings, lives in Turkey, or asks for Turkish output. Either:
+**When to use Turkish modes:** If the user is targeting Turkish-language job postings, lives in Turkey, or explicitly asks for Turkish market modes. Either:
 1. User says "use Turkish modes" → read from `modes/tr/` instead of `modes/`
 2. User sets `language.modes_dir: modes/tr` in `config/profile.yml` → always use Turkish modes
 3. You detect a Turkish JD → suggest switching to Turkish modes
 
-**When to use Hindi modes:** If the user is targeting Indian job postings, lives in India, or asks for Hindi output. Either:
+**When to use Hindi modes:** If the user is targeting Indian job postings, lives in India, or explicitly asks for Hindi market modes. Either:
 1. User says "use Hindi modes" → read from `modes/hi/` instead of `modes/`
 2. User sets `language.modes_dir: modes/hi` in `config/profile.yml` → always use Hindi modes
 3. You detect a Hindi JD → suggest switching to Hindi modes
 
-**When NOT to:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, Turkish, or Indian companies, use the default English modes — *unless* the user has explicitly requested another mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection).
+**When NOT to switch market modes:** If the user applies to English-language roles, even at French, German, Arabic, Japanese, Turkish, or Indian companies, use the default English market modes — *unless* the user has explicitly requested another market mode in this conversation, or `language.modes_dir` is set in `config/profile.yml` (the explicit user preference always wins over JD-language detection). This does not override `language.output`; prose still follows `language.output`.
 
 ### Skill Modes
 
@@ -298,6 +341,8 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks about rejection patterns, wants to improve targeting, or wants to match interview answers to best-fit roles | `patterns` |
 | Receives an offer/contract and wants help understanding it before signing | `offer-prep` — clause walk with neutral tags + lawyer question list; describes, never judges; no verdicts, no online research; optional draft-only negotiation reply email from the "Items to raise" list |
 | Wants to broaden the search with adjacent job titles suggested from the CV | `titles` |
+| Maintains their own hand-tuned `.tex` CV and wants it tailored in place (opt-in; cv.md stays the default) | `latex-tex` |
+| Asks what skills to learn, wants a skill-gap analysis of their pipeline | `upskill` |
 | Asks about follow-ups or application cadence | `followup` |
 | Wants to classify application replies and review updates | `reply-watch` — classifies candidate replies, matches them to applications, and suggests tracker updates |
 | Wants to update the system | `update` |
@@ -395,6 +440,8 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 9. `notes` -- one-line summary
 
 **Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
+
+**Backfilled entries with no evaluation (#1799):** for a row added retroactively without ever running an evaluation (e.g. a rejection email for a role you never scored), the `score` field must be one of the recognized score-cell sentinels — `N/A`, `—` (em dash), or `-` (hyphen) — never left blank and never some other placeholder. `merge-tracker.mjs`'s column-swap guard (`looksLikeScoreCell` in `tracker-parse.mjs`, #1427) identifies the score column by content pattern (`X.X/5` or one of these sentinels); an unrecognized placeholder makes the row ambiguous and it gets skipped with a warning instead of merged.
 
 **Optional Via field (#1596):** when the application goes through an agency/recruiter, append a **tagged** extra field `via={Agency}` (e.g. `via=Hays`) after notes — never a positional slot; the tag is mandatory. A single untagged extra field keeps its legacy meaning (location). Unknown end employer → write `?` as company (locale-invariant structural marker — never the word "Confidential") plus a distinguishing descriptor in notes. `merge-tracker.mjs` rejects ambiguous extras loudly, and `--migrate-via` adds the Via column to an existing tracker.
 

@@ -275,9 +275,11 @@ career-ops/
 
 ## Über den Autor
 
-Ich bin Santiago -- Head of Applied AI, ehemaliger Gründer (ich habe ein Unternehmen aufgebaut und verkauft, das bis heute mit meinem Namen läuft). Ich habe career-ops gebaut, um meine eigene Jobsuche zu steuern. Es hat funktioniert: Damit habe ich meine aktuelle Rolle bekommen.
+Ich bin [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, ehemaliger Gründer (ich habe ein Unternehmen aufgebaut und verkauft, das bis heute mit meinem Namen läuft). Ich habe career-ops gebaut, um meine eigene Jobsuche zu steuern. Es hat funktioniert: Damit habe ich meine aktuelle Rolle bekommen.
 
 Mein Portfolio und weitere Open-Source-Projekte → [santifer.io](https://santifer.io)
+
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
 
 ## Haftungsausschluss
 
