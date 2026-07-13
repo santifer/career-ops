@@ -2058,6 +2058,22 @@ if (
   } else {
     fail('apply mode references browser-extract.mjs — the extractor must not touch the apply/form path');
   }
+
+  // Phase 2b (#1449): the language-market pipeline mirrors must wire the same
+  // opt-in extractor, so non-English users get the token saving too.
+  const langPipelines = readdirSync(join(ROOT, 'modes'), { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => `modes/${e.name}/pipeline.md`)
+    .filter((p) => existsSync(join(ROOT, p)));
+  const langMissing = langPipelines.filter((m) => {
+    const src = readFile(m);
+    return !(src.includes('browser-extract.mjs') && src.includes('scan.extractor'));
+  });
+  if (langPipelines.length > 0 && langMissing.length === 0) {
+    pass(`all ${langPipelines.length} language pipeline mirrors wire the opt-in extractor (#1449 Phase 2b)`);
+  } else {
+    fail(`language pipeline mirrors missing extractor wiring: ${langMissing.join(', ') || '(none found)'}`);
+  }
 }
 
 if (readFile('DATA_CONTRACT.md').includes('data/blacklist.md')) {
