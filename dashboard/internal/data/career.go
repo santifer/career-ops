@@ -12,6 +12,7 @@ import (
 
 	"github.com/santifer/career-ops/dashboard/internal/model"
 )
+
 var (
 	reReportLink     = regexp.MustCompile(`\[(\d+)\]\(([^)]+)\)`)
 	reScoreValue     = regexp.MustCompile(`(\d+\.?\d*)/5`)
@@ -567,8 +568,6 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 	return
 }
 
-
-
 // splitTrackerRow splits a tracker table line into trimmed cell values, using
 // the same delimiter logic as ParseApplications: a mixed "| " + tab-separated
 // body, or a pure pipe-delimited row. Field 0 is the first real column (num), so
@@ -692,7 +691,6 @@ func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerAppli
 		return fmt.Errorf("notes column not found in tracker, cannot append notes")
 	}
 
-
 	found := false
 	for i, line := range lines {
 		if !strings.HasPrefix(strings.TrimSpace(line), "|") {
@@ -810,6 +808,13 @@ func replaceStatusInLine(line, oldStatus, newStatus string, statusField int) (st
 // that doesn't match — e.g. a custom tracker layout — it falls back to the first
 // cell that equals want exactly. Matching is whole-cell and case-insensitive,
 // never a substring, so a status word inside an earlier cell is never hit.
+//
+// Final fallback: when neither check matches (the in-memory status went stale —
+// e.g. set-status.mjs or merge-tracker.mjs rewrote the row while the dashboard
+// was open), trust canonicalIdx anyway *if* its current content normalizes to a
+// recognized canonical status. That keeps the #1180 guarantee (never rewrite a
+// non-status cell) while dropping the requirement that the UI's snapshot of the
+// old status still matches the file.
 // Returns -1 when nothing matches, so the caller leaves the row untouched rather
 // than corrupt a guess.
 func statusCellIndex(cells []string, canonicalIdx int, want string) int {
@@ -821,7 +826,21 @@ func statusCellIndex(cells []string, canonicalIdx int, want string) int {
 			return i
 		}
 	}
+	if canonicalIdx >= 0 && canonicalIdx < len(cells) && isCanonicalStatusValue(cells[canonicalIdx]) {
+		return canonicalIdx
+	}
 	return -1
+}
+
+// isCanonicalStatusValue reports whether a cell's content reads as one of the
+// known tracker statuses (in any accepted spelling/language), i.e. whether it
+// is safe to treat the cell as the Status column.
+func isCanonicalStatusValue(cell string) bool {
+	switch NormalizeStatus(cell) {
+	case "evaluated", "applied", "responded", "interview", "offer", "hired", "rejected", "discarded", "skip":
+		return true
+	}
+	return false
 }
 
 // spliceCellValue swaps a cell's inner value while preserving its surrounding
@@ -995,7 +1014,6 @@ func safePct(part, whole int) float64 {
 	}
 	return float64(part) / float64(whole) * 100
 }
-
 
 // LoadReportDiscardReasons parses predicted discard reasons from a report file.
 func LoadReportDiscardReasons(careerOpsPath, reportPath string) []string {

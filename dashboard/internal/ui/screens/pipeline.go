@@ -102,7 +102,6 @@ var canonicalDiscardReasons = []string{
 	"company_culture",
 }
 
-
 type reportSummary struct {
 	archetype string
 	tldr      string
@@ -230,14 +229,14 @@ type PipelineModel struct {
 	// Discard reason picker sub-state (Issue 1380) — opens when status
 	// transitions to Discarded or SKIP, pre-populated from the report's
 	// predicted discard_reasons, plus canonical fallback options.
-	discardPicker       bool
-	discardCursor       int
-	discardOptions      []string // predicted + canonical options shown to user
-	discardCustomInput  bool     // true when "Other…" is selected and user is typing
-	discardCustomText   string   // free-text typed for "Other…" reason
-	discardPendingApp    model.CareerApplication // app awaiting the reason pick
-	discardPendingStatus string                  // new status to commit with the reason
-	discardPredictedCount int                    // count of predicted reasons (from report)
+	discardPicker         bool
+	discardCursor         int
+	discardOptions        []string                // predicted + canonical options shown to user
+	discardCustomInput    bool                    // true when "Other…" is selected and user is typing
+	discardCustomText     string                  // free-text typed for "Other…" reason
+	discardPendingApp     model.CareerApplication // app awaiting the reason pick
+	discardPendingStatus  string                  // new status to commit with the reason
+	discardPredictedCount int                     // count of predicted reasons (from report)
 
 	// PDF picker sub-state — shown when one application matches several
 	// generated CVs (role variants from the same company).
@@ -344,6 +343,21 @@ func (m PipelineModel) WithReloadedData(apps []model.CareerApplication, metrics 
 	reloaded.searchInput = m.searchInput
 	// Preserve user's column visibility choices across refresh.
 	reloaded.visibleCols = m.visibleCols
+	// Preserve in-progress interactive flows. The viewer status path starts
+	// the hired celebration / discard reason picker on the pipeline model and
+	// then immediately triggers a data reload; rebuilding the model here used
+	// to wipe that state, so picking Discarded/SKIP from the report viewer
+	// silently never asked for a reason and never wrote the status.
+	reloaded.hiredApp = m.hiredApp
+	reloaded.hiredStep = m.hiredStep
+	reloaded.discardPicker = m.discardPicker
+	reloaded.discardCursor = m.discardCursor
+	reloaded.discardOptions = m.discardOptions
+	reloaded.discardCustomInput = m.discardCustomInput
+	reloaded.discardCustomText = m.discardCustomText
+	reloaded.discardPendingApp = m.discardPendingApp
+	reloaded.discardPendingStatus = m.discardPendingStatus
+	reloaded.discardPredictedCount = m.discardPredictedCount
 	reloaded.applyFilterAndSort()
 	reloaded.CopyReportCache(&m)
 
@@ -775,8 +789,8 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 func (m PipelineModel) startDiscardFlow(app model.CareerApplication, newStatus string) tea.Msg {
 	predicted := data.LoadReportDiscardReasons(m.careerOpsPath, app.ReportPath)
 	return pipelineStartDiscardPickerMsg{
-		app:           app,
-		newStatus:     newStatus,
+		app:              app,
+		newStatus:        newStatus,
 		predictedReasons: predicted,
 	}
 }
@@ -1889,7 +1903,6 @@ func (m PipelineModel) overlayStatusPicker(body string) string {
 	return strings.Join(bodyLines, "\n")
 }
 
-
 func (m PipelineModel) overlayHiredFlow() string {
 	borderStyle := lipgloss.NewStyle().
 		Border(lipgloss.DoubleBorder()).
@@ -2098,7 +2111,6 @@ func (m PipelineModel) overlayDiscardPicker(body string) string {
 		picker = append(picker, padStyle.Render(hintStyle.Render("Enter: confirm   Esc: back")))
 	} else {
 		numPredicted := m.discardPredictedCount
-
 
 		heading := "─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─"
 		picker = append(picker, padStyle.Render(titleStyle.Render(heading)))
