@@ -419,6 +419,8 @@ Curious how this repo is maintained in ~4 hours a week? Read [Agentic maintenanc
 
 My portfolio and other open source projects → [santifer.io](https://santifer.io)
 
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
+
 ## Disclaimer
 
 **career-ops is a local, open-source tool, NOT a hosted service.** By using this software, you acknowledge:
