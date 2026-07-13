@@ -121,17 +121,17 @@ Write the following structure:
 - "Before accepting: ask [specific questions] to verify the concern."
 - "Reconsider: the pattern across {N} rounds suggests [specific risk]."}
 
-{If Warning level is 🚩 Reconsider (score 4+), append a blacklist suggestion sub-block. Synthesize the one-line reason from the signal table in Step 3/4 — name the specific pattern(s) at 2+ sessions, not a generic label. This is a suggestion only: present the row in `data/blacklist.md`'s table format so the user can copy it in themselves. Never write to `data/blacklist.md`.
+{If Warning level is 🚩 Reconsider (score 4+), append a blacklist suggestion sub-block. Synthesize the one-line reason from the signal table in Step 3/4 — name the specific pattern(s) at 2+ sessions, not a generic label. This is a suggestion only: present the row in `data/blacklist.md`'s table format so the user can copy it in themselves. Never write to `data/blacklist.md`. Render the heading and instructional sentences in `{language.output}` per the project's language-mode rules (see AGENTS.md § "Output Language vs Market Modes") — only the table's column headers (`Company | Since | Scope | Reason`) and the literal `company` scope value stay fixed, since they must match `data/blacklist.md`'s actual file format regardless of output language.
 
-#### Consider adding to blacklist
+#### Consider adding to blacklist [heading — render in {language.output}]
 
-If you agree with this assessment, copy the row below into `data/blacklist.md` (see `templates/blacklist.example.md` for the file's column format):
+[Render in {language.output}: an instruction telling the user that if they agree with this assessment, they should copy the row below into `data/blacklist.md` (see `templates/blacklist.example.md` for the file's column format).]
 
 | Company | Since | Scope | Reason |
 |---------|-------|-------|--------|
 | {Company} | {today's date, YYYY-MM-DD} | company | {1-line reason drawn from the Step 3/4 signal breakdown, e.g. "2+ rounds: defensive closure + evaluator competency gap"} |
 
-This is a suggestion only — nothing is written to `data/blacklist.md` automatically.}
+[Render in {language.output}: a note that this is a suggestion only — nothing is written to `data/blacklist.md` automatically.]}
 
 *Analysis based on interviewer behaviour only. Candidate decides.*
 ```
@@ -153,10 +153,10 @@ Signals:
 → Full analysis written to interview-prep/{company-slug}-redflags.md
 ```
 
-If the warning level is `🚩 Reconsider`, add one line noting the suggestion is in the file — do not repeat the full blacklist row in the console summary:
+If the warning level is `🚩 Reconsider`, add one line noting the suggestion is in the file — do not repeat the full blacklist row in the console summary. Render this line in `{language.output}` (see AGENTS.md § "Output Language vs Market Modes"); only the file path is a fixed literal:
 
 ```text
-→ Blacklist entry suggested — see interview-prep/{company-slug}-redflags.md
+→ [render in {language.output}, e.g. "Blacklist entry suggested — see"] interview-prep/{company-slug}-redflags.md
 ```
 
 If multiple companies were analysed in one run, show a summary table:
