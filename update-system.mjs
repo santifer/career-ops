@@ -976,10 +976,14 @@ async function apply() {
       }
 
       if (commitFailed) {
-        console.error(`\n[!] Update commit failed (files may be staged but not committed).`);
-        console.error(`    Error: ${e.message.split('\\n')[0]}`);
-        console.error(`    Please run 'git commit -m "chore: auto-update system files to v${remote}"' manually to finish the update.\n`);
-        process.exit(1);
+        const allTargetPaths = [...pathsToStage, ...materializedSkillEntrypoints];
+        const pathspec = allTargetPaths.map(p => `"${p}"`).join(' ');
+        throw new Error(
+          `Update commit failed (files may be staged but not committed).\n` +
+          `    Error: ${e.message.split('\n')[0]}\n` +
+          `    Please run manually to finish the update:\n` +
+          `    git commit -m "chore: auto-update system files to v${remote}" -- ${pathspec}`
+        );
       }
       // Otherwise, genuinely nothing to commit (already up to date)
     }
