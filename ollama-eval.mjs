@@ -258,9 +258,12 @@ try {
         { role: 'system', content: systemPrompt },
         { role: 'user',   content: `JOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
       ],
-      stream:      false,
-      temperature: 0.4,
-      options: { num_ctx: 32768 },
+      stream: false,
+      // Ollama's /api/chat reads generation params from `options` only — a
+      // top-level `temperature` is silently ignored, so the eval was running at
+      // Ollama's default (0.8) instead of the intended 0.4. Keep it deterministic
+      // (matching the openai/gemini engines) by putting it where Ollama reads it.
+      options: { temperature: 0.4, num_ctx: 32768 },
     }),
     signal: AbortSignal.timeout(timeoutMs),
   });
