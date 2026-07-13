@@ -8247,6 +8247,68 @@ try {
   fail(`test layout guard: ${e.message}`);
 }
 
+console.log('\n62. User path drift-guard (no codebase-root path resolution for user-layer files)');
+try {
+  const USER_SEGMENTS = [
+    'data', 'reports', 'output',
+    'cv.md', 'article-digest.md', 'portals.yml',
+    'config/profile.yml',
+    'applications.md', 'pipeline.md', 'active-interviews.md', 'follow-ups.md',
+    'scan-history.tsv', 'scan-runs.tsv', 'salary-observations.tsv',
+    'assessments.tsv', 'pdf-index.tsv', 'batch-state.tsv',
+  ];
+  const segAlt = USER_SEGMENTS.map(s => s.replace(/[.]/g, '\\.').replace(/\//g, '/')).join('|');
+
+  const listScripts = (dir) => {
+    const out = [];
+    for (const name of readdirSync(dir)) {
+      if (name === 'node_modules' || name.startsWith('.')) continue;
+      const p = join(dir, name);
+      const statResult = statSync(p);
+      if (statResult.isDirectory()) continue;
+      if (!name.endsWith('.mjs')) continue;
+      if (/-tests?\.mjs$/.test(name) || /\.test\.mjs$/.test(name)) continue;
+      out.push(p);
+    }
+    return out;
+  };
+
+  const violations = [];
+
+  for (const file of listScripts(ROOT)) {
+    const src = readFileSync(file, 'utf8');
+    const lines = src.split('\n');
+
+    const codeRootVars = new Set();
+    for (const m of src.matchAll(/const\s+(\w+)\s*=\s*dirname\(fileURLToPath\(import\.meta\.url\)\)/g)) codeRootVars.add(m[1]);
+    for (const m of src.matchAll(/const\s+(\w+)\s*=\s*process\.cwd\(\)/g)) codeRootVars.add(m[1]);
+    if (codeRootVars.size === 0) continue;
+
+    const varAlt = [...codeRootVars].join('|');
+    const joinRe = new RegExp(`\\b(?:join|resolve)\\(\\s*(${varAlt})\\s*,\\s*'(?:${segAlt})`, 'g');
+
+    lines.forEach((line, i) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('*') || trimmed.startsWith('//') || trimmed.startsWith('/*')) return;
+      let m;
+      joinRe.lastIndex = 0;
+      while ((m = joinRe.exec(line)) !== null) {
+        violations.push({ file: file.replace(ROOT + '\\', '').replace(ROOT + '/', ''), line: i + 1, root: m[1], code: trimmed.slice(0, 90) });
+      }
+    });
+  }
+
+  if (violations.length === 0) {
+    pass('all user-layer paths resolve through getCareerOpsRoot() (no silent split)');
+  } else {
+    fail(`${violations.length} user-layer path(s) built from the CODEBASE root instead of getCareerOpsRoot():\n` +
+      violations.map(v => `    ${v.file}:L${v.line} (${v.root}) ${v.code}`).join('\n')
+    );
+  }
+} catch (e) {
+  fail(`user path drift-guard check crashed: ${e.message}`);
+}
+
 await runDiscovered();
 
 finish();
