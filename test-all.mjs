@@ -8257,7 +8257,7 @@ try {
     'scan-history.tsv', 'scan-runs.tsv', 'salary-observations.tsv',
     'assessments.tsv', 'pdf-index.tsv', 'batch-state.tsv',
   ];
-  const segAlt = USER_SEGMENTS.map(s => s.replace(/[.]/g, '\\.').replace(/\//g, '/')).join('|');
+  const segAlt = USER_SEGMENTS.map(s => s.replace(/\./g, '\\.').replace(/\//g, '[/\\\\]')).join('|');
 
   const listScripts = (dir) => {
     const out = [];

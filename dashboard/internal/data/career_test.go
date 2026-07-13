@@ -322,6 +322,7 @@ func TestResolveTrackerColumnsVia(t *testing.T) {
 	}
 	if cols["status"] != 6 {
 		t.Errorf("status index = %d, want 6", cols["status"])
+	}
 }
 
 // TestNormalizeStatus verifies that localized string variants map to the canonical English form.
