@@ -105,7 +105,7 @@ If `candidate.wechat` is absent, omit WeChat. Do not invent one.
 
 ## Step 2 — Classify Email Type
 
-Choose one of four variants from user wording or context:
+Choose one of five variants from user wording or context:
 
 | Variant | When | Tone |
 |---|---|---|
@@ -346,6 +346,8 @@ Required, always ask for whatever is missing (do not invent any of these):
 
 1. **The confirmed date/time**, as agreed in the exchange (include timezone
    if known).
+   Before drafting, verify that this time has passed and is today in the
+   relevant timezone; otherwise clarify the scenario or use another variant.
 2. **The interviewer or recruiter's name**, exactly as given by the user —
    do not scrape or guess it from a report.
 3. **Remaining same-day availability** the user wants to offer (a window,
@@ -365,8 +367,9 @@ Required, always ask for whatever is missing (do not invent any of these):
 5. Signature.
 
 Keep it short: under 120 words. Reference the specific confirmed time
-plainly once; do not restate it more than once or pad with general "just
-checking in" framing (same banned-phrase rule as `modes/followup.md`).
+plainly once in the body (the subject line may also reference it); do not
+restate it more than once in the body or pad with general "just checking in"
+framing (same banned-phrase rule as `modes/followup.md`).
 
 ### Guardrails
 
