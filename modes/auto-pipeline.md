@@ -28,9 +28,17 @@ Before running any evaluation, confirm the posting is still live. The Step 0 Pla
 
 Do not continue to Step 1 until this gate is resolved.
 
+## Step 0.6 — Blacklist gate (#1742)
+
+If `data/blacklist.md` exists, check the posting's company against it before running any evaluation — the file is the candidate's own do-not-apply list (user layer, opt-in; absent file = skip this gate). Match case- and punctuation-insensitively.
+
+On a hit, **stop before Step 1** and surface the candidate's own recorded decision: tell them which entry matched and quote their recorded reason ("{Company} is on your blacklist (since {Since}): *{Reason}*. Do you still want me to evaluate it?"). Wait for an explicit answer — never silently refuse, never silently proceed. The candidate's call always wins (same HITL spirit as the score < 4.0 rule): an explicit yes continues to Step 1 as normal; anything else stops the pipeline here, and if the entry came from `data/pipeline.md`, mark it `- [x] ~~Company | Role~~ — blacklisted`. A blacklist entry never changes any score.
+
 ## Step 1 — A-G Evaluation
 
-Execute the same as the `oferta` mode (read `modes/oferta.md` for all A-F blocks + Block G Posting Legitimacy).
+Execute the same as the `oferta` mode (read `modes/oferta.md` for all A-F blocks + Block G Posting Legitimacy). Read `modes/_custom.md` → Evaluation Rules, if it exists, and apply its override here. Default (if absent or silent): standard A-G evaluation.
+
+**Agency-mediated postings (#1596):** if the JD smells like a recruiter/agency listing ("our client", agency domain, no employer named), ask the user which agency it came through BEFORE writing the tracker row. Record the end employer as `?` (never "Confidential"), the agency in the Via field / `via=` TSV tag, and a distinguishing descriptor in Notes — see `modes/oferta.md` and `modes/tracker.md` for the full convention and reveal workflow.
 
 The evaluation inherits `oferta`'s bounded research budget. Company, compensation, and hiring-signal lookup must not invoke `deep-research`, must not spawn subagents, and must stop at the shared query cap instead of escalating into open-ended research.
 

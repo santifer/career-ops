@@ -6,6 +6,7 @@ import {
   parseCliArgs,
   parsePdfInfoPages,
   resolveEngineCandidates,
+  validateLatexContent,
 } from './generate-latex.mjs';
 
 assert.deepEqual(
@@ -22,10 +23,18 @@ assert.deepEqual(parseCliArgs(['--engine=xelatex', '--expect-pages=1', '--ats-te
   engine: 'xelatex',
   expectPages: 1,
   atsTextCheck: true,
+  compileOnly: false,
   help: false,
   inputPath: 'cv.tex',
   outputPath: 'cv.pdf',
 });
+
+assert.equal(parseCliArgs(['cv.tex', '--compile-only']).compileOnly, true);
+assert.deepEqual(
+  validateLatexContent('\\begin{document}\nHello\\n\\end{document}', true).issues,
+  [],
+  'compile-only should accept a user-owned document without career-ops macros',
+);
 
 assert.deepEqual(findAtsTextLayerIssues('Normal searchable text'), []);
 assert.deepEqual(findAtsTextLayerIssues(''), ['pdftotext extracted no text']);

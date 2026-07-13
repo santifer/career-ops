@@ -4,6 +4,8 @@
 
 Analyze all tracked applications to find patterns in outcomes and surface actionable insights. Identifies what's working (archetypes, remote policies, score ranges) and what's wasting time (geo-restricted roles, stack mismatches, low-score applications).
 
+When interview sessions are available, it also reads *what the candidate actually says in the room* — a higher-resolution, lower-noise signal of role-fit than win/loss — to detect role **misfit**: when the candidate's strongest, most fluent answers point at a different role-type than the one they keep applying to (Step 1b).
+
 ## Inputs
 
 - `data/applications.md` — Application tracker
@@ -11,6 +13,7 @@ Analyze all tracked applications to find patterns in outcomes and surface action
 - `config/profile.yml` — User profile (for recommendation context)
 - `modes/_profile.md` — User archetypes and framing
 - `portals.yml` — Portal config (for filter update recommendations)
+- `interview-prep/sessions/*.md` — Interview sessions (optional; drives Step 1b). Drop real-interview transcripts and mock-session files here.
 
 ## Minimum Threshold
 
@@ -41,6 +44,7 @@ Parse the JSON output. It contains:
 | `remotePolicy` | Per-policy bucket: total, positive, negative, conversion rate |
 | `companySizeBreakdown` | Per-size bucket: startup, scaleup, enterprise |
 | `vendorAnalysis` | ATS channel analysis: per-vendor advance rate + coverage (see below) |
+| `viaChannelAnalysis` | Via channel analysis (#1596): per-agency advance rate + agency-vs-direct aggregate (see below) |
 | `scoreThreshold` | Recommended minimum score + reasoning |
 | `techStackGaps` | Most frequent tech gaps in negative outcomes |
 | `recommendations` | Top 5 actionable items with reasoning and impact level |
@@ -71,6 +75,53 @@ When you narrate this to the user:
 - Always state coverage (`coveragePct`) so the user knows the stats cover a subset.
 - The `recommendations` array already contains the `high`-impact channel action
   when one qualifies — surface it verbatim rather than inventing a stronger claim.
+
+### `viaChannelAnalysis` — per-agency advance rate (#1596)
+
+Groups **submitted** applications by their `Via` channel (the recruiter/agency
+firm; requires the optional Via column, #1596 — trackers without it produce
+empty buckets and nothing is claimed). `—` rows count as `direct`; the
+`breakdown` lists each agency with total/advanced/`advanceRate`/`sufficientSample`.
+Submitted rows with an *empty* Via cell (legacy tracker or blank cell, as
+opposed to the explicit `—` direct marker) belong to neither bucket and are
+counted in `unknownVia` — when it's non-zero, state it so the user knows the
+agency/direct split covers a subset of submissions.
+In an agency-mediated search the highest-leverage decision is which recruiter
+relationships to invest in — this shows which ones actually convert.
+
+Same causal-humility rules as `vendorAnalysis`: report channel yield, never a
+causal claim; respect `sufficientSample`; a strong agency is *"prioritize roles
+via X — it converts"*, a weak one is an observation, not an accusation.
+- The `recommendations` array already contains the `medium`-impact
+  best-converting-agency action when one qualifies — surface it verbatim rather
+  than inventing a stronger claim.
+
+### Salary lens (optional)
+
+If compensation observations exist (report `advertised_comp` keys or `data/salary-observations.tsv` lines), run `node salary-gap.mjs --summary` as an additional lens: advertised→actual haircut per (company, role) and per currency, plus desired-attainment. Zero tokens — never recompute these numbers manually. Respect its data-quality section the same way as `sufficientSample`: low sample sizes are observations, not recommendations.
+
+## Step 1b — Session-Content Targeting Signal (optional)
+
+Outcome data (Step 1) tells you *whether* you're winning. Interview sessions tell you *what role you're actually selling* in the room — a higher-resolution, lower-noise signal of role-fit than win/loss, which is confounded by comp, timing, headcount, and a dozen reasons unrelated to fit.
+
+**Run this step only if session data exists.** Check: `interview-prep/sessions/*.md` (excluding `README.md` and `.gitkeep`).
+
+If no sessions are present, **skip this step silently** and proceed with outcome-only analysis. This step is purely additive — the mode works fully without it, and gains resolution once sessions accumulate.
+
+If sessions exist, for each one:
+1. Separate the candidate's answers from the interviewer's questions. If speaker labels are missing, infer them (turns tagged `**Interviewer:**` / `**Candidate:**` per the session format).
+2. Determine the competency / role-signal each substantive answer demonstrates (e.g. *instructional-design*, *systems-architecture*, *data-analysis*, *stakeholder-management*, *people-leadership*). **Tags first, inference as fallback:** if the answer already carries an explicit competency tag — `<!-- competency: ... -->` per the convention in `interview-prep/sessions/README.md`, whether written by hand or emitted by a debrief tool (e.g. `interview/debrief`) — use it directly. Only infer the competency yourself when no tag is present.
+3. Mark whether the answer is **fluent and specific** (concrete metrics, named tools, real decisions) or **flat and generic** (hedged, vague, textbook).
+
+Then aggregate across all sessions:
+- **Where do the fluent/specific answers cluster?** That competency cluster is the role-type the candidate is *actually* strongest at — regardless of the title on their résumé.
+- Compare that cluster against (a) the archetypes in `modes/_profile.md` and (b) the distribution of roles actually applied to in `data/applications.md`.
+- **Surface the misfit:** if the strongest cluster (X) is under-represented in the roles applied to (Y), that is a targeting-correction signal:
+  > "Your answers consistently light up around **X**, but you're mostly applying to **Y**. Consider adding archetype X and reweighting `portals.yml` `title_filter.positive` toward it."
+
+This is the difference between *"you're losing"* (Step 1, outcomes) and *"you're aiming at the wrong target"* (Step 1b, content). Feed the result into the Step 2 report and Step 4 recommendations.
+
+**Privacy:** sessions contain real interviewer names and companies. Read them locally only; **never quote a real name or company into a committed report.** Summarize the signal (competency clusters), never the content.
 
 ## Step 2 — Generate Report
 
@@ -128,6 +179,13 @@ List of most common missing skills in negative/self-filtered outcomes with frequ
 
 State the data-driven minimum score and reasoning.
 
+## Targeting Signal (interview sessions)
+
+*Include this section only if Step 1b ran.* Summarize, in competency terms only (no real names/companies):
+- Which competency cluster the candidate's answers are strongest at (X)
+- Which role-types they're actually applying to (Y)
+- The misfit gap and the suggested realignment (add archetype X / reweight `portals.yml`)
+
 ## Recommendations
 
 Number the top recommendations (from the script output). For each:
@@ -160,6 +218,7 @@ Ask the user if they want to act on any recommendations:
 > - Update `portals.yml` to filter out geo-restricted roles
 > - Set a score threshold in `_profile.md` for PDF generation
 > - Adjust archetype targeting based on what's converting
+> - Realign targeting from the session signal — add the under-targeted archetype X to `modes/_profile.md` and reweight `portals.yml` `title_filter.positive` (if Step 1b ran)
 >
 > Just say which ones, or 'all' to apply everything."
 

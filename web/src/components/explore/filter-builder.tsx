@@ -22,6 +22,7 @@ html.dark .co-fb__chip.inc{color:hsl(26 86% 70%);background:hsl(26 80% 55% / .14
 .co-fb__field{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;min-height:2.6rem;padding:.45rem .55rem;border-radius:.7rem}
 .co-fb__field input{flex:1;min-width:7rem;background:transparent;border:none;outline:none;font-size:13.5px;color:inherit}
 .co-fb__field input::placeholder{color:var(--co-faint,hsl(0 0% 60%))}
+@media (max-width:639px){.co-fb__chip button{min-width:44px;min-height:44px;justify-content:center}.co-fb__chip{min-height:44px}.co-fb__field{min-height:44px}.co-fb__field input{min-height:32px}}
 `;
 
 function KeywordField({
@@ -40,7 +41,7 @@ function KeywordField({
   // bare spaces, which are legitimate inside multi-word entries ("AI platform",
   // "New York", "Costa Rica"). A space-only paste stays one chip on purpose (#1147).
   const commit = (text: string) => {
-    const parts = text.split(/[,\n;]+/);
+    const parts = text.split(/[,\n;\t\r]+/);
     const next = cleanChips([...values, ...parts]);
     onChange(next);
     setDraft("");
@@ -60,7 +61,7 @@ function KeywordField({
         value={draft}
         onChange={(e) => {
           const val = e.target.value;
-          if (/[,\n;]$/.test(val)) commit(val);
+          if (/[,\n;\t\r]$/.test(val)) commit(val);
           else setDraft(val);
         }}
         onKeyDown={(e) => {
@@ -72,11 +73,14 @@ function KeywordField({
           }
         }}
         onPaste={(e) => {
+          e.preventDefault();
           const text = e.clipboardData.getData("text");
-          if (/[,\n;]/.test(text)) {
-            e.preventDefault();
-            commit(draft + text);
-          }
+          const merged = draft + text;
+          // Only commit to chips when the paste contains item separators.
+          // A plain-text paste (e.g. pasting "-EMEA" after typing "Remote")
+          // stays in the input field so the user can keep editing.
+          if (/[,;\n\t\r]/.test(text)) commit(merged);
+          else setDraft(merged);
         }}
         onBlur={() => draft.trim() && commit(draft)}
         placeholder={values.length ? "" : placeholder}
@@ -142,7 +146,7 @@ export function FilterBuilder({
                 type="button"
                 onClick={() => set({ sinceDays: r.days })}
                 className={cn(
-                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors max-sm:min-h-[44px]",
                   filters.sinceDays === r.days ? "bg-brand-soft text-brand" : "text-muted hover:text-foreground",
                 )}
               >
@@ -163,7 +167,7 @@ export function FilterBuilder({
                   type="button"
                   onClick={() => toggleAts(a)}
                   className={cn(
-                    "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                    "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors max-sm:min-h-[44px]",
                     on ? "border-brand/40 bg-brand-soft text-brand" : "border-border text-muted hover:text-foreground",
                   )}
                 >
@@ -178,7 +182,7 @@ export function FilterBuilder({
       <button
         type="button"
         onClick={() => setAdvanced((v) => !v)}
-        className="inline-flex items-center gap-1.5 text-[12px] text-muted hover:text-foreground transition-colors"
+        className="inline-flex items-center gap-1.5 text-[12px] text-muted hover:text-foreground transition-colors max-sm:min-h-[44px]"
       >
         <SlidersHorizontal className="size-3.5" />
         Location &amp; scope

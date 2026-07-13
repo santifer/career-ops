@@ -26,6 +26,20 @@ if (typeof window !== "undefined" && !window.__coLogBufInstalled) {
     orig(...args);
   };
   window.addEventListener("error", (e) => push(`[onerror] ${e.message || ""} @ ${e.filename || ""}:${e.lineno || ""}`));
+  // Server-side failures are invisible to console.error — wrap fetch so a
+  // degraded API (500, or a route that answered but couldn't do its job) lands
+  // in the ring too. Pathname only: query strings can carry company names.
+  const origFetch = window.fetch.bind(window);
+  window.fetch = async (...args: Parameters<typeof fetch>) => {
+    const res = await origFetch(...args);
+    try {
+      const u = new URL(typeof args[0] === "string" ? args[0] : (args[0] as Request).url, location.origin);
+      if (u.pathname.startsWith("/api/") && !res.ok) push(`[api] ${u.pathname} → ${res.status}`);
+    } catch {
+      /* never break fetch */
+    }
+    return res;
+  };
   window.addEventListener("unhandledrejection", (e) => push(`[rejection] ${String((e as PromiseRejectionEvent).reason)}`));
 }
 

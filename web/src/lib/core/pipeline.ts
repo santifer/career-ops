@@ -27,6 +27,9 @@ export function addOffersToPipeline(offers: DiscoveredOffer[]): Promise<AddResul
       title: o.title || "",
       location: o.location || "",
       source: o.source || o.ats || "explorer",
+      // Preserve the optional per-offer signal so it survives to pipeline.md.
+      // The core writer treats an empty note as absent (byte-identical output).
+      note: o.note || "",
     }));
   if (clean.length === 0) return Promise.resolve({ added: 0 });
 

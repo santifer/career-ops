@@ -5,11 +5,11 @@
  *
  * Usage:
  *   node generate-latex.mjs <input.tex> [output.pdf]
+ *   node generate-latex.mjs <input.tex> [output.pdf] --compile-only
  *   node generate-latex.mjs --engine=xelatex --expect-pages=1 --ats-text-check <input.tex> [output.pdf]
  *
- * The default path is unchanged: validate the career-ops CV template, compile
- * with the first available engine from auto mode, and write a sibling PDF when
- * output.pdf is omitted.
+ * Default: validate the career-ops template structure before compiling.
+ * --compile-only: compile any user-owned .tex after basic document checks.
  */
 
 import { readFile, writeFile, stat, copyFile, rm } from 'fs/promises';
@@ -30,7 +30,7 @@ const CJK_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff
 
 function usage() {
   return `Usage:
-  node generate-latex.mjs [--engine=auto|tectonic|pdflatex|lualatex|xelatex] [--expect-pages=N] [--ats-text-check] <input.tex> [output.pdf]`;
+  node generate-latex.mjs [--compile-only] [--engine=auto|tectonic|pdflatex|lualatex|xelatex] [--expect-pages=N] [--ats-text-check] <input.tex> [output.pdf]`;
 }
 
 export function parseCliArgs(argv = process.argv.slice(2)) {
@@ -38,6 +38,7 @@ export function parseCliArgs(argv = process.argv.slice(2)) {
     engine: 'auto',
     expectPages: null,
     atsTextCheck: false,
+    compileOnly: false,
     help: false,
     inputPath: null,
     outputPath: null,
@@ -48,6 +49,8 @@ export function parseCliArgs(argv = process.argv.slice(2)) {
     const arg = argv[i];
     if (arg === '--help' || arg === '-h') {
       options.help = true;
+    } else if (arg === '--compile-only') {
+      options.compileOnly = true;
     } else if (arg === '--ats-text-check') {
       options.atsTextCheck = true;
     } else if (arg.startsWith('--engine=')) {
@@ -82,7 +85,7 @@ export function parseCliArgs(argv = process.argv.slice(2)) {
 
 export function resolveEngineCandidates(requested = 'auto') {
   if (requested === 'auto') return [...AUTO_ENGINE_ORDER];
-  if (!ALLOWED_ENGINES.has(requested) || requested === 'auto') return [...AUTO_ENGINE_ORDER];
+  if (!ALLOWED_ENGINES.has(requested)) return [...AUTO_ENGINE_ORDER];
   return [requested];
 }
 
@@ -102,32 +105,87 @@ function selectEngine(requested) {
   return null;
 }
 
+export function validateLatexContent(content, compileOnly = false) {
+  const issues = [];
+  let resumeItemCount = 0;
+  let subheadingCount = 0;
+  let projectHeadingCount = 0;
+
+  if (!content.includes('\\begin{document}')) issues.push('Missing \\begin{document}');
+  if (!content.includes('\\end{document}')) issues.push('Missing \\end{document}');
+
+  if (compileOnly) {
+    return {
+      issues,
+      counts: { resumeItems: 0, subheadings: 0, projectHeadings: 0 },
+    };
+  }
+
+  const sectionCount = (content.match(/\\section\{/g) || []).length;
+  if (sectionCount < MIN_SECTIONS) {
+    issues.push(`Expected at least ${MIN_SECTIONS} \\section{} blocks (Education, Work Experience, Projects, Skills or localized equivalents), found ${sectionCount}`);
+  }
+
+  if (CJK_RE.test(content)) {
+    issues.push('CJK characters detected. The career-ops LaTeX template does not support Japanese/Chinese/Korean yet. Use pdf mode, or use latex-tex with a CJK-capable template and engine.');
+  }
+
+  for (const cmd of REQUIRED_COMMANDS) {
+    if (!new RegExp(cmd).test(content)) issues.push(`Missing command: ${cmd}`);
+  }
+
+  const unresolvedMatch = content.match(/\{\{[A-Z_]+\}\}/g);
+  if (unresolvedMatch) {
+    issues.push(`Unresolved placeholders: ${[...new Set(unresolvedMatch)].join(', ')}`);
+  }
+
+  for (const line of content.split('\n')) {
+    if (/\\resumeItem\{/.test(line)) resumeItemCount += 1;
+    if (/\\resumeSubheading(?!Continue)/.test(line)) subheadingCount += 1;
+    if (/\\resumeProjectHeading/.test(line)) projectHeadingCount += 1;
+  }
+
+  if (!content.includes('\\pdfgentounicode=1')) {
+    issues.push('Missing \\pdfgentounicode=1 (ATS compatibility)');
+  }
+
+  return {
+    issues,
+    counts: {
+      resumeItems: resumeItemCount,
+      subheadings: subheadingCount,
+      projectHeadings: projectHeadingCount,
+    },
+  };
+}
+
 export function parsePdfInfoPages(output) {
   const match = String(output || '').match(/^\s*Pages:\s*(\d+)\s*$/mi);
   return match ? Number.parseInt(match[1], 10) : null;
 }
 
 function countPdfPagesHeuristic(pdfBuffer) {
-  const text = pdfBuffer.toString('latin1');
-  const matches = text.match(/\/Type\s*\/Page\b/g);
+  const matches = pdfBuffer.toString('latin1').match(/\/Type\s*\/Page\b/g);
   return matches ? matches.length : null;
 }
 
 async function readPdfPageCount(pdfPath) {
   try {
-    const output = execFileSync('pdfinfo', [pdfPath], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const output = execFileSync('pdfinfo', [pdfPath], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     const pages = parsePdfInfoPages(output);
     if (pages) return { pages, method: 'pdfinfo' };
   } catch {
-    // Fall back below. pdfinfo is part of Poppler and may not be installed.
+    // Poppler is optional; use a conservative PDF object count next.
   }
 
   try {
-    const buffer = await readFile(pdfPath);
-    const pages = countPdfPagesHeuristic(buffer);
+    const pages = countPdfPagesHeuristic(await readFile(pdfPath));
     if (pages) return { pages, method: 'pdf-heuristic' };
   } catch {
-    // Report skipped below.
+    // The caller reports an unavailable page count.
   }
 
   return { pages: null, method: null };
@@ -179,58 +237,135 @@ function latexArgs(engine, texDir, texPath) {
   ];
 }
 
-async function validateLatex(absPath, content, requestedEngine) {
-  const issues = [];
-
-  const sectionCount = (content.match(/\\section\{/g) || []).length;
-  if (sectionCount < MIN_SECTIONS) {
-    issues.push(`Expected at least ${MIN_SECTIONS} \\section{} blocks (Education, Work Experience, Projects, Skills or localized equivalents), found ${sectionCount}`);
+/**
+ * Compile a LaTeX file while preserving the historical four-argument API.
+ * @param {string} absPath
+ * @param {string} content
+ * @param {string|null} outputPath
+ * @param {boolean} compileOnly
+ * @param {{engine?: string, expectPages?: number|null, atsTextCheck?: boolean}} options
+ * @returns {Promise<object>}
+ */
+export async function compileLatexFile(absPath, content, outputPath = null, compileOnly = false, options = {}) {
+  const engineRequest = options.engine || 'auto';
+  const expectPages = options.expectPages ?? null;
+  const atsTextCheck = options.atsTextCheck === true;
+  if (!ALLOWED_ENGINES.has(engineRequest)) {
+    throw new Error(`Invalid engine "${engineRequest}"`);
+  }
+  if (expectPages !== null && (!Number.isInteger(expectPages) || expectPages < 1)) {
+    throw new Error('expectPages must be a positive integer or null');
   }
 
-  if (CJK_RE.test(content) && ['auto', 'tectonic', 'pdflatex'].includes(requestedEngine)) {
-    issues.push('CJK characters detected. Use --engine=lualatex or --engine=xelatex with a CJK-capable template, or use pdf mode (HTML to PDF).');
-  }
-
-  for (const cmd of REQUIRED_COMMANDS) {
-    if (!new RegExp(cmd).test(content)) issues.push(`Missing command: ${cmd}`);
-  }
-
-  if (!content.includes('\\begin{document}')) issues.push('Missing \\begin{document}');
-  if (!content.includes('\\end{document}')) issues.push('Missing \\end{document}');
-
-  const unresolvedMatch = content.match(/\{\{[A-Z_]+\}\}/g);
-  if (unresolvedMatch) {
-    issues.push(`Unresolved placeholders: ${[...new Set(unresolvedMatch)].join(', ')}`);
-  }
-
-  if (!content.includes('\\pdfgentounicode=1') && !['lualatex', 'xelatex'].includes(requestedEngine)) {
-    issues.push('Missing \\pdfgentounicode=1 (ATS compatibility)');
-  }
-
-  const lines = content.split('\n');
-  let resumeItemCount = 0;
-  let subheadingCount = 0;
-  let projectHeadingCount = 0;
-
-  for (const line of lines) {
-    if (/\\resumeItem\{/.test(line)) resumeItemCount += 1;
-    if (/\\resumeSubheading[^C]/.test(line)) subheadingCount += 1;
-    if (/\\resumeProjectHeading/.test(line)) projectHeadingCount += 1;
-  }
-
+  const { issues, counts } = validateLatexContent(content, compileOnly);
   const fileInfo = await stat(absPath);
-  return {
+  const report = {
     file: basename(absPath),
     path: absPath,
     sizeKB: parseFloat((fileInfo.size / 1024).toFixed(1)),
-    counts: {
-      resumeItems: resumeItemCount,
-      subheadings: subheadingCount,
-      projectHeadings: projectHeadingCount,
-    },
+    counts,
     issues,
     valid: issues.length === 0,
+    compileOnly,
+    options: { engine: engineRequest, expectPages, atsTextCheck },
   };
+
+  if (issues.length > 0) return report;
+
+  const texDir = dirname(absPath);
+  const texBase = basename(absPath, '.tex');
+  const defaultPdf = join(texDir, `${texBase}.pdf`);
+  const targetPdf = outputPath ? resolve(outputPath) : defaultPdf;
+  const targetDir = dirname(targetPdf);
+  if (!existsSync(targetDir)) mkdirSync(targetDir, { recursive: true });
+
+  const engine = selectEngine(engineRequest);
+  if (!engine) {
+    report.compiled = false;
+    report.compileError = `No LaTeX engine found for --engine=${engineRequest}. Install tectonic, pdflatex, lualatex, or xelatex.`;
+    return report;
+  }
+  report.engine = engine;
+
+  let compilePath = absPath;
+  if (engine === 'tectonic') {
+    const patched = content
+      .replace(/\\pdfgentounicode\s*=\s*\d+[^\n]*\n?/g, '')
+      .replace(/\\input\{glyphtounicode\}[^\n]*\n?/g, '');
+    compilePath = join(texDir, `${texBase}._tectonic.tex`);
+    await writeFile(compilePath, patched, 'utf-8');
+  }
+  const compileBase = basename(compilePath, '.tex');
+
+  try {
+    const args = latexArgs(engine, texDir, compilePath);
+    execFileSync(engine, args, { cwd: texDir, stdio: 'pipe', timeout: 120_000 });
+    if (engine !== 'tectonic') {
+      execFileSync(engine, args, { cwd: texDir, stdio: 'pipe', timeout: 120_000 });
+    }
+    report.compiled = true;
+  } catch (err) {
+    let latexError = err.message;
+    for (const logBase of [compileBase, texBase]) {
+      try {
+        const log = await readFile(join(texDir, `${logBase}.log`), 'utf-8');
+        const errorLines = log.split('\n').filter(line => line.startsWith('!'));
+        if (errorLines.length > 0) {
+          latexError = errorLines.join('\n');
+          break;
+        }
+      } catch {
+        // Try the next possible log path.
+      }
+    }
+    report.compiled = false;
+    report.compileError = latexError;
+  }
+
+  if (report.compiled) {
+    const compiledPdf = join(texDir, `${compileBase}.pdf`);
+    try {
+      if (resolve(compiledPdf) !== resolve(targetPdf)) {
+        await copyFile(compiledPdf, targetPdf);
+        await rm(compiledPdf).catch(() => {});
+      }
+      const pdfStat = await stat(targetPdf);
+      report.pdf = {
+        path: targetPdf,
+        sizeKB: parseFloat((pdfStat.size / 1024).toFixed(1)),
+      };
+    } catch (err) {
+      report.postCompileError = `Failed to finalize PDF: ${err.message}`;
+    }
+
+    if (!report.postCompileError && expectPages !== null) {
+      const pageInfo = await readPdfPageCount(targetPdf);
+      report.pageCheck = {
+        expected: expectPages,
+        actual: pageInfo.pages,
+        method: pageInfo.method,
+        passed: pageInfo.pages === expectPages,
+      };
+      if (!report.pageCheck.passed) {
+        report.pageCheck.error = pageInfo.pages === null
+          ? 'Could not determine PDF page count'
+          : `Expected ${expectPages} page(s), found ${pageInfo.pages}`;
+      }
+    }
+
+    if (!report.postCompileError && atsTextCheck) {
+      report.atsText = runPdfToText(targetPdf);
+    }
+  }
+
+  const auxExts = ['.aux', '.log', '.out', '.fls', '.fdb_latexmk', '.synctex.gz'];
+  for (const ext of auxExts) {
+    await rm(join(texDir, `${compileBase}${ext}`)).catch(() => {});
+    if (compileBase !== texBase) await rm(join(texDir, `${texBase}${ext}`)).catch(() => {});
+  }
+  if (engine === 'tectonic') await rm(compilePath).catch(() => {});
+
+  return report;
 }
 
 async function main() {
@@ -257,122 +392,21 @@ async function main() {
     process.exit(1);
   }
 
-  const report = await validateLatex(absPath, content, options.engine);
-  report.options = {
-    engine: options.engine,
-    expectPages: options.expectPages,
-    atsTextCheck: options.atsTextCheck,
-  };
-
-  if (report.issues.length > 0) {
-    console.log(JSON.stringify(report, null, 2));
-    process.exit(1);
-  }
-
-  const texDir = dirname(absPath);
-  const texBase = basename(absPath, '.tex');
-  const defaultPdf = join(texDir, `${texBase}.pdf`);
-  const targetPdf = options.outputPath ? resolve(options.outputPath) : defaultPdf;
-
-  const targetDir = dirname(targetPdf);
-  if (!existsSync(targetDir)) mkdirSync(targetDir, { recursive: true });
-
-  const engine = selectEngine(options.engine);
-  if (!engine) {
-    report.compiled = false;
-    report.compileError = `No LaTeX engine found for --engine=${options.engine}. Install tectonic, pdflatex, lualatex, or xelatex.`;
-    console.log(JSON.stringify(report, null, 2));
-    process.exit(1);
-  }
-
-  report.engine = engine;
-
-  let compilePath = absPath;
-  if (engine === 'tectonic') {
-    const patched = content
-      .replace(/\\pdfgentounicode\s*=\s*\d+[^\n]*\n?/g, '')
-      .replace(/\\input\{glyphtounicode\}[^\n]*\n?/g, '');
-    compilePath = join(texDir, `${texBase}._tectonic.tex`);
-    await writeFile(compilePath, patched, 'utf-8');
-  }
-
-  const compileBase = basename(compilePath, '.tex');
-
-  try {
-    if (engine === 'tectonic') {
-      execFileSync(engine, latexArgs(engine, texDir, compilePath), {
-        cwd: texDir,
-        stdio: 'pipe',
-        timeout: 120_000,
-      });
-    } else {
-      const args = latexArgs(engine, texDir, absPath);
-      execFileSync(engine, args, { cwd: texDir, stdio: 'pipe', timeout: 120_000 });
-      execFileSync(engine, args, { cwd: texDir, stdio: 'pipe', timeout: 120_000 });
-    }
-    report.compiled = true;
-  } catch (err) {
-    const logPath = join(texDir, `${texBase}.log`);
-    let latexError = err.message;
-    try {
-      const log = await readFile(logPath, 'utf-8');
-      const errorLines = log.split('\n').filter(l => l.startsWith('!'));
-      if (errorLines.length > 0) latexError = errorLines.join('\n');
-    } catch {
-      // no log file
-    }
-    report.compiled = false;
-    report.compileError = latexError;
-  }
-
-  if (report.compiled) {
-    const compiledPdf = join(texDir, `${compileBase}.pdf`);
-    try {
-      if (resolve(compiledPdf) !== resolve(targetPdf)) {
-        await copyFile(compiledPdf, targetPdf);
-        await rm(compiledPdf).catch(() => {});
-      }
-
-      const pdfStat = await stat(targetPdf);
-      report.pdf = {
-        path: targetPdf,
-        sizeKB: parseFloat((pdfStat.size / 1024).toFixed(1)),
-      };
-    } catch (err) {
-      report.postCompileError = `Failed to finalize PDF: ${err.message}`;
-    }
-
-    if (!report.postCompileError && options.expectPages !== null) {
-      const pageInfo = await readPdfPageCount(targetPdf);
-      report.pageCheck = {
-        expected: options.expectPages,
-        actual: pageInfo.pages,
-        method: pageInfo.method,
-        passed: pageInfo.pages === options.expectPages,
-      };
-      if (!report.pageCheck.passed) {
-        report.pageCheck.error = pageInfo.pages === null
-          ? 'Could not determine PDF page count'
-          : `Expected ${options.expectPages} page(s), found ${pageInfo.pages}`;
-      }
-    }
-
-    if (!report.postCompileError && options.atsTextCheck) {
-      report.atsText = runPdfToText(targetPdf);
-    }
-
-    const auxExts = ['.aux', '.log', '.out', '.fls', '.fdb_latexmk', '.synctex.gz'];
-    for (const ext of auxExts) {
-      await rm(join(texDir, `${compileBase}${ext}`)).catch(() => {});
-      if (compileBase !== texBase) await rm(join(texDir, `${texBase}${ext}`)).catch(() => {});
-    }
-    if (engine === 'tectonic') await rm(compilePath).catch(() => {});
-  }
+  const report = await compileLatexFile(
+    absPath,
+    content,
+    options.outputPath,
+    options.compileOnly,
+    {
+      engine: options.engine,
+      expectPages: options.expectPages,
+      atsTextCheck: options.atsTextCheck,
+    },
+  );
 
   const pageCheckOk = !report.pageCheck || report.pageCheck.passed;
   const atsOk = !report.atsText || report.atsText.skipped || report.atsText.issues.length === 0;
   const ok = report.compiled && !report.postCompileError && pageCheckOk && atsOk;
-
   console.log(JSON.stringify(report, null, 2));
   process.exit(ok ? 0 : 1);
 }

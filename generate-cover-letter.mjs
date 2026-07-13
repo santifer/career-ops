@@ -16,6 +16,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { dirname, resolve, basename, join, extname } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { parseArgs } from "util";
+import { resolveTemplate } from "./cv-templates.mjs";
 
 const OUTPUT_ROOT = resolve("output");
 const FORMATS = new Set(["html", "latex"]);
@@ -158,11 +159,25 @@ function validatePayload(payload) {
   return { candidate, letter };
 }
 
-export function buildHtml(payload) {
-  const { candidate, letter } = validatePayload(payload);
+// Resolve the cover-letter template through the shared resolver so a
+// `cover_letter.template` profile default, an explicit `payload.template`, and
+// installed template packs are all honored. Any resolver failure (no profile,
+// no templates dir, bad config) falls back to the base template, preserving the
+// original hardcoded behavior.
+export function resolveCoverTemplatePath(payload = {}, opts = {}) {
   const scriptDir = dirname(fileURLToPath(import.meta.url));
-  const templatePath = resolve(scriptDir, "templates", "cover-letter-template.html");
-  let html = readFileSync(templatePath, "utf-8");
+  const base = resolve(scriptDir, "templates", "cover-letter-template.html");
+  try {
+    return resolveTemplate("cover", payload.template, { format: "html", fallback: true, ...opts });
+  } catch {
+    return base;
+  }
+}
+
+export function buildHtml(payload, templatePath) {
+  const { candidate, letter } = validatePayload(payload);
+  const resolvedPath = templatePath || resolveCoverTemplatePath(payload);
+  let html = readFileSync(resolvedPath, "utf-8");
 
   const greetingBlock = letter.greeting ? `<p class="greeting">${escapeHtml(letter.greeting)}</p>` : "";
   const closingBlock = letter.closing ? `<p>${escapeHtml(letter.closing)}</p>` : "";
