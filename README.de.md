@@ -279,6 +279,8 @@ Ich bin [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) 
 
 Mein Portfolio und weitere Open-Source-Projekte → [santifer.io](https://santifer.io)
 
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
+
 ## Haftungsausschluss
 
 **career-ops ist ein lokales Open-Source-Tool, kein gehosteter Service.** Mit der Nutzung dieser Software erkennst du an:

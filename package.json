@@ -1,6 +1,6 @@
 {
   "name": "career-ops",
-  "version": "1.18.0",
+  "version": "1.19.0",
   "description": "AI-powered job search pipeline — works with any AI coding CLI (Claude Code, OpenCode, Gemini, Codex, Qwen)",
   "private": true,
   "scripts": {
@@ -39,6 +39,7 @@
     "add": "node add-entry.mjs",
     "reposts": "node detect-reposts.mjs",
     "invite-match": "node invite-match.mjs",
+    "paste-reply": "node paste-reply.mjs",
     "gemini:eval": "node gemini-eval.mjs",
     "ollama:eval": "node ollama-eval.mjs",
     "openai:eval": "node openai-eval.mjs",
