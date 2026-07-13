@@ -589,7 +589,11 @@ if (urlTextIdx !== -1 || directUrl) {
         console.warn('Playwright extraction failed or blocked, trying fallback WebFetch...', err.message);
         try {
           const secureUrl = await validateUrlSecurity(inputSource);
-          const res = await fetch(secureUrl, { signal: AbortSignal.timeout(30000) });
+          // validateUrlSecurity only vets the initial URL; a redirect could still
+          // steer the fetch at an internal host (SSRF). The Playwright path
+          // re-validates per hop, but this plain fetch must refuse redirects
+          // outright — fail closed rather than follow an unvetted Location (#1851).
+          const res = await fetch(secureUrl, { signal: AbortSignal.timeout(30000), redirect: 'error' });
           if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
           targetText = await res.text();
         } catch (fetchErr) {
