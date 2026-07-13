@@ -167,6 +167,19 @@ for (const check of twoPassManifestChecks) {
   else fail(check.name);
 }
 
+// #1706: update-system.mjs must be self-loading — no static (top-level) relative
+// imports. A pre-#1245 client's apply() self-reexec checks out ONLY
+// update-system.mjs before re-execing it, so any top-level `import ... from
+// './...'` (or bare `import './...'`) crashes that re-exec with
+// ERR_MODULE_NOT_FOUND on the old→new jump. Relative modules must be lazily
+// `await import()`ed at their point of use instead.
+const staticRelativeImport = /^\s*(?:import|export)\b[^\n]*?\bfrom\s*['"]\.[^'"]*['"]|^\s*import\s*['"]\.[^'"]*['"]/m;
+if (staticRelativeImport.test(source)) {
+  fail('update-system.mjs is self-loading — no static relative imports (#1706)');
+} else {
+  pass('update-system.mjs is self-loading — no static relative imports (#1706)');
+}
+
 for (const userPath of ['cv.md', 'config/profile.yml', 'modes/_profile.md', 'portals.yml', 'data/', 'reports/']) {
   if (userPaths.includes(userPath)) pass(`USER_PATHS protects ${userPath}`);
   else fail(`USER_PATHS missing ${userPath}`);

@@ -14,7 +14,7 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
 import { resolveColumns, parseTrackerRow, normalizeVia } from './tracker-parse.mjs';
@@ -43,7 +43,11 @@ const MACHINE_SUMMARY_FIELDS = new Set([
   'seniority',
   'remote',
   'team_size',
+  // Issue 1380: predicted skip/discard reasons from the agent.
+  'discard_reasons',
   'advertised_comp',
+  'via',
+  'company_confidential',
 ]);
 
 // --- CLI args ---
@@ -199,6 +203,8 @@ top_strengths:
 risk_level: "Medium"
 confidence: "High"
 next_action: "Follow up on ticket #42 with tailored CV"
+via: "Hays"
+company_confidential: true
 \`\`\`
 `);
 
@@ -208,6 +214,8 @@ next_action: "Follow up on ticket #42 with tailored CV"
   if (!Array.isArray(summary?.hard_stops) || summary.hard_stops.length !== 0) failures.push('empty list was not parsed');
   if (summary?.soft_gaps?.[0] !== 'No direct healthcare domain experience') failures.push('list item was not parsed');
   if (summary?.next_action !== 'Follow up on ticket #42 with tailored CV') failures.push('hash-containing scalar field was not parsed');
+  if (summary?.via !== 'Hays') failures.push('via was not preserved from Machine Summary');
+  if (summary?.company_confidential !== true) failures.push('company_confidential boolean was not preserved from Machine Summary');
 
   // Vendor detection (community ATS only; white-labeled → null)
   const vendorCases = [
@@ -304,6 +312,7 @@ function parseReport(reportPath) {
     confidence: null,
     nextAction: null,
     topStrengths: [],
+    discardReasons: [],
     scores: {},
     gaps: [],
   };
@@ -324,6 +333,7 @@ function parseReport(reportPath) {
     report.confidence = normalizeScalar(machineSummary.confidence) || report.confidence;
     report.nextAction = normalizeScalar(machineSummary.next_action) || report.nextAction;
     report.topStrengths = normalizeList(machineSummary.top_strengths);
+    report.discardReasons = normalizeList(machineSummary.discard_reasons);
 
     if (typeof machineSummary.score === 'number') {
       report.scores.global = machineSummary.score;
@@ -504,7 +514,19 @@ function analyze() {
   // Enrich entries with report data and classification
   const enriched = entries.map(e => {
     const reportMatch = e.report.match(/\]\(([^)]+)\)/);
-    const reportPath = reportMatch ? join(CAREER_OPS, reportMatch[1]) : null;
+    // Tracker links are relative to the tracker file's own directory (see
+    // merge-tracker.mjs link normalization); fall back to repo root for
+    // legacy root-relative links.
+    let reportPath = null;
+    if (reportMatch) {
+      const fromTracker = join(dirname(APPS_FILE), reportMatch[1]);
+      const candidate = existsSync(fromTracker) ? fromTracker : join(CAREER_OPS, reportMatch[1]);
+      
+      const repoRelative = relative(CAREER_OPS, candidate).split(sep).join('/');
+      if (repoRelative.startsWith('reports/') && !repoRelative.includes('..')) {
+        reportPath = existsSync(candidate) ? candidate : null;
+      }
+    }
     const reportData = reportPath ? parseReport(reportPath) : null;
     const outcome = classifyOutcome(e.status);
     const trackerScore = parseFloat(e.score);
@@ -714,6 +736,42 @@ function analyze() {
       : 'N/A',
   };
 
+  // --- Generate recommendations ---
+  const recommendations = [];
+
+  // --- Discard reason analysis (Issue 1380) ---
+
+  // Aggregates user-committed `DISCARD: <reason>` or `SKIP: <reason>` tags in the Notes column.
+  const discardReasonCounts = new Map();
+  for (const e of enriched) {
+    if (e.outcome !== 'self_filtered' && e.outcome !== 'negative') continue;
+    // From tracker Notes column: "DISCARD: <reason>" or "SKIP: <reason>"
+    const notesMatch = (e.notes || '').match(/(?:DISCARD|SKIP):\s*([^,;\n]+)/gi);
+    if (notesMatch) {
+      for (const m of notesMatch) {
+        const key = m.replace(/^(?:DISCARD|SKIP):\s*/i, '').trim().toLowerCase();
+        if (key) discardReasonCounts.set(key, (discardReasonCounts.get(key) || 0) + 1);
+      }
+    }
+  }
+  const discardReasonStats = [...discardReasonCounts.entries()]
+    .map(([reason, frequency]) => ({
+      reason,
+      frequency,
+      percentage: Math.round((frequency / enriched.length) * 100),
+    }))
+    .sort((a, b) => b.frequency - a.frequency);
+
+  // Recommend updating _custom.md when a single reason dominates
+  const topDiscardReason = discardReasonStats[0];
+  if (topDiscardReason && topDiscardReason.frequency >= Math.max(3, Math.ceil(enriched.length * 0.15))) {
+    recommendations.push({
+      action: `Add "${topDiscardReason.reason}" filter to modes/_custom.md to avoid wasting evaluation effort`,
+      reasoning: `"${topDiscardReason.reason}" is the most frequent discard reason (${topDiscardReason.frequency}x, ${topDiscardReason.percentage}% of all applications).`,
+      impact: 'high',
+    });
+  }
+
   // --- Tech stack gaps (from negative + self_filtered outcomes) ---
   // Canonical spellings keyed by lowercased match — the /i regex below returns
   // the source casing ("react native", "NODEJS"), and without this map each
@@ -747,9 +805,6 @@ function analyze() {
     .map(([skill, frequency]) => ({ skill, frequency }))
     .sort((a, b) => b.frequency - a.frequency)
     .slice(0, 15);
-
-  // --- Generate recommendations ---
-  const recommendations = [];
 
   // Geo-restriction recommendation
   const geoBlocker = blockerAnalysis.find(b => b.blocker === 'geo-restriction');
@@ -866,6 +921,7 @@ function analyze() {
     viaChannelAnalysis,
     scoreThreshold,
     techStackGaps,
+    discardReasonStats,
     recommendations,
   };
 }
@@ -877,7 +933,7 @@ function printSummary(result) {
     return;
   }
 
-  const { metadata, funnel, scoreComparison, archetypeBreakdown, blockerAnalysis, remotePolicy, scoreThreshold, techStackGaps, recommendations } = result;
+  const { metadata, funnel, scoreComparison, archetypeBreakdown, blockerAnalysis, remotePolicy, scoreThreshold, techStackGaps, discardReasonStats, recommendations } = result;
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(`  Pattern Analysis — ${metadata.analysisDate}`);
@@ -926,6 +982,15 @@ function printSummary(result) {
     console.log('-'.repeat(40));
     for (const g of techStackGaps.slice(0, 10)) {
       console.log(`  ${g.skill.padEnd(20)} ${g.frequency}x`);
+    }
+  }
+
+  // Discard reasons
+  if (discardReasonStats && discardReasonStats.length > 0) {
+    console.log('\nTOP DISCARD / SKIP REASONS');
+    console.log('-'.repeat(40));
+    for (const d of discardReasonStats.slice(0, 10)) {
+      console.log(`  ${d.reason.padEnd(30)} ${String(d.frequency).padStart(2)}x (${d.percentage}%)`);
     }
   }
 

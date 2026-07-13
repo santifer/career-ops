@@ -88,13 +88,29 @@ function validateParser(parser, path, errors) {
 
 async function loadProviderIds() {
   const ids = new Set();
-  if (!existsSync(PROVIDERS_DIR)) return ids;
-  const files = readdirSync(PROVIDERS_DIR)
-    .filter(f => f.endsWith('.mjs') && !f.startsWith('_'))
-    .sort();
-  for (const file of files) {
-    const mod = await import(pathToFileURL(join(PROVIDERS_DIR, file)).href);
-    if (mod.default?.id) ids.add(mod.default.id);
+  if (existsSync(PROVIDERS_DIR)) {
+    const files = readdirSync(PROVIDERS_DIR)
+      .filter(f => f.endsWith('.mjs') && !f.startsWith('_'))
+      .sort();
+    for (const file of files) {
+      const mod = await import(pathToFileURL(join(PROVIDERS_DIR, file)).href);
+      if (mod.default?.id) ids.add(mod.default.id);
+    }
+  }
+
+  // scan.mjs accepts explicit provider-plugin ids even when a plugin is
+  // disabled or missing credentials (the runtime installs an actionable
+  // inactive-provider stub). Keep validation aligned with that contract.
+  try {
+    const { discoverPlugins, pluginRoots, resolveSuccessorIds } = await import('./plugins/_engine.mjs');
+    const manifests = discoverPlugins(pluginRoots(ROOT), resolveSuccessorIds(ROOT));
+    for (const manifest of manifests) {
+      if (manifest.hooks.includes('provider')) ids.add(manifest.id);
+    }
+  } catch (err) {
+    // A stripped-down checkout may not include plugin infrastructure. Core
+    // provider validation should continue to work in that environment.
+    if (err?.code !== 'ERR_MODULE_NOT_FOUND') throw err;
   }
   return ids;
 }
