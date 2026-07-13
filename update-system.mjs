@@ -949,13 +949,14 @@ async function apply() {
 
     // 7. Commit the update
     const remote = localVersion(); // Re-read after checkout updated VERSION
+    const pathsToStage = [...updated];
+    const dismissFile = join(ROOT, '.update-dismissed');
+    if (existsSync(dismissFile)) {
+      unlinkSync(dismissFile);
+      pathsToStage.push('.update-dismissed');
+    }
+
     try {
-      const pathsToStage = [...updated];
-      const dismissFile = join(ROOT, '.update-dismissed');
-      if (existsSync(dismissFile)) {
-        unlinkSync(dismissFile);
-        pathsToStage.push('.update-dismissed');
-      }
       prepareMaterializedSkillEntrypointsForStage(materializedSkillEntrypoints);
       addPaths(pathsToStage);
       // Scope the commit to only the staged update paths (#915 bug 2).
@@ -963,8 +964,24 @@ async function apply() {
       // the update commit. Passing the explicit pathspec list constrains the
       // commit to exactly the files this update touched.
       git('commit', '-m', `chore: auto-update system files to v${remote}`, '--', ...pathsToStage);
-    } catch {
-      // Nothing to commit (already up to date)
+    } catch (e) {
+      let commitFailed = false;
+      try {
+        const entries = gitStatusEntries();
+        const changedPaths = new Set(entries.map(entry => entry.path));
+        const allTargetPaths = [...pathsToStage, ...materializedSkillEntrypoints];
+        commitFailed = allTargetPaths.some(p => changedPaths.has(p));
+      } catch (err) {
+        commitFailed = true;
+      }
+
+      if (commitFailed) {
+        console.error(`\n[!] Update commit failed (files may be staged but not committed).`);
+        console.error(`    Error: ${e.message.split('\\n')[0]}`);
+        console.error(`    Please run 'git commit -m "chore: auto-update system files to v${remote}"' manually to finish the update.\n`);
+        process.exit(1);
+      }
+      // Otherwise, genuinely nothing to commit (already up to date)
     }
 
     console.log(`\nUpdate complete: v${local} → v${remote}`);
