@@ -283,8 +283,16 @@ LEGITIMACY: <High Confidence | Proceed with Caution | Suspicious>
 console.log(`🤖  Calling Gemini (${modelName})... this may take 30-60 seconds.\n`);
 
 const genAI = new GoogleGenerativeAI(apiKey);
+// Prompt caching (#1709) — engine 3 of the four, adapted to Gemini's shape.
+// Gemini has no `cache_control` field; its lever is the ~12K-token static prefix
+// (shared + oferta + cv) being a stable `systemInstruction` rather than the first
+// turn of `contents` — that's what its 2.5 models cache implicitly across
+// back-to-back requests. So the static context moves to `systemInstruction` and
+// generateContent() carries only the per-JD user turn. The prompt text is
+// unchanged — just where it sits in the request.
 const model = genAI.getGenerativeModel({
   model: modelName,
+  systemInstruction: systemPrompt,
   generationConfig: {
     temperature: 0.4,      // deterministic enough for structured evaluation
     maxOutputTokens: 8192, // full 7-block evaluation
@@ -293,10 +301,7 @@ const model = genAI.getGenerativeModel({
 
 let evaluationText;
 try {
-  const result = await model.generateContent([
-    { text: systemPrompt },
-    { text: `\n\nJOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
-  ]);
+  const result = await model.generateContent(`JOB DESCRIPTION TO EVALUATE:\n\n${jdText}`);
   evaluationText = result.response.text();
 } catch (err) {
   const sanitizedMsg = (err.message || '').split(apiKey).join('[REDACTED]');
