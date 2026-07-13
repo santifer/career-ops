@@ -6982,6 +6982,27 @@ try {
   fail(`openrouter-runner prompt-cache test crashed: ${e.message}`);
 }
 
+// ── 44d. gemini-eval — static prefix as systemInstruction (#1709) ────
+// Gemini has no cache_control field; its implicit prefix caching keys on a
+// stable systemInstruction, so the static context must sit there — not inline in
+// contents. Source-level, since gemini-eval runs on import.
+console.log('\n44d. gemini-eval — static prefix as systemInstruction (#1709)');
+try {
+  const src = readFileSync(join(ROOT, 'gemini-eval.mjs'), 'utf-8');
+  const usesSystemInstruction = /getGenerativeModel\(\{[\s\S]*?systemInstruction:\s*systemPrompt/.test(src);
+  // the per-request call must NOT re-embed the full systemPrompt inline (that
+  // would defeat stable-prefix caching and duplicate the context)
+  const noInlinePrefix = !/generateContent\(\[[\s\S]*?\{\s*text:\s*systemPrompt\s*\}/.test(src);
+  const carriesJdTurn = /generateContent\(`JOB DESCRIPTION TO EVALUATE/.test(src);
+  if (usesSystemInstruction && noInlinePrefix && carriesJdTurn) {
+    pass('gemini-eval moves the static prefix to systemInstruction and sends only the JD turn (#1709)');
+  } else {
+    fail(`gemini-eval systemInstruction wiring: sys=${usesSystemInstruction} noInline=${noInlinePrefix} jd=${carriesJdTurn}`);
+  }
+} catch (e) {
+  fail(`gemini-eval systemInstruction source test crashed: ${e.message}`);
+}
+
 // ── 45. SCAN COOLDOWN FILTER ──────────────────────────────────
 
 console.log('\n45. Scan cooldown filter');
