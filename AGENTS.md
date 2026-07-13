@@ -333,6 +333,7 @@ These are two separate axes:
 | Wants to broaden the search with adjacent job titles suggested from the CV | `titles` |
 | Maintains their own hand-tuned `.tex` CV and wants it tailored in place (opt-in; cv.md stays the default) | `latex-tex` |
 | Asks what skills to learn, wants a skill-gap analysis of their pipeline | `upskill` |
+| Wants to build or enrich the profile from documents they already have (master CV, LinkedIn export, diplomas, references) | `intake` — scans `documents/`, extracts text locally (`intake.mjs`), proposes source-annotated additions to `config/profile.yml`/`cv.md`/`modes/_profile.md`; writes nothing without explicit confirm |
 | Asks about follow-ups or application cadence | `followup` |
 | Wants to classify application replies and review updates | `reply-watch` — classifies candidate replies, matches them to applications, and suggests tracker updates |
 | Wants to update the system | `update` |
