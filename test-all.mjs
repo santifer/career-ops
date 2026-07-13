@@ -6982,6 +6982,25 @@ try {
   fail(`openrouter-runner prompt-cache test crashed: ${e.message}`);
 }
 
+// ── 44e. ollama-eval — temperature must live in options ────────
+// Ollama's /api/chat reads generation params from `options` only; a top-level
+// `temperature` is silently ignored (defaulting to 0.8). Assert it sits in
+// options so the eval stays deterministic. Source-level: ollama-eval runs on import.
+console.log('\n44e. ollama-eval — temperature in options');
+try {
+  const src = readFileSync(join(ROOT, 'ollama-eval.mjs'), 'utf-8');
+  const inOptions = /options:\s*\{[^}]*temperature:\s*0\.4[^}]*num_ctx/.test(src);
+  // must NOT set a top-level temperature in the request body (silently ignored)
+  const noTopLevel = !/\n\s*temperature:\s*0\.4,\s*\n\s*options:/.test(src);
+  if (inOptions && noTopLevel) {
+    pass('ollama-eval sets temperature inside options (not silently ignored at the top level)');
+  } else {
+    fail(`ollama-eval temperature placement: inOptions=${inOptions} noTopLevel=${noTopLevel}`);
+  }
+} catch (e) {
+  fail(`ollama-eval temperature test crashed: ${e.message}`);
+}
+
 // ── 45. SCAN COOLDOWN FILTER ──────────────────────────────────
 
 console.log('\n45. Scan cooldown filter');
