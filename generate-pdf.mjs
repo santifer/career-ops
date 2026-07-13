@@ -27,6 +27,7 @@ import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
+import { readStyleTokens, injectThemeStyle } from './theme-style.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PDF_PAGE_MARGIN = '0.6in';
@@ -433,6 +434,13 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const inputPath = opts.inputPath || '';
 
   mkdirSync(dirname(outputPath), { recursive: true });
+
+  // Inject the user's theme tokens (config/profile.yml `style:`) as CSS custom
+  // properties so the templates' var(--x, <default>) reads pick them up (#1837).
+  // No `style:` block → no tokens → byte-identical output. Both the CV path and
+  // the cover-letter path flow through here, so both are themed from one place.
+  const styleTokens = opts.styleTokens ?? readStyleTokens();
+  html = injectThemeStyle(html, styleTokens);
 
   html = injectPrintPageCss(html, format);
   html = await inlineLocalFonts(html);
