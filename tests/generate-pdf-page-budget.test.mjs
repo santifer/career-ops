@@ -18,6 +18,8 @@ const script = join(sandbox, 'generate-pdf.mjs');
 const input = join(sandbox, 'two-pages.html');
 const defaultOverflowInput = join(sandbox, 'three-pages.html');
 const manifest = join(sandbox, 'data', 'pdf-index.tsv');
+mkdirSync(join(sandbox, 'data'), { recursive: true });
+writeFileSync(manifest, '', 'utf-8');
 const playwrightStub = join(sandbox, 'node_modules', 'playwright');
 
 copyFileSync(join(ROOT, 'generate-pdf.mjs'), script);

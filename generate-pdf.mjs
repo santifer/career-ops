@@ -229,7 +229,7 @@ export function enforcePageBudget(pageCount, { maxPages = 2, allowOverflow = fal
   }
   if (pageCount <= maxPages) return;
 
-  const actualLabel = pageCount === 1 ? 'page' : 'pages';
+  const actualLabel = 'pages';
   const allowedLabel = maxPages === 1 ? 'page' : 'pages';
   const message =
     `CV is ${pageCount} ${actualLabel}; the allowed maximum is ${maxPages} ${allowedLabel}. ` +
