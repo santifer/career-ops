@@ -86,6 +86,28 @@ try {
     if (hasRoot && usesVars && !circular) pass(`${tpl} declares :root theme defaults and reads them via var() (no circular refs)`);
     else fail(`${tpl}: hasRoot=${hasRoot} usesVars=${usesVars} circular=${circular}`);
   }
+
+  // Regression (post-review, #1837): injectPrintPageCss's @page rule used to
+  // hardcode `margin: 0.6in`, which — injected last, right before </head> — won
+  // the CSS cascade over the template's own `@page { margin: var(--page-margin) }`
+  // and the theme override, silently making style.margin ineffective. Compose
+  // the two injectors exactly as renderHtmlToPdf does and assert the page-setup
+  // rule now reads the SAME variable (with 0.6in only as the final fallback), so
+  // a --page-margin override earlier in <head> is what actually wins.
+  {
+    const { injectPrintPageCss } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+    const tplSrc = readFileSync(join(ROOT, 'templates/cv-template.html'), 'utf-8');
+    const withOverride = injectPrintPageCss(injectThemeStyle(tplSrc, { '--page-margin': '0.5in' }), 'a4');
+    const rootDefaultIdx = withOverride.indexOf('--page-margin: 0.6in');   // template's own :root default
+    const overrideIdx = withOverride.indexOf('career-ops-dynamic-theme'); // the profile's style.margin override
+    const pageSetupIdx = withOverride.indexOf('career-ops-page-setup');   // injectPrintPageCss's @page rule
+    const pageSetupUsesVar = /@page \{ size: A4; margin: var\(--page-margin, 0\.6in\); \}/.test(withOverride);
+    if (rootDefaultIdx !== -1 && rootDefaultIdx < overrideIdx && overrideIdx < pageSetupIdx && pageSetupUsesVar) {
+      pass('injectPrintPageCss reads --page-margin instead of hardcoding it, so style.margin wins the cascade (#1837 review)');
+    } else {
+      fail(`page-margin cascade order/value wrong: root=${rootDefaultIdx} override=${overrideIdx} pageSetup=${pageSetupIdx} usesVar=${pageSetupUsesVar}`);
+    }
+  }
 } catch (e) {
   fail(`theme-style tests crashed: ${e.message}`);
 }

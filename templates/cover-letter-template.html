@@ -11,7 +11,10 @@
     --accent-color: #1A56A0;
     --font-family: "Helvetica", Arial, sans-serif;
     --font-size: 10pt;
-    --page-margin: 0;
+    /* Matches generate-pdf.mjs's PDF_PAGE_MARGIN — the actual PDF page margin
+       comes from the later @page rule injectPrintPageCss appends (which reads
+       this same variable), so this default must match it exactly. */
+    --page-margin: 0.6in;
   }
   @page { margin: var(--page-margin); }
 
