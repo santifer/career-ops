@@ -376,6 +376,7 @@ async function main() {
     console.log(`Result: All checks passed${warnNote}. You're ready to go! Run \`claude\` (or \`opencode\`) to start.`);
     console.log('');
     console.log('Join the community: https://discord.gg/8pRpHETxa4');
+    console.log('Read the manifesto: `npm run manifesto` — a new way of job searching is taking shape, and you are now part of it.');
     process.exit(0);
   }
 }
