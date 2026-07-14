@@ -28,7 +28,7 @@
  * Issue #1864 — github.com/santifer/career-ops
  */
 
-import { readFileSync, existsSync, writeFileSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, renameSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
@@ -152,9 +152,13 @@ export function parseCompanyInput(rawYaml, cliNames = []) {
     if (typeof raw.slug === 'string' && raw.slug.trim()) entry.slug = raw.slug.trim();
     if (typeof raw.website === 'string' && raw.website.trim()) entry.website = raw.website.trim();
     // Workday hint: a full careers URL (string) or a {tenant, site, instance?}
-    // object. parseWorkdayHint validates the contents downstream.
+    // object. parseWorkdayHint validates the contents downstream. Warn on a
+    // present-but-wrong-typed value (e.g. a number) so it isn't dropped silently.
     if (typeof raw.workday === 'string' && raw.workday.trim()) entry.workday = raw.workday.trim();
     else if (raw.workday && typeof raw.workday === 'object') entry.workday = raw.workday;
+    else if (raw.workday !== undefined && raw.workday !== null && raw.workday !== '') {
+      warnings.push(`${origin}: ignored "workday" hint for "${name}" — expected a URL string or {tenant, site} object`);
+    }
     byName.set(key, entry);
   };
 
@@ -413,13 +417,13 @@ export async function probeVendor(company, candidate, ctx) {
  * the provider honors this as a live-probe). First host that returns ≥1 job
  * wins.
  *
- * @returns {Promise<{resolved:any}|{status:'empty'|'error', tried:string[], detail?:string}>}
+ * @returns {Promise<{resolved:any}|{status:'empty'|'error', tried:string[], careers_url?:string, detail?:string}>}
  */
 export async function resolveWorkday(company, coords, ctx) {
   const candidates = buildWorkdayCandidates(coords);
   const probeCtx = { ...ctx, maxPages: 1 };
   const tried = [];
-  let sawEmpty = false;
+  let emptyUrl = null;
   let lastError;
 
   for (const candidate of candidates) {
@@ -441,13 +445,15 @@ export async function resolveWorkday(company, coords, ctx) {
           },
         };
       }
-      sawEmpty = true;
+      // Remember the FIRST host that was confirmed live-but-empty, so the
+      // reported emptyBoards URL is one we actually probed (not always wd1).
+      if (!emptyUrl) emptyUrl = candidate.careers_url;
     } catch (err) {
       lastError = err?.message || String(err);
     }
   }
-  return sawEmpty
-    ? { status: 'empty', tried }
+  return emptyUrl
+    ? { status: 'empty', tried, careers_url: emptyUrl }
     : { status: 'error', tried, detail: lastError };
 }
 
@@ -493,20 +499,36 @@ export async function resolveCompany(company, { vendors = VENDOR_ORDER, ctx, inc
     const wd = await resolveWorkday(company, coords, ctx);
     if (wd.resolved) return { resolved: wd.resolved };
     if (wd.status === 'empty') {
-      emptyBoards.push({ vendor: 'workday', careers_url: buildWorkdayCandidates(coords)[0].careers_url });
+      // Use the host resolveWorkday actually confirmed empty, not always wd1.
+      emptyBoards.push({ vendor: 'workday', careers_url: wd.careers_url });
     } else if (wd.detail) {
       errors.push({ vendor: 'workday', error: wd.detail });
     }
   }
 
-  const workdayHintable = !coords;
+  // A Workday hint was supplied (via any field parseWorkdayHint reads) but
+  // produced no usable coords — i.e. it was malformed/rejected. Distinct from
+  // "no hint at all", so the message can tell the user to fix their input
+  // rather than suggesting they add one. `includeWorkday` gates this the same
+  // way the probe above is gated.
+  const workdayHintProvided = includeWorkday
+    && (typeof company.workday === 'string' ? !!company.workday.trim()
+      : (company.workday && typeof company.workday === 'object'));
   const reason = emptyBoards.length
     ? 'board(s) found but currently list 0 jobs — re-run later or force-add manually'
-    : workdayHintable
-      ? 'no Greenhouse/Ashby/Lever board found. If this company uses Workday, add a hint — '
-        + 'a full careers URL (workday: https://<tenant>.wd<N>.myworkdayjobs.com/<site>) or '
-        + 'workday: {tenant, site} — and re-run; discover-ats will confirm and add it.'
-      : 'Workday coordinates given but no live board with open jobs found at the probed host(s).';
+    // Every probe errored (transient network/HTTP), and nothing was confirmed
+    // absent or empty — don't claim "no board found", the status is unknown.
+    : (errors.length && !coords)
+      ? 'probe error(s) occurred — board status unknown, see errors[] and re-run'
+      // A hint was given but rejected by parseWorkdayHint (bad chars, missing
+      // tenant/site): tell the user to fix it, not to add one.
+      : (workdayHintProvided && !coords)
+        ? 'Workday hint given but rejected (invalid/missing tenant or site) — check the `workday` field and re-run'
+        : coords
+          ? 'Workday coordinates given but no live board with open jobs found at the probed host(s).'
+          : 'no Greenhouse/Ashby/Lever board found. If this company uses Workday, add a hint — '
+            + 'a full careers URL (workday: https://<tenant>.wd<N>.myworkdayjobs.com/<site>) or '
+            + 'workday: {tenant, site} — and re-run; discover-ats will confirm and add it.';
 
   /** @type {any} */
   const unresolved = { name: company.name, triedVendors, reason };
@@ -759,7 +781,16 @@ async function main() {
   const { companies, warnings } = parseCompanyInput(rawYaml, opts.names);
 
   if (companies.length === 0) {
-    const out = { metadata: { resolved: 0, unresolved: 0, duplicatesSkipped: 0, written: false, warnings }, resolved: [], unresolved: [] };
+    // Emit the same metadata shape as the normal path (documented in
+    // modes/discover.md) so a consumer reading dryRun/portalsPath on a
+    // zero-company run gets the documented envelope, not undefined fields.
+    const out = {
+      metadata: {
+        resolved: 0, unresolved: 0, duplicatesSkipped: 0, freshWritten: 0,
+        written: false, dryRun: opts.dryRun, portalsPath: PORTALS_PATH, warnings,
+      },
+      resolved: [], unresolved: [],
+    };
     if (opts.summary) printSummary({ resolved: [], unresolved: [], duplicates: [] });
     else console.log(JSON.stringify(out, null, 2));
     process.exit(0);
@@ -783,7 +814,11 @@ async function main() {
   let written = false;
   if (!opts.dryRun && fresh.length && existsSync(PORTALS_PATH)) {
     const current = readFileSync(PORTALS_PATH, 'utf-8');
-    writeFileSync(PORTALS_PATH, insertIntoTrackedCompanies(current, snippets), 'utf-8');
+    // Write-to-temp-then-rename: atomic on the same filesystem, so a crash
+    // mid-write can't leave the user's portals.yml truncated.
+    const tmpPath = `${PORTALS_PATH}.tmp-${process.pid}`;
+    writeFileSync(tmpPath, insertIntoTrackedCompanies(current, snippets), 'utf-8');
+    renameSync(tmpPath, PORTALS_PATH);
     written = true;
   } else if (!opts.dryRun && fresh.length && !existsSync(PORTALS_PATH)) {
     warnings.push(`portals.yml not found at ${PORTALS_PATH} — printing entries instead of writing`);

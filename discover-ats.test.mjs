@@ -278,6 +278,17 @@ const noWd = await resolveCompany({ name: 'Whatever', slug: 'bad/slug' }, { vend
 ok('resolveCompany no-vendor no-workday → unresolved', !!noWd.unresolved);
 ok('resolveCompany unresolved names workday hint path', /Workday/.test(noWd.unresolved.reason));
 
+// A rejected Workday hint (bad tenant/site) must produce a "fix your hint" reason,
+// NOT the "add a hint" message. No slug vendors → network-free.
+const badHint = await resolveCompany({ name: 'BadHint', workday: { tenant: 'a/b', site: 'S' } }, { vendors: [] });
+ok('rejected hint → "given but rejected" reason', /rejected/i.test(badHint.unresolved.reason));
+ok('rejected hint → NOT the "add a hint" message', !/add a hint/i.test(badHint.unresolved.reason));
+
+// parseCompanyInput warns on a present-but-wrong-typed workday field (e.g. a number).
+const wrongType = parseCompanyInput('companies:\n  - name: X\n    workday: 42\n', []);
+ok('wrong-typed workday hint → warning emitted', wrongType.warnings.some(w => /workday/i.test(w)));
+ok('wrong-typed workday hint → field dropped', !('workday' in wrongType.companies[0]));
+
 // ============================================================================
 // 7. CLI behavior (execFileSync — no live network)
 // ============================================================================
