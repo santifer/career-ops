@@ -45,3 +45,4 @@ public commit with a stated reason.
 ---
 
 - @santifer | Santiago Fernández de Valderrama Aparicio | 2026-07-14 | "Companies use AI to filter candidates. We gave candidates AI to choose companies." | id:256850418 | src:https://github.com/santifer/career-ops/blob/manifesto-v1.0/MANIFESTO.md
+- @maricuxi25 | 2026-07-14 | "career-ops helped me looking for a better job" | id:305008579 | src:https://github.com/santifer/career-ops/discussions/1868
