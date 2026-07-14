@@ -1,5 +1,8 @@
 # Personal data (user fills these)
 cv.md
+article-digest.md
+voice-dna.md
+applications.md
 data/applications.md
 data/applications.db
 data/follow-ups.md
@@ -34,6 +37,14 @@ batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 jds/*
 !jds/.gitkeep
+
+# Private source material. Ignore the whole directory so resumes and identity
+# documents are protected regardless of filename or language.
+/my-info/
+
+# Local nested checkout used for comparison/update work. It has its own .git
+# directory and must never be committed inside this repository.
+/career-ops/
 
 # Personal documents — never commit scans or copies of these (PII).
 # Catches common identity/credential filenames so they can't be staged by accident.
@@ -75,6 +86,8 @@ plugins.lock
 
 # Secrets (never commit — use .env.example as template)
 .env
+.env.*
+!.env.example
 # Universal safety net — protects ALL checkouts/branches, incl. untracked subprojects
 # (e.g. web/ before it graduates to main). Never commit local env files or TS build caches.
 **/.env.local
@@ -111,6 +124,13 @@ package-lock.json
 
 # Playwright MCP server run artifacts (ephemeral, machine-local)
 .playwright-mcp/
+
+# Local agent and cache artifacts
+/.codex/
+/.cache/
+/tmp/
+/temp/
+*.tmp
 
 # Planning (local scratchpad)
 plan/

@@ -1,0 +1,13 @@
+{
+  "jobAds": [
+    {
+      "jobAdId": "abc-123",
+      "title": "AI Consultant",
+      "hiringOrgName": "Kommune Tech",
+      "municipality": "Aarhus",
+      "postalDistrictName": "Aarhus C",
+      "country": "Danmark",
+      "publicationDate": "2026-07-05T08:00:00Z"
+    }
+  ]
+}

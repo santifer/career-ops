@@ -147,6 +147,12 @@ Inbox: add URLs to data/pipeline.md → /career-ops pipeline
 Or paste a JD directly to run the full pipeline.
 ```
 
+Additional command:
+
+```text
+/career-ops upskill -> Build a skill-gap heatmap and learning plan
+```
+
 ---
 
 ## Context Loading by Mode

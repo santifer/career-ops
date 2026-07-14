@@ -1,0 +1,56 @@
+title_filter:
+  positive:
+    - engineer
+    - developer
+    - consultant
+    - specialist
+    - data
+    - ai
+    - machine
+    - software
+    - full stack
+  negative:
+    - intern
+    - internship
+    - student
+
+job_boards:
+  - name: LinkedIn Denmark Smoke
+    provider: linkedin
+    query: "software engineer"
+    location: "Denmark"
+    jobage: 1
+    remote: remote
+    page: 1
+    limit: 1
+    enabled: true
+
+  - name: Jobindex Denmark Smoke
+    provider: jobindex
+    query: "software engineer"
+    jobage: 7
+    sort: date
+    page: 1
+    limit: 1
+    enabled: true
+
+  - name: Jobbank Denmark Smoke
+    provider: jobbank
+    key: "software engineer"
+    since: 7
+    remote: true
+    limit: 1
+    enabled: true
+
+  - name: Jobnet Denmark Smoke
+    provider: jobnet
+    search_string: "software engineer"
+    limit: 1
+    enabled: true
+
+  - name: Jobdanmark Denmark Smoke
+    provider: jobdanmark
+    text: "software engineer"
+    page: 1
+    limit: 1
+    enabled: true

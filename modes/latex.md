@@ -27,6 +27,41 @@ Export a tailored, ATS-optimized CV as a `.tex` file and compile it to PDF via `
 - **Localized section titles are fine.** The validator counts `\section{}` blocks instead of matching English titles, so a Spanish/French/German CV (e.g. `\section{Educación}`) validates normally.
 - **CJK (Japanese / Chinese / Korean) is NOT supported on this path yet.** The template is a pdfLaTeX / Computer-Modern setup with no CJK font, so kana/kanji/hangul cannot render. `generate-latex.mjs` detects CJK characters and stops with guidance. For a Japanese CV, use `pdf` mode (HTML → PDF), which renders CJK via a `lang="ja"` font fallback.
 
+## Extended compile checks
+
+`generate-latex.mjs` supports explicit engines and post-compile validation:
+
+```bash
+node generate-latex.mjs --engine=auto --expect-pages=1 --ats-text-check output/cv.tex output/cv.pdf
+```
+
+Options:
+
+| Option | Meaning |
+|--------|---------|
+| `--engine=auto` | Default. Uses the first available engine from `tectonic`, `pdflatex`, `lualatex`, `xelatex`. |
+| `--engine=tectonic` | Good default for reproducible package resolution. |
+| `--engine=pdflatex` | Best match for the default career-ops template. |
+| `--engine=lualatex` / `--engine=xelatex` | Use only when the selected template requires Unicode/fontspec support. |
+| `--expect-pages=N` | Fails if the compiled PDF has a different page count. |
+| `--ats-text-check` | Runs `pdftotext` when available and fails on CID glyphs, replacement characters, or an empty text layer. |
+
+For one-page CVs, pass `--expect-pages=1`. For longer senior profiles, ask the
+user before generating a two-page CV and then pass `--expect-pages=2`.
+
+## LaTeX quality rules
+
+- Prevent orphaned entries: do not leave a section heading with only one dangling
+  bullet, an experience item without at least two bullets, or a project title
+  separated from its bullets by a page break.
+- Prefer `lualatex` or `xelatex` only when the template actually needs them.
+  They are not a license to add unsupported candidate facts or decorative layout.
+- After compilation, check the JSON report from `generate-latex.mjs`. Treat
+  page-count mismatch, compile failure, missing ATS text, `(cid:*)`, and
+  replacement characters as blockers.
+- If `pdftotext` is unavailable, report the ATS text-layer check as skipped and
+  tell the user what was not verified.
+
 ## JSON Input Schema
 
 Write a JSON file with this structure. `build-cv-latex.mjs` handles template merge and LaTeX escaping — no need to escape special characters yourself.

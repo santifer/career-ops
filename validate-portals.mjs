@@ -185,6 +185,11 @@ export async function validatePortalsConfig(config, { providerIds = new Set() } 
     add(errors, 'tracked_companies', 'tracked_companies must be an array when set');
   }
 
+  const jobBoards = config.job_boards;
+  if (jobBoards !== undefined && !Array.isArray(jobBoards)) {
+    add(errors, 'job_boards', 'job_boards must be an array when set');
+  }
+
   const seenEnabledNames = new Map();
   if (Array.isArray(companies)) {
     for (const [idx, company] of companies.entries()) {
@@ -218,6 +223,40 @@ export async function validatePortalsConfig(config, { providerIds = new Set() } 
       }
 
       validateParser(company.parser, `${base}.parser`, errors);
+    }
+  }
+
+  const seenEnabledBoardNames = new Map();
+  if (Array.isArray(jobBoards)) {
+    for (const [idx, board] of jobBoards.entries()) {
+      const base = `job_boards[${idx}]`;
+      if (!isObject(board)) {
+        add(errors, base, 'job board entry must be an object');
+        continue;
+      }
+      if (board.enabled === false) continue;
+
+      if (typeof board.name !== 'string' || board.name.trim() === '') {
+        add(errors, `${base}.name`, 'enabled job board must have a non-empty string name');
+      } else {
+        const normalized = normalizeName(board.name);
+        if (seenEnabledBoardNames.has(normalized)) {
+          add(warnings, `${base}.name`, `duplicate enabled job board name also seen at ${seenEnabledBoardNames.get(normalized)}`);
+        } else {
+          seenEnabledBoardNames.set(normalized, `${base}.name`);
+        }
+      }
+
+      validateUrl(board.careers_url, `${base}.careers_url`, errors);
+      validateUrl(board.api, `${base}.api`, errors);
+
+      if (typeof board.provider !== 'string' || board.provider.trim() === '') {
+        add(errors, `${base}.provider`, 'enabled job board must have a non-empty provider');
+      } else if (!providerIds.has(board.provider)) {
+        add(errors, `${base}.provider`, `unknown provider "${board.provider}"`);
+      }
+
+      validateParser(board.parser, `${base}.parser`, errors);
     }
   }
 

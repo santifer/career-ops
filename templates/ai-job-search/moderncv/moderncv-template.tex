@@ -1,0 +1,58 @@
+%% career-ops optional moderncv template
+%% Compile with lualatex or xelatex.
+%% Candidate facts must come from career-ops source-of-truth files only.
+
+\documentclass[11pt,a4paper,sans]{moderncv}
+\moderncvstyle{banking}
+\moderncvcolor{blue}
+
+\renewcommand*{\firstnamestyle}[1]{{\fontsize{34}{36}\bfseries\upshape\color{color1}#1}}
+\renewcommand*{\lastnamestyle}[1]{{\fontsize{34}{36}\bfseries\upshape\color{color1}#1}}
+\renewcommand*{\sectionstyle}[1]{{\sectionfont\color{color1}#1}}
+
+\usepackage[utf8]{inputenc}
+\usepackage[scale=0.80]{geometry}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=blue,
+    pdftitle={{{PDF_TITLE}}},
+    pdfpagemode=FullScreen,
+}
+
+\name{{{FIRST_NAME}}}{{{LAST_NAME}}}
+\address{{{LOCATION}}}{}{}
+\phone[mobile]{{{PHONE}}}
+\email{{{EMAIL}}}
+\extrainfo{{{LINKS}}}
+
+\begin{document}
+
+\makecvtitle
+
+\vspace{6pt}
+\small{{{SUMMARY}}}
+
+\section{Core Competencies}
+\vspace{1pt}
+{{CORE_COMPETENCIES}}
+
+\section{Professional Experience}
+\vspace{3pt}
+{{EXPERIENCE}}
+
+\section{Education}
+\vspace{1pt}
+{{EDUCATION}}
+
+\section{Projects}
+\vspace{1pt}
+{{PROJECTS}}
+
+\section{Skills}
+\vspace{1pt}
+{{SKILLS}}
+
+\end{document}

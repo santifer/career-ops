@@ -1,21 +1,57 @@
-# Mode: upskill -- Aggregate Skill-Gap Analysis
+# Mode: upskill -- Skill-Gap Analysis and Learning Plan
 
 ## Purpose
 
-After dozens of evaluations, the tracker holds dozens of verdicts — and no aggregate reading. Every low-scoring evaluation names the skills the candidate was missing. This mode turns that discard history into an answer to the question every job seeker asks: **what should I learn, in what order?**
+Turn evaluated roles into evidence-based skill priorities.
 
-Phase 1 (this mode): aggregate gap map from tracked reports, with an optional LLM synthesis pass and a diff against the previous run. The web-searched learning plan and targeted `<URL>` mode are phase 2 (see #1520).
+- `/career-ops upskill` aggregates recurring gaps from the tracker and reports.
+- `/career-ops upskill <url|report|local:jds/file>` builds a targeted learning plan for one role.
 
-Pattern credit: [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search)'s `/upskill`, adapted to career-ops' tracker and A–F scoring model.
+The mode must use demand evidence from roles the user actually evaluated. It
+must not produce a generic course list or invent candidate experience.
 
-## Inputs
+## Source-of-Truth Boundary
 
-- `data/applications.md` — Application tracker (rows with report links)
-- `reports/` — Evaluation reports (Machine Summary + Gap tables)
-- `cv.md` + `config/profile.yml` — Known skills (a skill present here must NEVER appear as a gap)
-- `data/upskill/report-*.md` — Previous upskill reports (for the diff section)
+Candidate facts may come only from:
 
-## Step 1 — Run the Aggregator
+- `cv.md`
+- `article-digest.md`
+- `config/profile.yml`
+- `modes/_profile.md`
+- `modes/_custom.md` for workflow and style rules only
+- `voice-dna.md` and `writing-samples/` for tone only
+- `interview-prep/story-bank.md`
+- `interview-prep/{company}-{role}.md`
+- factual statements from the user in the current conversation
+
+Tracker rows, reports, and JDs provide employer demand signals, not candidate
+facts. Never use sibling repositories, auto-memory, placeholders, or inferred
+authorship as evidence that the user has a skill.
+
+## Mode Selection
+
+### Aggregate mode
+
+Use when no target argument is supplied. Inputs:
+
+- `data/applications.md`
+- linked files under `reports/`
+- `cv.md` and `config/profile.yml`
+- previous `data/upskill/report-*.md` files
+
+### Targeted mode
+
+Use when the argument is one of:
+
+- a live job URL
+- a report number, slug, or path under `reports/`
+- `local:jds/{file}` or `jds/{file}`
+
+Targeted mode also reads the candidate source-of-truth files above.
+
+## Aggregate Workflow
+
+### Step 1 - Run the deterministic aggregator
 
 ```bash
 node upskill.mjs
@@ -23,91 +59,160 @@ node upskill.mjs
 
 Parse the JSON output:
 
-| Key | Contents |
-|-----|----------|
-| `schema_version` | Extraction-rule version. The diff section (Step 4) only compares reports with the same version. |
-| `metadata` | `reportsLinked` / `reportsRead` / `reportsWithMachineSummary` / `reportsScored` / `lowFitReports` — surface these honestly; older reports may predate the Machine Summary block |
-| `gaps` | `[{skill, reports, lowFitReports, lowFitShare, weightedScore, tier, sources}]` sorted by weighted score. Weight per report = `5.0 − score` (a 2.1/5 report says more about gaps than a 4.5/5 one); a skill counts once per report, not per mention |
-| `excludedAsKnown` | Skills found in report gaps but already present in `cv.md`/`config/profile.yml` |
-| `knownSkills` | The extracted known-skill set (for transparency) |
+| Key | Meaning |
+|-----|---------|
+| `schema_version` | Extraction-rule version used for comparable reports |
+| `metadata` | Linked, readable, scored, machine-summary, and low-fit report counts |
+| `gaps` | Normalized gaps sorted by weighted score |
+| `excludedAsKnown` | Report gaps already evidenced in the CV/profile |
+| `knownSkills` | Extracted known-skill set for transparency |
 
-Tiers are fixed, explainable thresholds over the share of low-fit (score < 4.0) reports naming the gap — always narrate them that way ("named in 4/9 low-fit reports"), never as an opaque ranking.
+Each skill counts once per report. The weight is `5.0 - score`, so a gap from a
+low-fit report contributes more than the same gap from a high-fit report.
 
-If the script returns `error` (missing tracker or fewer than 5 scored reports), show the message and exit gracefully.
+If the script returns `error`, show it and stop gracefully. Do not fabricate a
+heatmap when the tracker is missing or has fewer than the configured minimum
+number of scored reports. `--min-reports N` may be used only when the user asks
+to analyze a small tracker.
 
-`--summary` prints a human table; `--min-reports N` lowers the threshold for small trackers.
+### Step 2 - Optional synthesis
 
-## Step 2 — LLM Synthesis Pass (optional, skippable)
+Read the lowest-scoring source reports and add only gaps the tokenizer cannot
+represent, tagged as one of:
 
-The aggregator only sees hard skills its tokenizer knows. Read the gap descriptions from the lowest-scoring reports (the `sources` lists point at them) and look for what the keyword pass can't see:
+- `[domain]`
+- `[soft]`
+- `[tooling]`
+- `[credential]`
 
-- **[domain]** — domain knowledge gaps (e.g. healthcare data, fintech compliance)
-- **[soft]** — soft-skill or experience-shape gaps (e.g. people leadership, stakeholder management)
-- **[tooling]** — process/tooling gaps not in the tokenizer (e.g. specific ATS, niche frameworks)
-- **[credential]** — certifications or formal qualifications
+Every synthesized gap must cite `LLM synthesis` and a source report. Never add
+a duplicate of an aggregator gap or anything in `excludedAsKnown` or
+`knownSkills`. Skip synthesis on a cheap model or when evidence is ambiguous.
 
-Rules:
-- **No duplicates from Step 1** — if the aggregator already lists it, don't re-add it.
-- **Never contradict the exclusion list** — anything in `excludedAsKnown` or `knownSkills` is not a gap.
-- Tag every synthesized gap with its source: `LLM synthesis` (vs the aggregator's "N/M low-fit reports").
-- **On cheap models or when unsure, skip this step entirely.** The Step 1 output alone is a valid report — say "synthesis pass skipped" in the report and move on.
+### Step 3 - Write the aggregate report
 
-## Step 3 — Generate Report
-
-Write to `data/upskill/report-{YYYY-MM-DD}.md` (user layer — never touched by the updater). Create the `data/upskill/` directory if missing.
+Write `data/upskill/report-{YYYY-MM-DD}.md`:
 
 ```markdown
 # Skill-Gap Analysis -- {YYYY-MM-DD}
 
 **Schema:** v{schema_version}
 **Reports analyzed:** {reportsRead} ({reportsScored} scored, {lowFitReports} low-fit)
-**Coverage note:** {reportsWithMachineSummary}/{reportsRead} reports carry a Machine Summary block.
+**Coverage note:** {reportsWithMachineSummary}/{reportsRead} reports include a Machine Summary block.
 
 ## Gap Heatmap
 
 | Tier | Skill | Evidence | Source |
 |------|-------|----------|--------|
-| Critical | {skill} | named in {lowFitReports}/{totalLowFit} low-fit reports | tracker |
-| High | ... | | |
-| Medium | [domain] {gap} | — | LLM synthesis |
 
 ## Already Covered
 
-Skills named in report gaps but present in your CV/profile: {excludedAsKnown list}.
-(If one of these genuinely IS a gap — e.g. the CV overstates it — tell me and I'll re-run without it.)
-
 ## Diff vs Previous Report
 
-{See Step 4 — omit section if no previous report}
-
 ## Suggested Order
-
-{Top 3–5 gaps, ordered by tier then weighted score, one line each on why it's first/second/third. No fabricated resources or time estimates — the learning plan ships in phase 2.}
 ```
 
-## Step 4 — Diff vs Previous Report
+Compare only with the newest earlier report using the same schema version.
+Classify skills as closed, new, or still open. If schema versions differ, state
+that the reports are not comparable and omit the diff.
 
-Find the newest existing `data/upskill/report-*.md` (by filename date) from before today.
+## Targeted Workflow
 
-- If none exists, omit the diff section.
-- If its `**Schema:**` line differs from the current `schema_version`, say so and skip the comparison ("previous report used schema v{X} — not comparable") instead of reporting spurious closures.
-- Otherwise compare heatmap skill lists: **closed** (was a gap, now absent or excludedAsKnown — the loop closing), **new** (appeared this run), **still open** (in both). Example: "Since 2026-06-01: Kubernetes gap closed, CI/CD still open, Airflow new."
+### Step 1 - Resolve and verify the target
 
-## Step 5 — Present Summary
+- URL: use Playwright navigation and snapshot to read the JD. A title,
+  description, and Apply control means active; navigation-only content means
+  closed. In headless batch mode, mark verification as unconfirmed.
+- Report: locate the matching report and follow its `URL` and JD evidence.
+- Local JD: resolve only within `jds/`; reject path traversal.
 
-Condensed version in chat:
-1. One-line stat ("{N} reports, {M} distinct gaps, top tier: {skill}")
-2. Top 3 gaps with their evidence sentence
-3. Diff highlights if Step 4 ran
-4. Link to the full report
+If no readable JD or report can be resolved, stop without writing a plan.
 
-Then offer the loop-closing action:
+### Step 2 - Extract demand signals
 
-> "If you've since gained any of these skills, tell me — I'll add them to `cv.md`/`config/profile.yml`, and the next run will show the gap closing."
+Extract and classify:
+
+- must-have and preferred skills
+- tools, platforms, and frameworks
+- domain and regulatory knowledge
+- seniority and experience-shape requirements
+- repeated terminology worth mirroring in future materials
+
+Normalize only clear synonyms. Do not convert adjacent experience into a
+stronger claim.
+
+### Step 3 - Compare with candidate evidence
+
+For each demand signal, assign coverage:
+
+| Coverage | Meaning |
+|----------|---------|
+| Strong | Clearly evidenced in an allowed candidate source |
+| Partial | Related evidence exists but the JD asks for a sharper form |
+| Missing | No allowed evidence exists |
+| Unknown | The user may have it, but it is not documented |
+
+Assign priority:
+
+| Priority | Meaning |
+|----------|---------|
+| Critical | A missing must-have that blocks this target |
+| High | A material preferred gap or interview risk |
+| Medium | A useful differentiator |
+| Low | A distraction for this target |
+
+### Step 4 - Build an actionable plan
+
+For Critical and High gaps include:
+
+- a demonstrable target outcome
+- one to three current resources, preferring official documentation
+- an exact verification/access date for every external resource
+- a realistic timebox
+- a portfolio, coding, research, or interview artifact
+- a prompt for evidence to record after the work is actually completed
+
+Do not add the resulting skill to the CV or profile until the user confirms
+completion. STAR sections are prompts only unless the user supplies real facts.
+
+### Step 5 - Write the targeted plan
+
+Write `data/upskill/plan-{YYYY-MM-DD}-{slug}.md`:
+
+```markdown
+# Targeted Skill-Gap Plan -- {role}
+
+**Target:** {company and role}
+**Source:** {URL, report, or local JD}
+**Verification:** {active, closed, local, or unconfirmed}
+**Generated:** {YYYY-MM-DD}
+
+## Executive Summary
+
+## Gap Heatmap
+
+| Priority | Skill / Area | Demand Signal | Coverage | Evidence | Next Action |
+|----------|--------------|---------------|----------|----------|-------------|
+
+## Learning Plan
+
+## Interview Prep Hooks
+
+## What Not To Learn Yet
+```
+
+## Final Response
+
+For aggregate mode, report the number of analyzed/scored roles, top three gaps,
+and diff highlights. For targeted mode, report the top three priorities and the
+first artifact to build. Always provide the output path.
 
 ## Rules
 
-- **Output is user layer** (`data/upskill/`) — never write gap analysis into system files.
-- **A skill present in `cv.md`/`config/profile.yml` never appears as a gap.** If the user disputes an exclusion, fix the source files, not the report.
-- Gap evidence must cite its source (tracker counts or "LLM synthesis") — never present synthesized gaps as measured ones.
-- This mode reads reports and the CV; it never fabricates skills the user "should" have from outside the tracked evidence.
+- All output is user layer under `data/upskill/`.
+- A skill evidenced in `cv.md` or `config/profile.yml` cannot be reported as
+  missing. If the user disputes an exclusion, correct the source file first.
+- Every gap must cite tracker counts, a report/JD source, or `LLM synthesis`.
+- External resource URLs, prices, availability, and freshness must be checked;
+  never invent them.
+- This mode never submits applications or modifies tracker status.

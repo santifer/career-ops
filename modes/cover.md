@@ -315,7 +315,26 @@ Run:
 node generate-cover-letter.mjs --payload /tmp/cover-payload-{company-slug}.json
 ```
 
+HTML/PDF remains the default output path. If the user explicitly asks for a
+LaTeX cover letter, run:
+
+```bash
+node generate-cover-letter.mjs --payload /tmp/cover-payload-{company-slug}.json --format=latex --out output/{company-slug}-{role-slug}-cover.tex
+```
+
+LaTeX output writes `.tex` only. Compile it with the user's selected TeX engine
+or template workflow after review.
+
 Report the output path and file size.
+
+### Cover letter layout rules
+
+- Achievement bullets must use the same font size as body text.
+- Only the bullet lead phrase is bold. The impact sentence remains regular
+  weight.
+- Do not use oversized headers or decorative sidebars in cover letters.
+- The approved body should fit on one page. If it does not, shorten content
+  rather than shrinking below readable body text.
 
 ---
 

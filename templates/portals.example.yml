@@ -1649,6 +1649,59 @@ tracked_companies:
 
 job_boards:
 
+  # -- Denmark / LinkedIn examples (disabled by default) --
+  # LinkedIn uses a public guest endpoint without auth/cookies. Keep limit low
+  # and use it only for personal discovery.
+  #
+  # - name: LinkedIn Denmark
+  #   provider: linkedin
+  #   query: "software engineer"
+  #   location: "Denmark"
+  #   jobage: 1
+  #   remote: true
+  #   page: 0
+  #   limit: 10
+  #   enabled: false
+  #
+  # - name: Jobindex Denmark
+  #   provider: jobindex
+  #   query: "software engineer"
+  #   jobage: "today"
+  #   sort: "date"
+  #   page: 1
+  #   limit: 20
+  #   enabled: false
+  #
+  # - name: Jobbank Denmark
+  #   provider: jobbank
+  #   key: "software engineer"
+  #   location: "Copenhagen"
+  #   remote: true
+  #   since: "7"
+  #   limit: 20
+  #   enabled: false
+  #
+  # - name: Jobnet Denmark
+  #   provider: jobnet
+  #   search_string: "software engineer"
+  #   region: "Hovedstaden"
+  #   work_hours: "fulltime"
+  #   duration: "permanent"
+  #   postal_code: "1000"
+  #   radius: 50
+  #   limit: 20
+  #   enabled: false
+  #
+  # - name: Jobdanmark Denmark
+  #   provider: jobdanmark
+  #   text: "software engineer"
+  #   municipality: "Copenhagen"
+  #   region: "Capital Region"
+  #   job_type: "fulltime"
+  #   page: 1
+  #   limit: 20
+  #   enabled: false
+
   # ── SolidJobs (Polish market) ──────────────────────────────────────
   # Public API — no auth needed. Division in URL path, campaign=career-ops for tracking.
   # Available divisions: it, engineering, marketing, sales, hr, logistics, finances, other

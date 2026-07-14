@@ -63,6 +63,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/project.md` | Project evaluation instructions |
 | `modes/tracker.md` | Tracker instructions |
 | `modes/training.md` | Training evaluation instructions |
+| `modes/upskill.md` | Skill-gap learning plan instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/titles.md` | Adjacent job-title suggestion instructions |
 | `modes/upskill.md` | Skill-gap analysis instructions |
