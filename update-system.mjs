@@ -209,6 +209,7 @@ const SYSTEM_PATHS = [
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'batch/README.md',
+  'batch-tailor.mjs',
   'dashboard/',
   'templates/',
   'config/cv-facts.example.json',
