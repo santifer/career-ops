@@ -245,6 +245,40 @@ export function enforcePageBudget(pageCount, { maxPages = 2, allowOverflow = fal
 }
 
 /**
+ * Read the page count from the PDF catalog's root /Pages dictionary.
+ *
+ * Following the catalog reference keeps page-like text in content streams or
+ * metadata from being mistaken for an actual page object.
+ *
+ * @param {Buffer} pdfBuffer - PDF bytes returned by Chromium.
+ * @returns {number}
+ */
+function countRenderedPdfPages(pdfBuffer) {
+  const pdf = pdfBuffer.toString('latin1');
+  const objects = new Map();
+  const objectPattern = /(?:^|[\r\n])(\d+)\s+(\d+)\s+obj\b([\s\S]*?)\bendobj\b/g;
+
+  for (const match of pdf.matchAll(objectPattern)) {
+    const streamIndex = match[3].search(/\bstream(?:\r?\n|\r)/);
+    const dictionary = streamIndex === -1 ? match[3] : match[3].slice(0, streamIndex);
+    objects.set(`${match[1]} ${match[2]}`, dictionary);
+  }
+
+  const catalog = [...objects.values()].find((body) => /\/Type\s*\/Catalog\b/.test(body));
+  const pagesRef = catalog?.match(/\/Pages\s+(\d+)\s+(\d+)\s+R\b/);
+  const pages = pagesRef ? objects.get(`${pagesRef[1]} ${pagesRef[2]}`) : null;
+  const count = pages && /\/Type\s*\/Pages\b/.test(pages)
+    ? pages.match(/\/Count\s+(\d+)\b/)
+    : null;
+  const pageCount = count ? Number(count[1]) : 0;
+
+  if (!Number.isInteger(pageCount) || pageCount < 1) {
+    throw new Error('Could not determine the rendered PDF page count from its page tree.');
+  }
+  return pageCount;
+}
+
+/**
  * Convert a path to a repo-relative manifest entry, or blank if it is unknown
  * or outside the career-ops repository.
  *
@@ -533,9 +567,8 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     // Write PDF
     await writeFile(outputPath, pdfBuffer);
 
-    // Count the rendered PDF's leaf page objects (excluding /Pages tree nodes).
-    const pdfString = pdfBuffer.toString('latin1');
-    const pageCount = (pdfString.match(/\/Type\s*\/Page\b/g) || []).length;
+    // Read the root page-tree count so page-like text in streams is ignored.
+    const pageCount = countRenderedPdfPages(pdfBuffer);
 
     // The draft stays on disk when over budget, but it is not reported or
     // indexed as a successful CV unless overflow was explicitly accepted.

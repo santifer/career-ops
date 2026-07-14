@@ -8,7 +8,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'fs';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { pass, fail, ROOT, NODE } from './helpers.mjs';
 
 const outputRoot = join(ROOT, 'output');
@@ -40,10 +40,16 @@ endobj
 << /Type /Pages /Count 2 /Kids [3 0 R 4 0 R] >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R >>
+<< /Type /Page /Parent 2 0 R /Contents 5 0 R >>
 endobj
 4 0 obj
 << /Type /Page /Parent 2 0 R >>
+endobj
+5 0 obj
+<< /Length 11 >>
+stream
+/Type /Page
+endstream
 endobj
 %%EOF\`, 'latin1');
 
@@ -127,6 +133,13 @@ function stablePdf(path) {
     .replace(/\/ID\s*\[\s*<[^>]+>\s*<[^>]+>\s*\]/g, '/ID[]');
 }
 
+function manifestHasPdf(path) {
+  const expected = relative(sandbox, path).replaceAll('\\', '/');
+  return readFileSync(manifest, 'utf-8')
+    .split('\n')
+    .some((line) => line.split('\t')[1] === expected);
+}
+
 try {
   for (const invalid of ['nope', '-1', '0', '1.5']) {
     const invalidOutput = join(sandbox, `invalid-${invalid.replace(/\W/g, '-')}.pdf`);
@@ -145,8 +158,13 @@ try {
 
   const withinBudgetPdf = join(sandbox, 'within-budget.pdf');
   const withinBudget = runPdf([input, withinBudgetPdf, '--max-pages=2']);
-  if (withinBudget.status === 0 && existsSync(withinBudgetPdf) && countPages(withinBudgetPdf) === 2) {
-    pass('generate-pdf accepts the actual rendered page count when it is inside the configured budget');
+  if (
+    withinBudget.status === 0 &&
+    existsSync(withinBudgetPdf) &&
+    countPages(withinBudgetPdf) === 2 &&
+    manifestHasPdf(withinBudgetPdf)
+  ) {
+    pass('generate-pdf ignores page-like content and accepts the structural rendered page count');
   } else {
     fail(`generate-pdf rejected a PDF inside its page budget: ${withinBudget.output.trim()}`);
   }
@@ -156,7 +174,8 @@ try {
   if (
     roomyBudget.status === 0 &&
     existsSync(roomyBudgetPdf) &&
-    stablePdf(roomyBudgetPdf) === stablePdf(withinBudgetPdf)
+    stablePdf(roomyBudgetPdf) === stablePdf(withinBudgetPdf) &&
+    manifestHasPdf(roomyBudgetPdf)
   ) {
     pass('changing an accepted page budget does not change deterministic PDF rendering');
   } else {
@@ -212,7 +231,8 @@ try {
     allowed.output.includes('--allow-overflow') &&
     allowed.output.includes('proceeding') &&
     allowed.output.includes('✅ PDF generated') &&
-    allowed.output.includes('Manifest:')
+    allowed.output.includes('Manifest:') &&
+    manifestHasPdf(allowedPdf)
   ) {
     pass('generate-pdf deliberately downgrades overflow only with --allow-overflow');
   } else {
