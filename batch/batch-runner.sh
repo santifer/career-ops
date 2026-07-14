@@ -420,7 +420,7 @@ resolve_worker_model() {
 # Run one worker using the selected CLI's native headless interface. Both
 # adapters receive the same resolved batch prompt and per-offer instruction.
 run_worker() {
-  local resolved_prompt="$1" prompt="$2" log_file="$3"
+  local resolved_prompt="$1" prompt="$2" log_file="$3" worker_url="$4"
 
   case "$WORKER_CLI" in
     claude)
@@ -436,10 +436,23 @@ run_worker() {
     codex)
       # Codex has no append-system-prompt-file equivalent. Feed the complete
       # self-contained mode/profile context plus the offer task through stdin.
-      # Network access is intentional: standalone runs start with an empty JD
-      # scratch file, and the batch contract requires fetching the posting plus
-      # company/compensation research. Ephemeral mode, ignored user config, no
-      # MCP servers, and the workspace-write sandbox limit the worker instead.
+      # Spawned-command egress is limited to the exact posting host; broader
+      # company/compensation research uses Codex's cached web-search index.
+      local worker_host
+      if ! worker_host=$(node --input-type=module -e '
+        import { pathToFileURL } from "node:url";
+        try {
+          const [rawUrl, guardPath] = process.argv.slice(1);
+          const { rejectPrivateOrInvalid } = await import(pathToFileURL(guardPath).href);
+          if (rejectPrivateOrInvalid(rawUrl)) process.exit(1);
+          const host = new URL(rawUrl).hostname.toLowerCase().replace(/\.$/, "");
+          if (!/^[a-z0-9.-]+$/i.test(host)) process.exit(1);
+          process.stdout.write(host);
+        } catch { process.exit(1); }
+      ' "$worker_url" "$PROJECT_DIR/liveness-browser.mjs"); then
+        printf 'ERROR: Codex worker URL must be an HTTP(S) URL with a valid hostname: %s\n' "$worker_url" > "$log_file"
+        return 1
+      fi
       local -a codex_args=(
         exec
         --ephemeral
@@ -449,6 +462,10 @@ run_worker() {
         --model "$RESOLVED_MODEL"
         -c 'approval_policy="never"'
         -c 'sandbox_workspace_write.network_access=true'
+        -c 'features.network_proxy.enabled=true'
+        -c "features.network_proxy.domains={ \"$worker_host\" = \"allow\" }"
+        -c 'features.network_proxy.allow_local_binding=false'
+        -c 'web_search="cached"'
         -c "model_reasoning_effort=\"$REASONING_EFFORT\""
         -
       )
@@ -677,7 +694,7 @@ process_offer() {
   local max_shim_retries=4
   while true; do
     exit_code=0
-    run_worker "$resolved_prompt" "$prompt" "$log_file" || exit_code=$?
+    run_worker "$resolved_prompt" "$prompt" "$log_file" "$url" || exit_code=$?
 
     if [[ $exit_code -eq 0 ]]; then
       break

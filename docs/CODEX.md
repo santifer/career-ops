@@ -58,15 +58,12 @@ The runner sends Codex the same self-contained batch instructions and runtime
 profile context as the default Claude worker. Reports, tracker additions, state,
 retry handling, and the final tracker merge use the same canonical paths.
 
-Standalone batch inputs are remote job URLs, so Codex workers have network
-access to fetch the posting and perform the company and compensation research
-required by the batch contract. Workers are still ephemeral, ignore user-level
-Codex configuration, load no MCP servers, and run in the workspace-write
-sandbox. Treat batch URLs and job descriptions as untrusted input.
+The authoritative Codex worker security and network requirements live in
+[`batch/batch-prompt.md`](../batch/batch-prompt.md) and are enforced by
+`batch/batch-runner.sh`.
 
 ## Notes
 
 - If your Codex environment exposes slash commands, the shared `/career-ops` router semantics still apply.
 - If it does not, use the same mode names through prompts or `codex exec`.
 - Browser-heavy flows such as `scan`, `pipeline`, and `apply` still depend on Playwright browser tools being available in the active agent setup.
-- `batch-runner.sh` uses ephemeral Codex sessions and requires explicit `--model` and `--reasoning-effort` values for reproducible runs.

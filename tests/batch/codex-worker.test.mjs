@@ -4,6 +4,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from 'fs';
@@ -64,6 +65,9 @@ try {
   const runner = join(batchDir, 'batch-runner.sh');
   writeFileSync(runner, readFileSync(join(ROOT, 'batch/batch-runner.sh'), 'utf-8').replace(/\r\n/g, '\n'));
   execFileSync(getBash(), ['-c', `chmod +x "${toBashPath(runner)}"`], { cwd: tmp });
+  for (const fixture of ['liveness-browser.mjs', 'liveness-core.mjs']) {
+    writeFileSync(join(tmp, fixture), readFileSync(join(ROOT, fixture), 'utf-8').replace(/\r\n/g, '\n'));
+  }
 
   writeFileSync(join(batchDir, 'batch-prompt.md'), [
     '# Fixture batch mode context',
@@ -176,6 +180,10 @@ try {
     argv.includes('--sandbox\nworkspace-write\n') &&
     argv.includes('approval_policy="never"') &&
     argv.includes('sandbox_workspace_write.network_access=true') &&
+    argv.includes('features.network_proxy.enabled=true') &&
+    argv.includes('features.network_proxy.domains={ "example.com" = "allow" }') &&
+    argv.includes('features.network_proxy.allow_local_binding=false') &&
+    argv.includes('web_search="cached"') &&
     argv.includes(`--cd\n${tmp}\n`) &&
     argv.endsWith('-\n')
   ) {
@@ -221,6 +229,10 @@ try {
     'id\turl\tsource\tnotes',
     ...Array.from({ length: 51 }, (_, index) => `${index + 100}\thttps://example.com/jobs/reservation-${index}\tfixture\t-`),
   ].join('\n') + '\n');
+  const reservationStart = Math.max(
+    0,
+    ...readdirSync(reportsDir).map(name => Number(name.match(/^(\d+)-/)?.[1] || 0)),
+  ) + 1;
   writeFileSync(join(tmp, 'batch-events.txt'), '');
   const reservationFailure = spawnSync(getBash(), [
     toBashPath(runner),
@@ -233,7 +245,7 @@ try {
   const reservationEvents = readFileSync(join(tmp, 'batch-events.txt'), 'utf-8').trim().split('\n');
   const leakedReservations = Array.from(
     { length: 50 },
-    (_, index) => join(reportsDir, `${String(index + 44).padStart(3, '0')}-RESERVED.md`),
+    (_, index) => join(reportsDir, `${String(index + reservationStart).padStart(3, '0')}-RESERVED.md`),
   ).filter(path => existsSync(path));
   if (
     reservationFailure.status !== 0 &&
