@@ -277,7 +277,6 @@ npm run gemini:eval -- "JD text here"
 
 > **இலவச திட்டம் (Free Tier):** இரண்டு முறைகளும் கட்டணமின்றி பயன்படுத்தலாம். Native CLI, Google OAuth-ஐ பயன்படுத்துகிறது. API Script, `gemini-2.5-flash` மாதிரியைப் பயன்படுத்துகிறது (15 RPM, நாளொன்றுக்கு 1M Tokens இலவசம்).
 
----
 
 ## Usage
 
@@ -358,7 +357,6 @@ node scan.mjs --verify          # Zero-token discovery + Playwright liveness che
 
 API Scan முடிந்த பிறகு Playwright மூலம் வேலைவாய்ப்பு இன்னும் செயலிலுள்ளதா என்று சரிபார்க்கப்படும். இந்தச் சரிபார்ப்பு புதிய வேலை வாய்ப்புகளுக்கு மட்டுமே நடைபெறும் (Duplicate Entries நீக்கப்பட்ட பிறகு), எனவே தேவையற்ற கூடுதல் செலவு ஏற்படாது.
 
----
 
 ## Dashboard TUI
 
@@ -417,7 +415,6 @@ career-ops/
 └── examples/                    # CV, Report மற்றும் பிற எடுத்துக்காட்டுகள்
 ```
 
----
 
 ## Tech Stack
 
@@ -428,13 +425,11 @@ career-ops/
 - **Dashboard:** Go + Bubble Tea + Lipgloss (Catppuccin Mocha Theme)
 - **Data:** Markdown Tables + YAML Configuration + TSV Files
 
----
 
 ## மேலும் Open Source திட்டங்கள்
 
 - **[cv-santiago](https://github.com/santifer/cv-santiago)** — AI Chatbot, LLMOps Dashboard மற்றும் Case Studies கொண்ட Portfolio Website (santifer.io). உங்கள் வேலை தேடலுக்காக ஒரு Portfolio Website தேவைப்பட்டால், இதை Fork செய்து உங்களுக்கேற்றவாறு மாற்றிக் கொள்ளலாம்.
 
----
 
 ## ஆசிரியரைப் பற்றி
 
@@ -455,7 +450,6 @@ Wikidata:
 - Santiago Fernández de Valderrama Aparicio
 - career-ops
 
----
 
 ## Disclaimer
 
@@ -473,30 +467,27 @@ Wikidata:
 
 இந்த மென்பொருள் **MIT License**-ன் கீழ் **"as is"** அடிப்படையில், எந்த உத்தரவாதமும் இன்றி வழங்கப்படுகிறது.
 
----
 
 ## Contributors
 
-Career-Ops-ஐ பயன்படுத்தி வேலை கிடைத்ததா?
+<a href="https://github.com/santifer/career-ops/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+</a>
 
-உங்கள் வெற்றிக் கதையைப் பகிருங்கள்!
+Career-Ops-ஐ பயன்படுத்தி வேலை கிடைத்ததா? [உங்கள் வெற்றிக் கதையைப் பகிருங்கள்!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
 
-https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml
-
----
 
 ## License & Trademark
 
-இந்த நிரலின் Source Code, **MIT License**-ன் கீழ் வழங்கப்படுகிறது.
+இந்த நிரலின் Code, **MIT License**-ன் கீழ் வழங்கப்படுகிறது.
 
-**career-ops** என்ற பெயரும் அதன் Brand-மும் **Trademark Policy**-க்கு உட்பட்டவை. சமூகப் பயன்பாட்டிற்கு அனுமதி வழங்கப்பட்டாலும், வணிகப் பொருட்களின் பெயரிடல் மற்றும் அதிகாரப்பூர்வ ஒப்புதலுக்கான உரிமைகள் பாதுகாக்கப்பட்டுள்ளன.
+**career-ops** என்ற பெயரும் அதன் Brand-மும் [Trademark Policy](TRADEMARK.md)-க்கு உட்பட்டவை. சமூகப் பயன்பாட்டிற்கு அனுமதி வழங்கப்பட்டாலும், வணிகப் பொருட்களின் பெயரிடல் மற்றும் அதிகாரப்பூர்வ ஒப்புதலுக்கான உரிமைகள் பாதுகாக்கப்பட்டுள்ளன.
 
----
 
 ## Let's Connect
 
-- Website: https://santifer.io
-- LinkedIn: https://linkedin.com/in/santifer
-- X: https://x.com/santifer
-- Discord: https://discord.gg/8pRpHETxa4
-- Email
+[![Website](https://img.shields.io/badge/santifer.io-000?style=for-the-badge&logo=safari&logoColor=white)](https://santifer.io)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/santifer)
+[![X](https://img.shields.io/badge/X-000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/santifer)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8pRpHETxa4)
+[![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:hi@santifer.io)
