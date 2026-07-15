@@ -261,6 +261,91 @@ await runWhileLocked({
   beforeMutationOutput: 'Apply recommended status updates',
 });
 
+async function testTrackerLockReleaseRetriesPartialCleanup() {
+  const dir = mkdtempSync(join(tmpdir(), 'career-ops-lock-release-'));
+  const lockDir = join(dir, 'tracker.lock');
+  let removeAttempts = 0;
+  try {
+    const lock = await acquireTrackerLock(lockDir, {
+      timeoutMs: 1_000,
+      retryMs: 20,
+      staleMs: 5_000,
+      tracker: join(dir, 'applications.md'),
+      removeLock: path => {
+        removeAttempts++;
+        if (removeAttempts === 1) {
+          rmSync(join(path, 'owner.json'));
+          throw new Error('transient cleanup failure');
+        }
+        rmSync(path, { recursive: true, force: true });
+      },
+    });
+
+    let firstError = null;
+    try {
+      lock.release();
+    } catch (err) {
+      firstError = err;
+    }
+    const partialCleanupPreservedDir = existsSync(lockDir)
+      && !existsSync(join(lockDir, 'owner.json'));
+    lock.release();
+    if (firstError?.message.includes('transient cleanup failure')
+        && partialCleanupPreservedDir && removeAttempts === 2 && !existsSync(lockDir)) {
+      pass('tracker lock release retries after owner.json was removed by partial cleanup');
+    } else {
+      fail(`tracker lock partial-cleanup retry failed (error=${firstError?.message}, attempts=${removeAttempts})`);
+    }
+  } catch (err) {
+    fail(`tracker lock partial-cleanup test crashed: ${err.message}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+await testTrackerLockReleaseRetriesPartialCleanup();
+
+async function testTrackerLockReleasePreservesReplacementAfterPartialCleanup() {
+  const dir = mkdtempSync(join(tmpdir(), 'career-ops-lock-replacement-'));
+  const lockDir = join(dir, 'tracker.lock');
+  let removeAttempts = 0;
+  try {
+    const lock = await acquireTrackerLock(lockDir, {
+      timeoutMs: 1_000,
+      retryMs: 20,
+      staleMs: 5_000,
+      tracker: join(dir, 'applications.md'),
+      removeLock: path => {
+        removeAttempts++;
+        rmSync(join(path, 'owner.json'));
+        throw new Error('transient cleanup failure');
+      },
+    });
+    try { lock.release(); } catch {}
+
+    rmSync(lockDir, { recursive: true, force: true });
+    mkdirSync(lockDir);
+    writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
+      pid: process.pid,
+      token: 'replacement-owner',
+    }));
+    lock.release();
+
+    const owner = JSON.parse(readFileSync(join(lockDir, 'owner.json'), 'utf-8'));
+    if (owner.token === 'replacement-owner' && removeAttempts === 1) {
+      pass('stale tracker lock handle preserves a replacement after partial cleanup');
+    } else {
+      fail(`stale tracker lock handle touched replacement (attempts=${removeAttempts})`);
+    }
+  } catch (err) {
+    fail(`tracker lock replacement test crashed: ${err.message}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+await testTrackerLockReleasePreservesReplacementAfterPartialCleanup();
+
 async function testReplyWatchConflictingRecommendations() {
   const dir = mkdtempSync(join(tmpdir(), 'career-ops-reply-conflict-'));
   const tracker = join(dir, 'applications.md');
@@ -296,6 +381,9 @@ async function testReplyWatchConflictingRecommendations() {
         ...process.env,
         CAREER_OPS_TRACKER: tracker,
         CAREER_OPS_TRACKER_DB: db,
+        CAREER_OPS_TRACKER_LOCK: join(dir, 'career-ops-merge-tracker-conflict.lock'),
+        CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS: '1000',
+        CAREER_OPS_TRACKER_LOCK_RETRY_MS: '20',
       },
       stdio: ['pipe', 'pipe', 'pipe'],
     });

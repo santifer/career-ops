@@ -32,11 +32,13 @@ type trackerLockOwner struct {
 }
 
 type trackerLock struct {
-	dir       string
-	token     string
-	removeAll func(string) error
-	mu        sync.Mutex
-	released  bool
+	dir           string
+	token         string
+	removeAll     func(string) error
+	mu            sync.Mutex
+	ownerVerified bool
+	verifiedDir   fs.FileInfo
+	released      bool
 }
 
 type processStatus uint8
@@ -230,17 +232,58 @@ func (lock *trackerLock) release() error {
 	if lock.released {
 		return nil
 	}
-	owner, err := readTrackerLockOwner(lock.dir)
-	if err != nil {
-		if _, statErr := os.Stat(lock.dir); errors.Is(statErr, fs.ErrNotExist) {
+	if lock.ownerVerified {
+		currentDir, err := os.Stat(lock.dir)
+		if errors.Is(err, fs.ErrNotExist) {
 			lock.released = true
 			return nil
 		}
-		return fmt.Errorf("read tracker lock owner: %w", err)
-	}
-	if owner.Token != lock.token {
-		lock.released = true
-		return nil
+		if err != nil {
+			return fmt.Errorf("stat tracker lock: %w", err)
+		}
+		if lock.verifiedDir == nil || !os.SameFile(lock.verifiedDir, currentDir) {
+			lock.released = true
+			return nil
+		}
+		owner, ownerErr := readTrackerLockOwner(lock.dir)
+		if ownerErr == nil && owner.Token != lock.token {
+			lock.released = true
+			return nil
+		}
+		if ownerErr != nil && !errors.Is(ownerErr, fs.ErrNotExist) {
+			return fmt.Errorf("read tracker lock owner: %w", ownerErr)
+		}
+	} else {
+		beforeRead, err := os.Stat(lock.dir)
+		if errors.Is(err, fs.ErrNotExist) {
+			lock.released = true
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("stat tracker lock: %w", err)
+		}
+		owner, err := readTrackerLockOwner(lock.dir)
+		if err != nil {
+			return fmt.Errorf("read tracker lock owner: %w", err)
+		}
+		if owner.Token != lock.token {
+			lock.released = true
+			return nil
+		}
+		afterRead, err := os.Stat(lock.dir)
+		if errors.Is(err, fs.ErrNotExist) {
+			lock.released = true
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("stat tracker lock: %w", err)
+		}
+		if !os.SameFile(beforeRead, afterRead) {
+			lock.released = true
+			return nil
+		}
+		lock.ownerVerified = true
+		lock.verifiedDir = afterRead
 	}
 	removeAll := lock.removeAll
 	if removeAll == nil {

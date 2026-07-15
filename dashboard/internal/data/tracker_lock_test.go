@@ -92,6 +92,9 @@ func TestTrackerLockReleaseRetriesAfterCleanupFailure(t *testing.T) {
 		removeAll: func(path string) error {
 			removeAttempts++
 			if removeAttempts == 1 {
+				if err := os.Remove(filepath.Join(path, "owner.json")); err != nil {
+					return err
+				}
 				return errors.New("transient cleanup failure")
 			}
 			return os.RemoveAll(path)
@@ -106,6 +109,9 @@ func TestTrackerLockReleaseRetriesAfterCleanupFailure(t *testing.T) {
 	if _, err := os.Stat(lockDir); err != nil {
 		t.Fatalf("lock disappeared after failed cleanup: %v", err)
 	}
+	if _, err := os.Stat(filepath.Join(lockDir, "owner.json")); !os.IsNotExist(err) {
+		t.Fatalf("first cleanup did not model a removed owner file: %v", err)
+	}
 	if err := lock.release(); err != nil {
 		t.Fatalf("retry release: %v", err)
 	}
@@ -114,6 +120,50 @@ func TestTrackerLockReleaseRetriesAfterCleanupFailure(t *testing.T) {
 	}
 	if _, err := os.Stat(lockDir); !os.IsNotExist(err) {
 		t.Fatalf("lock remains after successful retry: %v", err)
+	}
+}
+
+func TestTrackerLockReleaseDoesNotRemoveReplacementAfterCleanupFailure(t *testing.T) {
+	lockDir := filepath.Join(t.TempDir(), "tracker.lock")
+	if err := os.Mkdir(lockDir, 0o755); err != nil {
+		t.Fatalf("create lock: %v", err)
+	}
+	owner := trackerLockOwner{PID: os.Getpid(), Token: "original-owner"}
+	writeTrackerLockOwnerForTest(t, lockDir, owner)
+
+	removeAttempts := 0
+	lock := &trackerLock{
+		dir:   lockDir,
+		token: owner.Token,
+		removeAll: func(path string) error {
+			removeAttempts++
+			if err := os.Remove(filepath.Join(path, "owner.json")); err != nil {
+				return err
+			}
+			return errors.New("transient cleanup failure")
+		},
+	}
+	if err := lock.release(); err == nil {
+		t.Fatal("first release unexpectedly hid the cleanup failure")
+	}
+	if err := os.RemoveAll(lockDir); err != nil {
+		t.Fatalf("remove partial original lock: %v", err)
+	}
+	if err := os.Mkdir(lockDir, 0o755); err != nil {
+		t.Fatalf("create replacement lock: %v", err)
+	}
+	replacement := trackerLockOwner{PID: os.Getpid(), Token: "replacement-owner"}
+	writeTrackerLockOwnerForTest(t, lockDir, replacement)
+
+	if err := lock.release(); err != nil {
+		t.Fatalf("release stale handle: %v", err)
+	}
+	current, err := readTrackerLockOwner(lockDir)
+	if err != nil {
+		t.Fatalf("stale handle removed replacement lock: %v", err)
+	}
+	if current.Token != replacement.Token || removeAttempts != 1 {
+		t.Fatalf("replacement token = %q, attempts = %d", current.Token, removeAttempts)
 	}
 }
 
