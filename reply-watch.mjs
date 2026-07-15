@@ -17,11 +17,13 @@ import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { matchCandidates, classifyReply } from './reply-matcher.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
-import { rebuildRow } from './tracker-utils.mjs';
+import {
+  acquireTrackerLock, rebuildRow, resolveTrackerPath, trackerLockDirFor, writeFileAtomic,
+} from './tracker-utils.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_CANDIDATES_PATH = path.join(__dirname, 'data', 'reply-candidates.json');
-const APPS_FILE = path.join(__dirname, 'data', 'applications.md');
+const APPS_FILE = resolveTrackerPath(__dirname);
 const FOLLOWUPS_FILE = path.join(__dirname, 'data', 'follow-ups.md');
 
 // Helper to ask a question in the CLI
@@ -138,29 +140,52 @@ function loadFollowups() {
   return followups;
 }
 
-// Update the status of a specific row in the tracker markdown file
-function updateTrackerStatus(appNum, newStatus) {
-  const content = fs.readFileSync(APPS_FILE, 'utf-8');
-  const lines = content.split('\n');
-  const colmap = resolveColumns(lines);
+// Apply an approved batch in one locked read/modify/write transaction. Reading
+// after lock acquisition matters because the review prompt can remain open
+// while another process merges or updates tracker rows.
+async function updateTrackerStatuses(updates) {
+  const lock = await acquireTrackerLock(trackerLockDirFor(APPS_FILE), {
+    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    tracker: APPS_FILE,
+  });
 
-  let updated = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const row = parseTrackerRow(line, colmap);
-    if (row && row.num === appNum) {
-      const parts = line.split('|').map(s => s.trim());
-      parts[colmap.status] = newStatus;
+  try {
+    const content = fs.readFileSync(APPS_FILE, 'utf-8');
+    const lines = content.split('\n');
+    const colmap = resolveColumns(lines);
+    const updatesByNum = new Map(updates.map(update => [update.num, update]));
+    const applied = new Set();
+    const alreadyCurrent = new Set();
+    const conflicts = new Map();
+    const missing = new Set(updatesByNum.keys());
+
+    for (let i = 0; i < lines.length; i++) {
+      const row = parseTrackerRow(lines[i], colmap);
+      if (!row) continue;
+      const update = updatesByNum.get(row.num);
+      if (!update) continue;
+      missing.delete(update.num);
+      if (row.status === update.newStatus) {
+        alreadyCurrent.add(update.num);
+        continue;
+      }
+      if (row.status !== update.oldStatus) {
+        conflicts.set(update.num, row.status);
+        continue;
+      }
+      const parts = lines[i].split('|').map(s => s.trim());
+      parts[colmap.status] = update.newStatus;
       lines[i] = rebuildRow(parts);
-      updated = true;
-      break;
+      applied.add(update.num);
     }
-  }
 
-  if (updated) {
-    fs.writeFileSync(APPS_FILE, lines.join('\n'), 'utf-8');
+    if (applied.size > 0) writeFileAtomic(APPS_FILE, lines.join('\n'));
+    return { applied, alreadyCurrent, conflicts, missing };
+  } finally {
+    lock.release();
   }
-  return updated;
 }
 
 async function main() {
@@ -240,11 +265,19 @@ async function main() {
 
     const answer = await askQuestion('Apply recommended status updates to data/applications.md? (y/N): ');
     if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
+      const result = await updateTrackerStatuses(recommendations);
       for (const r of recommendations) {
-        updateTrackerStatus(r.num, r.newStatus);
-        console.log(`Updated #${r.num} to ${r.newStatus}`);
+        if (result.applied.has(r.num)) {
+          console.log(`Updated #${r.num} to ${r.newStatus}`);
+        } else if (result.alreadyCurrent.has(r.num)) {
+          console.log(`No change for #${r.num}: already ${r.newStatus}`);
+        } else if (result.conflicts.has(r.num)) {
+          console.warn(`Skipped #${r.num}: status changed from ${r.oldStatus} to ${result.conflicts.get(r.num)} during review`);
+        } else if (result.missing.has(r.num)) {
+          console.warn(`Skipped #${r.num}: row no longer exists in the tracker`);
+        }
       }
-      console.log('\n✅ All updates written to data/applications.md');
+      console.log('\n✅ Tracker review complete');
 
       // Sync tracker DB if tracker.mjs exists
       try {

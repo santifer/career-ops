@@ -11,16 +11,15 @@
  * Run: node career-ops/normalize-statuses.mjs [--dry-run]
  */
 
-import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { rebuildRow } from './tracker-utils.mjs';
+import {
+  acquireTrackerLock, rebuildRow, resolveTrackerPath, trackerLockDirFor, writeFileAtomic,
+} from './tracker-utils.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
+const APPS_FILE = resolveTrackerPath(CAREER_OPS);
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // Ensure required directories exist (fresh setup)
@@ -93,6 +92,22 @@ if (!existsSync(APPS_FILE)) {
   console.log('No applications.md found. Nothing to normalize.');
   process.exit(0);
 }
+
+let trackerLock = null;
+if (!DRY_RUN) {
+  try {
+    trackerLock = await acquireTrackerLock(trackerLockDirFor(APPS_FILE), {
+      timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+      retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
+      staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+      tracker: APPS_FILE,
+    });
+  } catch (err) {
+    console.error(`Cannot acquire tracker lock: ${err.message}`);
+    process.exit(1);
+  }
+  process.once('exit', () => trackerLock.release());
+}
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
 
@@ -160,10 +175,11 @@ console.log(`\n📊 ${changes} statuses normalized`);
 if (!DRY_RUN && changes > 0) {
   // Backup first
   copyFileSync(APPS_FILE, APPS_FILE + '.bak');
-  writeFileSync(APPS_FILE, lines.join('\n'));
+  writeFileAtomic(APPS_FILE, lines.join('\n'));
   console.log('✅ Written to applications.md (backup: applications.md.bak)');
 } else if (DRY_RUN) {
   console.log('(dry-run — no changes written)');
 } else {
   console.log('✅ No changes needed');
 }
+trackerLock?.release();

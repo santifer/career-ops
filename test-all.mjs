@@ -164,6 +164,7 @@ const scripts = [
   { name: 'followup-seed-tests.mjs', expectExit: 0 },
   { name: 'paste-reply-tests.mjs', expectExit: 0 },
   { name: 'set-status-tests.mjs', expectExit: 0 },
+  { name: 'tracker-writer-lock-tests.mjs', expectExit: 0 },
   // Root-level standalone suites shipped in SYSTEM_PATHS but previously never
   // executed by CI (issue #1624). All are fast (<0.5s each), so they run in
   // both quick and full mode like their siblings above.
@@ -2399,6 +2400,41 @@ try {
   else fail('tracker.mjs removeRowByNum behaves wrong');
 } catch (e) {
   fail(`tracker.mjs removeRowByNum test crashed: ${e.message}`);
+}
+
+// Every applications.md writer must join the same read/modify/write lock and
+// replace the tracker atomically. Integration tests prove blocking behavior;
+// this source guard keeps a newly added direct write from quietly bypassing
+// the protocol again.
+try {
+  const nodeTrackerWriters = [
+    'dedup-tracker.mjs',
+    'normalize-statuses.mjs',
+    'reply-watch.mjs',
+    'tracker.mjs',
+  ];
+  const unsafeWriters = nodeTrackerWriters.filter(name => {
+    const source = readFile(name);
+    return !source.includes('acquireTrackerLock')
+      || !source.includes('writeFileAtomic')
+      || /(?:fs\.)?writeFileSync\(APPS_FILE\b/.test(source);
+  });
+  if (unsafeWriters.length === 0) {
+    pass('all root tracker writers use the shared lock and atomic replacement');
+  } else {
+    fail(`tracker writers bypass shared lock/atomic write: ${unsafeWriters.join(', ')}`);
+  }
+
+  const dashboardWriter = readFile('dashboard/internal/data/career.go');
+  if (dashboardWriter.includes('acquireTrackerLock')
+      && dashboardWriter.includes('writeFileAtomic')
+      && !/os\.WriteFile\(filePath,\s*\[\]byte\(strings\.Join\(lines/.test(dashboardWriter)) {
+    pass('dashboard tracker updates use the cross-runtime lock and atomic replacement');
+  } else {
+    fail('dashboard tracker update bypasses the cross-runtime lock or atomic replacement');
+  }
+} catch (e) {
+  fail(`tracker writer lock contract tests crashed: ${e.message}`);
 }
 
 // ── 10. PORTALS CONFIG VALIDATOR ────────────────────────────────
