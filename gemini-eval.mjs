@@ -47,6 +47,7 @@ try {
 }
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { resolveOutputLanguage, outputLanguageDirective } from './profile-utils.mjs';
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -224,6 +225,7 @@ const ofertaLogic    = readFile(PATHS.oferta,      'modes/oferta.md');
 const cvContent      = readFile(PATHS.cv,          'cv.md');
 const profileContent = readFile(PATHS.profile,     'modes/_profile.md');
 const profileYml     = readFile(PATHS.profileYml,  'config/profile.yml');
+const outputLang     = resolveOutputLanguage(PATHS.profileYml);
 
 // ---------------------------------------------------------------------------
 // Build the system prompt (mirrors the Claude skill router logic)
@@ -265,7 +267,7 @@ IMPORTANT OPERATING RULES FOR THIS CLI SESSION
    - For Block D (Comp research): provide salary estimates based on your training data, clearly noted as estimates.
    - For Block G (Legitimacy): analyze the JD text only; skip URL/page freshness checks.
    - Post-evaluation file saving is handled by the script, not by you.
-2. Generate Blocks A through G in full, in English, unless the JD is in another language.
+2. Generate Blocks A through G in full. ${outputLanguageDirective(outputLang)}
 3. At the very end, output a machine-readable summary block in this exact format:
 
 ---SCORE_SUMMARY---
