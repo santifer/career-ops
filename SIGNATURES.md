@@ -66,3 +66,5 @@ public commit with a stated reason.
 - @tklwin | Thein Kyaw Lwin | 2026-07-15 | "Career-Ops: A strategic move for job hunting" | id:150787051 | src:https://github.com/santifer/career-ops/discussions/1909
 - @devty | Tyler Singletary | 2026-07-15 | "I want a job search that adapts to the reality on the ground and my own needs." | id:463035 | src:https://github.com/santifer/career-ops/discussions/1915
 - @NapaDude | 2026-07-15 | id:278759596 | src:https://github.com/santifer/career-ops/discussions/1919
+- @reykiit | Rey Kingham-Italia | 2026-07-15 | "this made applying more intentional" | id:14134425 | src:https://github.com/santifer/career-ops/discussions/1925
+- @danielh-official | Daniel (Haven) Hotyanov | 2026-07-15 | id:49914607 | src:https://github.com/santifer/career-ops/discussions/1930
