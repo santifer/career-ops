@@ -55,3 +55,4 @@ public commit with a stated reason.
 - @felipequentino | Felipe Quentino | 2026-07-14 | "_'if it is hostile, you kill it'_" | id:100160215 | src:https://github.com/santifer/career-ops/discussions/1885
 - @21BPS1591 | Anurag Singh | 2026-07-14 | id:91667749 | src:https://github.com/santifer/career-ops/discussions/1887
 - @brnomt | Bruno Moraga | 2026-07-14 | id:104028922 | src:https://github.com/santifer/career-ops/discussions/1888
+- @mchelen | Mike Chelen | 2026-07-14 | "Let the robots talk to robots. Let the humans talk to humans." | id:30691 | src:https://github.com/santifer/career-ops/discussions/1891
