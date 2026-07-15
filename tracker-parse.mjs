@@ -157,6 +157,53 @@ export function parseTrackerRow(line, colmap = LEGACY_COLMAP) {
 }
 
 /**
+ * Extract report IDs referenced by one tracker Report cell.
+ *
+ * Both the numeric markdown label and the local report filename are returned.
+ * Keeping both makes tracker drift visible instead of silently trusting one
+ * side of a malformed link. External URLs are ignored even when their path
+ * happens to contain a reports/ segment.
+ *
+ * @param {string} reportCell - Raw Report cell value.
+ * @returns {number[]} Unique positive report IDs in encounter order.
+ */
+export function extractTrackerReportNumbers(reportCell) {
+  const value = String(reportCell ?? '').trim();
+  if (!value || value === '-' || value === '—') return [];
+
+  const numbers = new Set();
+  const numberFromTarget = (rawTarget) => {
+    const target = String(rawTarget).trim().replace(/^<|>$/g, '');
+    if (!target || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(target)) return null;
+    const pathname = target.split(/[?#]/, 1)[0];
+    const match = pathname.match(/(?:^|[\\/])reports[\\/]0*(\d+)-/i)
+      || pathname.match(/(?:^|[\\/])0*(\d+)-[^\\/]*\.md$/i);
+    if (!match) return null;
+    const num = parseInt(match[1], 10);
+    return Number.isInteger(num) && num > 0 ? num : null;
+  };
+
+  let sawMarkdownLink = false;
+  for (const match of value.matchAll(/\[([^\]]*)\]\(([^)]+)\)/g)) {
+    sawMarkdownLink = true;
+    const pathNum = numberFromTarget(match[2]);
+    if (pathNum == null) continue;
+    const label = match[1].trim();
+    if (/^\d+$/.test(label)) {
+      const labelNum = parseInt(label, 10);
+      if (labelNum > 0) numbers.add(labelNum);
+    }
+    numbers.add(pathNum);
+  }
+
+  if (!sawMarkdownLink) {
+    const pathNum = numberFromTarget(value);
+    if (pathNum != null) numbers.add(pathNum);
+  }
+  return [...numbers];
+}
+
+/**
  * Unicode-aware key for Via (agency) comparison.
  *
  * normalizeCompany()-style keys strip everything outside [a-z0-9], so
