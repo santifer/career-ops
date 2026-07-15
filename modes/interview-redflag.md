@@ -119,7 +119,16 @@ Write the following structure:
 - "No action needed — proceed."
 - "Before accepting: clarify [specific scope/responsibility] in writing."
 - "Before accepting: ask [specific questions] to verify the concern."
-- "Reconsider: the pattern across {N} rounds suggests [specific risk]."}
+- "Reconsider: the pattern across {N} rounds suggests [specific risk]."
+
+When the warning level is `🚩 Reconsider`, also add this suggestion immediately
+after the recommendation. It is a draft only: never write to the file or change
+the tracker automatically.
+
+```markdown
+Consider adding to `data/blacklist.md`:
+| {Company} | {today's date} | company | {one-line reason drawn from the signal breakdown} |
+```
 
 *Analysis based on interviewer behaviour only. Candidate decides.*
 ```

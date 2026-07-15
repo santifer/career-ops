@@ -15,6 +15,13 @@ Given a job description and interview date/time, build a structured, time-blocke
 7. **Story bank** at `interview-prep/story-bank.md` — existing STAR+R stories
 8. **Question bank** at `interview-prep/question-bank.md` — existing gaps (if file exists)
 
+When later-round panelists are named, also build the **Panel Intel** table
+specified in `modes/interview-prep.md`. Use only panelist details supplied by
+the user, a pasted invite, or a pasted profile/screenshot description. Reuse
+that mode's input contract and output fields; do not scrape profiles or invent
+career history. Include likely decision-maker weighting, trajectory-based
+question angles, and one tailored closing question per panelist.
+
 ---
 
 ## Step 1 — Fit Assessment

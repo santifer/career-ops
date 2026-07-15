@@ -30,14 +30,20 @@ const yellow = (s) => isTTY ? `\x1b[33m${s}\x1b[0m` : s;
 const dim = (s) => isTTY ? `\x1b[2m${s}\x1b[0m` : s;
 
 function checkNodeVersion() {
-  const major = parseInt(process.versions.node.split('.')[0]);
+  const [major, minor] = process.versions.node.split('.').map(Number);
+  const hasSqlite = major > 22 || (major === 22 && minor >= 5);
+  if (hasSqlite) return { pass: true, label: `Node.js >= 22.5 (v${process.versions.node})` };
   if (major >= 18) {
-    return { pass: true, label: `Node.js >= 18 (v${process.versions.node})` };
+    return {
+      warn: true,
+      label: `Node.js v${process.versions.node} detected. Node >= 22.5.0 is required for SQLite indexing (tracker.mjs).`,
+      fix: 'Upgrade Node.js to v22.5.0 or later to enable full tracker database support.',
+    };
   }
   return {
     pass: false,
-    label: `Node.js >= 18 (found v${process.versions.node})`,
-    fix: 'Install Node.js 18 or later from https://nodejs.org',
+    label: `Node.js >= 22.5 (found v${process.versions.node})`,
+    fix: 'Install Node.js 22.5.0 or later from https://nodejs.org',
   };
 }
 

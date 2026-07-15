@@ -97,6 +97,23 @@ Generate a 3-4 sentence email:
 > Best,
 > [Name]
 
+### Confirmed-Time No-Show
+
+Use this separate same-day template when a recruiter or interviewer confirmed a
+specific call time in a two-way exchange and the time passed without a call.
+This scenario is not governed by the normal day-elapsed cadence.
+
+Generate a concise email that:
+- names the confirmed date/time and time zone;
+- says the candidate is still available during a specific remaining window that day;
+- asks whether the other person can connect in that window or would prefer to reschedule;
+- stays professional and neutral, without implying bad intent.
+
+Require the user to provide the confirmed time, recipient name, and remaining
+availability. Do not infer any of them from the tracker or scrape them.
+
+Example subject: `Re: Confirmed call today at {time}`
+
 ### LinkedIn Follow-up (if no email contact found)
 
 Reuse the contacto framework: 3 sentences, 300 character max.
