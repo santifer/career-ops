@@ -47,7 +47,11 @@ export const HEADER_ALIASES = (() => {
 
 /**
  * A score cell in the tracker: `N/5` or `N.N/5` (any precision), or the
- * sentinels `N/A` / `DUP`. Markdown bold is stripped first. A status label
+ * sentinels `N/A` / `DUP` / `—` (em dash) / `-` (hyphen). Markdown bold is
+ * stripped first. `—`/`-` mirror the tracker's own "no data" convention used
+ * in every other column (Report, PDF, etc.) — see #1799: a backfilled entry
+ * with no evaluation (e.g. a rejection for a role never run through
+ * `oferta`) needs a score-cell sentinel too, not just `N/A`. A status label
  * never matches this, which is what makes it a reliable discriminator between
  * the score and status columns regardless of their order (#1427).
  */
@@ -56,7 +60,7 @@ export const SCORE_CELL_RE = /^\d+(?:\.\d+)?\/5$/;
 /** @param {string} v @returns {boolean} whether the cell reads as a score. */
 export function looksLikeScoreCell(v) {
   const t = String(v ?? '').replace(/\*\*/g, '').trim();
-  return SCORE_CELL_RE.test(t) || t === 'N/A' || t === 'DUP';
+  return SCORE_CELL_RE.test(t) || t === 'N/A' || t === 'DUP' || t === '—' || t === '-';
 }
 
 /**
