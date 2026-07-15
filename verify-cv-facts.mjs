@@ -14,18 +14,12 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_SOURCES = ['cv.md', 'article-digest.md'];
 const DEFAULT_CONFIG = join(ROOT, 'config', 'cv-facts.json');
-const COMMON_LOWERCASE_TOOLS = new Set([
-  'agno', 'alpine', 'angular', 'astro', 'aws', 'docker', 'fastapi', 'flask',
-  'git', 'graphql', 'java', 'javascript', 'kotlin', 'mysql', 'nextjs', 'nginx',
-  'node', 'nuxt', 'ollama', 'pandas', 'php', 'postgresql', 'prisma', 'python',
-  'react', 'redis', 'ruby', 'rust', 'sqlite', 'svelte', 'swift', 'terraform',
-  'typescript', 'vue', 'webpack', 'whisper',
-]);
 const TOOL_PROSE_WORDS = new Set([
   'a', 'an', 'and', 'at', 'built', 'by', 'containerized', 'deployment',
   'deployments', 'for', 'from', 'in', 'of', 'on', 'production', 'project',
   'team', 'the', 'to', 'using', 'with',
 ]);
+const TOOL_PHRASE_PATTERN = /^(?=.{1,80}$)[\p{L}\p{N}.][\p{L}\p{N}+#./-]*(?:\s+[\p{L}\p{N}.][\p{L}\p{N}+#./-]*){0,2}$/u;
 
 /** Read a UTF-8 file when it exists, otherwise return an empty string. */
 function readIfExists(path) {
@@ -60,9 +54,10 @@ function isLikelyTool(value) {
   const normalized = normalizeFact(value);
   const words = normalized.split(' ');
   if (!normalized || words.length > 3 || words.some(word => TOOL_PROSE_WORDS.has(word))) return false;
-  return words.some(word => COMMON_LOWERCASE_TOOLS.has(word)
-    || /^[A-Z][A-Za-z0-9+#./-]*$/.test(value.trim())
-    || /^[A-Z0-9][A-Za-z0-9+#./-]*$/.test(word));
+  // The surrounding grammar ("using", "built with", "tech stack") already
+  // asserts that each short fragment is a tool. Requiring capitalization or a
+  // hand-maintained allowlist makes unknown lowercase tools bypass the gate.
+  return TOOL_PHRASE_PATTERN.test(value.trim());
 }
 
 /** Extract explicitly asserted employer, title, and tool claims from text. */

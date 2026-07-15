@@ -43,6 +43,17 @@ try {
     fail(`unsupported non-metric facts were not blocked: ${JSON.stringify(unsupported)}`);
   }
 
+  const lowercaseUnknownTool = verifyFacts('built using react with kubernetes and google cloud.', {
+    sourcePaths: [source], configPath: config,
+  });
+  if (lowercaseUnknownTool.verdict === 'block'
+      && lowercaseUnknownTool.unsupportedFacts.some(claim => claim.value === 'kubernetes')
+      && lowercaseUnknownTool.unsupportedFacts.some(claim => claim.value === 'google cloud')) {
+    pass('explicit lowercase tool claims fail closed without a whitelist entry');
+  } else {
+    fail(`lowercase tool claims bypassed the fact gate: ${JSON.stringify(lowercaseUnknownTool)}`);
+  }
+
   const trailingProse = factClaims('I built this using React and Docker for containerized deployments.');
   if (trailingProse.some(claim => claim.kind === 'tool' && claim.value === 'react')
       && trailingProse.some(claim => claim.kind === 'tool' && claim.value === 'docker')
