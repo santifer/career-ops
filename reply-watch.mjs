@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { matchCandidates, classifyReply } from './reply-matcher.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import {
-  acquireTrackerLock, rebuildRow, resolveTrackerPath, trackerLockDirFor, writeFileAtomic,
+  openTrackerTransaction, rebuildRow, resolveTrackerPath,
 } from './tracker-utils.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -168,15 +168,10 @@ function groupStatusRecommendations(recommendations) {
 }
 
 async function updateTrackerStatuses(updates) {
-  const lock = await acquireTrackerLock(trackerLockDirFor(APPS_FILE), {
-    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
-    tracker: APPS_FILE,
-  });
+  const trackerTransaction = await openTrackerTransaction(APPS_FILE);
 
   try {
-    const content = fs.readFileSync(APPS_FILE, 'utf-8');
+    const content = trackerTransaction.read();
     const lines = content.split('\n');
     const colmap = resolveColumns(lines);
     const grouped = groupStatusRecommendations(updates);
@@ -206,10 +201,10 @@ async function updateTrackerStatuses(updates) {
       applied.add(update.num);
     }
 
-    if (applied.size > 0) writeFileAtomic(APPS_FILE, lines.join('\n'));
+    if (applied.size > 0) trackerTransaction.replace(lines.join('\n'));
     return { applied, alreadyCurrent, conflicts, missing, recommendationConflicts: grouped.conflicts };
   } finally {
-    lock.release();
+    trackerTransaction.close();
   }
 }
 

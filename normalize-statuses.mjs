@@ -15,7 +15,7 @@ import { readFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import {
-  acquireTrackerLock, rebuildRow, resolveTrackerPath, trackerLockDirFor, writeFileAtomic,
+  openTrackerTransaction, rebuildRow, resolveTrackerPath,
 } from './tracker-utils.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
@@ -93,22 +93,20 @@ if (!existsSync(APPS_FILE)) {
   process.exit(0);
 }
 
-let trackerLock = null;
+let trackerTransaction = null;
 if (!DRY_RUN) {
   try {
-    trackerLock = await acquireTrackerLock(trackerLockDirFor(APPS_FILE), {
-      timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-      retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-      staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
-      tracker: APPS_FILE,
-    });
+    trackerTransaction = await openTrackerTransaction(APPS_FILE);
   } catch (err) {
     console.error(`Cannot acquire tracker lock: ${err.message}`);
     process.exit(1);
   }
-  process.once('exit', () => trackerLock.release());
+  process.once('exit', () => {
+    try { trackerTransaction.close(); } catch {}
+  });
 }
-const content = readFileSync(APPS_FILE, 'utf-8');
+try {
+const content = trackerTransaction ? trackerTransaction.read() : readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
 
 let changes = 0;
@@ -176,11 +174,13 @@ if (!DRY_RUN && changes > 0) {
   // Backup first
   const backupPath = `${APPS_FILE}.bak`;
   copyFileSync(APPS_FILE, backupPath);
-  writeFileAtomic(APPS_FILE, lines.join('\n'));
+  trackerTransaction.replace(lines.join('\n'));
   console.log(`✅ Written to ${APPS_FILE} (backup: ${backupPath})`);
 } else if (DRY_RUN) {
   console.log('(dry-run — no changes written)');
 } else {
   console.log('✅ No changes needed');
 }
-trackerLock?.release();
+} finally {
+  trackerTransaction?.close();
+}

@@ -2402,36 +2402,50 @@ try {
   fail(`tracker.mjs removeRowByNum test crashed: ${e.message}`);
 }
 
-// Every applications.md writer must join the same read/modify/write lock and
-// replace the tracker atomically. Integration tests prove blocking behavior;
-// this source guard keeps a newly added direct write from quietly bypassing
-// the protocol again.
+// Every applications.md writer must perform its read and atomic replacement
+// through one shared transaction object. The integration suite proves actual
+// contention; these structural checks enforce the transaction boundaries.
 try {
   const nodeTrackerWriters = [
-    'dedup-tracker.mjs',
-    'normalize-statuses.mjs',
-    'reply-watch.mjs',
-    'tracker.mjs',
+    ['dedup-tracker.mjs', 1],
+    ['normalize-statuses.mjs', 1],
+    ['reply-watch.mjs', 1],
+    ['tracker.mjs', 2],
   ];
-  const unsafeWriters = nodeTrackerWriters.filter(name => {
+  const unsafeWriters = nodeTrackerWriters.filter(([name, minTransactions]) => {
     const source = readFile(name);
-    return !source.includes('acquireTrackerLock')
-      || !source.includes('writeFileAtomic')
-      || /(?:fs\.)?writeFileSync\(APPS_FILE\b/.test(source);
-  });
+    const opens = (source.match(/await\s+openTrackerTransaction\s*\(/g) || []).length;
+    const reads = (source.match(/trackerTransaction\.read\s*\(/g) || []).length;
+    const replacements = (source.match(/trackerTransaction\.replace\s*\(/g) || []).length;
+    const closes = (source.match(/trackerTransaction\??\.close\s*\(/g) || []).length;
+    return opens < minTransactions || reads < 1 || replacements < minTransactions || closes < minTransactions
+      || source.includes('acquireTrackerLock') || source.includes('trackerLockDirFor')
+      || /writeFileAtomic\(\s*(?:APPS_FILE|MD_PATH|trackerPath|writeTarget)\b/.test(source)
+      || /(?:fs\.)?writeFileSync\(\s*(?:APPS_FILE|MD_PATH|trackerPath)\b/.test(source);
+  }).map(([name]) => name);
   if (unsafeWriters.length === 0) {
-    pass('all root tracker writers use the shared lock and atomic replacement');
+    pass('all root tracker writers keep read and atomic replacement in shared transactions');
   } else {
-    fail(`tracker writers bypass shared lock/atomic write: ${unsafeWriters.join(', ')}`);
+    fail(`tracker writers bypass shared transaction scope: ${unsafeWriters.join(', ')}`);
   }
 
   const dashboardWriter = readFile('dashboard/internal/data/career.go');
-  if (dashboardWriter.includes('acquireTrackerLock')
-      && dashboardWriter.includes('writeFileAtomic')
-      && !/os\.WriteFile\(filePath,\s*\[\]byte\(strings\.Join\(lines/.test(dashboardWriter)) {
-    pass('dashboard tracker updates use the cross-runtime lock and atomic replacement');
+  const dashboardStart = dashboardWriter.indexOf('func UpdateApplicationStatusAndNotes(');
+  const dashboardTail = dashboardStart === -1 ? '' : dashboardWriter.slice(dashboardStart);
+  const nextDashboardFunction = dashboardTail.indexOf('\nfunc ', 1);
+  const dashboardBody = nextDashboardFunction === -1
+    ? dashboardTail
+    : dashboardTail.slice(0, nextDashboardFunction);
+  const acquireAt = dashboardBody.indexOf('acquireTrackerLock(');
+  const deferredReleaseAt = dashboardBody.indexOf('defer func()');
+  const readAt = dashboardBody.indexOf('os.ReadFile(filePath)');
+  const replaceAt = dashboardBody.indexOf('writeFileAtomic(filePath');
+  if (acquireAt >= 0 && deferredReleaseAt > acquireAt && readAt > deferredReleaseAt
+      && replaceAt > readAt
+      && !/os\.WriteFile\(filePath,\s*\[\]byte\(strings\.Join\(lines/.test(dashboardBody)) {
+    pass('dashboard tracker update structurally holds the lock across read and atomic replacement');
   } else {
-    fail('dashboard tracker update bypasses the cross-runtime lock or atomic replacement');
+    fail('dashboard tracker update escapes the cross-runtime transaction scope');
   }
 } catch (e) {
   fail(`tracker writer lock contract tests crashed: ${e.message}`);

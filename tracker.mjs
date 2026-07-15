@@ -41,7 +41,7 @@ import { pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { resolveColumns } from './tracker-parse.mjs';
 import {
-  acquireTrackerLock, canonicalizeTrackerPath, trackerLockDirFor, writeFileAtomic,
+  canonicalizeTrackerPath, openTrackerTransaction, writeFileAtomic,
 } from './tracker-utils.mjs';
 
 const MD_PATH = process.env.CAREER_OPS_TRACKER || 'data/applications.md';
@@ -450,13 +450,8 @@ async function exportMd(args) {
   const writesTracker = outPath
     ? canonicalizeTrackerPath(outPath) === trackerPath
     : false;
-  const lock = writesTracker
-    ? await acquireTrackerLock(trackerLockDirFor(trackerPath), {
-        timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-        retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-        staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
-        tracker: trackerPath,
-      })
+  const trackerTransaction = writesTracker
+    ? await openTrackerTransaction(trackerPath)
     : null;
 
   try {
@@ -484,10 +479,11 @@ async function exportMd(args) {
       copyFileSync(writeTarget, writeTarget + '.bak');
       console.error(`Existing ${outPath} backed up to ${outPath}.bak`);
     }
-    writeFileAtomic(writeTarget, out);
+    if (trackerTransaction) trackerTransaction.replace(out);
+    else writeFileAtomic(outPath, out);
     console.error(`Exported ${rows.length} applications to ${outPath}`);
   } finally {
-    lock?.release();
+    trackerTransaction?.close();
   }
 }
 
@@ -518,25 +514,19 @@ async function deleteApp(args) {
     return;
   }
 
-  const trackerPath = canonicalizeTrackerPath(MD_PATH);
-  const lock = await acquireTrackerLock(trackerLockDirFor(trackerPath), {
-    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
-    tracker: trackerPath,
-  });
+  const trackerTransaction = await openTrackerTransaction(MD_PATH);
 
   let removal;
   try {
-    removal = removeRowByNum(readFileSync(trackerPath, 'utf-8'), num);
+    removal = removeRowByNum(trackerTransaction.read(), num);
     if (!removal.removed) {
       console.error(`No application numbered ${num} in ${MD_PATH}.`);
       process.exitCode = 1;
       return;
     }
-    writeFileAtomic(trackerPath, removal.newContent);
+    trackerTransaction.replace(removal.newContent);
   } finally {
-    lock.release();
+    trackerTransaction.close();
   }
 
   const { removedCount, report } = removal;

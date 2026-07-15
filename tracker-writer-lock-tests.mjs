@@ -72,7 +72,8 @@ async function runWhileLocked({
   const launchWriter = (timeoutMs) => {
     let stdout = '';
     let stderr = '';
-    const child = spawn(NODE, [join(ROOT, script), ...args], {
+    const resolvedArgs = args.map(arg => arg === '{tracker}' ? tracker : arg);
+    const child = spawn(NODE, [join(ROOT, script), ...resolvedArgs], {
       cwd: ROOT,
       env: {
         ...childEnv,
@@ -189,6 +190,20 @@ await runWhileLocked({
     '| 2 | 2026-01-02 | Beta | Analyst | 3.5/5 | Evaluated | ❌ | [2](reports/002-beta.md) | keep |',
   ]),
   verify: content => !content.includes('| 1 | 2026-01-01 | Acme |') && content.includes('| 2 | 2026-01-02 | Beta |'),
+});
+
+await runWhileLocked({
+  name: 'tracker-export',
+  script: 'tracker.mjs',
+  args: ['export', '--out', '{tracker}'],
+  content: trackerTable([
+    '| 1 | 2026-01-01 | Acme | Engineer | 4.0/5 | Evaluated | ❌ | [1](reports/001-acme.md) | seed |',
+  ]),
+  verify: content => content.includes('| 1 | 2026-01-01 | Acme |')
+    && content.includes(CONCURRENT_ROW),
+  verifyOutput: (_stdout, stderr, tracker) => stderr.includes('Exported 2 applications')
+    && existsSync(`${tracker}.bak`),
+  completion: 'exports the fresh locked snapshot without losing concurrent rows',
 });
 
 await runWhileLocked({

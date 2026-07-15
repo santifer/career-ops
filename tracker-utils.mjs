@@ -284,11 +284,17 @@ export async function acquireTrackerLock(lockDir, options = {}) {
         staleRecovered,
         release() {
           if (released) return;
-          released = true;
           const owner = readLockOwner(lockDir);
           if (owner?.token === token) {
             rmSync(lockDir, { recursive: true, force: true });
+            released = true;
+            return;
           }
+          if (owner || !existsSync(lockDir)) {
+            released = true;
+            return;
+          }
+          throw new Error(`Cannot verify tracker lock ownership at ${lockDir}`);
         },
       };
     } catch (err) {
@@ -332,6 +338,43 @@ export async function acquireTrackerLock(lockDir, options = {}) {
   const timeoutErr = new Error(`Timed out waiting for tracker lock at ${lockDir}`);
   timeoutErr.code = 'LOCK_TIMEOUT';
   throw timeoutErr;
+}
+
+/**
+ * Open one serialized read/replace transaction for an applications tracker.
+ * Writers receive only the canonical path plus guarded read and atomic replace
+ * operations, keeping the complete mutation inside one shared lock lifetime.
+ */
+export async function openTrackerTransaction(appsFile, options = {}) {
+  const trackerPath = canonicalizeTrackerPath(appsFile);
+  const { lockDir = trackerLockDirFor(trackerPath), ...lockOptions } = options;
+  const lock = await acquireTrackerLock(lockDir, {
+    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    tracker: trackerPath,
+    ...lockOptions,
+  });
+  let closed = false;
+  const assertOpen = () => {
+    if (closed) throw new Error('Tracker transaction is already closed');
+  };
+  return {
+    path: trackerPath,
+    read() {
+      assertOpen();
+      return readFileSync(trackerPath, 'utf-8');
+    },
+    replace(content) {
+      assertOpen();
+      writeFileAtomic(trackerPath, content);
+    },
+    close() {
+      if (closed) return;
+      lock.release();
+      closed = true;
+    },
+  };
 }
 
 /**
