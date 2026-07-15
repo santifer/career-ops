@@ -184,6 +184,7 @@ const SYSTEM_PATHS = [
   'agent-inbox.mjs',
   'followup-seed.mjs',
   'followup-seed-tests.mjs',
+  'profile-language.mjs',
   'gemini-eval.mjs',
   'ollama-eval.mjs',
   'openai-eval.mjs',

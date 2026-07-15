@@ -25,6 +25,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { outputLanguageInstruction, parseOutputLanguage } from './profile-language.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -40,6 +41,7 @@ const PATHS = {
   shared:  join(ROOT, 'modes', '_shared.md'),
   oferta:  join(ROOT, 'modes', 'oferta.md'),
   cv:      join(ROOT, 'cv.md'),
+  profileYml: join(ROOT, 'config', 'profile.yml'),
   reports: join(ROOT, 'reports'),
 };
 
@@ -205,6 +207,8 @@ console.log('\n📂  Loading context files...');
 const sharedContext = readFile(PATHS.shared, 'modes/_shared.md');
 const ofertaLogic   = readFile(PATHS.oferta, 'modes/oferta.md');
 const cvContent     = readFile(PATHS.cv,     'cv.md');
+const profileYml    = readFile(PATHS.profileYml, 'config/profile.yml');
+const languageInstruction = outputLanguageInstruction(parseOutputLanguage(profileYml));
 
 // ---------------------------------------------------------------------------
 // Build system prompt
@@ -236,8 +240,9 @@ IMPORTANT OPERATING RULES FOR THIS SESSION
    - Block D (Comp research): use training-data salary estimates; note them as estimates.
    - Block G (Legitimacy): analyze JD text only; skip URL/page freshness checks.
    - Post-evaluation file saving is handled by the script, not by you.
-2. Generate Blocks A through G in full.
-3. At the very end, output this exact machine-readable block:
+2. ${languageInstruction}
+3. Generate Blocks A through G in full.
+4. At the very end, output this exact machine-readable block:
 
 ---SCORE_SUMMARY---
 COMPANY: <company name or "Unknown">
