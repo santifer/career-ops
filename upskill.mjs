@@ -27,6 +27,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { compactText } from './browser-extract.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
@@ -289,6 +290,12 @@ export function computeTargetedGaps(jdText, knownText) {
   return { gaps, excludedAsKnown, knownSkills: [...known].sort() };
 }
 
+// Both Playwright's innerText() and fetch().text() produce strings. Keep that
+// contract while applying the same whitespace cap as browser extraction.
+export function compactTargetText(rawText) {
+  return compactText(rawText);
+}
+
 // --- Main ---
 function analyze(minReports) {
   if (!existsSync(APPS_FILE)) {
@@ -514,6 +521,21 @@ soft_gaps:
     }
   }
 
+  // URL extraction returns body text as a string. The targeted pipeline must
+  // keep that shape while compacting it; passing the string through normalizeJd
+  // turns it into an empty object and crashes extractSkills (#1894).
+  {
+    const targetText = compactTargetText('  Senior Engineer\n\n\nRequires Kubernetes and Go.  ');
+    if (typeof targetText !== 'string' || !targetText.includes('Requires Kubernetes')) {
+      failures.push(`targeted URL text was not preserved as a compact string (${JSON.stringify(targetText)})`);
+    } else {
+      const { gaps } = computeTargetedGaps(targetText, 'Python');
+      if (!gaps.includes('Kubernetes') || !gaps.includes('Go')) {
+        failures.push(`targeted URL text did not reach gap extraction (got ${gaps.join(',')})`);
+      }
+    }
+  }
+
   if (failures.length > 0) {
     console.error(`upskill self-test failed: ${failures.join('; ')}`);
     process.exit(1);
@@ -604,10 +626,7 @@ if (urlTextIdx !== -1 || directUrl) {
         if (browser) await browser.close();
       }
 
-      try {
-        const { normalizeJd } = await import('./browser-extract.mjs');
-        targetText = normalizeJd(targetText, inputSource);
-      } catch (e) {}
+      targetText = compactTargetText(targetText);
     } else {
       if (existsSync(inputSource)) {
         targetText = readFileSync(inputSource, 'utf-8');
