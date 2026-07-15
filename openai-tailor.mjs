@@ -308,7 +308,7 @@ try {
   console.log(`\n✅  Tailored HTML saved: ${htmlPath}`);
 
   // Print next steps
-  const pdfFilename = `cv-${companySlug}-${roleSlug}-${new Date().toISOString().split('T')[0]}.pdf`;
+  const pdfFilename = `cv-${candidateName}-${companySlug}-${roleSlug}-${new Date().toISOString().split('T')[0]}.pdf`;
   const reportNumMatch = reportFilename.match(/^(\d+)-/);
   const reportNum = reportNumMatch ? reportNumMatch[1] : '001';
 
