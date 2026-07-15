@@ -277,6 +277,23 @@ Check the JD for these three signal classes:
 
 This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — the posting can be entirely real and still oversell its AI maturity. It is orthogonal to ghost-job detection and is reported separately.
 
+**8. Benefits/Employment Terminology Country Mismatch** (from JD text; cross-check stated location against jurisdiction-specific benefits/employment terms):
+
+Some JDs are copy-pasted from a template built for a different country's postings, leaving behind benefits or employment-law terminology that belongs to the wrong jurisdiction — e.g. a Canada-located posting that lists "401(k)" or "W-2 employment," which are US-only terms. The posting can be entirely live and real and still describe the wrong country's benefits; this is a template-error detector, not a ghost-job signal. Check the JD's benefits/employment section against the jurisdiction-specific term list below (add a new row to extend to another country — this table is a data reference, not instruction logic, so extending it never requires touching the rule text):
+
+| Jurisdiction | Terms exclusive to that jurisdiction |
+|---|---|
+| US only | "401(k)", "W-2 employment", "PTO" (used alone, without "vacation," is a weaker signal) |
+| Canada only | "RRSP", "T4", "ESA" (Employment Standards Act) |
+
+Only flag when the JD's stated location is in jurisdiction A, but the benefits/employment section uses terms exclusive to jurisdiction B. Generic terms ("health benefits," "retirement plan") should never trigger this on their own.
+
+If this mismatch is present, append a short, non-alarmist note to the report:
+
+> ⚠️ **Benefits terminology mismatch signal:** This posting is listed in {location}, but its benefits section uses {jurisdiction B}-specific terms ("{specific phrase found}"). This is often a copy-paste artifact from a template used for a different country's postings, and doesn't necessarily mean the posting is fake — but worth confirming with the employer/recruiter which country's employment terms actually apply before assuming the listed benefits package is accurate.
+
+This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is orthogonal to ghost-job detection and is reported separately.
+
 ### Output format:
 
 **Assessment:** One of three tiers:
