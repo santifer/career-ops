@@ -93,13 +93,17 @@ jobs:
             const today = new Date().toISOString().slice(0, 10);
             const line = `- @${login}` + (displayName ? ` | ${displayName}` : '') + ` | ${today}`
               + (phrase ? ` | "${phrase}"` : '') + ` | id:${u.id} | src:${d.html_url}`;
-            await github.rest.repos.createOrUpdateFileContents({
+            const { data: saved } = await github.rest.repos.createOrUpdateFileContents({
               ...context.repo, path: 'SIGNATURES.md',
               message: `docs(signatures): add @${login} (discussion #${d.number})\n\nCo-authored-by: ${login} <${u.id}+${login}@users.noreply.github.com>`,
               content: Buffer.from(body + line + '\n').toString('base64'),
               sha: cur.sha, branch: 'main',
               committer: { name: 'career-ops ledger', email: 'ledger@career-ops.org' }
             });
+            // Línea del firmante en el fichero nuevo: body (normalizado a un solo \n
+            // final) + su línea al final. SPEC-1a: el permalink a SU línea es la prueba.
+            const lineNo = body.split('\n').length;
+            const ledgerUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/${saved.commit.sha}/SIGNATURES.md#L${lineNo}`;
             // Webhook: ESPERAR el 200 ANTES de notificar; si cae, el ISR cubre.
             for (let i = 1; i <= 3; i++) {
               try {
@@ -121,7 +125,7 @@ jobs:
               } catch (e) { /* seguir esperando */ }
               await new Promise(res => setTimeout(res, i < 10 ? 3000 : 30000));
             }
-            await say(`Merged. Your signature: https://career-ops.org/manifesto/s/${login}`);
+            await say(`merged. you are in the ledger: ${ledgerUrl}\nyour certificate: https://career-ops.org/manifesto/s/${login}?fresh=1`);
             await close();
 
   # Vía PR orgánica: un maintainer/diputado comenta /approve sobre el PR validado
@@ -182,7 +186,7 @@ jobs:
             const today = new Date().toISOString().slice(0, 10);
             const line = `- @${login}` + (displayName ? ` | ${displayName}` : '') + ` | ${today}`
               + (phrase ? ` | "${phrase}"` : '') + ` | id:${u.id} | src:${pr.html_url}`;
-            await github.rest.repos.createOrUpdateFileContents({
+            const { data: savedPr } = await github.rest.repos.createOrUpdateFileContents({
               ...context.repo, path: 'SIGNATURES.md',
               message: `docs(signatures): add @${login} (#${prNumber})`,
               content: Buffer.from(body + line + '\n').toString('base64'),
@@ -190,6 +194,8 @@ jobs:
               author:    { name: login, email: `${u.id}+${login}@users.noreply.github.com` },
               committer: { name: 'career-ops ledger', email: 'ledger@career-ops.org' }
             });
+            const lineNoPr = body.split('\n').length;
+            const ledgerUrlPr = `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/${savedPr.commit.sha}/SIGNATURES.md#L${lineNoPr}`;
             // Webhook (esperar 200) y notificación en el MISMO step — sin outputs cruzados
             for (let i = 1; i <= 3; i++) {
               try {
@@ -200,5 +206,5 @@ jobs:
               if (i < 3) await new Promise(res => setTimeout(res, 5000));
             }
             await github.rest.issues.createComment({ ...context.repo, issue_number: prNumber,
-              body: `Merged. Your signature: https://career-ops.org/manifesto/s/${login}` });
+              body: `merged. you are in the ledger: ${ledgerUrlPr}\nyour certificate: https://career-ops.org/manifesto/s/${login}?fresh=1` });
             await github.rest.pulls.update({ ...context.repo, pull_number: prNumber, state: 'closed' });
