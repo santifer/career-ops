@@ -196,6 +196,7 @@ const SYSTEM_PATHS = [
   'test-salary-filter.mjs',
   'test-trust-validator.mjs',
   'tracker-columns-tests.mjs',
+  'tracker-writer-lock-tests.mjs',
   'agent-inbox-tests.mjs',
   'validate-portals.mjs',
   'verify-portals.mjs',
