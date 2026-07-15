@@ -56,3 +56,13 @@ public commit with a stated reason.
 - @21BPS1591 | Anurag Singh | 2026-07-14 | id:91667749 | src:https://github.com/santifer/career-ops/discussions/1887
 - @brnomt | Bruno Moraga | 2026-07-14 | id:104028922 | src:https://github.com/santifer/career-ops/discussions/1888
 - @mchelen | Mike Chelen | 2026-07-14 | "Let the robots talk to robots. Let the humans talk to humans." | id:30691 | src:https://github.com/santifer/career-ops/discussions/1891
+- @TeBrick | 2026-07-15 | id:191656207 | src:https://github.com/santifer/career-ops/discussions/1892
+- @darkpandawarrior | Siddharth Pandalai | 2026-07-15 | "In the oceans of the job sea, let us find our island of automation" | id:31278912 | src:https://github.com/santifer/career-ops/discussions/1898
+- @alaaalsaban | Alaa Alsaban | 2026-07-15 | "Forcing automated recruiting systems to meet human standards" | id:214480204 | src:https://github.com/santifer/career-ops/discussions/1899
+- @semil007 | Semil Periyasamy | 2026-07-15 | "Talent over pedigree, please." | id:87702420 | src:https://github.com/santifer/career-ops/discussions/1900
+- @SPerekrestova | Svetlana Perekrestova | 2026-07-15 | "Let engineers find the job without leaving their terminal" | id:32782746 | src:https://github.com/santifer/career-ops/discussions/1901
+- @saiHub108 | Sai Burgula | 2026-07-15 | "career-ops is a gateway for companies to recognize talent" | id:43947426 | src:https://github.com/santifer/career-ops/discussions/1902
+- @yanchies | 2026-07-15 | "career-ops supercharged my job search, application, and interview process and I hope many others benefit from it too!" | id:122583060 | src:https://github.com/santifer/career-ops/discussions/1908
+- @tklwin | Thein Kyaw Lwin | 2026-07-15 | "Career-Ops: A strategic move for job hunting" | id:150787051 | src:https://github.com/santifer/career-ops/discussions/1909
+- @devty | Tyler Singletary | 2026-07-15 | "I want a job search that adapts to the reality on the ground and my own needs." | id:463035 | src:https://github.com/santifer/career-ops/discussions/1915
+- @NapaDude | 2026-07-15 | id:278759596 | src:https://github.com/santifer/career-ops/discussions/1919

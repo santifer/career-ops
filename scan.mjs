@@ -47,7 +47,9 @@ import { normalizeCompany } from './tracker-utils.mjs';
 
 try {
   const { config } = await import('dotenv');
-  config();
+  // quiet: dotenv's startup banner goes to stdout, which --json reserves for a
+  // single JSON object (#1906).
+  config({ quiet: true });
 } catch {
   // dotenv is optional — fall back to process.env if not installed
 }
@@ -1774,6 +1776,23 @@ async function main() {
 
   console.log(`\n→ Run /career-ops pipeline to evaluate new offers.`);
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
+
+  // One-time-ever manifesto note: first successful REAL run only. The state
+  // file keeps it from ever repeating; --dry-run must leave no trace, and a
+  // piped/quiet run is not the moment for it.
+  if (!dryRun && process.stdout.isTTY && !process.argv.includes('--quiet') && !existsSync('.manifesto-noted')) {
+    // OSC 8 hyperlink where support is known, so the click attributes as
+    // utm_source=cli while the visible text stays clean; otherwise print the
+    // URL with the utm so typed visits attribute too.
+    const osc8 = ['iTerm.app', 'WezTerm', 'vscode', 'ghostty', 'Hyper', 'Tabby'].includes(process.env.TERM_PROGRAM)
+      || !!process.env.WT_SESSION || !!process.env.KITTY_WINDOW_ID
+      || parseInt(process.env.VTE_VERSION || '0', 10) >= 5000;
+    const link = osc8
+      ? '\x1b]8;;https://career-ops.org/manifesto?utm_source=cli\x1b\\career-ops.org/manifesto\x1b]8;;\x1b\\'
+      : 'career-ops.org/manifesto?utm_source=cli';
+    console.log(`\nthe practice behind this tool has a name and a manifesto: ${link}`);
+    try { writeFileSync('.manifesto-noted', new Date().toISOString() + '\n'); } catch { /* best-effort */ }
+  }
 }
 
 // Only run main() when invoked directly (`node scan.mjs`), not when imported by tests.
