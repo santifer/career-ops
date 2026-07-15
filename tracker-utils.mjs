@@ -406,6 +406,7 @@ export async function openTrackerTransaction(appsFile, options = {}) {
     ...lockOptions,
   });
   let closed = false;
+  let closeError = null;
   const assertOpen = () => {
     if (closed) throw new Error('Tracker transaction is already closed');
   };
@@ -420,9 +421,16 @@ export async function openTrackerTransaction(appsFile, options = {}) {
       writeFileAtomic(trackerPath, content);
     },
     close() {
-      if (closed) return;
-      lock.release();
-      closed = true;
+      if (closed) return closeError;
+      try {
+        lock.release();
+      } catch (err) {
+        closeError = err;
+        console.error(`Warning: tracker transaction closed but lock cleanup failed at ${lockDir}: ${err.message}`);
+      } finally {
+        closed = true;
+      }
+      return closeError;
     },
   };
 }

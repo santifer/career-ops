@@ -9,7 +9,7 @@ import {
 import { dirname, join } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
-import { acquireTrackerLock } from './tracker-utils.mjs';
+import { acquireTrackerLock, openTrackerTransaction } from './tracker-utils.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const NODE = process.execPath;
@@ -202,7 +202,7 @@ await runWhileLocked({
   verify: content => content.includes('| 1 | 2026-01-01 | Acme |')
     && content.includes(CONCURRENT_ROW),
   verifyOutput: (_stdout, stderr, tracker) => stderr.includes('Exported 2 applications')
-    && existsSync(`${tracker}.bak`),
+    && existsSync(`${realpathSync(tracker)}.bak`),
   completion: 'exports the fresh locked snapshot without losing concurrent rows',
 });
 
@@ -345,6 +345,44 @@ async function testTrackerLockReleasePreservesReplacementAfterPartialCleanup() {
 }
 
 await testTrackerLockReleasePreservesReplacementAfterPartialCleanup();
+
+async function testTrackerTransactionCloseReportsCleanupFailure() {
+  const dir = mkdtempSync(join(tmpdir(), 'career-ops-transaction-close-'));
+  const tracker = join(dir, 'applications.md');
+  const lockDir = join(dir, 'tracker.lock');
+  const originalConsoleError = console.error;
+  let warning = '';
+  try {
+    writeFileSync(tracker, 'before');
+    const transaction = await openTrackerTransaction(tracker, {
+      lockDir,
+      removeLock: () => { throw new Error('injected cleanup failure'); },
+    });
+    transaction.replace('after');
+    console.error = (...args) => { warning += args.join(' '); };
+    const closeError = transaction.close();
+    const repeatedCloseError = transaction.close();
+    let rejectedClosedRead = false;
+    try { transaction.read(); } catch { rejectedClosedRead = true; }
+
+    if (readFileSync(tracker, 'utf-8') === 'after'
+        && closeError?.message === 'injected cleanup failure'
+        && repeatedCloseError === closeError
+        && rejectedClosedRead
+        && warning.includes('lock cleanup failed')) {
+      pass('tracker transaction close preserves completed writes and reports cleanup failure');
+    } else {
+      fail(`tracker transaction close lost cleanup state (warning=${JSON.stringify(warning)})`);
+    }
+  } catch (err) {
+    fail(`tracker transaction close test crashed: ${err.message}`);
+  } finally {
+    console.error = originalConsoleError;
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+await testTrackerTransactionCloseReportsCleanupFailure();
 
 async function testReplyWatchConflictingRecommendations() {
   const dir = mkdtempSync(join(tmpdir(), 'career-ops-reply-conflict-'));
