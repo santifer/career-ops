@@ -2218,6 +2218,38 @@ try {
   fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
 }
 
+// Reverse-scan blacklist gate: scan-ats-full must share scan.mjs's
+// user-owned do-not-apply semantics, including audit mode annotation.
+try {
+  const { filterBlacklistedOffers } = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+  const blacklist = new Map([
+    ['acmecorp', { company: 'Acme Corp', reason: 'example reason' }],
+  ]);
+  const offers = [
+    { company: 'Acme Corp.', title: 'Software Engineer', url: 'https://example.com/acme' },
+    { company: 'Globex', title: 'Software Engineer', url: 'https://example.com/globex' },
+  ];
+  const skipped = typeof filterBlacklistedOffers === 'function'
+    ? filterBlacklistedOffers(offers, blacklist, { includeBlacklisted: false })
+    : null;
+  const audited = typeof filterBlacklistedOffers === 'function'
+    ? filterBlacklistedOffers(offers, blacklist, { includeBlacklisted: true })
+    : null;
+  const ok =
+    skipped?.filteredBlacklist === 1 &&
+    skipped.offers.length === 1 &&
+    skipped.offers[0].company === 'Globex' &&
+    audited?.annotatedBlacklisted === 1 &&
+    audited.offers.length === 2 &&
+    audited.offers[0].blacklisted === true &&
+    audited.offers[0].note.includes('blacklisted: example reason') &&
+    offers[0].blacklisted === undefined;
+  if (ok) pass('scan-ats-full filters data/blacklist.md matches by default and annotates them under --include-blacklisted (#1911)');
+  else fail('scan-ats-full missing blacklist filter/audit semantics (#1911)');
+} catch (e) {
+  fail(`scan-ats-full blacklist test crashed: ${e.message}`);
+}
+
 // ── VC Portfolio Seed Fetcher ────────────────────────────────────────
 // Tests the pure (no-network) parseSeedEntries(), parseYCPayload(),
 // parseA16zPayload(), toPortalEntry(), and the SEED_SOURCES registry.

@@ -374,6 +374,8 @@ Reverse ATS discovery scanner. Where `scan.mjs` scans the companies you track in
 
 Postings without a usable publish date are skipped — a reverse scan is only useful for fresh postings. New matches are appended to `data/pipeline.md` and `data/scan-history.tsv` in the same format as `scan.mjs`.
 
+`data/blacklist.md` is respected here too: blacklisted companies are skipped by default and reported in the summary. Pass `--include-blacklisted` to audit them instead; matching postings flow through annotated (`note: blacklisted: {reason}` in `data/pipeline.md`).
+
 ### Cross-listing detection
 
 `data/scan-history.tsv` carries a **SimHash fingerprint** of the JD text in its 8th column (`jd_fingerprint`), and the original posting date in its 9th column (`postedAt`). The fingerprint column exists to catch a specific double-submission hazard: the same role posted by the direct employer **and** by a recruitment agency, often with the employer name stripped from the agency listing. URL dedup and company+role dedup both miss this pair because the URLs and company names are different — but agencies rarely rewrite the requirements text, so a near-identical JD body is a reliable signal.
@@ -395,6 +397,7 @@ node scan-ats-full.mjs --ats greenhouse,workday # subset of sources
 node scan-ats-full.mjs --limit 200             # max companies per ATS
 node scan-ats-full.mjs --dry-run               # preview without writing
 node scan-ats-full.mjs --liveness              # Playwright-verify matches first
+node scan-ats-full.mjs --include-blacklisted   # audit blacklist matches instead of skipping
 node scan-ats-full.mjs --md-out notes/scans    # also write a dated markdown digest
 ```
 
