@@ -40,7 +40,7 @@ Before generating any application answers, verify that the form still points to 
 
 > "You've applied to {Company} {N} times before. Some ATS platforms (Workday in particular) retain and cross-reference a candidate's full application history. Before submitting, consider checking your candidate profile/application history in their portal for consistency with your current materials — especially if any earlier applications predate your current resume-generation workflow."
 
-This is a reminder, not a gate — proceed to drafting once the candidate has acknowledged it. Never scrape or log into the employer's ATS portal on the candidate's behalf; this check only counts rows already in the candidate's own tracker.
+This is a reminder, not a gate — surface it and continue drafting immediately; do not wait for the candidate to acknowledge it first. The candidate can review their ATS profile/application history manually before they submit. Never scrape or log into the employer's ATS portal on the candidate's behalf; this check only counts rows already in the candidate's own tracker.
 
 1. Read the visible URL, page title, company, role, and any closed/expired signals.
 2. If a URL is available, verify liveness with Playwright:
