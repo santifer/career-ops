@@ -667,7 +667,7 @@ async function cmdEvaluate(input, ctx) {
     return relPath;
   } finally {
     try {
-      releaseReportNumbers(reservedNumbers, { reportsDir: path.join(__dirname, 'reports') });
+      await releaseReportNumbers(reservedNumbers, { reportsDir: path.join(__dirname, 'reports') });
     } catch (e) {
       console.warn(`Could not release report reservation: ${e.message}`);
     }

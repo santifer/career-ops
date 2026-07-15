@@ -20,6 +20,7 @@ import {
   existsSync, mkdirSync, readFileSync, readdirSync, realpathSync,
   statSync, unlinkSync, writeFileSync,
 } from 'fs';
+import { randomUUID } from 'crypto';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import {
@@ -33,6 +34,7 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const MAX_SENTINEL_AGE_MS = 4 * 60 * 60 * 1000;
 const MAX_RETRIES = 50;
 const MAX_COUNT = 50;
+const RESERVATION_TOKEN = Symbol('career-ops-report-reservation-token');
 
 /** Format a report ID with a minimum width of three digits. */
 export function formatReportNumber(num) {
@@ -99,10 +101,14 @@ function sentinelPath(reportsDir, num) {
   return join(reportsDir, `${formatReportNumber(num)}-RESERVED.md`);
 }
 
-function claimSlot(reportsDir, num, occupied) {
+function claimSlot(reportsDir, num, occupied, token) {
   if (occupied.has(num)) return false;
   try {
-    writeFileSync(sentinelPath(reportsDir, num), '', { flag: 'wx' });
+    writeFileSync(sentinelPath(reportsDir, num), JSON.stringify({
+      pid: process.pid,
+      token,
+      created_at: new Date().toISOString(),
+    }), { flag: 'wx' });
     return true;
   } catch (err) {
     if (err?.code === 'EEXIST') return false;
@@ -110,12 +116,33 @@ function claimSlot(reportsDir, num, occupied) {
   }
 }
 
-function releaseSlot(reportsDir, num) {
+function readSentinelOwner(sentinel) {
+  try {
+    return JSON.parse(readFileSync(sentinel, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+function releaseSlot(reportsDir, num, { token, force = false } = {}) {
   const sentinel = sentinelPath(reportsDir, num);
   try {
+    if (!force && readSentinelOwner(sentinel)?.token !== token) return false;
     unlinkSync(sentinel);
+    return true;
   } catch (err) {
-    if (err?.code !== 'ENOENT') throw err;
+    if (err?.code === 'ENOENT') return false;
+    throw err;
+  }
+}
+
+function processIsAlive(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err?.code === 'EPERM';
   }
 }
 
@@ -146,21 +173,25 @@ export async function reserveReportNumbers(count = 1, options = {}) {
   try {
     let occupied = collectOccupied(reportsDir, trackerPath);
     let base = highestNumber(occupied) + 1;
+    const token = randomUUID();
 
     for (let tries = 0; tries < MAX_RETRIES; tries++) {
       const claimed = [];
       let failedAt = null;
       for (let num = base; num < base + count; num++) {
-        if (claimSlot(reportsDir, num, occupied)) {
+        if (claimSlot(reportsDir, num, occupied, token)) {
           claimed.push(num);
         } else {
           failedAt = num;
           break;
         }
       }
-      if (failedAt == null) return claimed;
+      if (failedAt == null) {
+        Object.defineProperty(claimed, RESERVATION_TOKEN, { value: token });
+        return claimed;
+      }
 
-      for (const num of claimed) releaseSlot(reportsDir, num);
+      for (const num of claimed) releaseSlot(reportsDir, num, { token });
       occupied = collectOccupied(reportsDir, trackerPath);
       base = Math.max(failedAt + 1, highestNumber(occupied) + 1);
     }
@@ -171,38 +202,76 @@ export async function reserveReportNumbers(count = 1, options = {}) {
   throw new Error(`Could not claim ${count} report slot(s) after ${MAX_RETRIES} retries`);
 }
 
-/** Release reservation sentinels after report creation or on failure. */
-export function releaseReportNumbers(numbers, options = {}) {
+/**
+ * Release reservation sentinels after report creation or on failure.
+ * Only the array returned by reserveReportNumbers owns its sentinels. The CLI
+ * uses force mode as an explicit administrative cleanup path.
+ */
+export async function releaseReportNumbers(numbers, options = {}) {
   const reportsDir = reportsDirFor(options);
   const values = Array.isArray(numbers) ? numbers : [numbers];
   for (const num of values) {
     if (!Number.isInteger(num) || num < 1) {
       throw new TypeError(`Report number must be a positive integer, got ${num}`);
     }
-    releaseSlot(reportsDir, num);
+  }
+  const force = options.force === true;
+  const token = options.reservationToken || numbers?.[RESERVATION_TOKEN];
+  if (!force && !token) throw new Error('Reservation ownership token is required for release');
+  if (!existsSync(reportsDir)) return 0;
+
+  const trackerPath = trackerPathFor(options);
+  const lock = await acquireTrackerLock(trackerLockDirFor(trackerPath), {
+    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    tracker: trackerPath,
+    ...options.lockOptions,
+  });
+  try {
+    return values.reduce(
+      (removed, num) => removed + Number(releaseSlot(reportsDir, num, { token, force })),
+      0,
+    );
+  } finally {
+    lock.release();
   }
 }
 
 /** Remove reservation sentinels older than the configured TTL. */
-export function gcStaleReportReservations(options = {}) {
+export async function gcStaleReportReservations(options = {}) {
   const reportsDir = reportsDirFor(options);
   if (!existsSync(reportsDir)) return 0;
 
+  const trackerPath = trackerPathFor(options);
+  const lock = await acquireTrackerLock(trackerLockDirFor(trackerPath), {
+    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    tracker: trackerPath,
+    ...options.lockOptions,
+  });
   const maxAgeMs = options.maxAgeMs ?? MAX_SENTINEL_AGE_MS;
   const now = Date.now();
   let removed = 0;
-  for (const name of readdirSync(reportsDir)) {
-    if (!/^\d+-RESERVED\.md$/.test(name)) continue;
-    const fullPath = join(reportsDir, name);
-    try {
-      if (now - statSync(fullPath).mtimeMs > maxAgeMs) {
-        unlinkSync(fullPath);
-        removed++;
-        process.stderr.write(`reserve-report-num: GC stale sentinel ${name}\n`);
+  try {
+    for (const name of readdirSync(reportsDir)) {
+      if (!/^\d+-RESERVED\.md$/.test(name)) continue;
+      const fullPath = join(reportsDir, name);
+      try {
+        if (now - statSync(fullPath).mtimeMs > maxAgeMs) {
+          const owner = readSentinelOwner(fullPath);
+          if (owner?.pid && processIsAlive(owner.pid)) continue;
+          unlinkSync(fullPath);
+          removed++;
+          process.stderr.write(`reserve-report-num: GC stale sentinel ${name}\n`);
+        }
+      } catch (err) {
+        if (err?.code !== 'ENOENT') throw err;
       }
-    } catch (err) {
-      if (err?.code !== 'ENOENT') throw err;
     }
+  } finally {
+    lock.release();
   }
   if (removed > 0) {
     process.stderr.write(`reserve-report-num: removed ${removed} stale sentinel(s)\n`);
@@ -222,16 +291,21 @@ async function runCli() {
     }
     const start = parseInt(match[1], 10);
     const end = match[2] ? parseInt(match[2], 10) : start;
-    if (start < 1 || end < start) {
-      process.stderr.write('reserve-report-num: --release range end must be >= start\n');
+    const rangeCount = end - start + 1;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end)
+        || start < 1 || end < start || rangeCount > MAX_COUNT) {
+      process.stderr.write(`reserve-report-num: --release requires a safe ascending range of at most ${MAX_COUNT} slots\n`);
       return 1;
     }
-    releaseReportNumbers(Array.from({ length: end - start + 1 }, (_, index) => start + index), options);
+    await releaseReportNumbers(
+      Array.from({ length: rangeCount }, (_, index) => start + index),
+      { ...options, force: true },
+    );
     return 0;
   }
 
   if (cmd === '--gc') {
-    gcStaleReportReservations(options);
+    await gcStaleReportReservations(options);
     return 0;
   }
 

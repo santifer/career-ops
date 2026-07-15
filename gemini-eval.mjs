@@ -430,7 +430,7 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
 
   if (reservedNumbers.length > 0) {
     try {
-      releaseReportNumbers(reservedNumbers, { reportsDir: PATHS.reports });
+      await releaseReportNumbers(reservedNumbers, { reportsDir: PATHS.reports });
     } catch (err) {
       console.warn(`⚠️   Could not release report reservation: ${err.message}`);
     }

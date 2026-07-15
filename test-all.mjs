@@ -4186,12 +4186,42 @@ try {
   const apiTracker = join(apiTmp, 'applications.md');
   const apiProbe = execFileSync(NODE, ['--input-type=module', '--eval', `
     const api = await import(${JSON.stringify(pathToFileURL(RESERVE).href)});
+    const { existsSync, readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
     const nums = await api.reserveReportNumbers(1, {
       reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
       trackerPath: process.env.CAREER_OPS_TRACKER,
     });
-    api.releaseReportNumbers(nums, { reportsDir: process.env.CAREER_OPS_REPORTS_DIR });
-    console.log(JSON.stringify({ nums, formatted: api.formatReportNumber(nums[0]) }));
+    const sentinel = join(process.env.CAREER_OPS_REPORTS_DIR, '001-RESERVED.md');
+    let firstToken = null;
+    try { firstToken = JSON.parse(readFileSync(sentinel, 'utf-8')).token; } catch {}
+    await api.releaseReportNumbers(nums, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    const replacement = await api.reserveReportNumbers(1, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    let replacementToken = null;
+    try { replacementToken = JSON.parse(readFileSync(sentinel, 'utf-8')).token; } catch {}
+    await api.releaseReportNumbers(nums, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    const replacementPreserved = existsSync(sentinel);
+    await api.releaseReportNumbers(replacement, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    console.log(JSON.stringify({
+      nums,
+      formatted: api.formatReportNumber(nums[0]),
+      firstToken,
+      replacementToken,
+      replacementPreserved,
+      replacementCleaned: !existsSync(sentinel),
+    }));
   `], {
     encoding: 'utf-8',
     env: { ...process.env, CAREER_OPS_REPORTS_DIR: apiTmp, CAREER_OPS_TRACKER: apiTracker },
@@ -4199,12 +4229,27 @@ try {
   let apiResult = null;
   try { apiResult = JSON.parse(apiProbe); } catch {}
   if (apiResult?.nums?.[0] === 1 && apiResult.formatted === '001'
-      && !existsSync(join(apiTmp, '001-RESERVED.md'))) {
-    pass('reserve-report-num is import-safe and exposes reserve/release/format APIs');
+      && apiResult.firstToken && apiResult.replacementToken
+      && apiResult.firstToken !== apiResult.replacementToken
+      && apiResult.replacementPreserved && apiResult.replacementCleaned) {
+    pass('reserve-report-num token ownership prevents stale cleanup from deleting a replacement claim');
   } else {
     fail(`reserve-report-num import API failed: ${apiProbe}`);
   }
   rmSync(apiTmp, { recursive: true, force: true });
+
+  const trackerParseApi = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
+  const complexLinkNums = trackerParseApi.extractTrackerReportNumbers(
+    '[22](../reports/021-acme_(us)-2026-07-15.md "US role")',
+  );
+  const angleLinkNums = trackerParseApi.extractTrackerReportNumbers(
+    '[23](<../reports/023-acme role-(eu)-2026-07-15.md> \'EU role\')',
+  );
+  if (complexLinkNums.join(',') === '22,21' && angleLinkNums.join(',') === '23') {
+    pass('tracker report-link parsing supports balanced parentheses, spaces, and optional titles');
+  } else {
+    fail(`complex tracker report links parsed incorrectly: ${complexLinkNums} / ${angleLinkNums}`);
+  }
 
   const reserveTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-'));
   const single = reserveRun([], reserveTmp);
@@ -4251,7 +4296,9 @@ try {
   const evaluatorSources = ['ollama-eval.mjs', 'openai-eval.mjs', 'gemini-eval.mjs', 'openrouter-runner.mjs']
     .map(name => [name, readFile(name)]);
   const unmigratedEvaluators = evaluatorSources
-    .filter(([, source]) => !source.includes('reserveReportNumbers') || /function\s+nextReport(?:Number|Num)\s*\(/.test(source))
+    .filter(([, source]) => !/reservedNumbers\s*=\s*await\s+reserveReportNumbers\s*\(/.test(source)
+      || !/await\s+releaseReportNumbers\s*\(\s*reservedNumbers\b/.test(source)
+      || /function\s+nextReport(?:Number|Num)\s*\(/.test(source))
     .map(([name]) => name);
   if (unmigratedEvaluators.length === 0) {
     pass('all headless evaluators use the shared atomic report allocator');
@@ -4373,10 +4420,13 @@ try {
   const badCount = reserveRunFail(['--count', '0'], relTmp);
   const hugeCount = reserveRunFail(['--count', '999'], relTmp);
   const badRelease = reserveRunFail(['--release', '009-004'], relTmp);
-  if (badCount === 1 && hugeCount === 1 && badRelease === 1) {
-    pass('invalid --count and inverted --release range exit 1');
+  const hugeRelease = reserveRunFail(['--release', '1-9007199254740992'], relTmp);
+  const wideRelease = reserveRunFail(['--release', '1-51'], relTmp);
+  if (badCount === 1 && hugeCount === 1 && badRelease === 1
+      && hugeRelease === 1 && wideRelease === 1) {
+    pass('invalid counts and unsafe, inverted, or oversized release ranges exit 1');
   } else {
-    fail(`validation exits: count0=${badCount}, count999=${hugeCount}, inverted=${badRelease}`);
+    fail(`validation exits: count0=${badCount}, count999=${hugeCount}, inverted=${badRelease}, unsafe=${hugeRelease}, wide=${wideRelease}`);
   }
   rmSync(relTmp, { recursive: true, force: true });
 } catch (e) {
