@@ -2,7 +2,10 @@
 
 package data
 
-// Unknown platforms conservatively keep PID-owned locks until manual cleanup.
-func processAlive(pid int) bool {
-	return pid > 0
+// Unknown platforms recover a PID-owned lock only after the age threshold.
+func getProcessStatus(pid int) processStatus {
+	if pid <= 0 {
+		return processDead
+	}
+	return processUnknown
 }

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -669,7 +670,7 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 // notesAppend is appended (with a space separator if notes are non-empty) to
 // whatever the Notes cell already contains. Pass an empty string to leave
 // notes unchanged.
-func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerApplication, newStatus, notesAppend string) error {
+func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerApplication, newStatus, notesAppend string) (returnErr error) {
 	filePath := filepath.Join(careerOpsPath, "applications.md")
 	if _, err := os.Stat(filePath); err != nil {
 		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
@@ -686,7 +687,16 @@ func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerAppli
 	if err != nil {
 		return fmt.Errorf("acquire tracker lock: %w", err)
 	}
-	defer lock.release()
+	defer func() {
+		if err := lock.release(); err != nil {
+			releaseErr := fmt.Errorf("release tracker lock: %w", err)
+			if returnErr == nil {
+				returnErr = releaseErr
+			} else {
+				returnErr = errors.Join(returnErr, releaseErr)
+			}
+		}
+	}()
 
 	content, err := os.ReadFile(filePath)
 	if err != nil {

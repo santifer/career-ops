@@ -143,6 +143,30 @@ function loadFollowups() {
 // Apply an approved batch in one locked read/modify/write transaction. Reading
 // after lock acquisition matters because the review prompt can remain open
 // while another process merges or updates tracker rows.
+function groupStatusRecommendations(recommendations) {
+  const byApplication = new Map();
+  for (const recommendation of recommendations) {
+    if (!byApplication.has(recommendation.num)) byApplication.set(recommendation.num, new Map());
+    const transitions = byApplication.get(recommendation.num);
+    const key = `${recommendation.oldStatus}\0${recommendation.newStatus}`;
+    const existing = transitions.get(key);
+    if (existing) {
+      existing.count++;
+    } else {
+      transitions.set(key, { ...recommendation, count: 1 });
+    }
+  }
+
+  const updates = [];
+  const conflicts = [];
+  for (const [num, transitions] of byApplication) {
+    const choices = [...transitions.values()];
+    if (choices.length === 1) updates.push(choices[0]);
+    else conflicts.push({ num, choices });
+  }
+  return { updates, conflicts };
+}
+
 async function updateTrackerStatuses(updates) {
   const lock = await acquireTrackerLock(trackerLockDirFor(APPS_FILE), {
     timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
@@ -155,7 +179,8 @@ async function updateTrackerStatuses(updates) {
     const content = fs.readFileSync(APPS_FILE, 'utf-8');
     const lines = content.split('\n');
     const colmap = resolveColumns(lines);
-    const updatesByNum = new Map(updates.map(update => [update.num, update]));
+    const grouped = groupStatusRecommendations(updates);
+    const updatesByNum = new Map(grouped.updates.map(update => [update.num, update]));
     const applied = new Set();
     const alreadyCurrent = new Set();
     const conflicts = new Map();
@@ -182,7 +207,7 @@ async function updateTrackerStatuses(updates) {
     }
 
     if (applied.size > 0) writeFileAtomic(APPS_FILE, lines.join('\n'));
-    return { applied, alreadyCurrent, conflicts, missing };
+    return { applied, alreadyCurrent, conflicts, missing, recommendationConflicts: grouped.conflicts };
   } finally {
     lock.release();
   }
@@ -256,21 +281,36 @@ async function main() {
     }
   });
 
-  if (recommendations.length > 0) {
+  const groupedRecommendations = groupStatusRecommendations(recommendations);
+  if (groupedRecommendations.conflicts.length > 0) {
+    console.warn('Conflicting status recommendations require manual review:');
+    for (const conflict of groupedRecommendations.conflicts) {
+      const summary = conflict.choices
+        .map(choice => `${choice.newStatus} (${choice.count} ${choice.count === 1 ? 'reply' : 'replies'})`)
+        .join(' vs ');
+      console.warn(`  #${conflict.num}: ${summary} — no automatic update`);
+    }
+    console.log('');
+  }
+
+  if (groupedRecommendations.updates.length > 0) {
+    const updates = groupedRecommendations.updates;
     console.log('Suggested status updates to apply:');
-    recommendations.forEach(r => {
-      console.log(`  #${r.num} ${r.company} (${r.role}): ${r.oldStatus} → ${r.newStatus}`);
+    updates.forEach(r => {
+      const count = r.count > 1 ? ` (${r.count} replies)` : '';
+      console.log(`  #${r.num} ${r.company} (${r.role}): ${r.oldStatus} → ${r.newStatus}${count}`);
     });
     console.log('');
 
-    const answer = await askQuestion('Apply recommended status updates to data/applications.md? (y/N): ');
+    const answer = await askQuestion(`Apply recommended status updates to ${APPS_FILE}? (y/N): `);
     if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
-      const result = await updateTrackerStatuses(recommendations);
-      for (const r of recommendations) {
+      const result = await updateTrackerStatuses(updates);
+      for (const r of updates) {
+        const count = r.count > 1 ? ` (${r.count} replies)` : '';
         if (result.applied.has(r.num)) {
-          console.log(`Updated #${r.num} to ${r.newStatus}`);
+          console.log(`Updated #${r.num} to ${r.newStatus}${count}`);
         } else if (result.alreadyCurrent.has(r.num)) {
-          console.log(`No change for #${r.num}: already ${r.newStatus}`);
+          console.log(`No change for #${r.num}: already ${r.newStatus}${count}`);
         } else if (result.conflicts.has(r.num)) {
           console.warn(`Skipped #${r.num}: status changed from ${r.oldStatus} to ${result.conflicts.get(r.num)} during review`);
         } else if (result.missing.has(r.num)) {

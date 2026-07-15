@@ -32,11 +32,20 @@ type trackerLockOwner struct {
 }
 
 type trackerLock struct {
-	dir      string
-	token    string
-	mu       sync.Mutex
-	released bool
+	dir       string
+	token     string
+	removeAll func(string) error
+	mu        sync.Mutex
+	released  bool
 }
+
+type processStatus uint8
+
+const (
+	processUnknown processStatus = iota
+	processDead
+	processAlive
+)
 
 func envMilliseconds(name string, fallback time.Duration) time.Duration {
 	value, err := strconv.Atoi(os.Getenv(name))
@@ -121,7 +130,12 @@ func readTrackerLockOwner(lockDir string) (trackerLockOwner, error) {
 
 func trackerLockCanRecover(lockDir string, stale time.Duration) bool {
 	if owner, err := readTrackerLockOwner(lockDir); err == nil && owner.PID > 0 {
-		return !processAlive(owner.PID)
+		switch getProcessStatus(owner.PID) {
+		case processDead:
+			return true
+		case processAlive:
+			return false
+		}
 	}
 	info, err := os.Stat(lockDir)
 	if err != nil {
@@ -207,20 +221,36 @@ func acquireTrackerLock(trackerPath string, options trackerLockOptions) (*tracke
 	return nil, fmt.Errorf("timed out waiting for tracker lock at %s", lockDir)
 }
 
-func (lock *trackerLock) release() {
+func (lock *trackerLock) release() error {
 	if lock == nil {
-		return
+		return nil
 	}
 	lock.mu.Lock()
 	defer lock.mu.Unlock()
 	if lock.released {
-		return
+		return nil
+	}
+	owner, err := readTrackerLockOwner(lock.dir)
+	if err != nil {
+		if _, statErr := os.Stat(lock.dir); errors.Is(statErr, fs.ErrNotExist) {
+			lock.released = true
+			return nil
+		}
+		return fmt.Errorf("read tracker lock owner: %w", err)
+	}
+	if owner.Token != lock.token {
+		lock.released = true
+		return nil
+	}
+	removeAll := lock.removeAll
+	if removeAll == nil {
+		removeAll = os.RemoveAll
+	}
+	if err := removeAll(lock.dir); err != nil {
+		return fmt.Errorf("remove tracker lock: %w", err)
 	}
 	lock.released = true
-	owner, err := readTrackerLockOwner(lock.dir)
-	if err == nil && owner.Token == lock.token {
-		_ = os.RemoveAll(lock.dir)
-	}
+	return nil
 }
 
 func writeFileAtomic(filePath string, content []byte) error {

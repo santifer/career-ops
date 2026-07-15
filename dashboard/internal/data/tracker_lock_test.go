@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -73,6 +74,46 @@ func TestTrackerLockReleaseDoesNotRemoveReplacementOwner(t *testing.T) {
 	}
 	if owner.Token != replacement.Token {
 		t.Fatalf("replacement token = %q, want %q", owner.Token, replacement.Token)
+	}
+}
+
+func TestTrackerLockReleaseRetriesAfterCleanupFailure(t *testing.T) {
+	lockDir := filepath.Join(t.TempDir(), "tracker.lock")
+	if err := os.Mkdir(lockDir, 0o755); err != nil {
+		t.Fatalf("create lock: %v", err)
+	}
+	owner := trackerLockOwner{PID: os.Getpid(), Token: "retry-owner"}
+	writeTrackerLockOwnerForTest(t, lockDir, owner)
+
+	removeAttempts := 0
+	lock := &trackerLock{
+		dir:   lockDir,
+		token: owner.Token,
+		removeAll: func(path string) error {
+			removeAttempts++
+			if removeAttempts == 1 {
+				return errors.New("transient cleanup failure")
+			}
+			return os.RemoveAll(path)
+		},
+	}
+	if err := lock.release(); err == nil {
+		t.Fatal("first release unexpectedly hid the cleanup failure")
+	}
+	if lock.released {
+		t.Fatal("failed cleanup permanently marked the lock released")
+	}
+	if _, err := os.Stat(lockDir); err != nil {
+		t.Fatalf("lock disappeared after failed cleanup: %v", err)
+	}
+	if err := lock.release(); err != nil {
+		t.Fatalf("retry release: %v", err)
+	}
+	if !lock.released || removeAttempts != 2 {
+		t.Fatalf("release retry state = released:%v attempts:%d", lock.released, removeAttempts)
+	}
+	if _, err := os.Stat(lockDir); !os.IsNotExist(err) {
+		t.Fatalf("lock remains after successful retry: %v", err)
 	}
 }
 

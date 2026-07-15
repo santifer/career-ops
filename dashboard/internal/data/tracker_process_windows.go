@@ -8,14 +8,20 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func processAlive(pid int) bool {
-	if pid <= 0 {
-		return false
+func getProcessStatus(pid int) processStatus {
+	if pid <= 0 || uint64(pid) > uint64(^uint32(0)) {
+		return processDead
 	}
 	handle, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
 	if err != nil {
-		return errors.Is(err, windows.ERROR_ACCESS_DENIED)
+		if errors.Is(err, windows.ERROR_ACCESS_DENIED) {
+			return processAlive
+		}
+		if errors.Is(err, windows.ERROR_INVALID_PARAMETER) {
+			return processDead
+		}
+		return processUnknown
 	}
 	_ = windows.CloseHandle(handle)
-	return true
+	return processAlive
 }

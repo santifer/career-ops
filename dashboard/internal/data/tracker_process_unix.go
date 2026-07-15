@@ -4,10 +4,16 @@ package data
 
 import "syscall"
 
-func processAlive(pid int) bool {
+func getProcessStatus(pid int) processStatus {
 	if pid <= 0 {
-		return false
+		return processDead
 	}
 	err := syscall.Kill(pid, 0)
-	return err == nil || err == syscall.EPERM
+	if err == nil || err == syscall.EPERM {
+		return processAlive
+	}
+	if err == syscall.ESRCH {
+		return processDead
+	}
+	return processUnknown
 }

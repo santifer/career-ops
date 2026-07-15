@@ -174,9 +174,10 @@ console.log(`\n📊 ${changes} statuses normalized`);
 
 if (!DRY_RUN && changes > 0) {
   // Backup first
-  copyFileSync(APPS_FILE, APPS_FILE + '.bak');
+  const backupPath = `${APPS_FILE}.bak`;
+  copyFileSync(APPS_FILE, backupPath);
   writeFileAtomic(APPS_FILE, lines.join('\n'));
-  console.log('✅ Written to applications.md (backup: applications.md.bak)');
+  console.log(`✅ Written to ${APPS_FILE} (backup: ${backupPath})`);
 } else if (DRY_RUN) {
   console.log('(dry-run — no changes written)');
 } else {
