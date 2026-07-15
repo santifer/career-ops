@@ -36,6 +36,12 @@ Before generating any application answers, verify that the form still points to 
 2. If the name is not available, check the tracker for `?` rows with the same Via + a similar role (the same agency re-blasting one listing) and for similar-role rows at plausible-match companies; surface anything close.
 3. Then STOP and require explicit user acknowledgment before the agency is authorized: "The end employer is unknown, so I cannot verify you haven't already applied to this company directly. Authorize anyway?" Never proceed on silence — the reveal-time check only catches damage after the fact.
 
+**Repeat-application ATS profile check (#1920):** count the visible company's rows in `data/applications.md` (the same company-name match Step 2 already uses to search `reports/`). If this submission would be the 2nd or later application to that company, surface a reminder before drafting — this is separate from the Ashby email-dedup quirk below (that one is about the *current* submission getting silently merged; this one is about *older* submissions, possibly predating the candidate's current resume-generation workflow, resurfacing and contradicting the current materials):
+
+> "You've applied to {Company} {N} times before. Some ATS platforms (Workday in particular) retain and cross-reference a candidate's full application history. Before submitting, consider checking your candidate profile/application history in their portal for consistency with your current materials — especially if any earlier applications predate your current resume-generation workflow."
+
+This is a reminder, not a gate — proceed to drafting once the candidate has acknowledged it. Never scrape or log into the employer's ATS portal on the candidate's behalf; this check only counts rows already in the candidate's own tracker.
+
 1. Read the visible URL, page title, company, role, and any closed/expired signals.
 2. If a URL is available, verify liveness with Playwright:
    - active posting evidence: title/role + job description or form fields + submit/apply path
