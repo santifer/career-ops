@@ -65,3 +65,4 @@ public commit with a stated reason.
 - @yanchies | 2026-07-15 | "career-ops supercharged my job search, application, and interview process and I hope many others benefit from it too!" | id:122583060 | src:https://github.com/santifer/career-ops/discussions/1908
 - @tklwin | Thein Kyaw Lwin | 2026-07-15 | "Career-Ops: A strategic move for job hunting" | id:150787051 | src:https://github.com/santifer/career-ops/discussions/1909
 - @devty | Tyler Singletary | 2026-07-15 | "I want a job search that adapts to the reality on the ground and my own needs." | id:463035 | src:https://github.com/santifer/career-ops/discussions/1915
+- @NapaDude | 2026-07-15 | id:278759596 | src:https://github.com/santifer/career-ops/discussions/1919
