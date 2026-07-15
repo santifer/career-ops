@@ -4293,6 +4293,33 @@ try {
   }
   rmSync(fourDigitTmp, { recursive: true, force: true });
 
+  const unsafeRangeTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-unsafe-range-'));
+  const unsafeRangeReports = join(unsafeRangeTmp, 'reports');
+  const unsafeRangeTracker = join(unsafeRangeTmp, 'applications.md');
+  mkdirSync(unsafeRangeReports);
+  writeFileSync(
+    join(unsafeRangeReports, `${Number.MAX_SAFE_INTEGER - 1}-existing.md`),
+    '# fixture',
+  );
+  const allocatorApi = await import(`${pathToFileURL(RESERVE).href}?unsafe-range=${Date.now()}`);
+  let unsafeRangeError = null;
+  try {
+    await allocatorApi.reserveReportNumbers(2, {
+      reportsDir: unsafeRangeReports,
+      trackerPath: unsafeRangeTracker,
+    });
+  } catch (err) {
+    unsafeRangeError = err;
+  }
+  const unsafeRangeLeaked = readdirSync(unsafeRangeReports)
+    .some(name => name.endsWith('-RESERVED.md'));
+  if (unsafeRangeError instanceof RangeError && !unsafeRangeLeaked) {
+    pass('unsafe report-number ranges fail before creating a partial sentinel');
+  } else {
+    fail(`unsafe range guard failed: error=${unsafeRangeError?.message}, leaked=${unsafeRangeLeaked}`);
+  }
+  rmSync(unsafeRangeTmp, { recursive: true, force: true });
+
   const evaluatorSources = ['ollama-eval.mjs', 'openai-eval.mjs', 'gemini-eval.mjs', 'openrouter-runner.mjs']
     .map(name => [name, readFile(name)]);
   const unmigratedEvaluators = evaluatorSources

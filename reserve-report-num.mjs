@@ -38,7 +38,7 @@ const RESERVATION_TOKEN = Symbol('career-ops-report-reservation-token');
 
 /** Format a report ID with a minimum width of three digits. */
 export function formatReportNumber(num) {
-  if (!Number.isInteger(num) || num < 1) {
+  if (!Number.isSafeInteger(num) || num < 1) {
     throw new TypeError(`Report number must be a positive integer, got ${num}`);
   }
   return String(num).padStart(3, '0');
@@ -176,9 +176,13 @@ export async function reserveReportNumbers(count = 1, options = {}) {
     const token = randomUUID();
 
     for (let tries = 0; tries < MAX_RETRIES; tries++) {
+      const end = base + (count - 1);
+      if (!Number.isSafeInteger(base) || !Number.isSafeInteger(end)) {
+        throw new RangeError('No safe report-number range remains');
+      }
       const claimed = [];
       let failedAt = null;
-      for (let num = base; num < base + count; num++) {
+      for (let num = base; num <= end; num++) {
         if (claimSlot(reportsDir, num, occupied, token)) {
           claimed.push(num);
         } else {
@@ -211,7 +215,7 @@ export async function releaseReportNumbers(numbers, options = {}) {
   const reportsDir = reportsDirFor(options);
   const values = Array.isArray(numbers) ? numbers : [numbers];
   for (const num of values) {
-    if (!Number.isInteger(num) || num < 1) {
+    if (!Number.isSafeInteger(num) || num < 1) {
       throw new TypeError(`Report number must be a positive integer, got ${num}`);
     }
   }
