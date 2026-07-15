@@ -604,9 +604,15 @@ if (urlTextIdx !== -1 || directUrl) {
         if (browser) await browser.close();
       }
 
+      // Whitespace-collapse + length-cap the fetched page text. Use compactText
+      // (string -> string), NOT normalizeJd: normalizeJd expects the { title,
+      // text } DOM-read object and returns { url, title, text }, so feeding it
+      // the innerText/fetch STRING silently produced { text: '' } — destroying
+      // the JD and then throwing `text.matchAll is not a function` downstream
+      // (#1894). compactText is the string-in/string-out helper this wants.
       try {
-        const { normalizeJd } = await import('./browser-extract.mjs');
-        targetText = normalizeJd(targetText, inputSource);
+        const { compactText } = await import('./browser-extract.mjs');
+        targetText = compactText(targetText);
       } catch (e) {}
     } else {
       if (existsSync(inputSource)) {
