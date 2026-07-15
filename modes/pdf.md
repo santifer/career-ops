@@ -27,8 +27,9 @@
 18. Run the fact gate: `node verify-cv-facts.mjs output/cv-{candidate}-{company}.html`
     - This is a hard gate before PDF rendering.
     - If it fails, stop and fix the generated HTML by removing invented metrics or adding verified evidence to `cv.md`, `article-digest.md`, or `config/cv-facts.json`.
-19. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number}` — `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry.
-20. Report: PDF path, number of pages, keyword coverage %, and any skill gaps from Step 4 still unaddressed
+19. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number}` — `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry. The command itself runs the final ATS verifier before recording the manifest.
+20. Treat that direct Chromium output as immutable. Do **not** run Ghostscript, Preview, qpdf, a metadata stamper, an optimizer, or any other PDF rewrite after `generate-pdf.mjs`. If a delivery workflow copies or renames it, run `node verify-ats-pdf.mjs {final-upload-file}.pdf --require "{candidate name}" --require "Professional Summary"` on the exact final file after the last copy. A different `Producer` is a hard stop, even when `pdftotext` appears to work.
+21. Report: PDF path, number of pages, keyword coverage %, the final verifier result, and any skill gaps from Step 4 still unaddressed
 
 ## ATS Rules (clean parsing)
 
@@ -37,6 +38,7 @@
 - No text in images/SVGs
 - No critical info in PDF headers/footers (ATS ignores them)
 - UTF-8, selectable text (not rasterized)
+- Final output must retain direct Chromium provenance (`pdfinfo` Producer starts with `Skia/PDF`), embedded Unicode-mapped fonts, and extractable body text. `generate-pdf.mjs` enforces this; `verify-ats-pdf.mjs` verifies a copied delivery artifact.
 - No nested tables
 - Distributed JD keywords: Summary (top 5), first bullet of each role, Skills section
 - No hidden text, keyword stuffing, or white-font tricks. Optimize for parseability plus human review.

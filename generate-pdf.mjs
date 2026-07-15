@@ -27,6 +27,7 @@ import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
+import { verifyAtsPdf } from './verify-ats-pdf.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PDF_PAGE_MARGIN = '0.6in';
@@ -361,7 +362,31 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath), reportNum, inputPath });
+  // Verify the exact final artifact before it becomes the canonical manifest
+  // target. A later Ghostscript/Preview rewrite can leave pdftotext readable
+  // while breaking the file shape an ATS receives, so the supported path is
+  // direct Chromium render -> verifier -> manifest/delivery with no mutation.
+  const result = await renderHtmlToPdf(html, outputPath, {
+    format,
+    baseDir: dirname(inputPath),
+    reportNum,
+    inputPath,
+    recordManifest: false,
+  });
+  const verification = verifyAtsPdf(outputPath);
+  if (!verification.ok) {
+    throw new Error(`Generated PDF failed ATS verification:\n${verification.errors.map((error) => `- ${error}`).join('\n')}`);
+  }
+  console.log(`🛡️  ATS PDF verified: ${verification.details.extractedCharacters} extracted characters; direct Chromium provenance`);
+
+  try {
+    updatePDFManifest(reportNum, outputPath, inputPath, format);
+    console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
+  } catch (err) {
+    // The verified PDF itself succeeded — never fail the run over bookkeeping.
+    console.error(`⚠️  Manifest update failed: ${err.message}`);
+  }
+  return result;
 }
 
 /**
@@ -422,6 +447,7 @@ export async function inlineLocalFonts(html) {
  *   baseDir?: string,
  *   reportNum?: string,
  *   inputPath?: string,
+ *   recordManifest?: boolean,
  *   launchBrowser?: (options: {headless: boolean}) => Promise<import('playwright').Browser>
  * }} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
@@ -431,6 +457,7 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const baseDir = opts.baseDir || process.cwd();
   const reportNum = opts.reportNum || '';
   const inputPath = opts.inputPath || '';
+  const recordManifest = opts.recordManifest !== false;
 
   mkdirSync(dirname(outputPath), { recursive: true });
 
@@ -480,12 +507,14 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     console.log(`📊 Pages: ${pageCount}`);
     console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
 
-    try {
-      updatePDFManifest(reportNum, outputPath, inputPath, format);
-      console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
-    } catch (err) {
-      // The PDF itself succeeded — never fail the run over manifest bookkeeping.
-      console.error(`⚠️  Manifest update failed: ${err.message}`);
+    if (recordManifest) {
+      try {
+        updatePDFManifest(reportNum, outputPath, inputPath, format);
+        console.log(`🔗 Manifest: data/pdf-index.tsv updated${reportNum ? ` (report ${reportNum})` : ' (no --report given)'}`);
+      } catch (err) {
+        // The PDF itself succeeded — never fail the run over manifest bookkeeping.
+        console.error(`⚠️  Manifest update failed: ${err.message}`);
+      }
     }
 
     return { outputPath, pageCount, size: pdfBuffer.length };

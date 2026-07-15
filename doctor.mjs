@@ -6,6 +6,7 @@
  */
 
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
@@ -81,6 +82,23 @@ async function checkPlaywright() {
   } finally {
     try { await browser?.close(); } catch { /* ignore */ }
   }
+}
+
+// Career-Ops' PDF command runs verify-ats-pdf.mjs before publishing a manifest
+// entry. Check the Poppler utilities here so missing system packages fail during
+// setup rather than after a tailored CV has been rendered.
+function checkAtsPdfUtilities() {
+  const tools = ['pdfinfo', 'pdffonts', 'pdftotext'];
+  const missing = tools.filter((tool) => {
+    const result = spawnSync(tool, ['-v'], { stdio: 'ignore' });
+    return result.error || result.status !== 0;
+  });
+  if (!missing.length) return { pass: true, label: 'ATS PDF utilities installed (Poppler)' };
+  return {
+    pass: false,
+    label: `ATS PDF utilities missing: ${missing.join(', ')}`,
+    fix: 'Install Poppler utilities (Ubuntu/Debian: sudo apt install poppler-utils).',
+  };
 }
 
 // The browser tools (`browser_navigate` / `browser_snapshot`) that scan / pipeline /
@@ -329,6 +347,7 @@ async function main() {
     checkNodeVersion(),
     checkDependencies(),
     await checkPlaywright(),
+    checkAtsPdfUtilities(),
     checkPlaywrightMcp(projectRoot),
     checkScanExtractor(projectRoot),
     ...USER_LAYER_PREREQS.map(checkPrereq),

@@ -823,6 +823,26 @@ if (!/waitUntil:\s*['"]networkidle['"]/.test(generatePdfScript)) {
   fail('generate-pdf still waits for networkidle');
 }
 
+const atsPdfVerifierScript = readFile('verify-ats-pdf.mjs');
+if (
+  atsPdfVerifierScript.includes("const REQUIRED_TOOLS = ['pdfinfo', 'pdffonts', 'pdftotext']") &&
+  atsPdfVerifierScript.includes("details.producer.startsWith('Skia/PDF')") &&
+  atsPdfVerifierScript.includes('PDF fonts must be embedded with Unicode mappings')
+) {
+  pass('ATS PDF verifier requires direct Chromium provenance and Unicode text fonts');
+} else {
+  fail('ATS PDF verifier is missing provenance or Unicode font checks');
+}
+if (
+  generatePdfScript.includes("import { verifyAtsPdf } from './verify-ats-pdf.mjs'") &&
+  generatePdfScript.includes('recordManifest: false') &&
+  generatePdfScript.includes('Generated PDF failed ATS verification')
+) {
+  pass('generate-pdf verifies the artifact before publishing its manifest entry');
+} else {
+  fail('generate-pdf does not enforce final ATS PDF verification before manifest publication');
+}
+
 function extractRenderHtmlToPdfOptions(source) {
   const call = /renderHtmlToPdf\s*\(\s*html\s*,\s*outputPath\s*,/g.exec(source);
   if (!call) return '';
