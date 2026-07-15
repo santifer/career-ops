@@ -26,6 +26,7 @@ import yaml from 'js-yaml';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
+import { resolveOutputLanguage, outputLanguageDirective } from './profile-utils.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -344,6 +345,7 @@ function loadContext() {
     profile:     readFile('config/profile.yml')  ?? '',
     shared:      readFile('modes/_shared.md')    ?? '',
     profileMode: readFile('modes/_profile.md')   ?? '',
+    outputLang:  resolveOutputLanguage('config/profile.yml'),
   };
 }
 
@@ -352,6 +354,8 @@ function buildSystemPrompt(modeContent, ctx) {
     ctx.shared,
     ctx.profileMode,
     modeContent,
+    '---',
+    outputLanguageDirective(ctx.outputLang || 'en'),
     '---',
     'CANDIDATE PROFILE (YAML):',
     ctx.profile,
