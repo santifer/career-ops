@@ -378,6 +378,39 @@ try {
   } else {
     fail('resolveAtsApi guard failed (bad id or http accepted)');
   }
+  // Workday: per-job CXS endpoint. Job path is genuinely multi-segment (a location
+  // slug + a title slug), which is why resolveAtsApi's SSRF guard uses isSafeValue
+  // (component-by-component) instead of the single-segment SAFE_SEGMENT check.
+  const wdApi = resolveAtsApi('https://acme.wd1.myworkdayjobs.com/en-US/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125');
+  if (wdApi?.ats === 'workday'
+      && wdApi.apiUrl === 'https://acme.wd1.myworkdayjobs.com/wday/cxs/acme/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125'
+      && wdApi.parts?.jobPath === 'Toronto-ON-CAN/Agentic-AI-Engineer_R260010125') {
+    pass('resolveAtsApi maps a Workday posting (with locale prefix) to its per-job CXS API URL');
+  } else {
+    fail(`Workday API URL wrong: ${JSON.stringify(wdApi)}`);
+  }
+  // Same tenant, no locale prefix in the URL.
+  const wdApiNoLocale = resolveAtsApi('https://acme.wd5.myworkdayjobs.com/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125');
+  if (wdApiNoLocale?.ats === 'workday'
+      && wdApiNoLocale.apiUrl === 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125') {
+    pass('resolveAtsApi maps a Workday posting without a locale prefix');
+  } else {
+    fail(`Workday (no locale) API URL wrong: ${JSON.stringify(wdApiNoLocale)}`);
+  }
+  // Directory traversal embedded inside one segment (not a bare ".." dot-segment,
+  // which the URL parser itself would normalize away before we ever see it) must
+  // still be rejected by isSafeValue's per-segment "..": ownership check.
+  if (resolveAtsApi('https://acme.wd1.myworkdayjobs.com/External/job/Toronto-ON-CAN/Role..R1') === null) {
+    pass('resolveAtsApi rejects ".." embedded in a Workday jobPath segment (SSRF guard)');
+  } else {
+    fail('resolveAtsApi should reject ".." embedded in a Workday jobPath segment');
+  }
+  if (resolveAtsApi('https://acme.notworkdayjobs.com/External/job/Toronto-ON-CAN/Role_R1') === null) {
+    pass('resolveAtsApi returns null for a myworkdayjobs.com lookalike host');
+  } else {
+    fail('resolveAtsApi should not match a lookalike Workday host');
+  }
+
   // Ashby: org-level board endpoint. Ashby pages are JS-rendered, so the browser/
   // static rung sees only nav/footer and false-reports live postings as expired —
   // the API rung must resolve the org board and confirm the specific job id.
@@ -438,15 +471,22 @@ try {
     const cvGone = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
     globalThis.fetch = async () => { throw new Error('network down'); };
     const cvErr = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
+    const wdUrl = 'https://acme.wd1.myworkdayjobs.com/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125';
+    globalThis.fetch = async () => ({ status: 200 });
+    const cvWdLive = await checkLivenessViaApi(wdUrl);
+    globalThis.fetch = async () => ({ status: 404 });
+    const cvWdGone = await checkLivenessViaApi(wdUrl);
     if (cvAshbyLive?.result === 'active' && cvAshbyLive?.code === 'ashby_api_ok'
         && cvAshbyGone?.result === 'expired' && cvAshbyGone?.code === 'ashby_api_unlisted'
         && cvAshbyMalformed === null
         && cvGhLive?.result === 'active'
         && cvGone?.result === 'expired'
-        && cvErr === null) {
-      pass('checkLivenessViaApi: 200→interpret (Ashby), malformed→null, greenhouse 200→active, 404→expired, fetch error→null');
+        && cvErr === null
+        && cvWdLive?.result === 'active' && cvWdLive?.code === 'workday_api_ok'
+        && cvWdGone?.result === 'expired' && cvWdGone?.code === 'workday_api_gone') {
+      pass('checkLivenessViaApi: 200→interpret (Ashby), malformed→null, greenhouse/workday 200→active, 404→expired, fetch error→null');
     } else {
-      fail(`checkLivenessViaApi wrong: ashbyLive=${JSON.stringify(cvAshbyLive)} ashbyGone=${JSON.stringify(cvAshbyGone)} malformed=${JSON.stringify(cvAshbyMalformed)} ghLive=${JSON.stringify(cvGhLive)} gone=${JSON.stringify(cvGone)} err=${JSON.stringify(cvErr)}`);
+      fail(`checkLivenessViaApi wrong: ashbyLive=${JSON.stringify(cvAshbyLive)} ashbyGone=${JSON.stringify(cvAshbyGone)} malformed=${JSON.stringify(cvAshbyMalformed)} ghLive=${JSON.stringify(cvGhLive)} gone=${JSON.stringify(cvGone)} err=${JSON.stringify(cvErr)} wdLive=${JSON.stringify(cvWdLive)} wdGone=${JSON.stringify(cvWdGone)}`);
     }
   } finally {
     globalThis.fetch = origFetch;

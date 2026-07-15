@@ -322,7 +322,9 @@ npm run rollback
 
 ## liveness
 
-Tests whether job posting URLs are still live using headless Chromium. Detects expired patterns (e.g. "job no longer available"), HTTP 404/410, ATS redirect patterns, and apply-button presence. Supports multi-language expired patterns (English, German, French).
+Tests whether job posting URLs are still live. Two rungs: a zero-token ATS API check first (`liveness-api.mjs` — Greenhouse, Lever, Ashby, Workday), falling back to headless Chromium (`liveness-browser.mjs`) for non-ATS pages or when the API is inconclusive. The browser rung detects expired patterns (e.g. "job no longer available"), HTTP 404/410, ATS redirect patterns, and apply-button presence, and supports multi-language expired patterns (English, German, French).
+
+Per-job ATS endpoints (Greenhouse, Lever, Workday) treat a 200 as proof the posting is live; Ashby's public API is org-level (the whole job board), so that rung parses the board and confirms the specific job id is still listed. A definitive 404/410 from any ATS API is authoritative and short-circuits the browser check entirely — zero tokens, no browser launch.
 
 ```bash
 npm run liveness -- https://example.com/job/123
