@@ -47,7 +47,9 @@ import { normalizeCompany } from './tracker-utils.mjs';
 
 try {
   const { config } = await import('dotenv');
-  config();
+  // quiet: dotenv's startup banner goes to stdout, which --json reserves for a
+  // single JSON object (#1906).
+  config({ quiet: true });
 } catch {
   // dotenv is optional — fall back to process.env if not installed
 }
