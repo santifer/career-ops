@@ -29,6 +29,7 @@
  *   node scan.mjs --verify --throttle          # jittered ~5-10s gap between checks (stay under rate limits)
  *   node scan.mjs --verify --throttle=8000     # custom base gap in ms (waits base..2*base)
  *   node scan.mjs --include-blacklisted        # let data/blacklist.md matches through (annotated)
+ *   node scan.mjs --triage         # chain the zero-token title+location triage (triage.mjs) after the scan
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
@@ -1301,6 +1302,10 @@ async function main() {
   const includeBlacklisted = args.includes('--include-blacklisted');
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
+  // --triage: after the scan, run the zero-token title+location triage
+  // (triage.mjs, #1729) so a scheduled unattended scan leaves a ready
+  // shortlist in data/shortlist.md instead of a silently growing queue.
+  const triage = args.includes('--triage');
 
   // 1. Load providers
   const providers = await loadProviders(PROVIDERS_DIR);
@@ -1770,6 +1775,20 @@ async function main() {
       dupes: totalDupes, newAdded: verifiedOffers.length, errors: errors.length,
       filteredBlacklist: totalFilteredBlacklist,
     });
+  }
+
+  // Chain the first-glance triage after everything is written. Skipped on
+  // --dry-run: the triage reads the pipeline this run deliberately didn't
+  // touch. A triage failure surfaces in the exit code so schedulers notice,
+  // but never undoes the completed scan above.
+  if (triage) {
+    if (dryRun) {
+      console.log('\n(dry run — skipping --triage: nothing was written to the pipeline)');
+    } else {
+      const { runTriage } = await import('./triage.mjs');
+      console.log('');
+      if (!runTriage().ok) process.exitCode = 1;
+    }
   }
 
   console.log(`\n→ Run /career-ops pipeline to evaluate new offers.`);

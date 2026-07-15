@@ -110,6 +110,8 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `upskill.mjs` | Aggregate skill-gap analyzer — weighted gap map from tracked reports, known skills from `cv.md`/`config/profile.yml` excluded (JSON output) |
 | `stats.mjs` | Lifetime pipeline stats aggregator (JSON or `--summary`) — tracker roll-up, canonical `ever*` funnel, lifetime scan totals, portal coverage, follow-up compliance, scan-run trends |
 | `data/scan-runs.tsv` | Per-run scan counters (appended by `scan.mjs`, read by `stats.mjs`) |
+| `triage.mjs` | Zero-token first-glance triage of `## Pending` — judges title + location against `config/profile.yml` targets and writes a Worth a look / Maybe / Skip shortlist to `data/shortlist.md`. Standalone (`node triage.mjs [--json]`) or chained after a scan (`node scan.mjs --triage`) |
+| `data/shortlist.md` | First-glance shortlist of pending postings (derived — rewritten by `triage.mjs` on every successful run) |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `followup-seed.mjs` | Seeds `data/follow-ups.md` with a pinned first follow-up date when a row turns Applied (JSON output) |
 | `set-status.mjs` | Canonical CLI to update a tracker row: `node set-status.mjs <report#\|company> <State> [--note]` — strict states.yml validation, shared tracker lock, atomic write |
