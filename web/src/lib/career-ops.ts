@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { atomicWrite } from "@/lib/core/safe-write";
 import { parseApplications } from "@/lib/tracker-table.mjs";
+import { reportNumFromCell } from "@/lib/format";
 
 /**
  * Resolve the career-ops "home" — the directory holding the user's sibling
@@ -220,7 +221,20 @@ export function readReport(n: string): ReportData | null {
 }
 
 export function findApplication(n: string): Application | null {
-  return readApplications().find((a) => a.n === n) ?? null;
+  const apps = readApplications();
+  const byTrackerNum = apps.find((a) => a.n === n);
+  if (byTrackerNum) return byTrackerNum;
+  // Fall back to the REPORT number embedded in the row's Report cell — the
+  // tracker `#` and the report's own number are independent sequences (see
+  // reportNumFromCell), so a /pipeline/{id} visit built from a report number
+  // (as findReportFile expects) must still resolve to its tracker row even
+  // when the two numbers diverge (#1623 follow-up to #1673).
+  const target = parseInt(n, 10);
+  if (Number.isNaN(target)) return null;
+  return apps.find((a) => {
+    const rn = reportNumFromCell(a.report);
+    return rn !== null && parseInt(rn, 10) === target;
+  }) ?? null;
 }
 
 /** The CANONICAL user-customization file the CLI/TUI reads. Durable facts the

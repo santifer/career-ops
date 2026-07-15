@@ -61,6 +61,22 @@ export function statusDot(status: string): string {
   return "bg-zinc-500"; // Evaluated / unknown
 }
 
+/** Extract the report number from a tracker row's Report cell, e.g.
+ *  "[010](../reports/010-decagon-2026-07-13.md)" -> "010". The tracker's own
+ *  `#` column and a report's filename number are DELIBERATELY independent
+ *  sequences (AGENTS.md: tracker rows can be backfilled with no report at
+ *  all, e.g. a rejection email for a role never evaluated) — a batch merge
+ *  routinely assigns a tracker # far from the report's own number once the
+ *  tracker already has higher numbers in use. Anything that needs to open
+ *  the actual report file (readReport/findReportFile key on the REPORT
+ *  number) must resolve through this, not the tracker `#`. Returns null when
+ *  the row has no report link (nothing to open).
+ */
+export function reportNumFromCell(reportCell: string | undefined | null): string | null {
+  const m = /\[(\d+)\]/.exec(reportCell ?? "");
+  return m ? m[1] : null;
+}
+
 /** First number in a score string ("4.1/5", "B+", "3.0") → numeric, or NaN. */
 export function scoreNum(s: string): number {
   const m = s.match(/(\d+(?:\.\d+)?)/);

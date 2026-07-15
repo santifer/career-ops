@@ -7,7 +7,7 @@ import { Search, ChevronsUpDown, X, Compass, ArrowRight } from "lucide-react";
 import type { Application, InboxJob } from "@/lib/career-ops";
 import { Badge } from "@/components/ui/badge";
 import { CompanyLogo } from "@/components/company-logo";
-import { canonStatus, scoreNum, scoreTone, statusDot } from "@/lib/format";
+import { canonStatus, reportNumFromCell, scoreNum, scoreTone, statusDot } from "@/lib/format";
 import { InboxTriage } from "@/components/inbox/inbox-triage";
 import { cn } from "@/lib/cn";
 
@@ -208,16 +208,22 @@ export function PipelineView({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map((r, i) => (
+              {filtered.map((r, i) => {
+                // Open by REPORT number when this row has a report (tracker #
+                // and report # are independent sequences — see
+                // reportNumFromCell), falling back to the tracker # for
+                // backfilled rows with no report to view.
+                const openId = reportNumFromCell(r.report) ?? r.n;
+                return (
                 <tr key={`${r.n}-${i}`} className="group transition-colors hover:bg-surface/40">
                   <td className="px-4 py-3 font-medium">
-                    <Link href={`/pipeline/${r.n}`} className="flex items-center gap-2.5 transition-colors group-hover:text-brand">
+                    <Link href={`/pipeline/${openId}`} className="flex items-center gap-2.5 transition-colors group-hover:text-brand">
                       <CompanyLogo name={r.company} size={20} />
                       {r.company}
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-muted">
-                    <Link href={`/pipeline/${r.n}`}>{r.role}</Link>
+                    <Link href={`/pipeline/${openId}`}>{r.role}</Link>
                   </td>
                   <td className="px-4 py-3">
                     <Badge tone={scoreTone(r.score)}>{r.score || "—"}</Badge>
@@ -230,7 +236,8 @@ export function PipelineView({
                   </td>
                   <td className="px-4 py-3 text-faint tabular-nums">{r.date}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
