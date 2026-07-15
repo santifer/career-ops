@@ -95,6 +95,14 @@ Career-ops is agentic: whichever AI coding CLI you choose navigates career pages
 
 Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
 
+## The CareerOps Manifesto
+
+**[Read the manifesto](./MANIFESTO.md)** ([career-ops.org/manifesto](https://career-ops.org/manifesto)) and [sign it](./SIGNATURES.md) -- for many signers, it is their first commit.
+
+> CareerOps is the practice of running a job search the way engineers run production: with evidence, with discipline, and with tools on the candidate's side of the table.
+
+> **On contributor counts:** signatures are credited via `Co-authored-by` and tracked in [SIGNATURES.md](./SIGNATURES.md); code contributors are tracked separately in [CONTRIBUTORS.md](./CONTRIBUTORS.md).
+
 ## Features
 
 | Feature                  | Description                                                                                                                              |

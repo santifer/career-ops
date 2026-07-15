@@ -16,7 +16,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run build:latex` | `build-cv-latex.mjs` | Build .tex from structured JSON payload |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
 | `npm run patterns` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |
-| `npm run upskill` | `upskill.mjs` | Aggregate skill-gap map from tracked reports |
+| `npm run upskill` | `upskill.mjs` | Aggregate skill-gap map from tracked reports (or `--url-text <url\|file>` for a single-JD targeted gap analysis) |
 | `npm run add` | `add-entry.mjs` | Dedup + insert a `/career-ops add` entry into cv.md / article-digest.md |
 | `npm run update:check` | `update-system.mjs check` | Check for upstream updates |
 | `npm run update` | `update-system.mjs apply` | Apply upstream update |
@@ -198,6 +198,8 @@ Aggregates skill gaps across every tracked report (#1520, phase 1). Extracts ski
 npm run upskill
 npm run upskill -- --summary
 npm run upskill -- --min-reports 3
+node upskill.mjs --url-text https://boards.greenhouse.io/acme/jobs/123   # targeted: gaps for one JD
+node upskill.mjs --url-text ./jds/my-job.txt                            # targeted: --url-text also takes a local file
 node upskill.mjs --self-test
 ```
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.20.0](https://github.com/santifer/career-ops/compare/career-ops-v1.19.0...career-ops-v1.20.0) (2026-07-14)
+
+
+### Features
+
+* **onboarding:** surface the CareerOps Manifesto after updates and setup ([84f2e53](https://github.com/santifer/career-ops/commit/84f2e534dfba7ac3831f0fda670bc6c3eaced788))
+
+
+### Bug Fixes
+
+* **upskill:** correct inverted known-skill suppression in targeted mode ([#1851](https://github.com/santifer/career-ops/issues/1851)) ([4d95d70](https://github.com/santifer/career-ops/commit/4d95d70704762dabcc540fe1f0b93cc9a2d78c41))
+
 ## [1.19.0](https://github.com/santifer/career-ops/compare/career-ops-v1.18.0...career-ops-v1.19.0) (2026-07-13)
 
 
