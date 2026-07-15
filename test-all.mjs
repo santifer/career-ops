@@ -4494,6 +4494,37 @@ try {
     fail('role matcher ignored a real short-acronym overlap');
   }
 
+  // A generic base title (no suffix of its own) shares every one of its tokens
+  // with a specialized sibling, so the shared tokens alone used to cross the
+  // Jaccard threshold — even though the sibling's extra word is exactly the
+  // signal that these are two different, separately-postable openings.
+  if (!roleFuzzyMatch('Senior Analytics Engineer', 'Senior Analytics Engineer, People Analytics')) {
+    pass('role matcher keeps a base title distinct from its specialized-suffix sibling (#1881)');
+  } else {
+    fail('role matcher collapsed a base title into its specialized-suffix sibling');
+  }
+
+  // A true repost of the same base title must still match.
+  if (roleFuzzyMatch('Senior Analytics Engineer', 'Senior Analytics Engineer')) {
+    pass('role matcher still matches an exact-title repost');
+  } else {
+    fail('role matcher rejected an exact-title repost');
+  }
+
+  // Seniority omitted on one side is not a specialization suffix — still a repost.
+  if (roleFuzzyMatch('Data Engineer', 'Senior Data Engineer')) {
+    pass('role matcher still matches when seniority is only stated on one side');
+  } else {
+    fail('role matcher rejected a repost that only adds a seniority word');
+  }
+
+  // A repost annotation is tracking metadata, not a specialization — must still match.
+  if (roleFuzzyMatch('Learning Development Designer III', 'Learning Development Designer III (Repost)')) {
+    pass('role matcher does not treat a "(Repost)" annotation as a specialization marker');
+  } else {
+    fail('role matcher wrongly treated a "(Repost)" annotation as a distinct sibling role');
+  }
+
   const dedupTmp = mkdtempSync(join(tmpdir(), 'career-ops-dedup-'));
   try {
     mkdirSync(join(dedupTmp, 'data'));
