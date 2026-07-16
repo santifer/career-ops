@@ -84,7 +84,7 @@
 
 Career-Ops ([career-ops.org](https://career-ops.org), auch **careerops**) macht jede KI-Coding-CLI zu einer Kommandozentrale für die Jobsuche. Statt Bewerbungen manuell in einer Tabelle zu verfolgen, bekommst du eine KI-gestützte Pipeline, die:
 
-- **Stellenanzeigen bewertet** mit einem strukturierten A-F-Scoring-System (10 gewichtete Dimensionen)
+- **Stellenanzeigen bewertet** mit einem strukturierten A-F-Bewertung (fünf gewichtete Dimensionen, die zu einer Bewertung von 1,0–5,0 führen)
 - **maßgeschneiderte PDFs generiert** -- ATS-optimierte Lebensläufe, angepasst an jede Stellenanzeige
 - **Portale automatisch scannt** (Greenhouse, Ashby, Lever, Unternehmensseiten)
 - **Batch-Verarbeitung** ermöglicht -- 10+ Stellenanzeigen parallel mit Sub-Agents bewerten
