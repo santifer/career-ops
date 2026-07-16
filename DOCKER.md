@@ -43,7 +43,7 @@ The `./cops` wrapper forwards any command into the container.
 | Apply update | `./cops update` |
 | Rollback | `./cops rollback` |
 | Interactive shell | `./cops shell` |
-| Raw node script | `./cops node scripts/js/check-liveness.mjs <url>` |
+| Raw node script | `./cops node scripts/archived-js/check-liveness.mjs <url>` |
 | Build dashboard | `./cops bash -c 'cd dashboard && go build -buildvcs=false -o career-dashboard . && ./career-dashboard --path ..'` |
 
 Unknown subcommands fall through to `docker compose exec` so anything works:

@@ -405,8 +405,8 @@ When spawning headless workers for batch processing, use the appropriate command
 
 ## Stack and Conventions
 
-- Python 3.10+ (scripts/python/ — primary runtime), Node.js (scripts/js/ — fallback), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
-- Scripts in `scripts/python/` (primary) and `scripts/js/` (fallback), configuration in YAML
+- Python 3.10+ (scripts/python/ — primary runtime), Node.js (scripts/archived-js/ — legacy), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data)
+- Scripts in `scripts/python/` (primary) and `scripts/archived-js/` (legacy), configuration in YAML
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
 - Batch in `batch/` (gitignored except scripts and prompt)

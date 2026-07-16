@@ -34,12 +34,12 @@ jobs:
 
       # Deterministic shape gate (no network).
       - name: Validate registry shape
-        run: node scripts/js/validate-plugin-registry.mjs
+        run: node scripts/archived-js/validate-plugin-registry.mjs
 
       # Deep gate: clone each entry at its pinned SHA + static-validate + audit.
       # No secrets are present in this job; nothing the plugin ships is executed.
       - name: Clone + audit each registry entry
-        run: node scripts/js/validate-plugin-registry.mjs --deep
+        run: node scripts/archived-js/validate-plugin-registry.mjs --deep
 
       - name: One plugin per PR
         # base_ref goes through env, never ${{ }}-spliced into the script —

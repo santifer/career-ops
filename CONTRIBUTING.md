@@ -96,17 +96,18 @@ Rule of thumb before you build: **provider modules, languages, CLI support, mode
 ```bash
 # Scripts
 npm run doctor                # Setup validation
-node scripts/js/verify-pipeline.mjs     # Health check
-node scripts/js/cv-sync-check.mjs        # Config check
+python -m scripts.python.tracker.verify_pipeline     # Health check
+python -m scripts.python.admin.cv_sync_check         # Config check
 
 # Dashboard
 npm run build:dashboard       # go build with platform-correct binary name
 npm run serve:dashboard       # launch the TUI against the repo root
 
 # Tests
-node scripts/js/test-all.mjs             # Full suite — run before pushing/opening a PR
-node scripts/js/test-all.mjs --quick     # Full suite, skipping the dashboard build
-node scripts/js/test-all.mjs --only providers/themuse   # Run just one provider's test(s)
+python -m pytest scripts/python/tests -q              # Python test suite (237 tests)
+node scripts/archived-js/test-all.mjs                 # Full JS suite — run before pushing/opening a PR
+node scripts/archived-js/test-all.mjs --quick         # Full suite, skipping the dashboard build
+node scripts/archived-js/test-all.mjs --only providers/themuse   # Run just one provider's test(s)
 ```
 
 **Adding a test for a new scanner provider:** add one file at
@@ -117,7 +118,7 @@ no registration needed. Do not add a section to `test-all.mjs` for this.
 `tests/` files matching the given substring and skips every inline core
 section (syntax, scripts, dashboard, data contract, personal data, paths,
 etc.). A green `--only` run is **not** a green suite — always run the full
-`node scripts/js/test-all.mjs` before pushing.
+`node scripts/archived-js/test-all.mjs` before pushing.
 
 ## Brand and Trademark
 
