@@ -213,7 +213,7 @@ Batch mode limitation: Playwright is not available, so exact apply-button state 
 
 Close the report body with a `## Risk Summary` block directly after Block G's section — one row per risk signal, fixed order, three states per row: `✅ {clear verdict}` / `⚠️ {finding}` / `— not evaluated`. **Aggregation only, zero new judgment:** each row quotes the verdict already produced by its source signal; it never re-scores or overrides.
 
-**`— not evaluated` is a first-class state:** a signal that this worker cannot evaluate is explicitly declared — NEVER omit the row — so an all-✅ summary can be trusted.
+**`— not evaluated` is a first-class state:** a signal that this worker cannot evaluate is explicitly declared — NEVER omit the row — so an all-✅ summary can be trusted. **Named exception:** the Interview red flags row renders its not-evaluated case as `— no interview sessions yet` — a documented, more specific phrasing of the same "not evaluated" concept for that one row (the cross-reference check did run; it just found no redflags file), not a fourth free-floating state.
 
 Batch rendering rules per row:
 
