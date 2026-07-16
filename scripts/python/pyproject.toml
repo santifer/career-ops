@@ -1,0 +1,27 @@
+[project]
+name = "career-ops-scripts"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "pyyaml>=6,<7",
+  "python-dotenv>=1.0,<2",
+  "httpx>=0.27,<1",
+  "playwright>=1.49,<2",
+  "openai>=1.50,<2",
+  "google-genai>=1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<9",
+  "pytest-asyncio>=0.24,<1",
+  "ruff>=0.6,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["../.."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
