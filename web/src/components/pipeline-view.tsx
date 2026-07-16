@@ -26,7 +26,7 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number];
 
-const SORT_KEYS = ["company", "role", "score", "status", "date"] as const;
+const SORT_KEYS = ["tracker", "company", "role", "score", "status", "date"] as const;
 type SortKey = (typeof SORT_KEYS)[number];
 
 export function PipelineView({
@@ -107,6 +107,13 @@ export function PipelineView({
       if (sort.key === "score") {
         const an = scoreNum(a.score);
         const bn = scoreNum(b.score);
+        const av = Number.isNaN(an) ? -Infinity : an;
+        const bv = Number.isNaN(bn) ? -Infinity : bn;
+        return (av - bv) * sort.dir;
+      }
+      if (sort.key === "tracker") {
+        const an = Number(a.n);
+        const bn = Number(b.n);
         const av = Number.isNaN(an) ? -Infinity : an;
         const bv = Number.isNaN(bn) ? -Infinity : bn;
         return (av - bv) * sort.dir;
@@ -196,7 +203,10 @@ export function PipelineView({
                 {SORT_KEYS.map((k) => (
                   <th
                     key={k}
-                    className="cursor-pointer select-none px-4 py-2.5 font-medium hover:text-foreground"
+                    className={cn(
+                      "cursor-pointer select-none px-3 py-2.5 font-medium hover:text-foreground lg:px-4",
+                      k === "date" && "max-lg:hidden",
+                    )}
                     onClick={() => setParams({ sort: k, dir: sort.key === k ? sort.dir * -1 : -1 })}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -210,25 +220,38 @@ export function PipelineView({
             <tbody className="divide-y divide-border">
               {filtered.map((r, i) => (
                 <tr key={`${r.n}-${i}`} className="group transition-colors hover:bg-surface/40">
-                  <td className="px-4 py-3 font-medium">
+                  <td className="w-16 px-3 py-3 font-mono text-xs tabular-nums text-faint lg:px-4">
+                    {r.n ? (
+                      <Link
+                        href={`/pipeline/${r.n}`}
+                        className="inline-flex min-h-6 items-center rounded-md px-1.5 transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                        aria-label={`Open tracker ${r.n}`}
+                      >
+                        #{r.n}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="px-3 py-3 font-medium lg:px-4">
                     <Link href={`/pipeline/${r.n}`} className="flex items-center gap-2.5 transition-colors group-hover:text-brand">
                       <CompanyLogo name={r.company} size={20} />
                       {r.company}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-muted">
+                  <td className="px-3 py-3 text-muted lg:px-4">
                     <Link href={`/pipeline/${r.n}`}>{r.role}</Link>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3 lg:px-4">
                     <Badge tone={scoreTone(r.score)}>{r.score || "—"}</Badge>
                   </td>
-                  <td className="px-4 py-3 text-muted">
+                  <td className="px-3 py-3 text-muted lg:px-4">
                     <span className="inline-flex items-center gap-1.5">
                       <span className={cn("size-1.5 shrink-0 rounded-full", statusDot(r.status))} />
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-faint tabular-nums">{r.date}</td>
+                  <td className="px-3 py-3 text-faint tabular-nums max-lg:hidden lg:px-4">{r.date}</td>
                 </tr>
               ))}
             </tbody>
