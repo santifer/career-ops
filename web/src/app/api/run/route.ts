@@ -142,7 +142,12 @@ export async function POST(req: Request) {
   // (tracker.mjs delete doesn't yet share a lock with merge-tracker — see run-registry).
   const writeToken = kind === "evaluate" || kind === "pdf" ? acquireTrackerWrite() : null;
 
-  const child = spawn(binPath, args, { cwd: careerOpsRoot(), env: process.env });
+  // stdin = /dev/null so the CLI doesn't wait on piped input (the /api/apply/prefill
+  // route already does this; Codex's `exec` in particular blocks reading stdin for
+  // additional context otherwise — confirmed it hangs until the kill timer, then
+  // reports a generic "installed and authenticated?" error that reads as an auth
+  // failure even though the CLI is fully signed in).
+  const child = spawn(binPath, args, { cwd: careerOpsRoot(), env: process.env, stdio: ["ignore", "pipe", "pipe"] });
   const enc = new TextEncoder();
 
   // `closed` + kill timer in the OUTER scope so cancel() (client disconnect) can
