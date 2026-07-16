@@ -4753,6 +4753,73 @@ try {
     fail('role matcher wrongly treated a "(Repost)" annotation as a distinct sibling role');
   }
 
+  // "Member of Technical Staff" is a boilerplate level-prefix used by several
+  // companies for senior IC titles. Without stripping it, "member" and
+  // "technical" leaked through as apparently-discriminating tokens and made two
+  // genuinely different roles register as a fuzzy-match false positive.
+  if (!roleFuzzyMatch('Member of Technical Staff, Connector Platform', 'Member of Technical Staff, Backend Platform')) {
+    pass('role matcher keeps distinct "Member of Technical Staff" sibling roles apart');
+  } else {
+    fail('role matcher collapsed distinct "Member of Technical Staff" sibling roles');
+  }
+
+  if (roleFuzzyMatch('Member of Technical Staff, Connector Platform', 'Member of Technical Staff, Connector Platform')) {
+    pass('role matcher still matches an exact "Member of Technical Staff" repost');
+  } else {
+    fail('role matcher rejected an exact "Member of Technical Staff" repost');
+  }
+
+  // The MTS fix strips the literal "member of technical staff" phrase, not a
+  // blanket stopword on "member"/"technical" — those words must keep their
+  // normal discriminating role in titles where the phrase isn't present.
+  if (!roleFuzzyMatch('Technical Writer, API Docs', 'Technical Writer, Onboarding Guides')) {
+    pass('role matcher still treats "technical" as discriminating outside the MTS phrase');
+  } else {
+    fail('role matcher over-stripped "technical" outside the MTS phrase');
+  }
+
+  // A blanket "technical" stopword would also break real reposts: stripped from
+  // both sides here, only "recruiter" is left, which alone can't clear the
+  // 2-token overlap minimum. Phrase-aware stripping keeps "technical" as a
+  // normal contributing token outside the MTS phrase, so the repost still matches.
+  if (roleFuzzyMatch('Senior Technical Recruiter, EMEA', 'Technical Recruiter, EMEA')) {
+    pass('role matcher still matches a real repost that happens to contain "technical"');
+  } else {
+    fail('role matcher rejected a real repost because "technical" was over-stripped');
+  }
+
+  // Stripping the MTS phrase can leave 0-1 tokens for a bare or short-suffix
+  // title, which would otherwise fall short of the 2-token overlap minimum —
+  // even for an exact repost of itself. The exact-match fast path in
+  // roleFuzzyMatch guards this regardless of tokenization.
+  if (roleFuzzyMatch('Member of Technical Staff', 'Member of Technical Staff')) {
+    pass('role matcher matches a bare "Member of Technical Staff" exact repost');
+  } else {
+    fail('role matcher rejected a bare "Member of Technical Staff" exact repost');
+  }
+
+  if (roleFuzzyMatch('Member of Technical Staff, Backend', 'Member of Technical Staff, Backend')) {
+    pass('role matcher matches an exact repost of a short-suffix MTS title');
+  } else {
+    fail('role matcher rejected an exact repost of a short-suffix MTS title');
+  }
+
+  // A non-identical repost (different punctuation) with a genuinely
+  // discriminating one-word suffix still needs 2+ tokens to clear the
+  // overlap minimum — the "engineer" filler (a BASELINE_TOKENS entry) pads
+  // that count without ever being the sole reason two titles match.
+  if (roleFuzzyMatch('Member of Technical Staff, Connector', 'Member of Technical Staff - Connector')) {
+    pass('role matcher matches a punctuation-variant repost of a short-suffix MTS title');
+  } else {
+    fail('role matcher rejected a punctuation-variant repost of a short-suffix MTS title');
+  }
+
+  if (roleFuzzyMatch('Member of Technical Staff, Connector', 'Member of Technical Staff, Backend')) {
+    fail('role matcher collapsed distinct one-word-suffix MTS roles via the "engineer" filler');
+  } else {
+    pass('role matcher keeps distinct one-word-suffix MTS roles apart despite the "engineer" filler');
+  }
+
   const dedupTmp = mkdtempSync(join(tmpdir(), 'career-ops-dedup-'));
   try {
     mkdirSync(join(dedupTmp, 'data'));
