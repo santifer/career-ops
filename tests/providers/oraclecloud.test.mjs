@@ -11,6 +11,12 @@ try {
   const oc = mod.default;
   const { parseOracleResponse, resolveSite, buildApiUrl, buildJobUrl } = mod;
 
+  // Validate a derived URL by its parsed hostname, never by substring-matching
+  // the whole URL string — a trusted host fragment can appear in a hostile
+  // URL's path/query/userinfo (CodeQL js/incomplete-url-substring-sanitization).
+  // Mirrors the provider's own assertOracleUrl discipline.
+  const hostOf = (u) => { try { return new URL(u).hostname; } catch { return null; } };
+
   // ── id ──────────────────────────────────────────────────────────────
   if (oc.id === 'oraclecloud') pass('oraclecloud.id is "oraclecloud"');
   else fail(`oraclecloud.id is ${JSON.stringify(oc.id)}`);
@@ -18,7 +24,8 @@ try {
   // ── detect ──────────────────────────────────────────────────────────
   const careers = 'https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1002/jobs';
   const hit = oc.detect({ name: 'JPMC', careers_url: careers });
-  if (hit && hit.url.includes('jpmc.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions')
+  if (hit && hostOf(hit.url) === 'jpmc.fa.oraclecloud.com'
+      && new URL(hit.url).pathname === '/hcmRestApi/resources/latest/recruitingCEJobRequisitions'
       && hit.url.includes('findReqs;siteNumber=CX_1002')) {
     pass('oraclecloud.detect() derives the requisitions API URL with siteNumber from careers_url');
   } else {
@@ -34,7 +41,7 @@ try {
 
   // region host variant (<tenant>.fa.<region>.oraclecloud.com)
   const regionHit = oc.detect({ name: 'Oracle', careers_url: 'https://oracle.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs' });
-  if (regionHit && regionHit.url.startsWith('https://oracle.fa.us2.oraclecloud.com/hcmRestApi')) {
+  if (regionHit && hostOf(regionHit.url) === 'oracle.fa.us2.oraclecloud.com') {
     pass('oraclecloud.detect() handles the <region> host variant (us2)');
   } else {
     fail(`region variant returned ${JSON.stringify(regionHit)}`);
@@ -42,7 +49,7 @@ try {
 
   // ocs host variant
   const ocsHit = oc.detect({ name: 'X', careers_url: 'https://acme.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs' });
-  if (ocsHit && ocsHit.url.startsWith('https://acme.fa.ocs.oraclecloud.com/')) {
+  if (ocsHit && hostOf(ocsHit.url) === 'acme.fa.ocs.oraclecloud.com') {
     pass('oraclecloud.detect() handles the .ocs. host variant');
   } else {
     fail(`ocs variant returned ${JSON.stringify(ocsHit)}`);
@@ -78,7 +85,7 @@ try {
     careers_url: 'https://careers.branded.com',
     api: 'https://tenant.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1005/jobs',
   });
-  if (apiPinned && apiPinned.url.includes('tenant.fa.oraclecloud.com') && apiPinned.url.includes('siteNumber=CX_1005')) {
+  if (apiPinned && hostOf(apiPinned.url) === 'tenant.fa.oraclecloud.com' && apiPinned.url.includes('siteNumber=CX_1005')) {
     pass('oraclecloud.detect() honors api: over a branded careers_url');
   } else {
     fail(`api-pinned returned ${JSON.stringify(apiPinned)}`);
@@ -238,7 +245,8 @@ try {
     fail(`fetch headers = ${JSON.stringify(capturedOpts?.headers)}`);
   }
 
-  if (capturedUrl && capturedUrl.startsWith('https://jpmc.fa.oraclecloud.com/hcmRestApi/')) {
+  if (capturedUrl && hostOf(capturedUrl) === 'jpmc.fa.oraclecloud.com'
+      && new URL(capturedUrl).pathname.startsWith('/hcmRestApi/')) {
     pass('oraclecloud.fetch() requests the trusted Oracle host');
   } else {
     fail(`fetch url = ${JSON.stringify(capturedUrl)}`);
