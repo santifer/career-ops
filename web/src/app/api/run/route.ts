@@ -9,6 +9,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 800; // a real oferta evaluation / pdf-mode CV tailoring + render is heavy and multi-step
 
+// Stderr is not a reliable fatal-error channel for every CLI. Codex in
+// particular writes its tool trace to stderr, including raw file contents read
+// from cv.md/modes/*.md. Keep this detector for non-zero exits, but do not let
+// a keyword in stderr override a clean process exit.
+const STDERR_ERROR_RE =
+  /\b(?:error|denied|fatal|not found|unauthorized|forbidden|login|credential|api[ -]?key|quota|rate limit|not authenticated|auth(?:entication|orization)?)\b/i;
+
 // The web ORCHESTRATES the real career-ops engine — it does NOT reimplement it.
 // kind "evaluate" runs the REAL modes/oferta.md and persists the canonical
 // artifacts (A–F report + tracker row) via the SAME scripts the CLI uses
@@ -154,7 +161,7 @@ export async function POST(req: Request) {
     start(controller) {
       let buf = "";
       let emittedText = false; // any assistant text delta → the CLI actually ran
-      let sawError = false;
+      let stderrErrorSnippet = "";
       let lastTokens = 0; // per-run token cost from the Claude result event (#6) — local only
       let lastCostUsd: number | null = null;
       // pdf-mode tailors a full CV + renders it — give it more headroom.
@@ -215,11 +222,11 @@ export async function POST(req: Request) {
       });
       child.stderr.on("data", (d: Buffer) => {
         const s = d.toString();
-        // Widened: auth/login/quota failures are the most common real error and
-        // the old narrow regex missed them (silent false "success").
-        if (/error|denied|fatal|not found|unauthorized|forbidden|auth|login|credential|api[ -]?key|quota|rate limit|not authenticated/i.test(s)) {
-          sawError = true;
-          send({ type: "error", msg: s.trim().slice(0, 200) });
+        // Do not stream this as a fatal `{ type: "error" }` immediately. Some
+        // CLIs echo normal tool traces and file contents to stderr; the close
+        // handler decides whether stderr mattered after it sees the exit code.
+        if (STDERR_ERROR_RE.test(s)) {
+          stderrErrorSnippet ||= s.trim().slice(0, 200);
         }
       });
       child.on("error", (e) => { send({ type: "error", msg: e.message }); close(); });
@@ -229,18 +236,18 @@ export async function POST(req: Request) {
         // Honesty gate (#9): a green "done" with a parsed score requires a CLEAN exit,
         // real output, AND (for evaluations) a report actually written. Anything else
         // is surfaced — an errored run must never be banked as a confident score.
-        if (!emittedText && !sawError && !cleanExit) {
-          send({ type: "error", msg: "The CLI exited with an error — is it installed and authenticated?" });
-        } else if (!emittedText && !sawError) {
+        if (!emittedText && !cleanExit) {
+          send({ type: "error", msg: stderrErrorSnippet || "The CLI exited with an error — is it installed and authenticated?" });
+        } else if (!emittedText) {
           send({ type: "error", msg: "The CLI produced no output — is it installed and authenticated? (career-ops is best on Claude Code.)" });
         } else if (persists && !wroteReport) {
           // The worker ran but never wrote the report/tracker row (e.g. a CLI
           // without file-write authorization) — surface it instead of a fake score.
           send({ type: "error", msg: "This evaluation didn't save a report, so it's not in your tracker. Full evaluation is verified on Claude Code." });
-        } else if (!cleanExit || sawError) {
+        } else if (!cleanExit) {
           // Produced output (maybe even a report) but did NOT finish cleanly — flag it
           // instead of recording a confident score off a half-finished run.
-          send({ type: "error", msg: "This run hit an error before finishing, so it isn't recorded as a confident result — re-run it to verify." });
+          send({ type: "error", msg: stderrErrorSnippet || "This run hit an error before finishing, so it isn't recorded as a confident result — re-run it to verify." });
         } else {
           send({ type: "done", tokens: lastTokens, costUsd: lastCostUsd });
         }
