@@ -9,7 +9,7 @@
  * - dedupeAgainstPortals (name/url/api hits, trailing-slash norm, self-dedup)
  * - insertIntoTrackedCompanies (splice correctness, byte-preservation, empty
  *   block, missing header, idempotency)
- * - CLI behavior (--self-test, --dry-run empty list leaves portals untouched,
+ * - CLI behavior (--self-test, default preview never writes, --write opt-in,
  *   unknown --vendors, --help) via execFileSync — no live network.
  *
  * Run: node discover-ats.test.mjs
@@ -305,9 +305,10 @@ try {
   console.log(`    exit code: ${e.status}, stderr: ${e.stderr?.slice(0, 200)}`);
 }
 
-// --help exits 0 and prints usage
+// --help exits 0 and documents the opt-in --write flag
 const helpOut = execFileSync('node', [scriptPath, '--help'], { encoding: 'utf-8', timeout: 15000 });
-ok('--help prints usage', helpOut.includes('Usage:') && helpOut.includes('--dry-run'));
+ok('--help prints usage', helpOut.includes('Usage:') && helpOut.includes('--write'));
+ok('--help states preview-by-default (never writes without --write)', /never writes[\s\S]*--write/i.test(helpOut));
 
 // Empty input (no --in, no names): valid JSON envelope, no network, exit 0.
 const emptyOut = execFileSync('node', [scriptPath], { encoding: 'utf-8', timeout: 15000, cwd: dirname(scriptPath) });
@@ -315,24 +316,50 @@ const emptyJson = JSON.parse(emptyOut);
 ok('empty input → valid JSON envelope', typeof emptyJson === 'object' && 'metadata' in emptyJson);
 eq('empty input → resolved []', emptyJson.resolved, []);
 eq('empty input → unresolved []', emptyJson.unresolved, []);
+ok('empty input → previewOnly true', emptyJson.metadata.previewOnly === true);
+ok('empty input → written false', emptyJson.metadata.written === false);
 
-// --dry-run with empty list against a scratch portals file: file must be untouched.
+// Data contract: the DEFAULT run (no --write) must never touch portals.yml, even
+// when it can't be parsed. Run against a scratch file and assert it's untouched.
+// Network-free: an unresolvable slug (SLUG_RE-safe but no real board) + no --write.
 const tmpDir = mkdtempSync(join(tmpdir(), 'discover-ats-test-'));
 const scratchPortals = join(tmpDir, 'portals.yml');
 const scratchContent = 'title_filter:\n  positive: [pm]\n\ntracked_companies:\n  - name: Existing\n    careers_url: https://jobs.lever.co/existing\n\njob_boards:\n  - name: Foo\n';
 writeFileSync(scratchPortals, scratchContent);
 try {
-  const dryOut = execFileSync('node', [scriptPath, '--dry-run'], {
+  // Empty company list → no network — the point is only to prove the default
+  // path writes nothing and reports previewOnly.
+  const previewOut = execFileSync('node', [scriptPath], {
     encoding: 'utf-8', timeout: 15000, cwd: dirname(scriptPath),
     env: { ...process.env, CAREER_OPS_PORTALS: scratchPortals },
   });
-  const dryJson = JSON.parse(dryOut);
-  ok('--dry-run empty → valid JSON', typeof dryJson === 'object' && 'metadata' in dryJson);
-  ok('--dry-run → written false', dryJson.metadata.written === false);
-  eq('--dry-run empty → portals.yml byte-for-byte unchanged', readFileSync(scratchPortals, 'utf-8'), scratchContent);
+  const previewJson = JSON.parse(previewOut);
+  ok('default run → previewOnly true', previewJson.metadata.previewOnly === true);
+  ok('default run → written false', previewJson.metadata.written === false);
+  eq('default run → portals.yml byte-for-byte unchanged', readFileSync(scratchPortals, 'utf-8'), scratchContent);
+
+  // --write is accepted as a known flag (empty list → no fresh entries → still
+  // no write, file unchanged). Proves the flag parses and the guard holds.
+  const writeOut = execFileSync('node', [scriptPath, '--write'], {
+    encoding: 'utf-8', timeout: 15000, cwd: dirname(scriptPath),
+    env: { ...process.env, CAREER_OPS_PORTALS: scratchPortals },
+  });
+  const writeJson = JSON.parse(writeOut);
+  ok('--write accepted (valid JSON, exit 0)', typeof writeJson === 'object' && 'metadata' in writeJson);
+  eq('--write with nothing fresh → portals.yml still unchanged', readFileSync(scratchPortals, 'utf-8'), scratchContent);
+
+  // --dry-run is accepted as a harmless alias for the default (no write).
+  const aliasOut = execFileSync('node', [scriptPath, '--dry-run'], {
+    encoding: 'utf-8', timeout: 15000, cwd: dirname(scriptPath),
+    env: { ...process.env, CAREER_OPS_PORTALS: scratchPortals },
+  });
+  ok('--dry-run still accepted (no-op alias)', JSON.parse(aliasOut).metadata.written === false);
 } finally {
   rmSync(tmpDir, { recursive: true, force: true });
 }
+
+// insertIntoTrackedCompanies unit test already proves the actual write/splice
+// mechanics deterministically (section 6); the CLI-level --write path shares it.
 
 // unknown --vendors → nonzero exit
 let vendorExit = 0;

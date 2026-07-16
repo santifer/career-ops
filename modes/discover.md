@@ -45,16 +45,17 @@ reusable tool that feeds the scanner.
 
 ## Step 1 — Run the script
 
-Preview first (writes nothing):
-
-```bash
-node discover-ats.mjs --in companies.yml --dry-run
-```
-
-Commit (appends confirmed entries to `portals.yml`):
+Preview (the default — writes nothing, prints the entries it would add):
 
 ```bash
 node discover-ats.mjs --in companies.yml
+```
+
+Commit — the user must explicitly opt in with `--write` to modify `portals.yml`
+(a user-layer file; it is never auto-touched):
+
+```bash
+node discover-ats.mjs --in companies.yml --write
 ```
 
 Other forms:
@@ -73,10 +74,13 @@ Parse the JSON envelope:
 
 | Key | Contents |
 |-----|----------|
-| `metadata` | Counts (`resolved`, `unresolved`, `duplicatesSkipped`, `freshWritten`), `written` flag, `dryRun`, `portalsPath`, `warnings` |
+| `metadata` | Counts (`resolved`, `unresolved`, `duplicatesSkipped`, `fresh`, `freshWritten`), `written` flag, `previewOnly`, `portalsPath`, `warnings` |
 | `resolved` | Per company: `name`, `vendor`, `slug`, `careers_url`, `api` (Greenhouse only), `provider` (Workday only), `jobCount` |
 | `unresolved` | Per company: `name`, `triedVendors`, `reason`, and (when present) `emptyBoards`, `errors`, `skippedUnsafeSlug`, `website` |
-| `pendingEntries` | The rendered YAML block (present on `--dry-run`, or when the tracker wasn't written) |
+| `pendingEntries` | The rendered YAML block — present whenever nothing was written (i.e. on a preview run, the default) so the user can paste it manually |
+
+**Default is preview.** Always show the user the `pendingEntries` / resolved
+table first, then let them decide; only re-run with `--write` once they confirm.
 
 ## Step 2 — Review resolved vs unresolved
 
@@ -110,8 +114,9 @@ like `eu-fintech`) to pull matching roles from the newly tracked boards.
 - **Workday needs a hint, never a guess:** resolve Workday only from a
   user-supplied URL or `{tenant, site}` — never brute-force site names. The
   instance (and only the instance) may be auto-probed from a bounded list.
-- **portals.yml is user-layer:** the script appends entries via a text splice
-  that preserves comments and formatting. Always offer `--dry-run` first so the
-  user sees what will be added before it's written.
+- **portals.yml is user-layer — never auto-written:** the run is preview-only by
+  default and touches nothing; only an explicit `--write` appends entries (via a
+  comment-preserving, atomic text splice). Show the user the preview and let them
+  confirm before you ever pass `--write`.
 - **Idempotent:** re-running with the same input adds nothing (dedupe by name +
   careers_url/api).

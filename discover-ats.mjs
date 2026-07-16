@@ -6,17 +6,20 @@
  * probing the public JSON APIs career-ops already supports (Greenhouse, Ashby,
  * Lever) via the existing providers/ layer — zero LLM tokens, zero auth. A
  * company "resolves" when a vendor's board exists AND currently lists ≥1 job.
- * Confirmed entries are appended to portals.yml `tracked_companies` (a text
- * splice that preserves the file's comments and formatting; deduped;
- * idempotent). Companies that don't resolve — JS-rendered portals, non-standard
- * slugs, or Workday (which needs a full tenant/instance/site URL, not a bare
- * slug) — are flagged for manual follow-up instead of being silently dropped.
+ *
+ * portals.yml is a USER-LAYER file, so by DEFAULT this command is preview-only:
+ * it prints the entries it WOULD add (pendingEntries) and writes nothing. Pass
+ * --write to explicitly opt in to appending them to portals.yml `tracked_companies`
+ * (a text splice that preserves the file's comments and formatting; deduped;
+ * idempotent; atomic temp-then-rename). Companies that don't resolve —
+ * JS-rendered portals, non-standard slugs, or Workday without a hint — are
+ * flagged for manual follow-up instead of being silently dropped.
  *
  * Input: a YAML file `companies: [{name, slug?, website?}]` (via --in), and/or
  * bare company names as positional CLI args.
  *
- * Run: node discover-ats.mjs --in companies.yml            (writes to portals.yml)
- *      node discover-ats.mjs --in companies.yml --dry-run  (preview, no write)
+ * Run: node discover-ats.mjs --in companies.yml            (preview — writes nothing)
+ *      node discover-ats.mjs --in companies.yml --write    (opt in: append to portals.yml)
  *      node discover-ats.mjs Stripe Ramp Mollie            (bare names)
  *      node discover-ats.mjs --in companies.yml --summary  (human table)
  *      node discover-ats.mjs --in companies.yml --vendors gh,ashby
@@ -65,9 +68,9 @@ const DEFAULT_CONCURRENCY = 8;
 // or an explicit {tenant, site[, instance]} block — with a bounded instance
 // auto-probe when the instance is the only missing coordinate.
 const VENDORS = {
-  gh:    { id: 'greenhouse', provider: greenhouse, buildUrl: (s) => `https://job-boards.greenhouse.io/${s}`, api: (s) => `https://boards-api.greenhouse.io/v1/boards/${s}/jobs` },
-  ashby: { id: 'ashby',      provider: ashby,      buildUrl: (s) => `https://jobs.ashbyhq.com/${s}` },
-  lever: { id: 'lever',      provider: lever,      buildUrl: (s) => `https://jobs.lever.co/${s}` },
+  gh:    { id: 'greenhouse', provider: greenhouse, host: 'job-boards.greenhouse.io', buildUrl: (s) => `https://job-boards.greenhouse.io/${s}`, api: (s) => `https://boards-api.greenhouse.io/v1/boards/${s}/jobs` },
+  ashby: { id: 'ashby',      provider: ashby,      host: 'jobs.ashbyhq.com',        buildUrl: (s) => `https://jobs.ashbyhq.com/${s}` },
+  lever: { id: 'lever',      provider: lever,      host: 'jobs.lever.co',           buildUrl: (s) => `https://jobs.lever.co/${s}` },
 };
 // Slug-resolvable vendors, probed in order for each company (first match wins).
 const VENDOR_ORDER = ['gh', 'ashby', 'lever'];
@@ -79,14 +82,17 @@ const VENDOR_ORDER = ['gh', 'ashby', 'lever'];
 const WORKDAY_INSTANCES = ['wd1', 'wd2', 'wd3', 'wd5', 'wd10', 'wd12', 'wd101', 'wd103'];
 
 const USAGE = `Usage:
-  node discover-ats.mjs --in companies.yml            # resolve + append to portals.yml
-  node discover-ats.mjs --in companies.yml --dry-run  # preview YAML + JSON, write nothing
+  node discover-ats.mjs --in companies.yml            # PREVIEW — resolve + print entries, write nothing
+  node discover-ats.mjs --in companies.yml --write    # opt in: append resolved entries to portals.yml
   node discover-ats.mjs Stripe Ramp Mollie            # company names as positional args
   node discover-ats.mjs --in companies.yml --summary  # human-readable table
   node discover-ats.mjs --in companies.yml --vendors gh,ashby,lever  # restrict probes
   node discover-ats.mjs --in companies.yml --vendors workday         # Workday only
   node discover-ats.mjs --self-test                   # inline test suite
   node discover-ats.mjs --help                        # print this usage block
+
+portals.yml is a user-layer file: this command NEVER writes it unless you pass
+--write. The default previews the entries it would add (see pendingEntries).
 
 Vendors: gh, ashby, lever (resolve from a name/slug) and workday (resolves from
 a coordinate hint — a name alone can't locate a Workday site). Default: all four.
@@ -208,7 +214,20 @@ export function buildCandidateUrls(company, vendors = VENDOR_ORDER) {
       skipped.push(vendor);
       continue;
     }
-    candidates.push({ vendor, slug, careers_url: cfg.buildUrl(slug) });
+    const careers_url = cfg.buildUrl(slug);
+    // Defense-in-depth: re-parse the URL we just built and confirm its hostname
+    // is EXACTLY the intended ATS host before it's ever probed — never trust the
+    // string by shape alone. SLUG_RE already forbids '/', '@', etc., so a slug
+    // can't smuggle in a host; this assertion makes that guarantee explicit and
+    // survives any future change to buildUrl. (Mirrors each provider's own
+    // new URL(...).hostname allowlist check.)
+    let host;
+    try { host = new URL(careers_url).hostname; } catch { host = null; }
+    if (host !== cfg.host) {
+      skipped.push(vendor);
+      continue;
+    }
+    candidates.push({ vendor, slug, careers_url });
   }
   return { candidates, skipped };
 }
@@ -699,7 +718,10 @@ function runSelfTest() {
 
 // ── CLI arg parsing ──────────────────────────────────────────────────
 
-const KNOWN_FLAGS = ['--in', '--vendors', '--dry-run', '--summary', '--self-test', '--help', '-h'];
+// --write is the explicit opt-in to modify portals.yml (a user-layer file);
+// without it the run is preview-only. --dry-run is accepted as a harmless alias
+// for "don't write" (the default) so an older invocation never surprises anyone.
+const KNOWN_FLAGS = ['--in', '--vendors', '--write', '--dry-run', '--summary', '--self-test', '--help', '-h'];
 const VALUE_FLAGS = ['--in', '--vendors'];
 
 function parseArgs(argv) {
@@ -755,7 +777,9 @@ function parseArgs(argv) {
     inPath: valueOf('--in'),
     vendors,
     includeWorkday,
-    dryRun: args.includes('--dry-run'),
+    // Preview by default; only --write may touch portals.yml. --dry-run is an
+    // accepted no-op alias (it just reaffirms the default).
+    write: args.includes('--write'),
     summary: args.includes('--summary'),
     selfTest: args.includes('--self-test'),
     names,
@@ -782,12 +806,12 @@ async function main() {
 
   if (companies.length === 0) {
     // Emit the same metadata shape as the normal path (documented in
-    // modes/discover.md) so a consumer reading dryRun/portalsPath on a
+    // modes/discover.md) so a consumer reading previewOnly/portalsPath on a
     // zero-company run gets the documented envelope, not undefined fields.
     const out = {
       metadata: {
-        resolved: 0, unresolved: 0, duplicatesSkipped: 0, freshWritten: 0,
-        written: false, dryRun: opts.dryRun, portalsPath: PORTALS_PATH, warnings,
+        resolved: 0, unresolved: 0, duplicatesSkipped: 0, fresh: 0, freshWritten: 0,
+        written: false, previewOnly: true, portalsPath: PORTALS_PATH, warnings,
       },
       resolved: [], unresolved: [],
     };
@@ -811,8 +835,12 @@ async function main() {
   const { fresh, duplicates } = dedupeAgainstPortals(resolved, existingEntries);
   const snippets = fresh.map(renderPortalEntry);
 
+  // Data-contract rule: portals.yml is a USER-LAYER file and is NEVER written
+  // unless the user explicitly opts in with --write. The default is preview —
+  // we print the entries we WOULD add and touch nothing. This mirrors how the
+  // rest of career-ops treats user files (see DATA_CONTRACT.md).
   let written = false;
-  if (!opts.dryRun && fresh.length && existsSync(PORTALS_PATH)) {
+  if (opts.write && fresh.length && existsSync(PORTALS_PATH)) {
     const current = readFileSync(PORTALS_PATH, 'utf-8');
     // Write-to-temp-then-rename: atomic on the same filesystem, so a crash
     // mid-write can't leave the user's portals.yml truncated.
@@ -820,17 +848,20 @@ async function main() {
     writeFileSync(tmpPath, insertIntoTrackedCompanies(current, snippets), 'utf-8');
     renameSync(tmpPath, PORTALS_PATH);
     written = true;
-  } else if (!opts.dryRun && fresh.length && !existsSync(PORTALS_PATH)) {
-    warnings.push(`portals.yml not found at ${PORTALS_PATH} — printing entries instead of writing`);
+  } else if (opts.write && fresh.length && !existsSync(PORTALS_PATH)) {
+    warnings.push(`--write given but portals.yml not found at ${PORTALS_PATH} — printing entries instead`);
+  } else if (!opts.write && fresh.length) {
+    warnings.push(`preview only — ${fresh.length} new entr${fresh.length === 1 ? 'y' : 'ies'} shown in pendingEntries; re-run with --write to append them to portals.yml`);
   }
 
   const metadata = {
     resolved: resolved.length,
     unresolved: unresolved.length,
     duplicatesSkipped: duplicates.length,
+    fresh: fresh.length,
     freshWritten: written ? fresh.length : 0,
     written,
-    dryRun: opts.dryRun,
+    previewOnly: !written,
     portalsPath: PORTALS_PATH,
     warnings,
   };
@@ -839,7 +870,9 @@ async function main() {
     printSummary({ resolved, unresolved, duplicates });
   } else {
     const out = { metadata, resolved, unresolved };
-    if (opts.dryRun || !written) out.pendingEntries = snippets.join('');
+    // Show the would-be YAML whenever we didn't write it (preview, or --write
+    // that couldn't find the file), so the user can paste it manually.
+    if (!written) out.pendingEntries = snippets.join('');
     console.log(JSON.stringify(out, null, 2));
   }
   process.exit(0);
