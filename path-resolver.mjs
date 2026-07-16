@@ -1,8 +1,17 @@
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, realpathSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function canonicalizePath(p) {
+  const absolutePath = resolve(p);
+  try {
+    return realpathSync(absolutePath);
+  } catch {
+    return absolutePath;
+  }
+}
 
 /**
  * Returns the resolved career-ops data directory root.
@@ -39,11 +48,12 @@ export function getCareerOpsRoot() {
  */
 export function resolveTrackerPath(root) {
   const env = process.env.CAREER_OPS_TRACKER?.trim();
-  if (env) {
-    return resolve(__dirname, env);
-  }
-  const dataPath = join(root, 'data/applications.md');
-  return existsSync(dataPath) ? dataPath : join(root, 'applications.md');
+  const raw = env
+    ? env
+    : existsSync(join(root, 'data/applications.md'))
+      ? join(root, 'data/applications.md')
+      : join(root, 'applications.md');
+  return canonicalizePath(raw);
 }
 
 /**
@@ -56,9 +66,9 @@ export function resolveTrackerPath(root) {
  */
 export function resolveTrackerPathForWrite(root) {
   const env = process.env.CAREER_OPS_TRACKER?.trim();
-  if (env) {
-    return resolve(__dirname, env);
-  }
-  return join(root, 'data/applications.md');
+  const raw = env
+    ? env
+    : join(root, 'data/applications.md');
+  return canonicalizePath(raw);
 }
 

@@ -57,7 +57,7 @@ try {
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
-import { getCareerOpsRoot } from './path-resolver.mjs';
+import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 const CODE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DATA_ROOT = getCareerOpsRoot();
 
@@ -65,7 +65,7 @@ const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || path.join(DATA_ROOT, 'por
 const PROFILE_PATH = process.env.CAREER_OPS_PROFILE || path.join(DATA_ROOT, 'config/profile.yml');
 const SCAN_HISTORY_PATH = path.join(DATA_ROOT, 'data/scan-history.tsv');
 const PIPELINE_PATH = path.join(DATA_ROOT, 'data/pipeline.md');
-const APPLICATIONS_PATH = path.join(DATA_ROOT, 'data/applications.md');
+const APPLICATIONS_PATH = resolveTrackerPath(DATA_ROOT);
 const PROVIDERS_DIR = path.resolve(CODE_ROOT, 'providers');
 
 // Ensure required directories exist (fresh setup)

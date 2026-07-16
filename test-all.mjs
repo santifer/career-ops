@@ -633,6 +633,27 @@ try {
   }
 
   // SSRF redirect routing tests
+  const dnsModule = await import('dns/promises');
+  const { mock } = await import('node:test');
+
+  // Stub resolve4, resolve6, and lookup to test the DNS path
+  mock.method(dnsModule.default, 'resolve4', (hostname) => {
+    if (hostname === 'ssrf-blocked-host.local') {
+      return Promise.resolve(['127.0.0.1']);
+    }
+    return Promise.resolve([]);
+  });
+  mock.method(dnsModule.default, 'resolve6', (hostname) => {
+    return Promise.resolve([]);
+  });
+  mock.method(dnsModule.default, 'lookup', (hostname, options) => {
+    if (hostname === 'ssrf-blocked-host.local') {
+      const addr = { address: '127.0.0.1', family: 4 };
+      return Promise.resolve(options?.all ? [addr] : addr);
+    }
+    return Promise.reject(new Error('DNS lookup failure'));
+  });
+
   let routeCallback = null;
   const mockPageInstance = {
     _blockedByGuard: null,
@@ -643,7 +664,7 @@ try {
       if (routeCallback) {
         let aborted = false;
         const mockRoute = {
-          request: () => ({ url: () => 'http://127.0.0.1/sensitive-internal' }),
+          request: () => ({ url: () => 'http://ssrf-blocked-host.local/sensitive-internal' }),
           abort: async () => {
             aborted = true;
           },
@@ -667,6 +688,9 @@ try {
   } else {
     fail(`SSRF redirect guard failed to block: ${JSON.stringify(redirectResult)}`);
   }
+
+  // Restore DNS mocks
+  mock.reset();
 
   let legitimateRouteCallback = null;
   const mockPageLegitimate = {
@@ -4627,7 +4651,7 @@ try {
     const vpReports = join(vpTmp, 'reports');
     mkdirSync(vpReports, { recursive: true });
     const vpTracker = join(vpTmp, 'applications.md');
-    const vpEnv = { ...process.env, CAREER_OPS_TRACKER: vpTracker, CAREER_OPS_REPORTS: vpReports };
+    const vpEnv = { ...process.env, CAREER_OPS_TRACKER: vpTracker, CAREER_OPS_REPORTS_DIR: vpReports };
 
     const report = (company, role) =>
       `# Evaluación: ${company} — ${role}\n\n## Machine Summary\n\n\`\`\`yaml\ncompany: "${company}"\nrole: "${role}"\nscore: 4.2\n\`\`\`\n`;
@@ -8642,7 +8666,6 @@ try {
     'scan-history.tsv', 'scan-runs.tsv', 'salary-observations.tsv',
     'assessments.tsv', 'pdf-index.tsv', 'batch-state.tsv',
   ];
-  const segAlt = USER_SEGMENTS.map(s => s.replace(/\./g, () => '\\.').replace(/\//g, () => '[/\\\\]')).join('|');
 
   const listScripts = (dir) => {
     const out = [];
@@ -8650,35 +8673,110 @@ try {
       if (name === 'node_modules' || name.startsWith('.')) continue;
       const p = join(dir, name);
       const statResult = statSync(p);
-      if (statResult.isDirectory()) continue;
-      if (!name.endsWith('.mjs')) continue;
-      if (/-tests?\.mjs$/.test(name) || /\.test\.mjs$/.test(name)) continue;
-      out.push(p);
+      if (statResult.isDirectory()) {
+        out.push(...listScripts(p));
+      } else {
+        if (!name.endsWith('.mjs')) continue;
+        if (/-tests?\.mjs$/.test(name) || /\.test\.mjs$/.test(name)) continue;
+        out.push(p);
+      }
     }
     return out;
   };
 
+  const { parse } = await import('acorn');
   const violations = [];
+
+  const walk = (node, visitors) => {
+    if (!node) return;
+    if (visitors[node.type]) {
+      visitors[node.type](node);
+    }
+    for (const key in node) {
+      const val = node[key];
+      if (val && typeof val === 'object') {
+        if (Array.isArray(val)) {
+          for (const item of val) {
+            if (item && typeof item === 'object' && typeof item.type === 'string') {
+              walk(item, visitors);
+            }
+          }
+        } else if (typeof val.type === 'string') {
+          walk(val, visitors);
+        }
+      }
+    }
+  };
 
   for (const file of listScripts(ROOT)) {
     const src = readFileSync(file, 'utf8');
-    const lines = src.split('\n');
+    let ast;
+    try {
+      ast = parse(src, { ecmaVersion: 'latest', sourceType: 'module' });
+    } catch (err) {
+      fail(`failed to parse ${file}: ${err.message}`);
+      continue;
+    }
 
     const codeRootVars = new Set();
-    for (const m of src.matchAll(/const\s+(\w+)\s*=\s*dirname\(fileURLToPath\(import\.meta\.url\)\)/g)) codeRootVars.add(m[1]);
-    for (const m of src.matchAll(/const\s+(\w+)\s*=\s*process\.cwd\(\)/g)) codeRootVars.add(m[1]);
-    if (codeRootVars.size === 0) continue;
 
-    const varAlt = [...codeRootVars].join('|');
-    const joinRe = new RegExp(`\\b(?:join|resolve)\\(\\s*(${varAlt})\\s*,\\s*'(?:${segAlt})`, 'g');
+    walk(ast, {
+      VariableDeclarator(node) {
+        if (!node.init) return;
+        const id = node.id.name;
+        if (!id) return;
 
-    lines.forEach((line, i) => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('*') || trimmed.startsWith('//') || trimmed.startsWith('/*')) return;
-      let m;
-      joinRe.lastIndex = 0;
-      while ((m = joinRe.exec(line)) !== null) {
-        violations.push({ file: file.replace(ROOT + '\\', '').replace(ROOT + '/', ''), line: i + 1, root: m[1], code: trimmed.slice(0, 90) });
+        if (node.init.type === 'CallExpression') {
+          const callee = node.init.callee;
+          if (callee.type === 'MemberExpression' && callee.object.name === 'process' && callee.property.name === 'cwd') {
+            codeRootVars.add(id);
+            return;
+          }
+          if (callee.type === 'Identifier' && callee.name === 'dirname') {
+            const arg = node.init.arguments[0];
+            if (arg && arg.type === 'CallExpression' && arg.callee.name === 'fileURLToPath') {
+              codeRootVars.add(id);
+              return;
+            }
+          }
+        }
+
+        if (node.init.type === 'Identifier' && codeRootVars.has(node.init.name)) {
+          codeRootVars.add(id);
+        }
+      },
+
+      CallExpression(node) {
+        const callee = node.callee;
+        if (callee.type !== 'Identifier' || (callee.name !== 'join' && callee.name !== 'resolve')) return;
+        const firstArg = node.arguments[0];
+        if (!firstArg || firstArg.type !== 'Identifier' || !codeRootVars.has(firstArg.name)) return;
+
+        const secondArg = node.arguments[1];
+        if (!secondArg) return;
+
+        let pathValue = null;
+        if (secondArg.type === 'Literal' && typeof secondArg.value === 'string') {
+          pathValue = secondArg.value;
+        } else if (secondArg.type === 'TemplateLiteral') {
+          pathValue = secondArg.quasis.map(q => q.value.cooked).join('');
+        }
+
+        if (pathValue) {
+          const normPath = pathValue.replace(/\\/g, '/');
+          if (USER_SEGMENTS.some(seg => {
+            const normSeg = seg.replace(/\\/g, '/');
+            return normPath === normSeg || normPath.startsWith(normSeg + '/');
+          })) {
+            const line = src.slice(0, node.start).split('\n').length;
+            violations.push({
+              file: file.replace(ROOT + '\\', '').replace(ROOT + '/', ''),
+              line,
+              root: firstArg.name,
+              code: src.slice(node.start, node.end).split('\n')[0].slice(0, 90)
+            });
+          }
+        }
       }
     });
   }

@@ -40,7 +40,8 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { computeFunnel, computeTrackerStats } from './stats.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
-import { resolveTrackerPath, loadCanonicalStates, resolveCanonicalState } from './tracker-utils.mjs';
+import { loadCanonicalStates, resolveCanonicalState } from './tracker-utils.mjs';
+import { resolveTrackerPath } from './path-resolver.mjs';
 import { parseAppliedDate } from './followup-cadence.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));

@@ -22,9 +22,9 @@
  */
 
 import { chromium } from 'playwright';
-import { resolve, dirname, relative, sep, isAbsolute } from 'path';
+import { resolve, dirname, relative, sep, isAbsolute, basename } from 'path';
 import { readFile } from 'fs/promises';
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync, existsSync, realpathSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
 import { getCareerOpsRoot } from './path-resolver.mjs';
@@ -329,7 +329,9 @@ async function generatePDF() {
   }
 
   inputPath = resolve(inputPath);
-  outputPath = resolve(outputPath);
+  const dataRoot = getCareerOpsRoot();
+  const absoluteOutputPath = isAbsolute(outputPath) ? resolve(outputPath) : resolve(dataRoot, outputPath);
+  outputPath = absoluteOutputPath;
 
   // Path-traversal guard: keep the PDF write inside the resolved career-ops
   // root so a crafted output argument (e.g. "../../etc/cron.d/x") can't escape
@@ -337,8 +339,29 @@ async function generatePDF() {
   // CAREER_OPS_DATA_DIR when set), not process.cwd(): running the script from
   // outside the root used to falsely refuse in-root outputs — and, worse,
   // would have allowed writes anywhere under an arbitrary cwd.
-  const dataRoot = getCareerOpsRoot();
-  const relOut = relative(dataRoot, outputPath);
+  // Canonicalize both the root and destination paths, then use the canonical
+  // paths for the containment check so symlinked destinations escaping the
+  // root are rejected while valid in-root outputs remain allowed.
+  let canonicalRoot;
+  try {
+    canonicalRoot = realpathSync(dataRoot);
+  } catch {
+    canonicalRoot = resolve(dataRoot);
+  }
+
+  let canonicalOutputPath;
+  try {
+    canonicalOutputPath = realpathSync(absoluteOutputPath);
+  } catch {
+    try {
+      const parentDir = dirname(absoluteOutputPath);
+      canonicalOutputPath = join(realpathSync(parentDir), basename(absoluteOutputPath));
+    } catch {
+      canonicalOutputPath = absoluteOutputPath;
+    }
+  }
+
+  const relOut = relative(canonicalRoot, canonicalOutputPath);
   if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
     console.error(`Refusing to write the PDF outside the Career Ops root directory: ${outputPath}`);
     process.exit(1);

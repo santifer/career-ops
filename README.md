@@ -403,9 +403,11 @@ By default, user-layer data (such as `cv.md`, `portals.yml`, and `data/` / `repo
 To separate your personal data from the code (making it easier to switch branches, pull updates, or test multiple profiles), you can configure an external data directory using the following precedence:
 
 1. **Environment Variables:** Set the `CAREER_OPS_ROOT` or `CAREER_OPS_DATA_DIR` environment variable:
+
    ```bash
    export CAREER_OPS_ROOT=~/my-career-data
    ```
+
 2. **Marker File:** Create a `.career-ops-data` file in the repository root containing the path to your data directory.
 3. **Default:** Defaults to the repository root.
 
