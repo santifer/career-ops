@@ -25,7 +25,7 @@
 
 
 import { execSync, execFileSync, spawn, spawnSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync, copyFileSync } from 'fs';
 import { join, dirname, basename, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -184,15 +184,64 @@ const scripts = [
   { name: 'archive-posting.mjs --help', expectExit: 0 },
 ];
 
-for (const { name, allowFail } of scripts) {
-  const result = run(NODE, name.split(' '), { stdio: ['pipe', 'pipe', 'pipe'] });
-  if (result !== null) {
-    pass(`${name} runs OK`);
-  } else if (allowFail) {
-    warn(`${name} exited with error (expected without user data)`);
-  } else {
-    fail(`${name} crashed`);
+const scriptTmp = mkdtempSync(join(ROOT, '.tmp-script-test-'));
+try {
+  const copyDirSync = (src, dest, exclude = []) => {
+    const pathParts = src.split(/[\\/]/);
+    if (exclude.some(p => pathParts.includes(p))) return;
+    const stat = statSync(src);
+    if (stat.isDirectory()) {
+      mkdirSync(dest, { recursive: true });
+      for (const entry of readdirSync(src)) {
+        copyDirSync(join(src, entry), join(dest, entry), exclude);
+      }
+    } else {
+      copyFileSync(src, dest);
+    }
+  };
+
+  const excludeDirs = [
+    'node_modules',
+    '.git',
+    'data',
+    'reports',
+    '.career-ops-web',
+    '.playwright-mcp',
+    '.agents',
+    'cdp-diff.patch',
+    'cdp-diff-focused.patch',
+    'test_diff.patch',
+    'test_diff_utf8.patch',
+    basename(scriptTmp),
+  ];
+  copyDirSync(ROOT, scriptTmp, excludeDirs);
+
+  mkdirSync(join(scriptTmp, 'data'), { recursive: true });
+  mkdirSync(join(scriptTmp, 'reports'), { recursive: true });
+  writeFileSync(
+    join(scriptTmp, 'data', 'applications.md'),
+    '# Applications\n\n| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n|---|---|---|---|---|---|---|---|---|\n',
+    'utf-8'
+  );
+
+  for (const { name, allowFail } of scripts) {
+    const parts = name.split(' ');
+    const scriptFile = parts[0];
+    const args = parts.slice(1);
+    const result = run(NODE, [join(scriptTmp, scriptFile), ...args], {
+      cwd: scriptTmp,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    if (result !== null) {
+      pass(`${name} runs OK`);
+    } else if (allowFail) {
+      warn(`${name} exited with error (expected without user data)`);
+    } else {
+      fail(`${name} crashed`);
+    }
   }
+} finally {
+  rmSync(scriptTmp, { recursive: true, force: true });
 }
 
 try {
