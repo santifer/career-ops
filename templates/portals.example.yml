@@ -531,9 +531,9 @@ search_queries:
 #
 # Some providers are job boards / aggregators with no per-company careers
 # URL to detect, so they must be selected with an explicit `provider:`
-# field: 4dayweek, arbeitnow, arbeitsagentur, getonbrd, glints, himalayas, ibm, jobicy,
-# jobstreet, justjoin, landingjobs, nofluffjobs, remoteok, remotive, thehub,
-# weworkremotely, workingnomads. Examples for every built-in provider are below.
+# field: 4dayweek, agentic-jobs, arbeitnow, arbeitsagentur, getonbrd, glints, himalayas,
+# ibm, jobicy, jobstreet, justjoin, landingjobs, nofluffjobs, remoteok, remotive, thehub,
+# weworkremotely, workingnomads, wttj. Examples for every built-in provider are below.
 
 # ── Built-in provider examples ────────────────────────────────────
 # Commented config for each provider in providers/. Copy a stanza into
@@ -751,6 +751,19 @@ search_queries:
 #
 # - name: LaraJobs                        # Laravel / PHP jobs (public RSS feed)
 #   provider: larajobs
+#   enabled: true
+#
+# - name: Welcome to the Jungle           # global board via WTTJ's public Algolia index
+#   provider: wttj
+#   wttj:
+#     queries: ["ai engineer", "data platform engineer"]  # REQUIRED — the board is global,
+#                                 # so explicit searches must be configured; each query is a
+#                                 # separate Algolia search, results deduped across queries
+#     max_hits: 100        # optional per-query hit cap (default 100, max 200)
+#   enabled: true
+#
+# - name: Agentic Engineering Jobs        # AI-agent engineering roles (SSR HTML, one fetch)
+#   provider: agentic-jobs
 #   enabled: true
 #
 # Comeet needs the full careers-api URL (it carries a per-tenant token that a
