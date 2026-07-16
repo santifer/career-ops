@@ -77,12 +77,16 @@ This is a **separate, fifth dimension** — distinct from the four interviewer-b
 
 Check, per session:
 
-1. **Off-JD topic** — did the interviewer ask about a specific skill, tool, or scope of responsibility that has **zero textual grounding anywhere in the JD** (not a rephrasing, not an adjacent/implied skill — genuinely absent from the posted text)? Quote the JD and the transcript question side by side to confirm before flagging; do not infer an absence you haven't checked.
-2. **Entry-level/junior framing** — does the JD title or body label the role entry-level, junior, associate, coordinator-tier, or similar, **and** does the posted pay band sit at the low end for that title/market (use whatever pay information the JD or the user's notes provide — don't estimate market rate yourself)?
+0. **Role match (gate, run first)** — confirm the session's role slug (from the filename pattern in Step 1) matches the role the supplied JD is for. The mode can analyze multiple role slugs for one company, but the supplied JD is for a single role — a session for a different role must never be compared against it. If the match can't be confirmed explicitly (ambiguous slug, JD role unclear, or the user hasn't stated which role the JD is for), **skip this session for Step 2b entirely** — do not run conditions 1–2 below on it, and do not guess.
 
-Flag **Scope/Compensation Mismatch** only when both conditions hold in the same session: an off-JD topic surfaced during a JD-labeled entry-level, low-band role.
+1. **Off-JD topic** — did the interviewer ask about a specific skill, tool, or scope of responsibility that has **zero textual grounding anywhere in the JD** (not a rephrasing, not an adjacent/implied skill — genuinely absent from the posted text)? Quote the JD and the transcript question side by side to confirm before flagging; do not infer an absence you haven't checked.
+2. **Entry-level/junior framing** — does the JD title or body label the role entry-level, junior, associate, coordinator-tier, or similar, **and** is there an **explicit** benchmark establishing the posted pay band as low-end for that title/market — either the JD itself states a specific pay figure alongside the entry-level/junior/associate/coordinator-tier label, or the user's own notes explicitly classify it as below market for that title (e.g. "this is below market for a coordinator role")? **Never estimate or infer market compensation yourself.** If no such explicit benchmark or classification is present in the JD text or the user's notes, treat this condition as unmet — do not flag the mismatch on the basis of an inferred or assumed market rate.
+
+Flag **Scope/Compensation Mismatch** only when all conditions hold for the same session: the session's role is confirmed to match the supplied JD (condition 0), an off-JD topic surfaced (condition 1), during a JD-labeled entry-level/junior/associate/coordinator-tier role with an explicit low-band pay benchmark (condition 2).
 
 **This signal is corroboration-sensitive, not a count-and-threshold signal like the four above.** A single instance is a data point, not a pattern — say so plainly in the output. If the user has a coffee chat note or other independent source for the same company (see #1940 / PR #1941, the coffee-chat cross-reference feature — a sibling to this one), check whether it corroborates that the off-JD topic is something the company consistently screens for. Corroboration changes the framing from "isolated tangent" to "observed pattern" — reflect that distinction explicitly rather than folding it into a score.
+
+**Multiple sessions may qualify.** Evaluate every session independently against conditions 0–2; do not stop at the first match. Carry forward every qualifying session (round, date, off-JD topic, JD context including the seniority label actually captured, evidence strength) into Step 5/6 — see the aggregation rule there.
 
 ## Step 3 — Aggregate Per Company
 
@@ -140,18 +144,23 @@ Write the following structure:
 *Analysis based on interviewer behaviour only. Candidate decides.*
 ```
 
-**If Step 2b flagged a Scope/Compensation Mismatch**, append this section (omit entirely if Step 2b was skipped or found nothing):
+**If Step 2b flagged one or more Scope/Compensation Mismatches**, append this section (omit entirely if Step 2b was skipped or found nothing across all sessions):
 
 ```markdown
 ### Scope/Compensation Mismatch
 
-**Round:** {round} ({date})
-**Off-JD topic asked about:** {specific skill/topic}, absent from the posted JD text for {role}.
-**JD context:** posted as {entry-level/junior/associate/etc.} at {stated pay band, if given}.
+{One entry per qualifying session, most recent first. Do not collapse multiple sessions into a single entry — each qualifying session gets its own full entry below.}
 
-{1–2 sentences, descriptive not accusatory: what was asked, and how it sits outside the JD's stated scope and pay level. E.g. "The interviewer asked directly about workflow automation experience — a skill not mentioned anywhere in the JD, which is posted as an entry-level, non-technical role at the low end of its stated band."}
+#### {round} ({date})
+
+**Off-JD topic asked about:** {specific skill/topic}, absent from the posted JD text for {role}.
+**JD context:** posted as {the actual seniority label captured in Step 2b — junior / associate / coordinator-tier / entry-level / etc.} at {stated pay band, with the explicit benchmark that qualified it as low-end}.
+
+{1–2 sentences, descriptive not accusatory: what was asked, and how it sits outside the JD's stated scope and pay level. E.g. "The interviewer asked directly about workflow automation experience — a skill not mentioned anywhere in the JD, which is posted as a coordinator-tier, non-technical role at the low end of its stated band."}
 
 **Evidence strength:** {"Single instance — one data point, not yet a pattern. Treat as an open question, not a conclusion." OR, if a coffee chat or other independent source corroborates it: "Corroborated by [coffee chat note / other source] (see #1940 / PR #1941) — this reads as something the company consistently screens for, not an isolated tangent."}
+
+{repeat the #### block above for each additional qualifying session}
 
 *This does not feed the red-flag score above — it's a separate JD-completeness/pay-fairness observation, not a measure of interviewer conduct.*
 ```
@@ -169,7 +178,9 @@ Warning level:   {emoji} {label}
 Signals:
   • {signal}: {n}/{total} sessions {(pattern) if 2+}
   ...
-{If Step 2b flagged: "  • Scope/Compensation Mismatch: {round} — {off-JD topic} asked at entry-level pay {(corroborated) if a coffee chat or other source confirms it}"}
+{If Step 2b flagged one or more sessions, list all of them here, most recent first — one bullet per qualifying session, do not collapse into a single line:
+  • Scope/Compensation Mismatch: {round} — {off-JD topic} asked at {the actual seniority label captured in Step 2b, e.g. junior/associate/coordinator-tier/entry-level} pay {(corroborated) if a coffee chat or other source confirms it}
+  ...}
 
 → Full analysis written to interview-prep/{company-slug}-redflags.md
 ```
