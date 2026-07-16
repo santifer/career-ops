@@ -7,6 +7,22 @@
 
 ## Constat
 
+### Comment portals.yml est alimente
+
+**Aucune automatisation.** Le fichier est gere manuellement :
+
+| Methode | Description | Automatique ? |
+|---------|-------------|:---:|
+| Copie du template | `cp templates/portals.example.yml config/portals.yml` | Non |
+| Ajout manuel | Editer le YAML a la main | Non |
+| Django admin web | UI web pour gerer les entreprises en DB, sync bidirectionnelle | Non |
+| LLM extraction | API qui extrait une entree entreprise depuis du texte via LLM | Semi |
+| Discovery bridge | Merge les mots-cles decouverts dans `title_filter.positive` | Semi |
+
+Le template (`templates/portals.example.yml`) contient ~100 entreprises AI/tech preselectionnees par l'auteur (santifer) pour son propre secteur. Il n'y a aucun scraper automatique qui decouvre et ajoute des entreprises.
+
+### Pourquoi le scanner ne trouve pas d'offres biomedicales
+
 Apres tests approfondis (`scan`, `scan_ats_full`, verification des APIs), le scanner automatique de career-ops **ne trouve pas d'offres pertinentes** pour le secteur biomedical/pharma/dispositifs medicaux en France.
 
 ### Pourquoi
