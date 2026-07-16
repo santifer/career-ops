@@ -5318,7 +5318,7 @@ try {
 // PDF was generated, so merge-tracker should flip only matching ❌ cells to ✅.
 console.log('\n🧪 Testing merge-tracker PDF flag sync from data/pdf-index.tsv (#1429)...');
 try {
-  const runPdfSyncFixture = (name, trackerRow, pdfIndex = null) => {
+  const runPdfSyncFixture = (name, trackerRow, pdfIndex = null, additions = []) => {
     const tmp = mkdtempSync(join(tmpdir(), `career-ops-merge-pdf-${name}-`));
     mkdirSync(join(tmp, 'data'), { recursive: true });
     const additionsDir = join(tmp, 'additions');
@@ -5329,13 +5329,22 @@ try {
       '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
       trackerRow + '\n');
     if (pdfIndex !== null) writeFileSync(join(tmp, 'data', 'pdf-index.tsv'), pdfIndex);
+    if (additions.length > 0) {
+      mkdirSync(additionsDir, { recursive: true });
+      for (const addition of additions) {
+        writeFileSync(join(additionsDir, addition.name), addition.content);
+      }
+    }
 
+    try {
     const result = run(NODE, ['merge-tracker.mjs'], {
       env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir },
     });
     const merged = readFileSync(tracker, 'utf-8');
-    rmSync(tmp, { recursive: true, force: true });
     return { result, merged };
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   };
 
   const matching = runPdfSyncFixture(
@@ -5370,6 +5379,22 @@ try {
     pass('merge-tracker runs successfully when data/pdf-index.tsv does not exist');
   } else {
     fail('merge-tracker crashed or changed the PDF cell when pdf-index.tsv was missing');
+  }
+
+  const newAddition = runPdfSyncFixture(
+    'new-addition',
+    '',
+    '# report\tpdf\thtml\tformat\tdate\n' +
+      '041\toutput/cv-umbrella.pdf\toutput/cv-umbrella.html\tletter\t2026-01-07\n',
+    [{
+      name: '001-umbrella.tsv',
+      content: '1\t2026-01-07\tUmbrella\tEngineer\t4.1/5\tEvaluated\t❌\t[41](../reports/041-umbrella-2026-01-07.md)\tok\n',
+    }],
+  );
+  if (newAddition.result !== null && newAddition.merged.includes('| 1 | 2026-01-07 | Umbrella | Engineer | 4.1/5 | Evaluated | ✅ | [41](../reports/041-umbrella-2026-01-07.md) | ok |')) {
+    pass('merge-tracker applies pdf-index.tsv to a newly merged tracker row in the same run');
+  } else {
+    fail('merge-tracker left a newly merged row at ❌ despite a matching pdf-index.tsv entry');
   }
 } catch (e) {
   fail(`merge-tracker PDF flag sync test crashed: ${e.message}`);

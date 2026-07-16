@@ -555,7 +555,8 @@ console.log(`📊 Existing: ${existingApps.length} entries, max #${maxNum}`);
 let added = 0;
 let updated = 0;
 let skipped = 0;
-const pdfSynced = syncPdfFlags(existingApps, appLines, loadPdfIndex());
+const pdfIndex = loadPdfIndex();
+const pdfSynced = syncPdfFlags(existingApps, appLines, pdfIndex);
 updated += pdfSynced;
 
 // Read tracker additions
@@ -676,11 +677,12 @@ for (const file of tsvFiles) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
+        const pdf = reportNum && pdfIndex.has(String(reportNum)) ? '✅' : duplicate.pdf;
         const updatedLine = buildRow({
           num: duplicate.num, date: addition.date, company: addition.company, role: addition.role,
           via: addition.via || duplicate.via || '—',
           location: addition.location || duplicate.location || '—',
-          score: addition.score, status: duplicate.status, pdf: duplicate.pdf,
+          score: addition.score, status: duplicate.status, pdf,
           report: addition.report,
           notes: `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`,
         });
@@ -711,11 +713,12 @@ for (const file of tsvFiles) {
     usedNumbers.add(entryNum);
     if (entryNum > maxNum) maxNum = entryNum;
 
+    const pdf = reportNum && pdfIndex.has(String(reportNum)) ? '✅' : addition.pdf;
     const newLine = buildRow({
       num: entryNum, date: addition.date, company: addition.company, role: addition.role,
       via: addition.via || '—',
       location: addition.location || '—',
-      score: addition.score, status: addition.status, pdf: addition.pdf,
+      score: addition.score, status: addition.status, pdf,
       report: addition.report, notes: addition.notes,
     });
     newLines.push(newLine);
