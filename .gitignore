@@ -120,6 +120,8 @@ plan/
 
 # Django backend local artifacts
 backend/.venv/
+.venv/
+venv/
 __pycache__/
 *.pyc
 backend/db.sqlite3

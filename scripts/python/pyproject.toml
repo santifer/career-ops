@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "career-ops-scripts"
 version = "0.1.0"
@@ -9,6 +13,7 @@ dependencies = [
   "playwright>=1.49,<2",
   "openai>=1.50,<2",
   "google-genai>=1.0,<2",
+  "rapidfuzz>=3,<4",
 ]
 
 [project.optional-dependencies]
@@ -18,10 +23,23 @@ dev = [
   "ruff>=0.6,<1",
 ]
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "admin*",
+  "cv*",
+  "evaluation*",
+  "export*",
+  "interview*",
+  "other*",
+  "pipeline*",
+  "plugins*",
+  "reply*",
+  "salary*",
+  "scanner*",
+  "tracker*",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["../.."]
-
-[tool.ruff]
-line-length = 100
-target-version = "py312"
