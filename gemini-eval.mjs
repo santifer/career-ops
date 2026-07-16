@@ -19,8 +19,8 @@
  * Model deprecation reference (per Google AI for Developers, July 2026):
  *   - gemini-2.0-flash       deprecated 2026-03-31  (do not use)
  *   - gemini-2.0-flash-lite  deprecated 2026-03-31
- *   - gemini-2.5-flash       deprecated 2026-06-17  (shutdown 2026-10-16)
- *   - gemini-2.5-flash-lite  deprecated 2026-07-22  (shutdown 2026-10-16)
+ *   - gemini-2.5-flash       released 2025-06-17  (shutdown 2026-10-16)
+ *   - gemini-2.5-flash-lite  released 2025-07-22  (shutdown 2026-10-16)
  *   - gemini-3.5-flash       active stable (current default)
  * Stable Gemini models follow a 12-month lifecycle from their release date.
  * Source: https://ai.google.dev/gemini-api/docs/models
