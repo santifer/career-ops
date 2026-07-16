@@ -154,7 +154,7 @@ Write the following structure:
 #### {round} ({date})
 
 **Off-JD topic asked about:** {specific skill/topic}, absent from the posted JD text for {role}.
-**JD context:** posted as {the actual seniority label captured in Step 2b — junior / associate / coordinator-tier / entry-level / etc.} at {stated pay band, with the explicit benchmark that qualified it as low-end}.
+**JD context:** posted as {the actual seniority label captured in Step 2b — junior / associate / coordinator-tier / entry-level / etc.}; compensation evidence: {exact JD pay figure/band if the JD stated one, otherwise the exact user-notes below-market benchmark or classification that qualified condition 2 — never invent or estimate a pay band}.
 
 {1–2 sentences, descriptive not accusatory: what was asked, and how it sits outside the JD's stated scope and pay level. E.g. "The interviewer asked directly about workflow automation experience — a skill not mentioned anywhere in the JD, which is posted as a coordinator-tier, non-technical role at the low end of its stated band."}
 
@@ -179,7 +179,7 @@ Signals:
   • {signal}: {n}/{total} sessions {(pattern) if 2+}
   ...
 {If Step 2b flagged one or more sessions, list all of them here, most recent first — one bullet per qualifying session, do not collapse into a single line:
-  • Scope/Compensation Mismatch: {round} — {off-JD topic} asked at {the actual seniority label captured in Step 2b, e.g. junior/associate/coordinator-tier/entry-level} pay {(corroborated) if a coffee chat or other source confirms it}
+  • Scope/Compensation Mismatch: {round} ({date}) — {off-JD topic} asked at {the actual seniority label captured in Step 2b, e.g. junior/associate/coordinator-tier/entry-level} pay [{exact JD pay figure/band, or exact user-notes below-market benchmark/classification that qualified condition 2}] — {"single-instance observation" OR "corroborated by [coffee chat note / other source, e.g. see #1940 / PR #1941]"}
   ...}
 
 → Full analysis written to interview-prep/{company-slug}-redflags.md
