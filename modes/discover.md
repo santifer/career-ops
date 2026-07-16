@@ -51,8 +51,9 @@ Preview (the default — writes nothing, prints the entries it would add):
 node discover-ats.mjs --in companies.yml
 ```
 
-Commit — the user must explicitly opt in with `--write` to modify `portals.yml`
-(a user-layer file; it is never auto-touched):
+Write — the user must explicitly opt in with `--write` to modify `portals.yml`
+(a user-layer file; it is never auto-touched). This updates the file on disk;
+it does not create a Git commit:
 
 ```bash
 node discover-ats.mjs --in companies.yml --write
