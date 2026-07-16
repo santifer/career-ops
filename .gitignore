@@ -120,9 +120,9 @@ plan/
 
 # Django backend local artifacts
 backend/.venv/
+__pycache__/
+*.pyc
 backend/db.sqlite3
 backend/.pytest_cache/
-backend/**/*.pyc
-backend/**/__pycache__/
 backend/*.egg-info/
 career-ops/
