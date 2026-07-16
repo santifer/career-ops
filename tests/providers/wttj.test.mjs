@@ -244,27 +244,28 @@ try {
     fail(`wttj.fetch() max_hits=500 → hitsPerPage=${capped.jsonCalls[0].hitsPerPage}`);
   }
 
-  let noQueriesThrew = false;
+  let noQueriesErr = '';
   try {
     await wttj.fetch({ name: 'WTTJ', provider: 'wttj' }, mkCtx(ENV_OK, () => ({ hits: [] })).ctx);
-  } catch { noQueriesThrew = true; }
-  if (noQueriesThrew) {
+  } catch (err) { noQueriesErr = err.message; }
+  // Assert the message, not just that something threw — an unrelated crash must not pass.
+  if (noQueriesErr.includes('wttj: the WTTJ board is global')) {
     pass('wttj.fetch() throws without an explicit wttj.queries config (never scans the whole board)');
   } else {
-    fail('wttj.fetch() should throw when wttj.queries is missing');
+    fail(`wttj.fetch() missing-queries error = ${JSON.stringify(noQueriesErr) || 'did not throw'}`);
   }
 
-  let badShapeThrew = false;
+  let badShapeErr = '';
   try {
     await wttj.fetch(
       { name: 'WTTJ', provider: 'wttj', wttj: { queries: ['x'] } },
       mkCtx(ENV_OK, () => ({ error: 'nope' })).ctx,
     );
-  } catch { badShapeThrew = true; }
-  if (badShapeThrew) {
+  } catch (err) { badShapeErr = err.message; }
+  if (badShapeErr.includes('wttj: unexpected Algolia response') && badShapeErr.includes('expected { hits: [...] }')) {
     pass('wttj.fetch() throws on an Algolia response without a hits array');
   } else {
-    fail('wttj.fetch() should throw on a malformed Algolia response');
+    fail(`wttj.fetch() malformed-response error = ${JSON.stringify(badShapeErr) || 'did not throw'}`);
   }
 } catch (e) {
   fail(`wttj provider tests crashed: ${e.message}`);
