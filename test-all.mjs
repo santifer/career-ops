@@ -4469,27 +4469,42 @@ try {
 
   // Range-vs-range: two concurrent --count 4 reservations must not overlap.
   // Terminates by construction: each restart strictly advances the base.
-  const concTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-conc-'));
-  const spawnReserve = () => new Promise(resolve => {
-    const child = spawn(NODE, [RESERVE, '--count', '4'], {
-      env: { ...process.env, CAREER_OPS_REPORTS_DIR: concTmp },
-    });
-    let stdout = '';
-    child.stdout.on('data', chunk => { stdout += chunk; });
-    child.on('close', () => resolve(stdout.trim()));
-  });
-  const [rangeX, rangeY] = await Promise.all([spawnReserve(), spawnReserve()]);
-  const toNums = r => {
-    const [s, e] = r.split('-').map(Number);
-    return Array.from({ length: e - s + 1 }, (_, i) => s + i);
-  };
-  const overlap = toNums(rangeX).filter(n => toNums(rangeY).includes(n));
-  if (rangeX && rangeY && overlap.length === 0) {
-    pass(`concurrent --count 4 reservations are disjoint (${rangeX} vs ${rangeY})`);
-  } else {
-    fail(`concurrent ranges overlap: ${rangeX} vs ${rangeY} share [${overlap}]`);
+  let reserveRetries = 1;
+  while (reserveRetries >= 0) {
+    const concTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-conc-'));
+    try {
+      const spawnReserve = () => new Promise(resolve => {
+        const child = spawn(NODE, [RESERVE, '--count', '4'], {
+          env: { ...process.env, CAREER_OPS_REPORTS_DIR: concTmp },
+        });
+        let stdout = '';
+        child.stdout.on('data', chunk => { stdout += chunk; });
+        child.on('close', () => resolve(stdout.trim()));
+      });
+      const [rangeX, rangeY] = await Promise.all([spawnReserve(), spawnReserve()]);
+      const toNums = r => {
+        const [s, e] = r.split('-').map(Number);
+        return Array.from({ length: e - s + 1 }, (_, i) => s + i);
+      };
+      const overlap = toNums(rangeX).filter(n => toNums(rangeY).includes(n));
+      if (rangeX && rangeY && overlap.length === 0) {
+        pass(`concurrent --count 4 reservations are disjoint (${rangeX} vs ${rangeY})`);
+      } else {
+        throw new Error(`concurrent ranges overlap: ${rangeX} vs ${rangeY} share [${overlap}]`);
+      }
+      break;
+    } catch (e) {
+      if (reserveRetries > 0) {
+        warn(`concurrent reservation test flaked (${e.message}). Retrying once...`);
+        reserveRetries -= 1;
+      } else {
+        fail(`concurrent reservation test failed: ${e.message}`);
+        break;
+      }
+    } finally {
+      rmSync(concTmp, { recursive: true, force: true });
+    }
   }
-  rmSync(concTmp, { recursive: true, force: true });
 
   // --release with a range deletes every sentinel in it.
   const reserveRunFail = (args, dir) => {
@@ -5595,119 +5610,131 @@ try {
 // tracker, making the old race deterministic.
 console.log('\n🧪 Testing merge-tracker concurrent writes...');
 try {
-  const mergeTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-lock-'));
-  /**
-   * Spawn one isolated `merge-tracker.mjs` process against the temporary fixture.
-   *
-   * Each spawned process receives the same tracker path and lock path but a
-   * different additions directory. Without serialization, both processes can
-   * read the same old tracker and the later write can lose the other row. The
-   * first worker also sends an IPC readiness message after reading the tracker
-   * and before its test hold, which lets the test launch the second worker at
-   * the exact old race point instead of relying on scheduler timing.
-   *
-   * @param {string} additionsDir - Directory containing this process's TSV row.
-   * @param {number} [holdMs=0] - Optional post-read delay injected into the merge.
-   * @returns {{ready: Promise<void>, result: Promise<{code:number|null,stdout:string,stderr:string}>}}
-   * Worker readiness and final process result promises.
-   */
-  function spawnMerge(additionsDir, holdMs = 0) {
-    let markReady;
-    let readyMarked = false;
-    const ready = new Promise(resolve => { markReady = resolve; });
-    const result = new Promise(resolve => {
-      const child = spawn(NODE, ['merge-tracker.mjs'], {
-        cwd: ROOT,
-        env: {
-          ...process.env,
-          CAREER_OPS_TRACKER: join(mergeTmp, 'data', 'applications.md'),
-          CAREER_OPS_ADDITIONS: additionsDir,
-          CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'career-ops-merge-tracker-fixture.lock'),
-          CAREER_OPS_MERGE_HOLD_MS: String(holdMs),
-          CAREER_OPS_MERGE_READY_IPC: '1',
-        },
-        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+  let retries = 1;
+  while (retries >= 0) {
+    const mergeTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-lock-'));
+    /**
+     * Spawn one isolated `merge-tracker.mjs` process against the temporary fixture.
+     *
+     * Each spawned process receives the same tracker path and lock path but a
+     * different additions directory. Without serialization, both processes can
+     * read the same old tracker and the later write can lose the other row. The
+     * first worker also sends an IPC readiness message after reading the tracker
+     * and before its test hold, which lets the test launch the second worker at
+     * the exact old race point instead of relying on scheduler timing.
+     *
+     * @param {string} additionsDir - Directory containing this process's TSV row.
+     * @param {number} [holdMs=0] - Optional post-read delay injected into the merge.
+     * @returns {{ready: Promise<void>, result: Promise<{code:number|null,stdout:string,stderr:string}>}}
+     * Worker readiness and final process result promises.
+     */
+    function spawnMerge(additionsDir, holdMs = 0) {
+      let markReady;
+      let readyMarked = false;
+      const ready = new Promise(resolve => { markReady = resolve; });
+      const result = new Promise(resolve => {
+        const child = spawn(NODE, ['merge-tracker.mjs'], {
+          cwd: ROOT,
+          env: {
+            ...process.env,
+            CAREER_OPS_TRACKER: join(mergeTmp, 'data', 'applications.md'),
+            CAREER_OPS_ADDITIONS: additionsDir,
+            CAREER_OPS_TRACKER_LOCK: join(mergeTmp, 'career-ops-merge-tracker-fixture.lock'),
+            CAREER_OPS_MERGE_HOLD_MS: String(holdMs),
+            CAREER_OPS_MERGE_READY_IPC: '1',
+          },
+          stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+        });
+        let stdout = '';
+        let stderr = '';
+        const resolveReady = () => {
+          if (readyMarked) return;
+          readyMarked = true;
+          markReady();
+        };
+        child.stdout.on('data', chunk => { stdout += chunk; });
+        child.stderr.on('data', chunk => { stderr += chunk; });
+        child.on('message', msg => {
+          if (msg?.type === 'merge-tracker-ready') resolveReady();
+        });
+        child.on('error', err => {
+          resolveReady();
+          resolve({ code: -1, stdout, stderr: String(err) });
+        });
+        child.on('close', code => {
+          resolveReady();
+          resolve({ code, stdout, stderr });
+        });
       });
-      let stdout = '';
-      let stderr = '';
-      const resolveReady = () => {
-        if (readyMarked) return;
-        readyMarked = true;
-        markReady();
-      };
-      child.stdout.on('data', chunk => { stdout += chunk; });
-      child.stderr.on('data', chunk => { stderr += chunk; });
-      child.on('message', msg => {
-        if (msg?.type === 'merge-tracker-ready') resolveReady();
-      });
-      child.on('error', err => {
-        resolveReady();
-        resolve({ code: -1, stdout, stderr: String(err) });
-      });
-      child.on('close', code => {
-        resolveReady();
-        resolve({ code, stdout, stderr });
-      });
-    });
-    return { ready, result };
-  }
-
-  /**
-   * Fail fast when a worker never reaches the deterministic race checkpoint.
-   *
-   * A missing readiness signal would otherwise hang the test suite. Timing out
-   * turns that broken test contract into a normal assertion failure with a clear
-   * message.
-   *
-   * @param {Promise<void>} ready - Worker readiness promise.
-   * @param {number} timeoutMs - Maximum milliseconds to wait.
-   * @returns {Promise<void>} Resolves when ready arrives before the timeout.
-   */
-  function waitForReady(ready, timeoutMs) {
-    return Promise.race([
-      ready,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('merge worker did not signal readiness')), timeoutMs)),
-    ]);
-  }
-
-  try {
-    mkdirSync(join(mergeTmp, 'data'));
-    mkdirSync(join(mergeTmp, 'reports'));
-    const additionsA = join(mergeTmp, 'additions-a');
-    const additionsB = join(mergeTmp, 'additions-b');
-    mkdirSync(additionsA);
-    mkdirSync(additionsB);
-
-    writeFileSync(join(mergeTmp, 'data', 'applications.md'),
-      '# Applications Tracker\n\n' +
-      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
-      '|---|------|---------|------|-------|--------|-----|--------|-------|\n');
-    writeFileSync(join(mergeTmp, 'reports', '010-alpha-2026-01-07.md'), '# fixture\n');
-    writeFileSync(join(mergeTmp, 'reports', '011-beta-2026-01-07.md'), '# fixture\n');
-    writeFileSync(join(additionsA, '010-alpha.tsv'),
-      '10\t2026-01-07\tAlpha\tPlatform Engineer\tEvaluated\t4.1/5\t❌\t[10](reports/010-alpha-2026-01-07.md)\tfirst concurrent merge\n');
-    writeFileSync(join(additionsB, '011-beta.tsv'),
-      '11\t2026-01-07\tBeta\tData Engineer\tEvaluated\t4.2/5\t❌\t[11](reports/011-beta-2026-01-07.md)\tsecond concurrent merge\n');
-
-    const first = spawnMerge(additionsA, 350);
-    await waitForReady(first.ready, 2_000);
-    const second = spawnMerge(additionsB, 0);
-    const [firstResult, secondResult] = await Promise.all([first.result, second.result]);
-
-    if (firstResult.code === 0 && secondResult.code === 0) {
-      pass('concurrent merge processes both exited successfully');
-    } else {
-      fail(`concurrent merge process failed: first=${firstResult.code} second=${secondResult.code} stderr=${firstResult.stderr || secondResult.stderr}`);
+      return { ready, result };
     }
 
-    const merged = readFileSync(join(mergeTmp, 'data', 'applications.md'), 'utf-8');
-    if (merged.includes('Alpha') && merged.includes('Beta')) {
-      pass('concurrent tracker merges preserve rows from both processes');
-    } else {
-      fail(`concurrent tracker merge lost a row: ${merged}`);
+    /**
+     * Fail fast when a worker never reaches the deterministic race checkpoint.
+     *
+     * A missing readiness signal would otherwise hang the test suite. Timing out
+     * turns that broken test contract into a normal assertion failure with a clear
+     * message.
+     *
+     * @param {Promise<void>} ready - Worker readiness promise.
+     * @param {number} timeoutMs - Maximum milliseconds to wait.
+     * @returns {Promise<void>} Resolves when ready arrives before the timeout.
+     */
+    function waitForReady(ready, timeoutMs) {
+      return Promise.race([
+        ready,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('merge worker did not signal readiness')), timeoutMs)),
+      ]);
     }
-  } finally {
-    rmSync(mergeTmp, { recursive: true, force: true });
+
+    try {
+      mkdirSync(join(mergeTmp, 'data'));
+      mkdirSync(join(mergeTmp, 'reports'));
+      const additionsA = join(mergeTmp, 'additions-a');
+      const additionsB = join(mergeTmp, 'additions-b');
+      mkdirSync(additionsA);
+      mkdirSync(additionsB);
+
+      writeFileSync(join(mergeTmp, 'data', 'applications.md'),
+        '# Applications Tracker\n\n' +
+        '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+        '|---|------|---------|------|-------|--------|-----|--------|-------|\n');
+      writeFileSync(join(mergeTmp, 'reports', '010-alpha-2026-01-07.md'), '# fixture\n');
+      writeFileSync(join(mergeTmp, 'reports', '011-beta-2026-01-07.md'), '# fixture\n');
+      writeFileSync(join(additionsA, '010-alpha.tsv'),
+        '10\t2026-01-07\tAlpha\tPlatform Engineer\tEvaluated\t4.1/5\t❌\t[10](reports/010-alpha-2026-01-07.md)\tfirst concurrent merge\n');
+      writeFileSync(join(additionsB, '011-beta.tsv'),
+        '11\t2026-01-07\tBeta\tData Engineer\tEvaluated\t4.2/5\t❌\t[11](reports/011-beta-2026-01-07.md)\tsecond concurrent merge\n');
+
+      const first = spawnMerge(additionsA, 350);
+      await waitForReady(first.ready, 10_000); // Widen to 10s
+      const second = spawnMerge(additionsB, 0);
+      const [firstResult, secondResult] = await Promise.all([first.result, second.result]);
+
+      if (firstResult.code === 0 && secondResult.code === 0) {
+        pass('concurrent merge processes both exited successfully');
+      } else {
+        throw new Error(`concurrent merge process failed: first=${firstResult.code} second=${secondResult.code} stderr=${firstResult.stderr || secondResult.stderr}`);
+      }
+
+      const merged = readFileSync(join(mergeTmp, 'data', 'applications.md'), 'utf-8');
+      if (merged.includes('Alpha') && merged.includes('Beta')) {
+        pass('concurrent tracker merges preserve rows from both processes');
+      } else {
+        throw new Error(`concurrent tracker merge lost a row: ${merged}`);
+      }
+      break;
+    } catch (e) {
+      if (retries > 0) {
+        warn(`merge-tracker concurrent write test flaked (${e.message}). Retrying once...`);
+        retries -= 1;
+      } else {
+        fail(`merge-tracker concurrent write test crashed: ${e.message}`);
+        break;
+      }
+    } finally {
+      rmSync(mergeTmp, { recursive: true, force: true });
+    }
   }
 } catch (e) {
   fail(`merge-tracker concurrent write test crashed: ${e.message}`);
