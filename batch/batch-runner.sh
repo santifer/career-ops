@@ -648,13 +648,13 @@ process_offer() {
 merge_tracker() {
   echo ""
   echo "=== Merging tracker additions ==="
-  node "$PROJECT_DIR/merge-tracker.mjs"
+  python -m scripts.python.tracker.merge_tracker
   echo ""
   echo "=== Reconciling pipeline.md ==="
-  node "$PROJECT_DIR/reconcile-pipeline.mjs" || echo "⚠️  Pipeline reconcile had issues (see above)"
+  python -m scripts.python.tracker.reconcile_pipeline || echo "⚠️  Pipeline reconcile had issues (see above)"
   echo ""
   echo "=== Verifying pipeline integrity ==="
-  node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
+  python -m scripts.python.tracker.verify_pipeline || echo "⚠️  Verification found issues (see above)"
 }
 
 # Print summary
@@ -794,12 +794,10 @@ watch_status() {
   echo "Showing final status:"
   print_status_table
 
-  # Chain verify-pipeline.mjs
-  if [[ -f "$PROJECT_DIR/verify-pipeline.mjs" ]]; then
-    echo ""
-    echo "=== Running pipeline verification ==="
-    node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues"
-  fi
+  # Chain verify-pipeline
+  echo ""
+  echo "=== Running pipeline verification ==="
+  python -m scripts.python.tracker.verify_pipeline || echo "⚠️  Verification found issues"
 }
 
 # Main
