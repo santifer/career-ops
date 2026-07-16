@@ -14,13 +14,21 @@ import (
 // 2026-06-04"). These regexes lift that structure back out so the dashboard can
 // show Location / Pay / Last-contact columns without a tracker schema change.
 var (
-	// $-amounts, optionally a range: "$140-210K", "$174,986-209,983", "~$124.2-198.7K"
-	reMoneySpan = regexp.MustCompile(`~?\$\d[\d,]*(?:\.\d+)?[KkMm]?(?:\s*[-–]\s*\$?\d[\d,]*(?:\.\d+)?[KkMm]?)?`)
+	// Pay amounts across the currencies career-ops users actually see, optionally
+	// a range: "$140-210K", "€130-160K", "£175-225K", "CHF 165-185K",
+	// "$174,986-209,983", "~$124.2-198.7K". payCeiling stays currency-naive (it
+	// reads the numbers), so PayMax sorts by magnitude across currencies.
+	reMoneySpan = regexp.MustCompile(`~?(?:[$€£]|CHF ?|EUR ?|USD ?|GBP ?)\d[\d,]*(?:\.\d+)?[KkMm]?(?:\s*[-–]\s*(?:[$€£])?\d[\d,]*(?:\.\d+)?[KkMm]?)?`)
 	// ISO dates embedded in notes ("Rejected 2026-06-04", "viewed 2026-06-04")
 	reISODate = regexp.MustCompile(`\b20\d{2}-\d{2}-\d{2}\b`)
 	// "City ST" / "City, ST" with a strict two-letter US state code so prose like
 	// "Sams AI" or "Kerin Colby DONE" can't false-positive.
 	reCityState = regexp.MustCompile(`\b([A-Z][A-Za-z.'-]+(?: [A-Z][A-Za-z.'-]+){0,2}),? (A[KLRZ]|C[AOT]|D[CE]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\b`)
+	// International cities, checked only when no US "City, ST" matches, so
+	// European/other non-US roles still surface a Location. Cities only (not bare
+	// country names) to avoid prose false-positives like "Portugal eligible" or
+	// "remote in Germany", which describe eligibility, not the job's location.
+	reCityIntl = regexp.MustCompile(`(?i)\b(Porto|Lisbon|London|Berlin|Munich|Hamburg|Frankfurt|Cologne|D(?:ü|u)sseldorf|Stuttgart|Z(?:ü|u)rich|Geneva|Lausanne|Basel|Dublin|Cork|Amsterdam|Rotterdam|Eindhoven|Utrecht|Paris|Lyon|Madrid|Barcelona|Valencia|Stockholm|Gothenburg|Malm(?:ö|o)|Copenhagen|Oslo|Helsinki|Milan|Rome|Turin|Vienna|Brussels|Ghent|Antwerp|Luxembourg|Warsaw|Krak(?:ó|o)w|Wroc(?:ł|l)aw|Tallinn|Riga|Vilnius|Prague|Brno|Budapest|Bucharest|Sofia|Athens|Bengaluru|Bangalore|Singapore|Sydney|Toronto|Vancouver|Tel Aviv|S(?:ã|a)o Paulo)\b`)
 	// Individual amounts inside an already-matched span: "140", "210K", "209,983"
 	reMoneyPart = regexp.MustCompile(`(\d[\d,]*(?:\.\d+)?)\s*([KkMm]?)`)
 	// Estimate markers: "(est)", "(est;", "market est)" or "market" as its own
@@ -56,18 +64,30 @@ func deriveNoteFields(app *model.CareerApplication) {
 	lower := strings.ToLower(app.Role + " " + app.Notes)
 
 	// Location: first "City, ST" in the notes, falling back to the role title
-	// (some tracker rows carry the city there, e.g. "... — Charlotte, NC").
+	// (some tracker rows carry the city there, e.g. "... — Charlotte, NC"). When
+	// no US "City, ST" is present, fall back to an international city/country so
+	// European and other non-US roles still show a Location.
 	if m := reCityState.FindStringSubmatch(app.Notes); m != nil {
 		app.Location = m[1] + ", " + m[2]
 	} else if m := reCityState.FindStringSubmatch(app.Role); m != nil {
 		app.Location = m[1] + ", " + m[2]
+	} else if m := reCityIntl.FindString(app.Notes); m != "" {
+		app.Location = m
+	} else if m := reCityIntl.FindString(app.Role); m != "" {
+		app.Location = m
 	}
 
 	// Work mode: hybrid beats remote ("Remote/hybrid" means office days exist);
+	// "remote-first" / "remote + flex" is softer than fully remote;
 	// a bare city+state with no keyword implies fully on-site.
 	switch {
 	case strings.Contains(lower, "hybrid"):
 		app.WorkMode = "Hybrid"
+	case strings.Contains(lower, "remote") &&
+		(strings.Contains(lower, "flex") ||
+			strings.Contains(lower, "remote-first") ||
+			strings.Contains(lower, "remote first")):
+		app.WorkMode = "RemoteFlex"
 	case strings.Contains(lower, "remote"):
 		app.WorkMode = "Remote"
 	case strings.Contains(lower, "onsite") || strings.Contains(lower, "on-site") || strings.Contains(lower, "in-office"):

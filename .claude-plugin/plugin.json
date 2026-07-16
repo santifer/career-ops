@@ -5,14 +5,5 @@
   "author": {
     "name": "santifer",
     "url": "https://santifer.io"
-  },
-  "skills": true,
-  "permissions": {
-    "allow": [
-      "Bash(node:*)",
-      "WebFetch(domain:boards-api.greenhouse.io)",
-      "WebFetch(domain:jobs.ashbyhq.com)",
-      "WebSearch"
-    ]
   }
 }

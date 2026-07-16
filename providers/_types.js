@@ -18,11 +18,32 @@
  * @property {string} company  May be empty when the source can't expose it
  *                             at the list-page level; populated downstream.
  * @property {string} location May be empty.
+ * @property {string} [description] Job description text, populated ONLY when the
+ *                               provider's list payload carries it for free (no
+ *                               extra per-job request — the scanner is zero-token).
+ *                               Lever supplies it via `descriptionPlain`; most
+ *                               providers omit it. Consumed by scan.mjs's
+ *                               content_filter; an empty/absent value always
+ *                               passes the filter.
  * @property {number} [postedAt] Epoch ms when the posting was published.
  *                               Omitted when the source doesn't expose a
  *                               usable date. scan.mjs ignores it; consumers
  *                               like scan-ats-full.mjs use it for recency
  *                               filtering.
+ * @property {number} [trustScore] 0-100 trust score from _trust-validator.mjs.
+ * @property {string[]} [trustFlags] Flags raised by trust validation (e.g.
+ *                                   'invalid_url', 'suspicious_domain').
+ * @property {'high'|'medium'|'low'} [trustLevel] Classification derived from
+ *                                                 trustScore.
+ */
+
+/**
+ * Result returned by the trust validator for a single job posting.
+ *
+ * @typedef {object} TrustResult
+ * @property {number} score       0-100, where 100 = fully trusted.
+ * @property {string[]} flags     Flags raised (e.g. 'invalid_url', 'suspicious_domain').
+ * @property {'high'|'medium'|'low'} level  Classification: 90-100 high, 60-89 medium, 0-59 low.
  */
 
 /**
@@ -40,6 +61,10 @@
  * @property {string}             [api]            JSON API URL; used directly by greenhouse/ashby providers.
  * @property {string}             [provider]       Explicit provider id — bypasses detect().
  * @property {('http')}           [transport]      Default: 'http'. Reserved for future transports.
+ * @property {number}             [max_pages]      Provider-specific pagination cap (avature, workday).
+ * @property {string}             [offset_param]   avature only: pins the pagination query key and disables the
+ *                                                 provider's jobOffset→offset self-heal. Rarely needed — an
+ *                                                 escape hatch for a tenant the auto-switch can't resolve.
  */
 
 /**
@@ -70,6 +95,17 @@
  * @property {('http')} transport
  * @property {(url: string, opts?: FetchOptions) => Promise<string>}  fetchText
  * @property {(url: string, opts?: FetchOptions) => Promise<unknown>} fetchJson
+ * @property {number} [maxPages] Optional pagination hint. When set (verify-portals.mjs's
+ *                              health probe passes 1), a paginating provider SHOULD stop
+ *                              after this many pages — the probe only needs the first page
+ *                              to tell a live board from a broken one, and must not walk an
+ *                              entire careers site. Providers that ignore it stay correct:
+ *                              the probe caps their requests defensively via the context's
+ *                              own fetch functions.
+ * @property {(ms: number) => Promise<void>} [sleep] Optional cross-provider pacing hook used by
+ *                              paginating providers (avature, workday) to throttle between page
+ *                              requests. May be absent — providers fall back to a native
+ *                              `setTimeout`-based delay.
  */
 
 /**

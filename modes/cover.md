@@ -36,6 +36,8 @@ Read `cv.md` for:
 
 Read `article-digest.md` if it exists — supplementary proof points and metrics take precedence over cv.md where they overlap.
 
+Read `modes/_profile.md` if it exists — the candidate's personalization file. It captures their target roles, adaptive framing and archetypes, exit narrative, cross-cutting advantage, proof points, comp targets, negotiation scripts, location policy, and any voice or writing-style rules they have added. Its rules **govern the letter's voice and structure and override the generic defaults in this mode**, so the candidate's personalization is never lost.
+
 ---
 
 ## Step 2 — Parse the JD
@@ -215,6 +217,9 @@ Cover Letter: [Role Title]
 
 ────────────────────────────────────────────────
 
+[Salutation — optional]
+Address the named hiring manager if known, e.g. "Dear Jane Smith,". Omit if no name.
+
 [Opening — 2 sentences]
 Why applying + functional summary. Derived from Angle A. Uses JD mirror vocabulary.
 
@@ -260,6 +265,13 @@ End the draft with: "How does this read? Once you approve I'll generate the PDF.
 
 ---
 
+Resolve the cover-letter template with the shared resolver (do not hardcode `cover-letter-template.html`):
+
+- If the user named a template, run: `node cv-templates.mjs resolve cover "<name>"`
+- Otherwise run: `node cv-templates.mjs resolve cover` (returns the `cover_letter.template` default, or the base template when unset).
+
+Fill the resolved template's `{{...}}` placeholders. A non-zero exit means the named template is missing/invalid — surface it, do not silently fall back.
+
 ## Step 9 — Generate PDF
 
 Only after explicit user approval.
@@ -282,6 +294,7 @@ Assemble the JSON payload:
     "company": "{company name}",
     "city": "{JD city}",
     "date": "{YYYY-MM-DD}",
+    "greeting": "{optional salutation, e.g. 'Dear Jane Smith,'; omit the key to skip the salutation}",
     "opening": "{approved opening paragraph}",
     "profile_intro": "{approved profile intro}",
     "achievements": [
