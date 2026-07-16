@@ -15,6 +15,7 @@ Requires transcripts produced by `modes/interview/debrief.md` or `modes/intervie
 - `interview-prep/sessions/` — Session transcripts (debrief + practice outputs). One file per round.
 - `interview-prep/{company}-{role}.md` — Company intel file (for context + output target).
 - `config/profile.yml` — User profile (for role/archetype context).
+- **Original JD text (user-provided, for Step 2b only)** — the posted job description for the role under analysis. Same "user-provided input, not automated scraping" pattern used elsewhere in this codebase (e.g. `jd-skill-gap.mjs`): paste it, or point at `local:jds/{file}` if it's already saved under `jds/`. Without it, Step 2b is skipped — every other step runs as normal.
 
 Expected transcript filename convention (from #956):
 ```
@@ -70,6 +71,19 @@ Mark each of the four signal types as **present** or **absent** for the session.
 
 Record which signals are present per session. Do not infer — only flag what is explicitly observable in the transcript text.
 
+## Step 2b — Detect Scope/Compensation Mismatch (requires JD text)
+
+This is a **separate, fifth dimension** — distinct from the four interviewer-behaviour signals above. It doesn't measure how the interviewer conducted the session; it measures whether what they *asked about* matches what the company *posted and priced* the role at. It only runs if the user has supplied the original JD text (see Inputs). If not supplied, skip this step entirely — it does not block or degrade Steps 2–6.
+
+Check, per session:
+
+1. **Off-JD topic** — did the interviewer ask about a specific skill, tool, or scope of responsibility that has **zero textual grounding anywhere in the JD** (not a rephrasing, not an adjacent/implied skill — genuinely absent from the posted text)? Quote the JD and the transcript question side by side to confirm before flagging; do not infer an absence you haven't checked.
+2. **Entry-level/junior framing** — does the JD title or body label the role entry-level, junior, associate, coordinator-tier, or similar, **and** does the posted pay band sit at the low end for that title/market (use whatever pay information the JD or the user's notes provide — don't estimate market rate yourself)?
+
+Flag **Scope/Compensation Mismatch** only when both conditions hold in the same session: an off-JD topic surfaced during a JD-labeled entry-level, low-band role.
+
+**This signal is corroboration-sensitive, not a count-and-threshold signal like the four above.** A single instance is a data point, not a pattern — say so plainly in the output. If the user has a coffee chat note or other independent source for the same company (see #1940 / PR #1941, the coffee-chat cross-reference feature — a sibling to this one), check whether it corroborates that the off-JD topic is something the company consistently screens for. Corroboration changes the framing from "isolated tangent" to "observed pattern" — reflect that distinction explicitly rather than folding it into a score.
+
 ## Step 3 — Aggregate Per Company
 
 For each company, count how many sessions triggered each signal type.
@@ -78,6 +92,8 @@ Compute a **red-flag score**:
 - Each signal type present in **1 session**: +1
 - Each signal type present in **2+ sessions** (pattern, not noise): +2
 - Maximum possible: 8 (4 signal types × 2)
+
+**Scope/Compensation Mismatch (Step 2b) is reported separately and does not feed the red-flag score above.** It's a different category of finding — JD-completeness and pay fairness, not interviewer conduct — and, unlike the four signals above, it's discovered *after* the fact rather than protecting the candidate in the process that produced it. Mixing it into the same 0–8 scale would overstate or understate it depending on session count for reasons unrelated to what it actually measures. Report it in its own output section (Step 5) instead.
 
 ## Step 4 — Assign Warning Level
 
@@ -124,6 +140,22 @@ Write the following structure:
 *Analysis based on interviewer behaviour only. Candidate decides.*
 ```
 
+**If Step 2b flagged a Scope/Compensation Mismatch**, append this section (omit entirely if Step 2b was skipped or found nothing):
+
+```markdown
+### Scope/Compensation Mismatch
+
+**Round:** {round} ({date})
+**Off-JD topic asked about:** {specific skill/topic}, absent from the posted JD text for {role}.
+**JD context:** posted as {entry-level/junior/associate/etc.} at {stated pay band, if given}.
+
+{1–2 sentences, descriptive not accusatory: what was asked, and how it sits outside the JD's stated scope and pay level. E.g. "The interviewer asked directly about workflow automation experience — a skill not mentioned anywhere in the JD, which is posted as an entry-level, non-technical role at the low end of its stated band."}
+
+**Evidence strength:** {"Single instance — one data point, not yet a pattern. Treat as an open question, not a conclusion." OR, if a coffee chat or other independent source corroborates it: "Corroborated by [coffee chat note / other source] (see #1940 / PR #1941) — this reads as something the company consistently screens for, not an isolated tangent."}
+
+*This does not feed the red-flag score above — it's a separate JD-completeness/pay-fairness observation, not a measure of interviewer conduct.*
+```
+
 ## Step 6 — Present Summary
 
 After writing the file, show the user:
@@ -137,6 +169,7 @@ Warning level:   {emoji} {label}
 Signals:
   • {signal}: {n}/{total} sessions {(pattern) if 2+}
   ...
+{If Step 2b flagged: "  • Scope/Compensation Mismatch: {round} — {off-JD topic} asked at entry-level pay {(corroborated) if a coffee chat or other source confirms it}"}
 
 → Full analysis written to interview-prep/{company-slug}-redflags.md
 ```
@@ -158,3 +191,4 @@ Company          Rounds   Level
 - **Privacy** — reads only local, gitignored session files. Nothing leaves the machine.
 - **Not a Glassdoor replacement** — analyses this candidate's live experience in this process, not crowd-sourced opinion.
 - **Candidate-side analysis is out of scope** — use `realign-targeting` (#960) for that.
+- **Scope/Compensation Mismatch (Step 2b) is descriptive, not actionable-in-the-moment** — by the time it's detected, the interview that produced it is already over, so it can't protect the candidate in that specific round. It's written to the company-level file as a record: if a later round with the same company happens, or the candidate considers re-applying, this is the place to check first. It is not fed automatically into `interview-prep/{company}-{role}.md` or any future prep step — the candidate re-reads it manually, the same way every other output of this mode is advisory-only.
