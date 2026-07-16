@@ -456,7 +456,7 @@ try {
   // pages script the goto/evaluate calls so we can exercise the wrapper without
   // launching a browser. checkUrlLiveness reads body text first, apply controls
   // second — the fake returns them in that order.
-  const { checkUrlLivenessWithFallback, isChallengeResult, jitteredDelayMs } =
+  const { checkUrlLiveness, checkUrlLivenessWithFallback, isChallengeResult, jitteredDelayMs } =
     await import(pathToFileURL(join(ROOT, 'liveness-browser.mjs')).href);
 
   const disabled = jitteredDelayMs(0) === 0 && jitteredDelayMs(-1) === 0;
@@ -590,6 +590,84 @@ try {
     pass('SSRF guard rejects unsupported protocol');
   } else {
     fail(`SSRF guard let unsupported protocol through: ${protoCase?.code ?? 'allowed'}`);
+  }
+
+  // SSRF redirect routing tests
+  let routeCallback = null;
+  const mockPageInstance = {
+    _blockedByGuard: null,
+    async route(pattern, callback) {
+      routeCallback = callback;
+    },
+    async goto() {
+      if (routeCallback) {
+        let aborted = false;
+        const mockRoute = {
+          request: () => ({ url: () => 'http://127.0.0.1/sensitive-internal' }),
+          abort: async () => {
+            aborted = true;
+          },
+          continue: async () => {}
+        };
+        await routeCallback(mockRoute);
+        if (aborted) {
+          throw new Error('net::ERR_BLOCKED_BY_CLIENT');
+        }
+      }
+      return { status: () => 200 };
+    },
+    async waitForTimeout() {},
+    url() { return 'https://example.com/redirected'; },
+    async evaluate() { return 'body text'; }
+  };
+
+  const redirectResult = await checkUrlLiveness(mockPageInstance, 'https://example.com/public-landing');
+  if (redirectResult.result === 'uncertain' && redirectResult.code === 'blocked_host') {
+    pass('SSRF redirect guard blocks redirects/subresources to private IPs via routing');
+  } else {
+    fail(`SSRF redirect guard failed to block: ${JSON.stringify(redirectResult)}`);
+  }
+
+  let legitimateRouteCallback = null;
+  const mockPageLegitimate = {
+    _blockedByGuard: null,
+    async route(pattern, callback) {
+      legitimateRouteCallback = callback;
+    },
+    async goto() {
+      if (legitimateRouteCallback) {
+        let continued = false;
+        const mockRoute = {
+          request: () => ({ url: () => 'https://example.com/assets/logo.png' }),
+          abort: async () => {},
+          continue: async () => {
+            continued = true;
+          }
+        };
+        await legitimateRouteCallback(mockRoute);
+        if (!continued) {
+          throw new Error('Blocked legitimate request');
+        }
+      }
+      return { status: () => 200 };
+    },
+    async waitForTimeout() {},
+    url() { return 'https://example.com'; },
+    async evaluate(fn) {
+      // simulate evaluating body/controls
+      const fnStr = fn.toString();
+      if (fnStr.includes('body')) {
+        return 'legitimate page body';
+      }
+      return ['Apply'];
+    }
+  };
+
+  const legitimateResult = await checkUrlLiveness(mockPageLegitimate, 'https://example.com');
+  if (legitimateResult.result === 'active') {
+    pass('SSRF redirect guard allows legitimate subresource requests');
+  } else {
+    fail(`SSRF redirect guard blocked legitimate requests: ${JSON.stringify(legitimateResult)}`);
   }
 } catch (e) {
   fail(`Liveness classification tests crashed: ${e.message}`);

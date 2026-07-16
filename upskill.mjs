@@ -486,6 +486,8 @@ const urlTextIdx = args.indexOf('--url-text');
 const directUrl = args.find(arg => arg.startsWith('http://') || arg.startsWith('https://'));
 
 // Helper function to enforce egress guard against SSRF (Private/Loopback IPs)
+const dnsCache = new Map();
+
 async function validateUrlSecurity(urlString) {
   const dns = await import('dns/promises');
   const url = new URL(urlString.endsWith('.') ? urlString.slice(0, -1) : urlString);
@@ -495,9 +497,15 @@ async function validateUrlSecurity(urlString) {
     throw new Error('Access denied: Localhost or internal domain target detected.');
   }
 
-  const addresses = await dns.resolve(hostname).catch(() => []);
-  const lookupRes = await dns.lookup(hostname).catch(() => null);
-  if (lookupRes) addresses.push(lookupRes.address);
+  let addresses;
+  if (dnsCache.has(hostname)) {
+    addresses = dnsCache.get(hostname);
+  } else {
+    addresses = await dns.resolve(hostname).catch(() => []);
+    const lookupRes = await dns.lookup(hostname).catch(() => null);
+    if (lookupRes) addresses.push(lookupRes.address);
+    dnsCache.set(hostname, addresses);
+  }
 
   for (const ip of addresses) {
     if (/^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|169\.254\.)/.test(ip)) {
@@ -528,12 +536,15 @@ if (urlTextIdx !== -1 || directUrl) {
         browser = await chromium.launch({ headless: true });
         const page = await browser.newPage();
 
-        page.on('framenavigated', async (frame) => {
-          if (frame === page.mainFrame()) {
-            await validateUrlSecurity(frame.url()).catch((err) => {
-              console.error(`Security Violation on Redirect: ${err.message}`);
-              process.exit(1);
-            });
+        await page.route('**/*', async (route) => {
+          const requestUrl = route.request().url();
+          try {
+            await validateUrlSecurity(requestUrl);
+            await route.continue();
+          } catch (err) {
+            console.error(`Security Violation on Redirect: ${err.message}`);
+            await route.abort('blockedbyclient');
+            process.exit(1);
           }
         });
 

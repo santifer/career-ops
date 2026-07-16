@@ -125,10 +125,64 @@ export function rejectPrivateOrInvalid(url) {
   return null;
 }
 
+const dnsCache = new Map();
+
+async function resolveDnsCached(hostname) {
+  if (dnsCache.has(hostname)) {
+    return dnsCache.get(hostname);
+  }
+  const dns = await import('dns/promises');
+  const addresses = await dns.resolve(hostname).catch(() => []);
+  const lookupRes = await dns.lookup(hostname).catch(() => null);
+  if (lookupRes) addresses.push(lookupRes.address);
+  dnsCache.set(hostname, addresses);
+  return addresses;
+}
+
+async function validateUrlSecurity(urlString) {
+  const url = new URL(urlString.endsWith('.') ? urlString.slice(0, -1) : urlString);
+  const hostname = url.hostname;
+  const host = normalizeHost(hostname);
+  const addresses = await resolveDnsCached(host);
+  for (const ip of addresses) {
+    const norm = normalizeHost(ip);
+    const mapped = extractMappedIPv4(norm);
+    const candidates = mapped ? [norm, mapped] : [norm];
+    for (const candidate of candidates) {
+      if (PRIVATE_HOST_PATTERNS.some((pattern) => pattern.test(candidate))) {
+        throw new Error(`Access denied: Egress guard blocked private target IP ${ip}`);
+      }
+    }
+  }
+}
+
 export async function checkUrlLiveness(page, url, { extraSettleMs = 0 } = {}) {
   const guardError = rejectPrivateOrInvalid(url);
   if (guardError) {
     return { result: 'uncertain', code: guardError.code, reason: guardError.reason };
+  }
+  if (page) {
+    page._blockedByGuard = null;
+  }
+  if (page && typeof page.route === 'function' && !page._routeInterceptorRegistered) {
+    page._routeInterceptorRegistered = true;
+    await page.route('**/*', async (route) => {
+      const requestUrl = route.request().url();
+      const errGuard = rejectPrivateOrInvalid(requestUrl);
+      if (errGuard) {
+        console.warn(`Blocked request to restricted destination: ${requestUrl}`);
+        page._blockedByGuard = errGuard;
+        return route.abort('blockedbyclient');
+      }
+      try {
+        await validateUrlSecurity(requestUrl);
+        return route.continue();
+      } catch (err) {
+        console.warn(`Blocked request to restricted destination (DNS): ${requestUrl} - ${err.message}`);
+        page._blockedByGuard = { code: 'blocked_host', reason: err.message };
+        return route.abort('blockedbyclient');
+      }
+    });
   }
   try {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAVIGATE_TIMEOUT_MS });
@@ -175,6 +229,9 @@ export async function checkUrlLiveness(page, url, { extraSettleMs = 0 } = {}) {
 
     return classifyLiveness({ status, requestedUrl: url, finalUrl, bodyText, applyControls });
   } catch (err) {
+    if (page && page._blockedByGuard) {
+      return { result: 'uncertain', code: page._blockedByGuard.code, reason: page._blockedByGuard.reason };
+    }
     // Transient failures (timeout, DNS, TLS, 5xx) shouldn't be treated as expired —
     // doing so would cause scan --verify to drop the URL and write it to scan-history,
     // permanently filtering it out on subsequent scans.
