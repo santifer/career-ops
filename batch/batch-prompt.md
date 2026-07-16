@@ -209,23 +209,23 @@ Assess whether the posting appears real and worth pursuing.
 
 Batch mode limitation: Playwright is not available, so exact apply-button state and freshness cannot be directly verified. Mark those signals as `unverified (batch mode)`.
 
-#### Risk Summary (después del Bloque G)
+#### Risk Summary (after Block G)
 
-Cierra el cuerpo del report con un bloque `## Risk Summary` justo después de la sección del Bloque G — una fila por señal de riesgo, orden fijo, tres estados por fila: `✅ {clear verdict}` / `⚠️ {finding}` / `— not evaluated`. **Aggregation only, zero new judgment:** cada fila cita el veredicto ya producido por su señal fuente; nunca re-puntúa ni sobrescribe.
+Close the report body with a `## Risk Summary` block directly after Block G's section — one row per risk signal, fixed order, three states per row: `✅ {clear verdict}` / `⚠️ {finding}` / `— not evaluated`. **Aggregation only, zero new judgment:** each row quotes the verdict already produced by its source signal; it never re-scores or overrides.
 
-**`— not evaluated` es un estado de primera clase:** una señal que este worker no puede evaluar se declara explícitamente — NUNCA se omite la fila — para que un summary todo-✅ sea fiable.
+**`— not evaluated` is a first-class state:** a signal that this worker cannot evaluate is explicitly declared — NEVER omit the row — so an all-✅ summary can be trusted.
 
-Reglas batch por fila:
+Batch rendering rules per row:
 
 | Signal | Batch rendering |
 |--------|-----------------|
-| Posting legitimacy | Espejo del tier del Bloque G: `✅ High Confidence`, o `⚠️ {tier} — {one-line reason}` |
-| Employment classification | `— not evaluated` (el check de clasificación no forma parte del Bloque G batch) |
-| Culture screen | `— not evaluated` (el Bloque A batch no produce el campo Culture screen pass/caution/fail) |
-| Interview red flags | Si existe `interview-prep/{company-slug}-redflags.md`, espejo de su warning level + link relativo `[{level}](../interview-prep/{company-slug}-redflags.md)`; si no, `— no interview sessions yet` |
-| AI claims vs. infrastructure | Si este prompt/report contiene el check de mismatch AI/infraestructura, espejo de su veredicto (`✅ consistent` / `⚠️ {finding}`); si no, `— not evaluated` |
+| Posting legitimacy | Mirror the Block G tier: `✅ High Confidence`, or `⚠️ {tier} — {one-line reason}` |
+| Employment classification | `— not evaluated` (classification check is not part of batch Block G) |
+| Culture screen | `— not evaluated` (batch Block A does not produce the Culture screen pass/caution/fail field) |
+| Interview red flags | If `interview-prep/{company-slug}-redflags.md` exists, mirror its warning level + relative link `[{level}](../interview-prep/{company-slug}-redflags.md)`; if not, `— no interview sessions yet` |
+| AI claims vs. infrastructure | If this prompt/report contains the AI/infrastructure mismatch check, mirror its verdict (`✅ consistent` / `⚠️ {finding}`); if not, `— not evaluated` |
 
-Formato del bloque:
+Block format:
 
 ```markdown
 ## Risk Summary
