@@ -99,6 +99,13 @@ try {
     fail(`normalizeAgenticCard() no-location card = ${JSON.stringify(noLocation)}`);
   }
 
+  const flagSlot = normalizeAgenticCard('agent-eng-2', ['Agent Engineer', 'Globex', '🇺🇸', '2026-06-15']);
+  if (flagSlot && flagSlot.location === 'United States') {
+    pass('normalizeAgenticCard() never reads a bare flag line as the location (no-location card)');
+  } else {
+    fail(`normalizeAgenticCard() flag-in-location-slot card = ${JSON.stringify(flagSlot)}`);
+  }
+
   if (normalizeAgenticCard('bad slug!', ['Title', 'Company']) === null) {
     pass('normalizeAgenticCard() rejects path-unsafe slugs (they feed straight into a URL path)');
   } else {

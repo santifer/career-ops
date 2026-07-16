@@ -85,7 +85,10 @@ export function normalizeAgenticCard(slug, lines) {
   const [title, company, maybeLocation] = fields;
   if (!title || !company) return null;
 
-  let location = maybeLocation && !/^\d{4}-\d{2}-\d{2}$/.test(maybeLocation) ? maybeLocation : '';
+  // A card without a location line slides the flag-emoji line into this slot —
+  // a bare flag is never a location (it resolves to the country name below).
+  let location =
+    maybeLocation && !/^\d{4}-\d{2}-\d{2}$/.test(maybeLocation) && !flagToCountry(maybeLocation) ? maybeLocation : '';
   const flag = fields.map(flagToCountry).find(Boolean);
   if (flag) location = location ? `${location}, ${flag}` : flag;
 
