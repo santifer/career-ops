@@ -250,6 +250,14 @@ function renderHtml(template, payload) {
   let html = template.replace(CONTACT_ROW_RE, () => buildContactRow(candidate));
   html = html.replace(/\{\{PHOTO\}\}/g, () => buildPhoto(candidate, candidate.name));
 
+  // Projects is the one CV section that's genuinely optional (education,
+  // experience, and skills are effectively always present) — drop the whole
+  // <!-- PROJECTS --> block when there are no entries, instead of leaving a
+  // bare "Projects" header with nothing under it.
+  if (!Array.isArray(payload.projects) || payload.projects.length === 0) {
+    html = html.replace(/<!-- PROJECTS -->[\s\S]*?(?=<!-- EDUCATION -->)/, '');
+  }
+
   for (const [key, value] of Object.entries(substitutions)) {
     html = html.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), () => value);
   }
