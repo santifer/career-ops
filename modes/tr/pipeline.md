@@ -6,7 +6,7 @@
 
 1. **Oku** `data/pipeline.md` → "Bekleyenler" bölümündeki `- [ ]` satırlarını bul
 2. **Her bekleyen URL için:**
-   a. Sıradaki `REPORT_NUM` değerini atomik olarak rezerve etmek üzere `node reserve-report-num.mjs` komutunu çalıştır (ve rapor yazıldıktan sonra `node reserve-report-num.mjs --release <num>` çalıştırarak sentineli serbest bırak)
+   a. Sıradaki `REPORT_NUM` değerini atomik olarak rezerve etmek üzere `node scripts/js/reserve-report-num.mjs` komutunu çalıştır (ve rapor yazıldıktan sonra `node scripts/js/reserve-report-num.mjs --release <num>` çalıştırarak sentineli serbest bırak)
    b. **İlan içeriğini çek:** Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch. **Playwright kullanılmadıysa** (toplu/headless mod veya yedek yola düşüldüyse) rapor başlığına `**Doğrulama:** doğrulanmamış (toplu mod)` etiketini ekle.
    c. URL erişilemiyorsa → `- [!]` olarak işaretle, not ekle ve bir sonrakine geç
    d. **Tam pipeline'ı çalıştır:** A-G değerlendirmesi → Rapor (.md) → PDF (puan ≥ 3,0 ise) → Takipçi
@@ -48,14 +48,14 @@
 
 ## Rapor Numaralandırma
 
-1. Sıradaki rapor numarasını atomik olarak rezerve etmek için `node reserve-report-num.mjs` komutunu çalıştır (standart çıktı `{###}` değerini döndürür).
+1. Sıradaki rapor numarasını atomik olarak rezerve etmek için `node scripts/js/reserve-report-num.mjs` komutunu çalıştır (standart çıktı `{###}` değerini döndürür).
 2. Bu numarayı kullanarak rapor dosyasını yaz.
-3. Rapor yazıldıktan sonra `node reserve-report-num.mjs --release {###}` komutunu çalıştırarak sentineli serbest bırak.
+3. Rapor yazıldıktan sonra `node scripts/js/reserve-report-num.mjs --release {###}` komutunu çalıştırarak sentineli serbest bırak.
 
 ## Başlamadan Önce
 
 Herhangi bir URL'yi işlemeden önce yapılandırma kontrolü çalıştır:
 ```bash
-node cv-sync-check.mjs
+node scripts/js/cv-sync-check.mjs
 ```
 Uyarı varsa adayı bilgilendirmeden devam etme.

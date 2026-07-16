@@ -178,7 +178,7 @@ I danske opslag og forhandlinger optræder visse termer, som ikke findes på EN/
 
 0. **Ansøgning (følgebrev):** Hvis formularen tillader det, så inkludér ALTID én. PDF i samme visuelle design som CV'et. Citater fra opslaget mappet til proof points. Maks. 1 side.
 1. Læs `cv.md` og `article-digest.md` (hvis den findes), før et opslag evalueres
-1b. **Første evaluering i hver session:** Kør `node cv-sync-check.mjs` via Bash. Ved advarsler, informér kandidaten
+1b. **Første evaluering i hver session:** Kør `node scripts/js/cv-sync-check.mjs` via Bash. Ved advarsler, informér kandidaten
 2. Detektér rollens arketype og tilpas framingen
 3. Citér eksakte linjer fra CV'et ved matching
 4. Brug WebSearch til løn- og virksomhedsdata
@@ -200,4 +200,4 @@ I danske opslag og forhandlinger optræder visse termer, som ikke findes på EN/
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | Midlertidig HTML til PDF, applications.md, reports .md |
 | Edit | Opdatér trackeren |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/js/generate-pdf.mjs` |

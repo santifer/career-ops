@@ -6,7 +6,7 @@ Procesa las URLs de ofertas acumuladas en `data/pipeline.md`. El candidato añad
 
 1. **Leer** `data/pipeline.md` -> encontrar los ítems `- [ ]` en la sección "Pendientes" / "Pending" / "En attente"
 2. **Para cada URL pendiente**:
-   a. Reservar el siguiente `REPORT_NUM` secuencial de forma atómica ejecutando `node reserve-report-num.mjs` (y liberar el sentinel ejecutando `node reserve-report-num.mjs --release <num>` una vez escrito el report)
+   a. Reservar el siguiente `REPORT_NUM` secuencial de forma atómica ejecutando `node scripts/js/reserve-report-num.mjs` (y liberar el sentinel ejecutando `node scripts/js/reserve-report-num.mjs --release <num>` una vez escrito el report)
    b. **Extraer la oferta** con Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch
    c. Si la URL no es accesible -> marcar como `- [!]` con una nota y continuar
    d. **Ejecutar el auto-pipeline completo**: Evaluación A-F -> Report .md -> PDF (si score >= 3.0) -> Tracker
@@ -48,16 +48,16 @@ Procesa las URLs de ofertas acumuladas en `data/pipeline.md`. El candidato añad
 
 ## Numeración automática
 
-1. Ejecutar `node reserve-report-num.mjs` para reservar el siguiente número secuencial de forma atómica (stdout devuelve `{###}`).
+1. Ejecutar `node scripts/js/reserve-report-num.mjs` para reservar el siguiente número secuencial de forma atómica (stdout devuelve `{###}`).
 2. Escribir el report con ese número.
-3. Liberar el sentinel ejecutando `node reserve-report-num.mjs --release {###}` una vez escrito el report.
+3. Liberar el sentinel ejecutando `node scripts/js/reserve-report-num.mjs --release {###}` una vez escrito el report.
 
 ## Sincronización de fuentes
 
 Antes de procesar una URL, verificar la sincronización:
 
 ```bash
-node cv-sync-check.mjs
+node scripts/js/cv-sync-check.mjs
 ```
 
 Si hay desincronización, avisar al candidato antes de continuar.

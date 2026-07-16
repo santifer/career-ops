@@ -59,6 +59,6 @@
 
 在启动处理之前，先执行以下脚本检查简历与配置的同步状态：
 ```bash
-node cv-sync-check.mjs
+node scripts/js/cv-sync-check.mjs
 ```
 如果检测到简历或个人偏好数据存在脱节风险，在继续执行前向求职者发出警示。

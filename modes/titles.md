@@ -112,13 +112,13 @@ When the user accepts one or more suggestions:
 
 ## Error Handling
 
-- `cv.md` missing → stop and point at onboarding (`node doctor.mjs --json`).
+- `cv.md` missing → stop and point at onboarding (`node scripts/js/doctor.mjs --json`).
   There is no evidence base to suggest from, and inventing one is forbidden.
 - `portals.yml` missing, or `title_filter.positive` empty → offer to create it
   from `templates/portals.example.yml` first, then re-run this mode. (An empty
   positive list means the scanner matches everything — nothing to broaden.)
 - `config/profile.yml` or `modes/_profile.md` missing → **hard stop**: do not
-  generate suggestions. Point at onboarding (`node doctor.mjs --json`) and
+  generate suggestions. Point at onboarding (`node scripts/js/doctor.mjs --json`) and
   stop, then re-run this mode once both files exist — the same
   fix-first-then-re-run behavior as a missing `portals.yml` above.
   Deal-breakers live in `modes/_profile.md` — suggestions generated without

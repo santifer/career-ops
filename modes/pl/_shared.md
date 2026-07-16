@@ -179,7 +179,7 @@ W polskich ofertach i negocjacjach pojawiają się terminy, które nie istnieją
 
 0. **List motywacyjny:** Jeśli formularz na to pozwala, ZAWSZE dołącz jeden. PDF w tym samym projekcie wizualnym co CV. Cytaty z oferty zmapowane na proof points. Maks. 1 strona.
 1. Czytaj `cv.md` i `article-digest.md` (jeśli istnieje) przed oceną oferty
-1b. **Pierwsza ocena każdej sesji:** Uruchom `node cv-sync-check.mjs` przez Bash. W razie ostrzeżeń poinformuj kandydata
+1b. **Pierwsza ocena każdej sesji:** Uruchom `node scripts/js/cv-sync-check.mjs` przez Bash. W razie ostrzeżeń poinformuj kandydata
 2. Wykryj archetyp roli i dostosuj framing
 3. Cytuj dokładne wiersze z CV podczas matchingu
 4. Używaj WebSearch do danych o wynagrodzeniach i firmie
@@ -201,4 +201,4 @@ W polskich ofertach i negocjacjach pojawiają się terminy, które nie istnieją
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | Tymczasowy HTML dla PDF, applications.md, reporty .md |
 | Edit | Aktualizacja trackera |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/js/generate-pdf.mjs` |

@@ -103,7 +103,7 @@ Notlar:
 ## Adım 6 — Başvuru Sonrası (isteğe bağlı)
 
 Aday başvuruyu gönderdiğini onaylarsa:
-1. Durumu kanonik CLI ile `Applied` yap: `node set-status.mjs <report#> Applied` (`applications.md` tablosunu elle düzenleme)
+1. Durumu kanonik CLI ile `Applied` yap: `node scripts/js/set-status.mjs <report#> Applied` (`applications.md` tablosunu elle düzenleme)
 2. Blok G'yi final yanıtlarla güncelle
 3. Sonraki adımı öner: İşe alım sorumlusuna LinkedIn erişimi için `/career-ops contacto`
 

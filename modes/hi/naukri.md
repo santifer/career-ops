@@ -107,7 +107,7 @@ Offer की requirements पर mapped 6-10 STAR+R stories (STAR + **Reflection
 
 पूरा evaluation `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` में save करें।
 
-- `{###}` = अगला sequential number (3 digits, zero-padded)। इसे atomically allocate करने के लिए `node reserve-report-num.mjs` run करें (stdout `{###}` return करता है), report लिखें, फिर sentinel release करने के लिए `node reserve-report-num.mjs --release {###}` run करें।
+- `{###}` = अगला sequential number (3 digits, zero-padded)। इसे atomically allocate करने के लिए `node scripts/js/reserve-report-num.mjs` run करें (stdout `{###}` return करता है), report लिखें, फिर sentinel release करने के लिए `node scripts/js/reserve-report-num.mjs --release {###}` run करें।
 - `{company-slug}` = company name lowercase, no spaces (dashes use करें)
 - `{YYYY-MM-DD}` = आज की date
 

@@ -103,7 +103,7 @@ Inkludér også:
 
 Gem den fulde evaluering i `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
-- `{###}` = næste fortløbende nummer (3 cifre, nul-paddet). For at allokere det atomisk og undgå race conditions skal du køre `node reserve-report-num.mjs` for at reservere nummeret (stdout returnerer `{###}`), skrive rapporten og derefter køre `node reserve-report-num.mjs --release {###}` for at frigive sentinel'en.
+- `{###}` = næste fortløbende nummer (3 cifre, nul-paddet). For at allokere det atomisk og undgå race conditions skal du køre `node scripts/js/reserve-report-num.mjs` for at reservere nummeret (stdout returnerer `{###}`), skrive rapporten og derefter køre `node scripts/js/reserve-report-num.mjs --release {###}` for at frigive sentinel'en.
 - `{company-slug}` = virksomhedsnavn i små bogstaver, uden mellemrum (brug bindestreger)
 - `{YYYY-MM-DD}` = dagens dato
 

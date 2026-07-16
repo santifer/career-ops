@@ -6,7 +6,7 @@
 
 1. **पढ़ें** `data/pipeline.md` → "Pending" / "En attente" / "Pendientes" / "Offen" / "लंबित" section में `- [ ]` items ढूंढें
 2. **हर pending URL के लिए**:
-   a. `node reserve-report-num.mjs` run करके atomically अगला `REPORT_NUM` reserve करें (और report लिखने के बाद `node reserve-report-num.mjs --release <num>` run करके sentinel release करें)
+   a. `node scripts/js/reserve-report-num.mjs` run करके atomically अगला `REPORT_NUM` reserve करें (और report लिखने के बाद `node scripts/js/reserve-report-num.mjs --release <num>` run करके sentinel release करें)
    b. **Offer extract करें** Playwright से (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
    c. URL accessible नहीं → `- [!]` mark करें note के साथ और continue करें
    d. **Complete auto-pipeline run करें**: A-F Evaluation → Report .md → PDF (यदि score >= 3.0) → Tracker
@@ -48,16 +48,16 @@
 
 ## Automatic Numbering
 
-1. `node reserve-report-num.mjs` run करें atomically अगला sequential number reserve करने के लिए (stdout `{###}` return करता है)।
+1. `node scripts/js/reserve-report-num.mjs` run करें atomically अगला sequential number reserve करने के लिए (stdout `{###}` return करता है)।
 2. उस number से report लिखें।
-3. Report लिखने के बाद `node reserve-report-num.mjs --release {###}` run करें sentinel release करने के लिए।
+3. Report लिखने के बाद `node scripts/js/reserve-report-num.mjs --release {###}` run करें sentinel release करने के लिए।
 
 ## Source Sync
 
 किसी URL को process करने से पहले sync check करें:
 
 ```bash
-node cv-sync-check.mjs
+node scripts/js/cv-sync-check.mjs
 ```
 
 Desync पर, continue करने से पहले candidate को alert करें।

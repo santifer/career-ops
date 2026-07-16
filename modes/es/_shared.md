@@ -178,7 +178,7 @@ En las ofertas y negociaciones en español, ciertos términos no existen en los 
 
 0. **Carta de presentación:** Si el formulario lo permite, SIEMPRE incluir una. PDF con el mismo diseño visual que el CV. Citas de la oferta mapeadas sobre los proof points. Máximo 1 página.
 1. Leer `cv.md` y `article-digest.md` (si existe) antes de evaluar una oferta
-1b. **Primera evaluación de cada sesión:** Ejecutar `node cv-sync-check.mjs` via Bash. Si hay alertas, avisar al candidato
+1b. **Primera evaluación de cada sesión:** Ejecutar `node scripts/js/cv-sync-check.mjs` via Bash. Si hay alertas, avisar al candidato
 2. Detectar el arquetipo del rol y adaptar el framing
 3. Citar líneas exactas del CV en el matching
 4. Usar WebSearch para datos de remuneración y de empresa
@@ -200,4 +200,4 @@ En las ofertas y negociaciones en español, ciertos términos no existen en los 
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | HTML temporal para PDF, applications.md, reports .md |
 | Edit | Actualizar el tracker |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/js/generate-pdf.mjs` |

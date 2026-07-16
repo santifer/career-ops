@@ -183,7 +183,7 @@ Profile को **"Demonstrable practice वाले Technical Builder"** के
 
 0. **Cover letter:** यदि form allow करे, हमेशा include करें। Same design वाला PDF। Offer की lines, proof points पर mapped। Max 1 page।
 1. Offer evaluate करने से पहले `cv.md` और `article-digest.md` (यदि मौजूद हो) पढ़ें
-1b. **हर session का पहला evaluation:** `node cv-sync-check.mjs` via Bash run करें। Alerts पर candidate को सूचित करें
+1b. **हर session का पहला evaluation:** `node scripts/js/cv-sync-check.mjs` via Bash run करें। Alerts पर candidate को सूचित करें
 2. Role का archetype detect करें और framing adapt करें
 3. Matching करते समय CV की exact lines quote करें
 4. Compensation और company data के लिए WebSearch उपयोग करें
@@ -205,4 +205,4 @@ Profile को **"Demonstrable practice वाले Technical Builder"** के
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | PDF के लिए temporary HTML, applications.md, reports .md |
 | Edit | Tracker update करें |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/js/generate-pdf.mjs` |

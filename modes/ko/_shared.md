@@ -179,7 +179,7 @@
 
 0. **커버레터:** 폼이 허용하면 항상 포함합니다. CV와 같은 visual design의 PDF. 공고 문구를 proof point와 매핑. 최대 1페이지.
 1. 공고 평가 전 `cv.md`와 `article-digest.md`(있다면)를 읽습니다.
-1b. **세션 첫 평가:** Bash로 `node cv-sync-check.mjs`를 실행합니다. 경고가 있으면 후보자에게 알립니다.
+1b. **세션 첫 평가:** Bash로 `node scripts/js/cv-sync-check.mjs`를 실행합니다. 경고가 있으면 후보자에게 알립니다.
 2. 역할 archetype을 감지하고 framing을 조정합니다.
 3. matching 시 CV의 정확한 문장을 인용합니다.
 4. 보상/회사 데이터에는 WebSearch를 사용합니다.
@@ -201,4 +201,4 @@
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | PDF용 임시 HTML, applications.md, reports .md |
 | Edit | tracker 업데이트 |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/js/generate-pdf.mjs` |

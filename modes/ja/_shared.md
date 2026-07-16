@@ -130,7 +130,7 @@ Archetype を検出した後、`modes/_profile.md` を読み、該当 archetype 
 
 0. **Cover letter:** フォームが許可する場合は必ず含める。CV と同じ visual design。JD quotes を proof points に mapping。最大 1 ページ。
 1. 評価前に `cv.md`、`_profile.md`、`article-digest.md`（存在する場合）を読む
-1b. **各セッションの最初の評価で:** `node cv-sync-check.mjs` を実行。warnings があればユーザーに知らせる
+1b. **各セッションの最初の評価で:** `node scripts/js/cv-sync-check.mjs` を実行。warnings があればユーザーに知らせる
 2. 求人の archetype を検出し、`_profile.md` に従って framing を適応させる
 3. マッチング時、CV の exact lines を引用する
 4. comp と company data のために WebSearch を使う
@@ -153,7 +153,7 @@ Archetype を検出した後、`modes/_profile.md` を読み、該当 archetype 
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | tracker 更新 |
 | Canva MCP | Optional visual CV generation. Base design を duplicate し、text を edit して PDF export。`profile.yml` の `cv.canva_resume_design_id` が必要 |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/js/generate-pdf.mjs` |
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection

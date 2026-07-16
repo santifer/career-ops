@@ -9,7 +9,7 @@ Process job URLs stored in `data/pipeline.md`. The user adds URLs at any time an
 Sweep all pending URLs in one batch with the zero-token liveness checker before the per-URL loop:
 
 1. Collect every `- [ ]` URL from the "Pending" section into a temp file (one URL per line).
-2. Run `node check-liveness.mjs --file <tmpfile>` (add `--throttle` for large batches to stay under WAF rate limits; it's pure Playwright, zero Claude tokens). The checker prints a per-URL verdict and exits non-zero if any are expired/uncertain.
+2. Run `node scripts/js/check-liveness.mjs --file <tmpfile>` (add `--throttle` for large batches to stay under WAF rate limits; it's pure Playwright, zero Claude tokens). The checker prints a per-URL verdict and exits non-zero if any are expired/uncertain.
 3. For every URL the checker reports as **expired/closed**, resolve the pipeline entry instead of processing it: move it to "Processed" as `- [x] ~~URL | Company | Role~~ — posting expired (liveness sweep)` and, if it already has a tracker row, mark it `Discarded`. **Do not** extract the JD, evaluate, or generate a report/PDF for it.
 4. Leave `uncertain` results in place to be confirmed during normal per-URL extraction (a transient timeout shouldn't drop a possibly-live posting).
 5. Only the surviving live URLs continue to the per-URL processing loop below.
@@ -33,7 +33,7 @@ Read `spend_tier` from `config/profile.yml` (see `modes/_shared.md` -- Spend Tie
    a. **Extract JD** using Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
    b. If the URL is not accessible → mark as `- [!]` with a note and continue
    c. **Pre-screen gate**: apply the gate above (using the extracted JD). If the JD is an obvious mismatch, log the discard to `data/discard.log` (per the **Discard log** rule above — three fields, no job ID in interactive mode), mark it `- [x] #-- | {url} | skipped (pre-screen mismatch: {reason})` in "Processed", and continue to the next URL. No `REPORT_NUM` is claimed for discarded postings.
-   d. Claim the next sequential `REPORT_NUM` atomically by running `node reserve-report-num.mjs` (and release the sentinel using `node reserve-report-num.mjs --release <num>` after the report is written)
+   d. Claim the next sequential `REPORT_NUM` atomically by running `node scripts/js/reserve-report-num.mjs` (and release the sentinel using `node scripts/js/reserve-report-num.mjs --release <num>` after the report is written)
    e. **Execute full auto-pipeline**: Evaluation A-F → Report .md → PDF (if score >= `auto_pdf_score_threshold`) → Tracker. Read `modes/_custom.md` → Pipeline Rules, if it exists, and apply its override here. Default (if absent or silent): standard pipeline execution.
    f. **Move from "Pending" to "Processed"**: `- [x] #NNN | URL | Company | Role | Score/5 | PDF ✅/❌`
 
@@ -93,7 +93,7 @@ Treat both as hints when triaging; neither changes how you process the URL.
 ## Intelligent JD detection from URL
 
 1. **Playwright (preferred):** `browser_navigate` + `browser_snapshot`. Works with all SPAs.
-   - **Opt-in — CLI extractor (`scan.extractor: cli` in `config/profile.yml`):** run `node browser-extract.mjs <url>` (default `--mode jd`) instead; it returns compact `{ "url", "title", "text" }` — the JD main text at ~4–5× fewer tokens than a full snapshot. Use its `text` as the JD. **Fall back silently** to `browser_navigate` + `browser_snapshot` if it errors or is missing.
+   - **Opt-in — CLI extractor (`scan.extractor: cli` in `config/profile.yml`):** run `node scripts/js/browser-extract.mjs <url>` (default `--mode jd`) instead; it returns compact `{ "url", "title", "text" }` — the JD main text at ~4–5× fewer tokens than a full snapshot. Use its `text` as the JD. **Fall back silently** to `browser_navigate` + `browser_snapshot` if it errors or is missing.
 2. **WebFetch (fallback):** For static pages or when Playwright is unavailable.
 3. **WebSearch (last resort):** Search in secondary portals that index the JD.
 
@@ -104,14 +104,14 @@ Treat both as hints when triaging; neither changes how you process the URL.
 
 ## Automatic numbering
 
-1. Run `node reserve-report-num.mjs` to claim the next sequential number (stdout returns `{###}`).
+1. Run `node scripts/js/reserve-report-num.mjs` to claim the next sequential number (stdout returns `{###}`).
 2. Write the report file using that number.
-3. Release the sentinel by running `node reserve-report-num.mjs --release {###}` once the report is written.
+3. Release the sentinel by running `node scripts/js/reserve-report-num.mjs --release {###}` once the report is written.
 
 ## Source synchronization
 
 Before processing any URL, verify sync:
 ```bash
-node cv-sync-check.mjs
+node scripts/js/cv-sync-check.mjs
 ```
 If there is a desynchronization, warn the user before continuing.

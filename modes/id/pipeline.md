@@ -6,7 +6,7 @@ Memproses URL lowongan yang menumpuk di `data/pipeline.md`. Kandidat menambahkan
 
 1. **Baca** `data/pipeline.md` -> temukan item `- [ ]` di bagian "Menunggu" / "Pending" / "Pendientes"
 2. **Untuk setiap URL yang menunggu**:
-   a. Pesan `REPORT_NUM` urut berikutnya secara atomik dengan menjalankan `node reserve-report-num.mjs` (dan lepas sentinel dengan menjalankan `node reserve-report-num.mjs --release <num>` setelah report ditulis)
+   a. Pesan `REPORT_NUM` urut berikutnya secara atomik dengan menjalankan `node scripts/js/reserve-report-num.mjs` (dan lepas sentinel dengan menjalankan `node scripts/js/reserve-report-num.mjs --release <num>` setelah report ditulis)
    b. **Ekstrak lowongan** dengan Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch
    c. Jika URL tidak bisa diakses -> tandai sebagai `- [!]` dengan catatan dan lanjutkan
    d. **Jalankan auto-pipeline lengkap**: Evaluasi A-F -> Report .md -> PDF (jika score >= 3.0) -> Tracker
@@ -48,16 +48,16 @@ Memproses URL lowongan yang menumpuk di `data/pipeline.md`. Kandidat menambahkan
 
 ## Penomoran otomatis
 
-1. Jalankan `node reserve-report-num.mjs` untuk memesan nomor urut berikutnya secara atomik (stdout mengembalikan `{###}`).
+1. Jalankan `node scripts/js/reserve-report-num.mjs` untuk memesan nomor urut berikutnya secara atomik (stdout mengembalikan `{###}`).
 2. Tulis report dengan nomor tersebut.
-3. Lepas sentinel dengan menjalankan `node reserve-report-num.mjs --release {###}` setelah report ditulis.
+3. Lepas sentinel dengan menjalankan `node scripts/js/reserve-report-num.mjs --release {###}` setelah report ditulis.
 
 ## Sinkronisasi sumber
 
 Sebelum memproses URL, verifikasi sinkronisasi:
 
 ```bash
-node cv-sync-check.mjs
+node scripts/js/cv-sync-check.mjs
 ```
 
 Jika terjadi desinkronisasi, beri peringatan kepada kandidat sebelum melanjutkan.

@@ -180,7 +180,7 @@ Dalam lowongan dan negosiasi di Indonesia, beberapa istilah tidak ada di pasar E
 
 0. **Cover letter:** Jika formulir memungkinkan, SELALU sertakan. PDF dengan desain visual yang sama dengan CV. Kutipan dari lowongan dipetakan ke proof point. Maksimal 1 halaman.
 1. Baca `cv.md` dan `article-digest.md` (jika ada) sebelum mengevaluasi lowongan
-1b. **Evaluasi pertama setiap sesi:** Jalankan `node cv-sync-check.mjs` via Bash. Jika ada peringatan, beri tahu kandidat
+1b. **Evaluasi pertama setiap sesi:** Jalankan `node scripts/js/cv-sync-check.mjs` via Bash. Jika ada peringatan, beri tahu kandidat
 2. Deteksi arketipe role dan sesuaikan framing
 3. Kutip baris persis dari CV saat melakukan matching
 4. Gunakan WebSearch untuk data kompensasi dan perusahaan
@@ -202,4 +202,4 @@ Dalam lowongan dan negosiasi di Indonesia, beberapa istilah tidak ada di pasar E
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | HTML sementara untuk PDF, applications.md, report .md |
 | Edit | Memperbarui tracker |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/js/generate-pdf.mjs` |

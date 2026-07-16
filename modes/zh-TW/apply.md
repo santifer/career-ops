@@ -106,7 +106,7 @@
 ## 步驟 6 — 投遞後動作
 
 當求職者確認已經成功按下「送出應徵／投遞」後，執行以下收尾與建檔工作：
-1. 使用規範的 CLI 將該職缺狀態更新為 `Applied`：`node set-status.mjs <report#> Applied`（不要手動編輯 `data/applications.md` 表格）。
+1. 使用規範的 CLI 將該職缺狀態更新為 `Applied`：`node scripts/js/set-status.mjs <report#> Applied`（不要手動編輯 `data/applications.md` 表格）。
 2. 將最終實際送出的表單回答歸檔，並更新到該報告的維度 H 區塊中，方便後續面試對照。
 3. 建議下一步行動：引導求職者使用 `/career-ops contacto` 指令，產生直達 LinkedIn 招募負責人的開發話術。
 

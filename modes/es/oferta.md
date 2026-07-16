@@ -103,7 +103,7 @@ Incluir también:
 
 Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
-- `{###}` = siguiente número secuencial (3 dígitos, zero-padded). Para asignarlo de forma atómica y evitar condiciones de carrera, ejecutar `node reserve-report-num.mjs` para reservar el número (stdout devuelve `{###}`), escribir el report y luego ejecutar `node reserve-report-num.mjs --release {###}` para liberar el sentinel.
+- `{###}` = siguiente número secuencial (3 dígitos, zero-padded). Para asignarlo de forma atómica y evitar condiciones de carrera, ejecutar `node scripts/js/reserve-report-num.mjs` para reservar el número (stdout devuelve `{###}`), escribir el report y luego ejecutar `node scripts/js/reserve-report-num.mjs --release {###}` para liberar el sentinel.
 - `{company-slug}` = nombre de empresa en minúsculas, sin espacios (usar guiones)
 - `{YYYY-MM-DD}` = fecha de hoy
 

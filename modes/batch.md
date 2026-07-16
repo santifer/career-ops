@@ -51,7 +51,7 @@ batch/
 4. **For each pending URL**:
    a. Chrome: click on the job → read JD text from the DOM
    b. Save JD to `/tmp/batch-jd-{id}.txt`
-   c. Reserve the next REPORT_NUM atomically: `node reserve-report-num.mjs` (release with `--release {num}` after the worker writes the report; stale sentinels are GC'd automatically)
+   c. Reserve the next REPORT_NUM atomically: `node scripts/js/reserve-report-num.mjs` (release with `--release {num}` after the worker writes the report; stale sentinels are GC'd automatically)
    d. Execute via Bash:
 
       ```bash
@@ -78,14 +78,14 @@ The individual worker tasks spawn headlessly in the background and write their s
 Orchestrating N parallel evaluators by hand (multiple agent windows / subagents, outside `batch-runner.sh`)? Reserve the whole range FIRST, then hand each worker its own number — never let workers compute `max+1` themselves:
 
 ```bash
-node reserve-report-num.mjs --count 8
+node scripts/js/reserve-report-num.mjs --count 8
 # stdout: 042-049  → worker 1 gets 042, worker 2 gets 043, ...
 ```
 
 Each number is backed by a sentinel file in `reports/`, so concurrent reservations from other windows cannot collide. After all reports are written, release leftovers in one call:
 
 ```bash
-node reserve-report-num.mjs --release 042-049
+node scripts/js/reserve-report-num.mjs --release 042-049
 ```
 
 **Two things to know:**

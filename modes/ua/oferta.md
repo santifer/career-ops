@@ -112,7 +112,7 @@
 
 Зберегти повну оцінку в `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
-- `{###}` = наступний порядковий номер (3 цифри, zero-padded). Щоб виділити цей номер атомарно та уникнути станів гонки, ви ПОВИННІ виконати `node reserve-report-num.mjs` для резервування номера (stdout поверне `{###}`), записати звіт, а потім виконати `node reserve-report-num.mjs --release {###}` для звільнення маркера (sentinel).
+- `{###}` = наступний порядковий номер (3 цифри, zero-padded). Щоб виділити цей номер атомарно та уникнути станів гонки, ви ПОВИННІ виконати `node scripts/js/reserve-report-num.mjs` для резервування номера (stdout поверне `{###}`), записати звіт, а потім виконати `node scripts/js/reserve-report-num.mjs --release {###}` для звільнення маркера (sentinel).
 - `{company-slug}` = назва компанії: lowercase, пробіли замінити на `-`, прибрати спецсимволи (наприклад, `Acme Corp` → `acme-corp`)
 - `{YYYY-MM-DD}` = поточна дата
 
@@ -179,6 +179,6 @@
 - `{pdf_emoji}` = `✅` або `❌`
 - `{note}` = короткий коментар (опціонально, колонку можна опустити)
 
-Потім виконати `node merge-tracker.mjs` для злиття в `data/applications.md`.
+Потім виконати `node scripts/js/merge-tracker.mjs` для злиття в `data/applications.md`.
 
 Для **існуючого** запису допустиме пряме оновлення в `data/applications.md` (статус, PDF, посилання на звіт).

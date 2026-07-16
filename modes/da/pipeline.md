@@ -6,7 +6,7 @@ Behandler URL'er til opslag, der er samlet i `data/pipeline.md`. Kandidaten tilf
 
 1. **Læs** `data/pipeline.md` -> find `- [ ]`-elementer i sektionen "Afventer" / "Pending" / "Pendientes"
 2. **For hver afventende URL**:
-   a. Reservér det næste fortløbende `REPORT_NUM` atomisk ved at køre `node reserve-report-num.mjs` (og frigiv sentinel'en ved at køre `node reserve-report-num.mjs --release <num>`, når rapporten er skrevet)
+   a. Reservér det næste fortløbende `REPORT_NUM` atomisk ved at køre `node scripts/js/reserve-report-num.mjs` (og frigiv sentinel'en ved at køre `node scripts/js/reserve-report-num.mjs --release <num>`, når rapporten er skrevet)
    b. **Udtræk opslaget** med Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch
    c. Hvis URL'en ikke er tilgængelig -> markér som `- [!]` med en note og fortsæt
    d. **Kør den fulde auto-pipeline**: Evaluering A-F -> Report .md -> PDF (hvis score >= 3.0) -> Tracker
@@ -48,16 +48,16 @@ Behandler URL'er til opslag, der er samlet i `data/pipeline.md`. Kandidaten tilf
 
 ## Automatisk nummerering
 
-1. Kør `node reserve-report-num.mjs` for at reservere det næste fortløbende nummer atomisk (stdout returnerer `{###}`).
+1. Kør `node scripts/js/reserve-report-num.mjs` for at reservere det næste fortløbende nummer atomisk (stdout returnerer `{###}`).
 2. Skriv rapporten med dette nummer.
-3. Frigiv sentinel'en ved at køre `node reserve-report-num.mjs --release {###}`, når rapporten er skrevet.
+3. Frigiv sentinel'en ved at køre `node scripts/js/reserve-report-num.mjs --release {###}`, når rapporten er skrevet.
 
 ## Synkronisering af kilder
 
 Før en URL behandles, tjek synkroniseringen:
 
 ```bash
-node cv-sync-check.mjs
+node scripts/js/cv-sync-check.mjs
 ```
 
 Ved desynkronisering, advar kandidaten, før du fortsætter.

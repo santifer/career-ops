@@ -13,17 +13,17 @@ Queued items are *intents* for the agent to action and the user to review.
 ## Queue a request
 
 ```bash
-node agent-inbox.mjs add "evaluate https://acme.com/jobs/42"
-node agent-inbox.mjs add "draft a follow-up for application #7"
-node agent-inbox.mjs add "run a scan and triage anything new"
+node scripts/js/agent-inbox.mjs add "evaluate https://acme.com/jobs/42"
+node scripts/js/agent-inbox.mjs add "draft a follow-up for application #7"
+node scripts/js/agent-inbox.mjs add "run a scan and triage anything new"
 ```
 
 ## Inspect / resolve
 
 ```bash
-node agent-inbox.mjs list            # pending items
-node agent-inbox.mjs list --all      # include resolved items
-node agent-inbox.mjs resolve 1 --result "scored 4.3 — report 012"
+node scripts/js/agent-inbox.mjs list            # pending items
+node scripts/js/agent-inbox.mjs list --all      # include resolved items
+node scripts/js/agent-inbox.mjs resolve 1 --result "scored 4.3 — report 012"
 ```
 
 `data/agent-inbox.md` is user-layer (gitignored). Items look like:
@@ -40,7 +40,7 @@ node agent-inbox.mjs resolve 1 --result "scored 4.3 — report 012"
 2. Run each **unchecked** item top-to-bottom by routing it to the right mode
    (a URL → `auto-pipeline`; "follow-up" → `followup`; "scan" → `scan`; etc.).
 3. After each, mark it `[x]` and append `→ result: <one line>` — either by hand
-   or with `node agent-inbox.mjs resolve <n> --result "..."`.
+   or with `node scripts/js/agent-inbox.mjs resolve <n> --result "..."`.
 4. Items that need **live user input** (a mock interview, a pasted transcript, a
    decision, anything that would submit an application) → do **not** run them;
    ask the user to start them instead. The inbox never bypasses human review.

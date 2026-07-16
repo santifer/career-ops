@@ -181,7 +181,7 @@ Negli annunci e nelle trattative in Italia si usano termini e tutele specifici c
 
 0. **Lettera di presentazione:** Se il modulo lo consente, includerla SEMPRE. PDF con lo stesso design visivo del CV. Citazioni dell'annuncio mappate sui proof point. Massimo 1 pagina.
 1. Leggere `cv.md` e `article-digest.md` (se presente) prima di valutare un annuncio
-1b. **Prima valutazione di ogni sessione:** eseguire `node cv-sync-check.mjs` via Bash. In caso di avvisi, informare il candidato.
+1b. **Prima valutazione di ogni sessione:** eseguire `node scripts/js/cv-sync-check.mjs` via Bash. In caso di avvisi, informare il candidato.
 2. Rilevare l'archetipo del ruolo e adattare il framing
 3. Citare righe esatte del CV durante il matching
 4. Usare WebSearch per dati retributivi e informazioni sull'azienda
@@ -203,4 +203,4 @@ Negli annunci e nelle trattative in Italia si usano termini e tutele specifici c
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | HTML temporaneo per PDF, applications.md, report .md |
 | Edit | Aggiornare il tracker |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/js/generate-pdf.mjs` |

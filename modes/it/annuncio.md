@@ -103,7 +103,7 @@ Eseguire **SEMPRE** dopo i blocchi A-F:
 
 Salvare la valutazione completa in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
-- `{###}` = prossimo numero sequenziale a 3 cifre, zero-padded. Allocarlo in modo atomico eseguendo `node reserve-report-num.mjs` (restituisce `{###}` su stdout), scrivere il report, poi eseguire `node reserve-report-num.mjs --release {###}` per liberare la prenotazione.
+- `{###}` = prossimo numero sequenziale a 3 cifre, zero-padded. Allocarlo in modo atomico eseguendo `node scripts/js/reserve-report-num.mjs` (restituisce `{###}` su stdout), scrivere il report, poi eseguire `node scripts/js/reserve-report-num.mjs --release {###}` per liberare la prenotazione.
 - `{company-slug}` = nome dell'azienda in minuscolo senza spazi (usare i trattini)
 - `{YYYY-MM-DD}` = data odierna
 

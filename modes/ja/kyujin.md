@@ -230,7 +230,7 @@ I am happy to discuss further at your convenience.
 
 Full evaluation を `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` に保存する。
 
-- `{###}` = next sequential number（3 digits, zero-padded）。競合を防ぐため、必ず `node reserve-report-num.mjs` を実行して番号を claim し（stdout returns `{###}`）、report を write してから `node reserve-report-num.mjs --release {###}` を実行して sentinel を release する。
+- `{###}` = next sequential number（3 digits, zero-padded）。競合を防ぐため、必ず `node scripts/js/reserve-report-num.mjs` を実行して番号を claim し（stdout returns `{###}`）、report を write してから `node scripts/js/reserve-report-num.mjs --release {###}` を実行して sentinel を release する。
 - `{company-slug}` = company name in lowercase, without spaces（use hyphens）
 - `{YYYY-MM-DD}` = current date
 

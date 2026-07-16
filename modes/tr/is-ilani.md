@@ -101,7 +101,7 @@ Bloklar A-F tamamlandıktan sonra **HER ZAMAN** şunları yap:
 
 Değerlendirmenin tamamını `reports/{###}-{sirket-slug}-{YYYY-MM-DD}.md` olarak kaydet.
 
-- `{###}` = sıradaki numara (3 haneli, sıfır dolgulu). Bu numarayı atomik olarak atamak ve yarış durumlarını (race condition) önlemek için, numarayı rezerve etmek üzere `node reserve-report-num.mjs` komutunu çalıştırmalısınız (standart çıktı `{###}` değerini döndürür), raporu yazmalı ve ardından sentineli serbest bırakmak için `node reserve-report-num.mjs --release {###}` komutunu çalıştırmalısınız.
+- `{###}` = sıradaki numara (3 haneli, sıfır dolgulu). Bu numarayı atomik olarak atamak ve yarış durumlarını (race condition) önlemek için, numarayı rezerve etmek üzere `node scripts/js/reserve-report-num.mjs` komutunu çalıştırmalısınız (standart çıktı `{###}` değerini döndürür), raporu yazmalı ve ardından sentineli serbest bırakmak için `node scripts/js/reserve-report-num.mjs --release {###}` komutunu çalıştırmalısınız.
 - `{sirket-slug}` = şirket adı küçük harfle, boşluksuz (tire kullan)
 - `{YYYY-MM-DD}` = bugünün tarihi
 
@@ -163,7 +163,7 @@ Değerlendirmenin tamamını `reports/{###}-{sirket-slug}-{YYYY-MM-DD}.md` olara
 - `{pdf_emoji}` = `✅` veya `❌`
 - `{note}` = kısa not (isteğe bağlı, sütun atlanabilir)
 
-Ardından `node merge-tracker.mjs` çalıştır.
+Ardından `node scripts/js/merge-tracker.mjs` çalıştır.
 
 **Mevcut** kayıt için `data/applications.md`'de ilgili satırı doğrudan güncelle (durum, PDF, rapor bağlantısı).
 

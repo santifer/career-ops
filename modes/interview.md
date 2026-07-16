@@ -59,7 +59,7 @@ Once the interview is complete, or once enough new details have been collected:
 1. **Update `cv.md`**: Update the professional summary, rewrite project bullet points to incorporate the new keywords and metrics, and append new skills.
 2. **Update `config/profile.yml`**: Update the targets, compensation, and narrative sections.
 3. **Update `modes/_profile.md`**: Map the new projects/proof points to the target archetypes and update the adaptive framing rules.
-4. Run `node doctor.mjs` silently to verify project integrity.
+4. Run `node scripts/js/doctor.mjs` silently to verify project integrity.
 5. Provide a summary of the files updated:
    > "✅ Interactive interview completed! Updated your profile:
    > - **CV**: Refined summaries and project bullets with new metrics.
