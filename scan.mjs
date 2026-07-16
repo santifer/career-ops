@@ -1654,8 +1654,12 @@ async function main() {
   if (config.max_posting_age_days != null || totalFilteredPostingAge > 0) {
     console.log(`Filtered by age:       ${totalFilteredPostingAge} removed`);
   }
-  console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
-  console.log(`Filtered by content:  ${totalFilteredContent} removed`);
+  if (config.salary_filter || totalFilteredSalary > 0) {
+    console.log(`Filtered by salary:    ${totalFilteredSalary} removed`);
+  }
+  if (config.content_filter || totalFilteredContent > 0) {
+    console.log(`Filtered by content:   ${totalFilteredContent} removed`);
+  }
   if (Object.keys(windows).length > 0 || totalFilteredCooldown > 0) {
     console.log(`Filtered by cooldown:  ${totalFilteredCooldown} removed`);
   }
