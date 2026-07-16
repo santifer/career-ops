@@ -47,45 +47,18 @@ func resolveReportPath(careerOpsPath, trackerPath, link string) string {
 	return link
 }
 
-func getRepoRoot() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "."
-	}
-	current := cwd
-	for {
-		if _, err := os.Stat(filepath.Join(current, "path-resolver.mjs")); err == nil {
-			return current
-		}
-		parent := filepath.Dir(current)
-		if parent == current {
-			break
-		}
-		current = parent
-	}
-	return cwd
-}
-
-func resolveTrackerPath(careerOpsPath string) string {
-	if envTracker := strings.TrimSpace(os.Getenv("CAREER_OPS_TRACKER")); envTracker != "" {
-		if filepath.IsAbs(envTracker) {
-			return filepath.Clean(envTracker)
-		}
-		return filepath.Clean(filepath.Join(getRepoRoot(), envTracker))
-	}
-	dataPath := filepath.Clean(filepath.Join(careerOpsPath, "data", "applications.md"))
-	if _, err := os.Stat(dataPath); err == nil {
-		return dataPath
-	}
-	return filepath.Clean(filepath.Join(careerOpsPath, "applications.md"))
-}
-
 // ParseApplications reads applications.md and returns parsed applications.
+// It tries both {path}/applications.md and {path}/data/applications.md for compatibility.
 func ParseApplications(careerOpsPath string) []model.CareerApplication {
-	filePath := resolveTrackerPath(careerOpsPath)
+	filePath := filepath.Join(careerOpsPath, "applications.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil
+		// Fallback: try data/ subdirectory
+		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
+		content, err = os.ReadFile(filePath)
+		if err != nil {
+			return nil
+		}
 	}
 
 	lines := strings.Split(string(content), "\n")
@@ -683,6 +656,7 @@ func resolveTrackerColumns(lines []string) map[string]int {
 	return legacyTrackerColumns
 }
 
+// UpdateApplicationStatus updates the status of an application in applications.md.
 func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, newStatus string) error {
 	return UpdateApplicationStatusAndNotes(careerOpsPath, app, newStatus, "")
 }

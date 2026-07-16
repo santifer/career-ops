@@ -18,10 +18,11 @@ import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
 import { resolveColumns, parseTrackerRow, normalizeVia } from './tracker-parse.mjs';
-import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 
-const CAREER_OPS = getCareerOpsRoot();
-const APPS_FILE = resolveTrackerPath(CAREER_OPS);
+const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
+  ? join(CAREER_OPS, 'data/applications.md')
+  : join(CAREER_OPS, 'applications.md');
 const REPORTS_DIR = join(CAREER_OPS, 'reports');
 
 const MACHINE_SUMMARY_FIELDS = new Set([

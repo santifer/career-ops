@@ -75,8 +75,5 @@
     "dotenv": "^17.0.0",
     "js-yaml": "^4.1.1",
     "playwright": "1.61.1"
-  },
-  "devDependencies": {
-    "acorn": "^8.17.0"
   }
 }

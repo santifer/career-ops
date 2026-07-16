@@ -45,9 +45,8 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { extractTrackerReportNumbers, resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
-import { resolveTrackerPath } from './path-resolver.mjs';
 import {
-  rebuildRow, trackerLockDirFor, acquireTrackerLock,
+  rebuildRow, resolveTrackerPath, trackerLockDirFor, acquireTrackerLock,
   writeFileAtomic, loadCanonicalStates, resolveCanonicalState, normalizeCompany, cell,
 } from './tracker-utils.mjs';
 

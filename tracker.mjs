@@ -39,11 +39,9 @@ import { createHash } from 'crypto';
 import { dirname, resolve, join, basename } from 'path';
 import { pathToFileURL } from 'url';
 import yaml from 'js-yaml';
-import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 import { resolveColumns } from './tracker-parse.mjs';
 
-const CAREER_OPS = getCareerOpsRoot();
-const MD_PATH = resolveTrackerPath(CAREER_OPS);
+const MD_PATH = process.env.CAREER_OPS_TRACKER || 'data/applications.md';
 const DB_PATH = process.env.CAREER_OPS_TRACKER_DB
   || (MD_PATH.endsWith('.md') ? MD_PATH.slice(0, -3) + '.db' : MD_PATH + '.db');
 

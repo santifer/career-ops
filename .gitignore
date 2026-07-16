@@ -118,6 +118,3 @@ plan/
 
 # Web
 .career-ops-web/logo-cache/
-
-# Agent local customizations
-.agents/

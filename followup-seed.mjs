@@ -62,9 +62,8 @@ import {
   parseDate,
   addDays,
 } from './followup-cadence.mjs';
-import { getCareerOpsRoot, resolveTrackerPath as sharedResolveTrackerPath } from './path-resolver.mjs';
 
-const CAREER_OPS = getCareerOpsRoot();
+const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 
 /** Canonical header written when data/follow-ups.md doesn't exist yet. */
 export const FOLLOWUPS_HEADER = [
@@ -151,7 +150,10 @@ export function formatPinLine(appNum, nextDate, setDate) {
 
 function resolveTrackerPath(override) {
   if (override) return override;
-  return sharedResolveTrackerPath(CAREER_OPS);
+  if (process.env.CAREER_OPS_TRACKER) return process.env.CAREER_OPS_TRACKER;
+  return existsSync(join(CAREER_OPS, 'data/applications.md'))
+    ? join(CAREER_OPS, 'data/applications.md')
+    : join(CAREER_OPS, 'applications.md');
 }
 
 function resolveFollowupsPath(override) {

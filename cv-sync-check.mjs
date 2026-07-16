@@ -14,17 +14,14 @@ import { readFileSync, existsSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-import { getCareerOpsRoot } from './path-resolver.mjs';
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CODE_ROOT = __dirname;
-const DATA_ROOT = getCareerOpsRoot();
+const projectRoot = __dirname;
 
 const warnings = [];
 const errors = [];
 
 // 1. Check cv.md exists
-const cvPath = join(DATA_ROOT, 'cv.md');
+const cvPath = join(projectRoot, 'cv.md');
 if (!existsSync(cvPath)) {
   errors.push('cv.md not found in project root. Create it with your CV in markdown format.');
 } else {
@@ -35,7 +32,7 @@ if (!existsSync(cvPath)) {
 }
 
 // 2. Check profile.yml exists
-const profilePath = join(DATA_ROOT, 'config', 'profile.yml');
+const profilePath = join(projectRoot, 'config', 'profile.yml');
 if (!existsSync(profilePath)) {
   errors.push('config/profile.yml not found. Copy from config/profile.example.yml and fill in your details.');
 } else {
@@ -51,8 +48,8 @@ if (!existsSync(profilePath)) {
 
 // 3. Check for hardcoded metrics in prompt files
 const filesToCheck = [
-  { path: join(CODE_ROOT, 'modes', '_shared.md'), name: '_shared.md' },
-  { path: join(CODE_ROOT, 'batch', 'batch-prompt.md'), name: 'batch-prompt.md' },
+  { path: join(projectRoot, 'modes', '_shared.md'), name: '_shared.md' },
+  { path: join(projectRoot, 'batch', 'batch-prompt.md'), name: 'batch-prompt.md' },
 ];
 
 // Pattern: numbers that look like hardcoded metrics (e.g., "170+ hours", "90% self-service")
@@ -75,7 +72,7 @@ for (const { path, name } of filesToCheck) {
 }
 
 // 4. Check article-digest.md freshness
-const digestPath = join(DATA_ROOT, 'article-digest.md');
+const digestPath = join(projectRoot, 'article-digest.md');
 if (existsSync(digestPath)) {
   const stats = statSync(digestPath);
   const daysSinceModified = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60 * 24);

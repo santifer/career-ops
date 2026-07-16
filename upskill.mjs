@@ -28,11 +28,10 @@ import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 
-import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
-
-const ROOT = dirname(fileURLToPath(import.meta.url));
-const CAREER_OPS = getCareerOpsRoot();
-const APPS_FILE = resolveTrackerPath(CAREER_OPS);
+const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
+  ? join(CAREER_OPS, 'data/applications.md')
+  : join(CAREER_OPS, 'applications.md');
 const CV_FILE = join(CAREER_OPS, 'cv.md');
 const PROFILE_FILE = join(CAREER_OPS, 'config/profile.yml');
 
@@ -665,7 +664,7 @@ if (urlTextIdx !== -1 || directUrl) {
     }
     let activeCvFile = CV_FILE;
     if (!existsSync(activeCvFile)) {
-      activeCvFile = join(ROOT, 'cv-example.md');
+      activeCvFile = join(CAREER_OPS, 'cv-example.md');
     }
     if (existsSync(activeCvFile)) {
       try { knownTextChunks.push(readFileSync(activeCvFile, 'utf-8')); } catch (e) {}

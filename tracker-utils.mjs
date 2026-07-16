@@ -78,7 +78,14 @@ export function cell(v) {
  * @param {string} rootDir - The career-ops repository root.
  * @returns {string} Absolute canonical tracker path.
  */
-
+export function resolveTrackerPath(rootDir) {
+  const raw = process.env.CAREER_OPS_TRACKER
+    ? process.env.CAREER_OPS_TRACKER
+    : existsSync(join(rootDir, 'data/applications.md'))
+      ? join(rootDir, 'data/applications.md')
+      : join(rootDir, 'applications.md');
+  return canonicalizeTrackerPath(raw);
+}
 
 /**
  * Convert the tracker path into one stable absolute spelling before hashing it.

@@ -20,7 +20,6 @@ import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
-import { getCareerOpsRoot } from './path-resolver.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -28,7 +27,6 @@ try {
 } catch { /* dotenv optional */ }
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const DATA_ROOT = getCareerOpsRoot();
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -36,10 +34,10 @@ const DATA_ROOT = getCareerOpsRoot();
 const PATHS = {
   shared:   join(ROOT, 'modes', '_shared.md'),
   pdfMode:  join(ROOT, 'modes', 'pdf.md'),
-  cv:       join(DATA_ROOT, 'cv.md'),
-  profile:  join(DATA_ROOT, 'config', 'profile.yml'),
+  cv:       join(ROOT, 'cv.md'),
+  profile:  join(ROOT, 'config', 'profile.yml'),
   template: join(ROOT, 'templates', 'cv-template.html'),
-  output:   join(DATA_ROOT, 'output'),
+  output:   join(ROOT, 'output'),
 };
 
 // ---------------------------------------------------------------------------

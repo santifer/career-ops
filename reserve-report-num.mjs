@@ -27,12 +27,10 @@ import {
   extractTrackerReportNumbers, parseTrackerRow, resolveColumns,
 } from './tracker-parse.mjs';
 import {
-  acquireTrackerLock, canonicalizeTrackerPath, trackerLockDirFor,
+  acquireTrackerLock, canonicalizeTrackerPath, resolveTrackerPath, trackerLockDirFor,
 } from './tracker-utils.mjs';
-import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const CAREER_OPS = getCareerOpsRoot();
 const MAX_SENTINEL_AGE_MS = 4 * 60 * 60 * 1000;
 const MAX_RETRIES = 50;
 const MAX_COUNT = 50;

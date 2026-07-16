@@ -21,10 +21,8 @@
 import { readFileSync, existsSync, statSync } from 'fs';
 import { basename, resolve, dirname, relative, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
-import { getCareerOpsRoot } from './path-resolver.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const DATA_ROOT = getCareerOpsRoot();
 
 const ALLOWED_HOSTS = new Set([
   'boards.greenhouse.io',
@@ -52,8 +50,8 @@ if (!applyUrl || !pdfPath) {
 
 // ── PDF validation ────────────────────────────────────────────────────
 
-const outputDir = resolve(DATA_ROOT, 'output');
-const absPdf    = resolve(DATA_ROOT, pdfPath);
+const outputDir = resolve(ROOT, 'output');
+const absPdf    = resolve(ROOT, pdfPath);
 
 const relPdf = relative(outputDir, absPdf);
 if (relPdf === '' || relPdf.startsWith('..') || isAbsolute(relPdf)) {
@@ -130,7 +128,7 @@ function detectAts(url) {
 // ── Profile reader ────────────────────────────────────────────────────
 
 function readProfile() {
-  const profilePath = resolve(DATA_ROOT, 'config/profile.yml');
+  const profilePath = resolve(ROOT, 'config/profile.yml');
   if (!existsSync(profilePath)) return {};
   const raw = readFileSync(profilePath, 'utf-8');
 
@@ -156,7 +154,7 @@ function readProfile() {
 
 function readCover() {
   if (!coverPath) return null;
-  const abs = resolve(DATA_ROOT, coverPath);
+  const abs = resolve(ROOT, coverPath);
   if (!existsSync(abs)) {
     console.error(`Warning: cover letter not found at ${coverPath} — skipping`);
     return null;

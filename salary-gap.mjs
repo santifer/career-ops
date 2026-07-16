@@ -29,9 +29,8 @@ import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
-import { getCareerOpsRoot } from './path-resolver.mjs';
 
-const CAREER_OPS = getCareerOpsRoot();
+const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const OBS_PATH = join(CAREER_OPS, 'data/salary-observations.tsv');
 const REPORTS_DIR = join(CAREER_OPS, 'reports');
 

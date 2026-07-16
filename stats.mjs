@@ -24,15 +24,13 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { normalizeStatus } from './followup-cadence.mjs';
-import { getCareerOpsRoot, resolveTrackerPath } from './path-resolver.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const DATA_ROOT = getCareerOpsRoot();
-const APPS_FILE = resolveTrackerPath(DATA_ROOT);
-const SCAN_HISTORY_FILE = join(DATA_ROOT, 'data', 'scan-history.tsv');
-const FOLLOWUPS_FILE = join(DATA_ROOT, 'data', 'follow-ups.md');
-const SCAN_RUNS_FILE = join(DATA_ROOT, 'data', 'scan-runs.tsv');
-const PORTALS_FILE = join(DATA_ROOT, 'portals.yml');
+const APPS_FILE = join(ROOT, 'data', 'applications.md');
+const SCAN_HISTORY_FILE = join(ROOT, 'data', 'scan-history.tsv');
+const FOLLOWUPS_FILE = join(ROOT, 'data', 'follow-ups.md');
+const SCAN_RUNS_FILE = join(ROOT, 'data', 'scan-runs.tsv');
+const PORTALS_FILE = join(ROOT, 'portals.yml');
 
 const CANONICAL_STATUSES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
 

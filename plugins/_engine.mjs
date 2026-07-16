@@ -199,7 +199,6 @@ export function validateManifest(m, dir, dirName) {
     skill = m.skill;
   }
 
-
   return {
     id: m.id,
     apiVersion: 1,
