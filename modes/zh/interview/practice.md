@@ -180,12 +180,12 @@ source: practice
 
 Recruiter screen 是勾选核对，不是深度探查。回答要干脆；不要过度工程化。招聘方在核实匹配度、薪酬对齐与后勤，再交给 hiring manager。
 
-1. Walk me through your background.
-2. Why this company / why this role?
-3. Why are you leaving your current role?
-4. What are your comp expectations?
-5. [Logistics: location / hybrid / timeline / work authorization]
-6. What questions do you have for us?
+1. 请介绍一下你的背景经历。
+2. 为什么选这家公司 / 为什么这个岗位？
+3. 你为什么要离开现在的工作？
+4. 你的薪酬预期是什么？
+5. [后勤：地点 / 混合办公 / 时间线 / 工作许可]
+6. 你有什么问题想问我们？
 
 **Comp coaching（仅 recruiter screen）。** 留意候选人是否主动报出薪酬底线（例如"最低我只能到 X"）。若发生，作答后点明："你刚把底线交出去了——谈判还没开始就被封顶。更强的做法是锚定调研后的目标区间，并把口径推到整包：'我盯的是这个级别市场区间的上半段——在定数字前，我想一起看清 base、bonus 和 equity。'" 若岗位专属准备文件定义了薪酬策略，就跟它走；否则只给这条通用机制说明——绝不编造目标数字。
 
@@ -193,51 +193,51 @@ Recruiter screen 是勾选核对，不是深度探查。回答要干脆；不要
 
 HM screen 探的是领导力哲学、判断力与经验深度。回答可以更长、更有故事分量。HM 在决定是否投入团队后续轮次的时间。
 
-1. Walk me through your background.
-2. Why this company / why this role?
-3. Tell me about the hardest problem you've solved in your field.
-4. Tell me about a time you faced resistance to a change you proposed.
-5. What does [title from JD] mean to you?
-6. How would you describe your approach to your craft?
-7. [One fundamental concept from the JD — e.g., a core method, framework, regulation, or tool of the discipline]
+1. 请介绍一下你的背景经历。
+2. 为什么选这家公司 / 为什么这个岗位？
+3. 讲讲你在本领域解决过的最难问题。
+4. 讲讲一次你推动变革却遇到阻力的经历。
+5. 对你来说，[title from JD] 意味着什么？
+6. 你会如何描述自己做这件事的方法论？
+7. [来自 JD 的一个基本概念 — 例如该学科的核心方法、框架、法规或工具]
 
 至少混入 2 道下方情境 / 前瞻题——这些探的是判断力与自我认知，不是过往故事：
 
-**Forward-looking / situational：**
-- "What does success look like for you in the first 90 days?"
-- "If you join and the team is struggling — missed deadlines, low morale — what's your first move?"
-- "How do you decide what to delegate vs. what to own yourself?"
-- "How do you handle a respected colleague who disagrees with a direction you've set?"
+**前瞻 / 情境：**
+- "对你来说，入职前 90 天的成功长什么样？"
+- "如果你入职后团队状态不好——交期延误、士气低落——你的第一步会做什么？"
+- "你如何决定什么该授权、什么该自己扛？"
+- "如果一位你尊重的同事不同意你定的方向，你会怎么处理？"
 
-**Self-awareness / growth：**
-- "What's something you got wrong professionally and what did you learn?"
-- "What do you need from your manager to do your best work?"
-- "Where are you still growing in your role?"
+**自我认知 / 成长：**
+- "职业上你曾做错过什么，学到了什么？"
+- "你需要管理者怎样支持，才能发挥最好水平？"
+- "在当前角色里，你还在哪些方面持续成长？"
 
 ### Technical / Domain-Specific (practitioner, 45–60 min)
 
-1. [Core internals of the discipline's main tool or method — e.g., runtime internals for engineering, attribution models for marketing, valuation methods for finance]
-2. [Established pattern or framework relevant to the role — from the JD]
-3. [Fundamental building block deep-dive — e.g., a data structure, a statistical test, an accounting principle]
-4. [Advanced topic the JD emphasizes — the area where depth separates candidates]
-5. Tell me about a high-stakes failure in your work — how you diagnosed it and what you did.
-6. How do you raise the quality bar on a team?
+1. [该学科主工具或方法的核心内部机制 — 例如工程的 runtime internals、营销的归因模型、金融的估值方法]
+2. [与岗位相关的成熟模式或框架 — 来自 JD]
+3. [基础构件深挖 — 例如某数据结构、某统计检验、某会计原则]
+4. [JD 强调的进阶主题 — 深度拉开候选人差距的区域]
+5. 讲讲工作中一次高风险失败——你如何诊断、又做了什么。
+6. 你如何在团队里拉高质量标准？
 
 ### Design / Case Study (45–60 min)
 
-1. Design [a system, process, campaign, or product relevant to the role].
-2. [Constraint question — how does your design behave when something fails, scales 10x, or loses budget?]
-3. [Quality/reliability question — how do you guarantee correctness or measure success?]
-4. Walk me through how you'd know it's working after launch.
+1. 设计 [与岗位相关的系统、流程、活动或产品]。
+2. [约束题 — 当某环节失败、放大 10 倍或预算砍掉时，你的设计如何表现？]
+3. [质量/可靠性题 — 你如何保证正确性或度量成功？]
+4. 上线后，你如何判断它在正常工作？
 
 ### Behavioral Panel
 
-1. Tell me about a time you led a team through a difficult delivery.
-2. Describe a major failure in production or in market — what happened and what changed after?
-3. Tell me about a time you influenced direction across teams or stakeholders.
-4. What does a high-performing team look like to you?
-5. Tell me about a time you simplified something complex.
-6. Tell me about a time you solved a problem that wasn't yours to solve.
+1. 讲讲一次你带领团队完成艰难交付的经历。
+2. 描述一次生产或市场上的重大失败——发生了什么，之后改了什么？
+3. 讲讲一次你跨团队或跨利益相关方影响方向的经历。
+4. 对你来说，高绩效团队是什么样的？
+5. 讲讲一次你把复杂事物简化的经历。
+6. 讲讲一次你解决了本不属于你职责范围的问题。
 
 ---
 

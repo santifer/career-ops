@@ -129,26 +129,26 @@
 ```markdown
 ## Round [N] Debrief — [YYYY-MM-DD]
 
-**Interviewer:** [name, role]
+**Interviewer:** [姓名, 角色]
 **Round type:** [screening / technical / design-case-study / behavioral]
 **Outcome:** [pending / moved forward / rejected]
 
 ### Questions Asked
-[list]
+[题目列表]
 
 ### Gaps Identified
-[list with correct answers]
+[短板列表，附正确答案]
 
 ### Next Round
-**Format:** [if known]
-**Interviewers:** [if known]
-**Priority prep:** [top 3 topics to close before next round]
+**Format:** [如已知]
+**Interviewers:** [如已知]
+**Priority prep:** [下一轮前优先补齐的 top 3 主题]
 
 ### Process Intel (recruiter / HM screens — omit if not applicable)
-**Comp discussed:** [yes / no — if yes, what was said and what was anchored]
-**Timeline:** [any dates or deadlines mentioned]
-**Other candidates:** [if disclosed]
-**Next steps:** [what the interviewer said happens next and by when]
+**Comp discussed:** [是 / 否 — 若是，说了什么、锚定在什么]
+**Timeline:** [提到的任何日期或截止日期]
+**Other candidates:** [若有披露]
+**Next steps:** [面试官说的下一步是什么、何时完成]
 ```
 
 **若本轮口头报出了薪酬数字**（候选人给了具体数字，而不只是"提到了薪酬"），且本轮对应的 tracker# **已知**：向 `data/salary-observations.tsv` 追加一行 `stated`（文件不存在则创建；格式见 `docs/SCRIPTS.md` → salary-gap），写入该 tracker#、本轮日期、金额/币种、来源 `user`、简短备注、轮次标签与面试官姓名。这能让 `interview/plan` 在下一轮前提醒候选人——见该模式 Inputs #9。若 tracker# 尚不可用，**跳过追加**——不要写入不完整或可能错绑的行；等 tracker# 明确后再补记。

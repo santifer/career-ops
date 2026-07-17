@@ -72,44 +72,47 @@
 
 在确定块大小之前，先检查 `interview-prep/question-bank.md`（如存在）。任何来自先前轮次、标为 🔴 的题都是已被证实的短板——无论 CV-vs-JD 分析如何排序，都要给它单独一块。真实表现数据优先于推断风险。
 
-**模板（按可用总时长调整各块大小）：**
+**模板（先预留休息，再按剩余可学习时长调整各块大小）：**
 
 ```text
-Block 1 — Lock your narrative (first, always)
-  - Write out your background timeline explicitly
-  - Prepare "why this company" with a specific connection to your history
-  - Prepare your strongest proof point story (30-second version)
-  - Time: ~15% of available hours
+先从「现在 → 面试时刻」的总可用时间中，强制预留面试前 60–90 分钟休息（Block 7）。
+Blocks 1–6 的百分比只作用于扣掉该休息窗口后的剩余学习时间。
 
-Block 2 — Priority domain topic (highest-risk gap first)
-  - One topic per block — don't mix
-  - For each: concept → your story hook → likely follow-up questions
-  - Time: ~25% of available hours
+Block 1 — 锁定叙事（始终最先）
+  - 把背景时间线写清楚
+  - 准备「为什么这家公司」，并与你的经历做具体连接
+  - 准备最强证明点故事（30 秒版）
+  - 时间：剩余学习时间的 ~15%
 
-Block 3 — Secondary domain topic
-  - Second-highest-risk gap
-  - Time: ~20% of available hours
+Block 2 — 优先领域主题（最高风险短板优先）
+  - 一块一个主题 — 不要混
+  - 每个主题：概念 → 你的故事钩子 → 可能的追问
+  - 时间：剩余学习时间的 ~25%
 
-Block 4 — Behavioral stories
-  - Map existing stories to likely question types
-  - Practice the 2-minute verbal version of each
-  - Prepare the Reflection for each — the senior-candidate differentiator
-  - Time: ~15% of available hours
+Block 3 — 次优先领域主题
+  - 第二高风险短板
+  - 时间：剩余学习时间的 ~20%
 
-Block 5 — Company research
-  - Product pages relevant to the role
-  - Connection between your history and their specific domain
-  - 3–4 sharp questions to ask them
-  - Time: ~10% of available hours
+Block 4 — 行为故事
+  - 把已有故事映射到可能的题型
+  - 练习每条故事的 2 分钟口述版
+  - 为每条准备 Reflection — 高级候选人的差异化信号
+  - 时间：剩余学习时间的 ~15%
 
-Block 6 — Practice run (if time permits)
-  - One question per likely topic — out loud, timed
-  - Time: ~10% of available hours
+Block 5 — 公司调研
+  - 与岗位相关的产品页
+  - 你的经历与他们具体领域的连接
+  - 准备 3–4 个尖锐问题问对方
+  - 时间：剩余学习时间的 ~10%
 
-Block 7 — Buffer + rest
-  - Stop studying 60–90 minutes before the interview
-  - Cramming in the last hour adds noise, not signal
-  - Time: remaining
+Block 6 — 演练（有时间才做）
+  - 每个可能主题一题 — 出声、计时
+  - 时间：剩余学习时间的 ~10%
+
+Block 7 — 缓冲 + 休息
+  - 面试前 60–90 分钟停止学习（强制预留，不是「剩下多少算多少」）
+  - 最后一小时临时抱佛脚只增加噪声，不增加信号
+  - 时间：固定预留 60–90 分钟；Blocks 1–6 仅分配扣掉该窗口后的剩余小时数
 ```
 
 按短板严重程度与轮次类型调整块大小。若是 screening，Block 4（行为）与 Block 5（公司调研）比深层领域块更重要。
@@ -123,19 +126,19 @@ Block 7 — Buffer + rest
 ```markdown
 ## 15-Minute Pre-Interview Review
 
-**Your anchor sentence:** [one sentence that captures why you're right for this role]
+**你的锚定句：** [一句话概括你为什么适合这个岗位]
 
-**Top 3 things to remember:**
-1. [most important message to leave the interviewer with]
-2. [most likely question and your first sentence of the answer]
-3. [the connection between your history and their domain]
+**最重要的 3 件事：**
+1. [最想留给面试官的信息]
+2. [最可能被问到的题，以及你回答的第一句]
+3. [你的经历与他们领域之间的连接]
 
-**Compensation — already discussed:** [only if `--stated-for` returned prior observations] "You stated {amount} {currency} to {interviewer} on {date} in {round}. Stay consistent unless something material changed." Omit this block entirely if there are no prior `stated` observations for this tracker# — don't invent a number that was never said.
+**薪酬 — 此前已谈过：** [仅当 `--stated-for` 返回过先前观察时] "你曾在 {date} 的 {round} 对 {interviewer} 表态 {amount} {currency}。除非出现实质性变化，否则保持口径一致。" 若该 tracker# 没有任何先前 `stated` 观察，整块省略 — 不要编造从未说过的数字。
 
-**Your questions to ask:**
-1. [question 1]
-2. [question 2]
-3. [question 3]
+**你要问对方的问题：**
+1. [问题 1]
+2. [问题 2]
+3. [问题 3]
 ```
 
 ---
@@ -152,6 +155,6 @@ Block 7 — Buffer + rest
 - **短板优先。** 时间有限。候选人的优势不需要准备——短板才需要。
 - **题库里的 🔴 短板优先于推断短板。** 真实表现数据胜过 CV-vs-JD 分析。若候选人已知自己某题吃力，不要把它埋掉。
 - **一块一个主题。** 单块混多个主题会降低记忆留存。
-- **始终留出休息时间。** 休息好的候选人比临时抱佛脚的表现更好。
+- **始终留出休息时间。** 先固定预留面试前 60–90 分钟休息，再用剩余时间分配学习块。休息好的候选人比临时抱佛脚的表现更好。
 - **绝不编造公司情报。** 若没有调研，就直说——不要捏造公司文化或技术细节。
-- **绝不替候选人编造主张。** 速查页（Step 4）中的锚定句与面试前话术，必须 grounded 在候选人实际拥有的材料上——`cv.md`、`article-digest.md` 或故事库。不要起草依赖候选人没有的经验或指标的主张。若某主张出现在 `interview-prep/retracted-claims.md` 中，永远不要纳入。
+- **绝不替候选人编造主张。** 速查页（Step 4）中的锚定句与面试前话术，必须基于候选人实际拥有的材料——`cv.md`、`article-digest.md` 或故事库。不要起草依赖候选人没有的经验或指标的主张。若某主张出现在 `interview-prep/retracted-claims.md` 中，永远不要纳入。
