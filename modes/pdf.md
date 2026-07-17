@@ -112,7 +112,8 @@ Write a JSON file with this structure, then run `node build-cv-html.mjs <input.j
     "linkedin": { "url": "https://linkedin.com/in/janesmith", "display": "linkedin.com/in/janesmith" },
     "portfolio": { "url": "https://janesmith.dev", "display": "janesmith.dev" },
     "location": "San Francisco, CA",
-    "photo": ""
+    "photo": "",
+    "photo_style": "rounded"
   },
   "sections": {
     "summary": "Professional Summary",
@@ -163,6 +164,7 @@ Write a JSON file with this structure, then run `node build-cv-html.mjs <input.j
 | `candidate.portfolio` | `{url, display}` | Optional — omit to drop the item and its separator. |
 | `candidate.location` | string | From `profile.yml`. |
 | `candidate.photo` | string | Opt-in profile photo (#264): a local path or `data:` URL. Empty/absent emits **no `<img>`**, rendering pixel-for-pixel identical to the photoless layout (US/UK/many-market ATS penalize photos; opt in for DACH/European markets). |
+| `candidate.photo_style` | string | Optional photo framing: `rounded` (default), `circle`, or `square`. Read it from `candidate.photo_style` in `config/profile.yml`; invalid values fail before HTML is written. |
 | `sections` | object | Optional localized section titles; any omitted key falls back to the English default shown above. |
 | `summary` | string | Personalized summary with keywords. |
 | `competencies` | string[] | 6-8 keyword phrases → competency tags. |
@@ -182,6 +184,18 @@ The `{{PHOTO}}` slot is **off by default** and intentionally market-specific:
 - **US / UK / Canada / Australia and many ATS-first markets**: photos are discouraged and can trip bias-avoidance filters. Leave `candidate.photo` empty — the `{{PHOTO}}` line is dropped entirely, no `<img>` is emitted, and the CV renders **pixel-for-pixel identical** to today's photoless layout.
 
 When set, the photo floats into the top corner (mirrored for RTL/Arabic) and the header/summary text wraps beside it; `.cv-photo` in `cv-template.html` controls its size and framing.
+
+Local photo paths may be absolute or relative to the career-ops project root.
+The builder validates PNG, JPEG, WebP, and GIF inputs and inlines them as data
+URLs so the saved HTML remains portable. To inspect the result before PDF
+generation, run:
+
+```bash
+node build-cv-html.mjs --preview /tmp/cv-{candidate}-{company}.json {template}
+```
+
+The preview is written to `output/cv-preview.html`. A missing, unreadable, empty,
+or unsupported photo fails with an actionable error before any output is written.
 
 ## Canva CV Generation (optional)
 
