@@ -263,6 +263,32 @@ export function aggregateGaps(reports, knownSkills) {
   return { gaps, excludedAsKnown, totalLowFit };
 }
 
+/**
+ * Targeted-mode gap analysis for a single JD (#1739): which JD skills are gaps
+ * vs. already known from the CV/profile.
+ *
+ * Uses the SAME canonicalization as the aggregate path (extractSkills on both
+ * sides, canonical-to-canonical comparison) so a known CV skill is suppressed
+ * and a real gap surfaces. The previous inline implementation matched raw
+ * lowercased regex tokens with substring `.includes()`, which (a) never matched
+ * symbol skills like `c\+\+`/`\.net` and (b) over-suppressed via substrings
+ * (`go` ⊂ `mongodb`, `sql` ⊂ `postgresql`, `java` ⊂ `javascript`) — inverting the
+ * result on every skill (#1851). Emits canonical names, matching aggregate mode.
+ *
+ * @param {string} jdText - the target job description text
+ * @param {string} knownText - cv + profile text (already-known skills)
+ * @returns {{ gaps: string[], excludedAsKnown: string[], knownSkills: string[] }}
+ */
+export function computeTargetedGaps(jdText, knownText) {
+  const known = extractSkills(knownText);
+  const gaps = [];
+  const excludedAsKnown = [];
+  for (const skill of extractSkills(jdText)) {
+    (known.has(skill) ? excludedAsKnown : gaps).push(skill);
+  }
+  return { gaps, excludedAsKnown, knownSkills: [...known].sort() };
+}
+
 // --- Main ---
 function analyze(minReports) {
   if (!existsSync(APPS_FILE)) {
@@ -467,6 +493,48 @@ soft_gaps:
   if (!/Kafka/.test(parsed.gapText)) failures.push('Gap table row not captured');
   if (!/Airflow/.test(parsed.gapText)) failures.push('soft_gaps not captured');
 
+  // Targeted mode (#1851): known-skill suppression must be canonical-to-canonical,
+  // never raw-token substring matching. The old inline path inverted every skill —
+  // CV skills shown as gaps, real gaps hidden. This is the exact reproduction from
+  // the bug report.
+  {
+    const { gaps, excludedAsKnown } = computeTargetedGaps(
+      'Kubernetes, C++, .NET, Java, SQL, Go, LLMs',        // JD asks for
+      'k8s, C++, .NET, JavaScript, PostgreSQL, MongoDB, LLMs' // CV already has
+    );
+    const gapSet = new Set(gaps);
+    const exSet = new Set(excludedAsKnown);
+    for (const g of ['Java', 'SQL', 'Go']) {
+      if (!gapSet.has(g)) failures.push(`targeted: ${g} should be a gap (got ${gaps.join(',')})`);
+      if (exSet.has(g)) failures.push(`targeted: real gap ${g} wrongly suppressed as known`);
+    }
+    for (const k of ['Kubernetes', 'C++', '.NET', 'LLMs']) {
+      if (!exSet.has(k)) failures.push(`targeted: ${k} should be excluded as known (got ${excludedAsKnown.join(',')})`);
+      if (gapSet.has(k)) failures.push(`targeted: known skill ${k} wrongly reported as gap`);
+    }
+  }
+
+  // Targeted --url-text path (#1894): the fetched page text must reach
+  // computeTargetedGaps as a plain STRING. It used to be run through normalizeJd
+  // (which wants the { title, text } DOM object), yielding { text: '' } and then
+  // a `text.matchAll is not a function` crash. Guard both halves: a realistic
+  // multi-line JD string produces the right gaps, and the source no longer feeds
+  // the raw string to normalizeJd.
+  {
+    const jdText = 'Requirements:\n- Kubernetes and Go\n- 5+ years experience';
+    const { gaps } = computeTargetedGaps(jdText, 'Python, AWS'); // must not throw on a string
+    if (!gaps.includes('Kubernetes') || !gaps.includes('Go')) {
+      failures.push(`url-text: multi-line JD string should yield Kubernetes+Go gaps (got ${gaps.join(',')})`);
+    }
+    const selfSrc = readFileSync(fileURLToPath(import.meta.url), 'utf-8');
+    if (/normalizeJd\(\s*targetText/.test(selfSrc)) {
+      failures.push('url-text: upskill.mjs still passes the raw fetched string to normalizeJd (regression, #1894)');
+    }
+    if (!/compactText\(targetText\)/.test(selfSrc)) {
+      failures.push('url-text: fetched text should be normalized with compactText (string->string), #1894');
+    }
+  }
+
   if (failures.length > 0) {
     console.error(`upskill self-test failed: ${failures.join('; ')}`);
     process.exit(1);
@@ -476,19 +544,147 @@ soft_gaps:
 }
 
 // --- CLI ---
+// --- CLI ---
 const args = process.argv.slice(2);
 if (args.includes('--self-test')) runSelfTest();
 
-const minReportsIdx = args.indexOf('--min-reports');
-const MIN_REPORTS = (() => {
-  if (minReportsIdx === -1 || args[minReportsIdx + 1] === undefined) return 5;
-  const n = parseInt(args[minReportsIdx + 1], 10);
-  return Number.isNaN(n) || n < 1 ? 5 : n;
-})();
+// ====== SECURE TARGETED MODE PHASE 2a IMPLEMENTATION ======
+const urlTextIdx = args.indexOf('--url-text');
+const directUrl = args.find(arg => arg.startsWith('http://') || arg.startsWith('https://'));
 
-const result = analyze(MIN_REPORTS);
-if (args.includes('--summary')) {
-  printSummary(result);
+// Helper function to enforce egress guard against SSRF (Private/Loopback IPs)
+async function validateUrlSecurity(urlString) {
+  const dns = await import('dns/promises');
+  const url = new URL(urlString.endsWith('.') ? urlString.slice(0, -1) : urlString);
+  const hostname = url.hostname;
+
+  if (hostname === 'localhost' || hostname.endsWith('.local')) {
+    throw new Error('Access denied: Localhost or internal domain target detected.');
+  }
+
+  const addresses = await dns.resolve(hostname).catch(() => []);
+  const lookupRes = await dns.lookup(hostname).catch(() => null);
+  if (lookupRes) addresses.push(lookupRes.address);
+
+  for (const ip of addresses) {
+    if (/^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|169\.254\.)/.test(ip)) {
+      throw new Error(`Access denied: Egress guard blocked private target IP ${ip}`);
+    }
+    if (ip === '::1' || ip.startsWith('fe80:') || ip.startsWith('fc00:') || ip.startsWith('fd00:')) {
+      throw new Error(`Access denied: Egress guard blocked private target IPv6 ${ip}`);
+    }
+  }
+  return url.toString();
+}
+
+if (urlTextIdx !== -1 || directUrl) {
+  (async () => {
+    let targetText = '';
+    const inputSource = urlTextIdx !== -1 ? args[urlTextIdx + 1] : directUrl;
+
+    if (!inputSource) {
+      console.error('Error: Please provide a valid URL or file path after --url-text');
+      process.exit(1);
+    }
+
+    if (inputSource.startsWith('http://') || inputSource.startsWith('https://')) {
+      let browser;
+      try {
+        const secureUrl = await validateUrlSecurity(inputSource);
+        const { chromium } = await import('playwright');
+        browser = await chromium.launch({ headless: true });
+        const page = await browser.newPage();
+
+        page.on('framenavigated', async (frame) => {
+          if (frame === page.mainFrame()) {
+            await validateUrlSecurity(frame.url()).catch((err) => {
+              console.error(`Security Violation on Redirect: ${err.message}`);
+              process.exit(1);
+            });
+          }
+        });
+
+        await page.goto(secureUrl, { waitUntil: 'networkidle', timeout: 30000 });
+        targetText = await page.innerText('body');
+      } catch (err) {
+        console.warn('Playwright extraction failed or blocked, trying fallback WebFetch...', err.message);
+        try {
+          const secureUrl = await validateUrlSecurity(inputSource);
+          // validateUrlSecurity only vets the initial URL; a redirect could still
+          // steer the fetch at an internal host (SSRF). The Playwright path
+          // re-validates per hop, but this plain fetch must refuse redirects
+          // outright — fail closed rather than follow an unvetted Location (#1851).
+          const res = await fetch(secureUrl, { signal: AbortSignal.timeout(30000), redirect: 'error' });
+          if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+          targetText = await res.text();
+        } catch (fetchErr) {
+          console.error(`Fatal: Failed to fetch JD from URL: ${fetchErr.message}`);
+          process.exit(1);
+        }
+      } finally {
+        if (browser) await browser.close();
+      }
+
+      // Whitespace-collapse + length-cap the fetched page text. Use compactText
+      // (string -> string), NOT normalizeJd: normalizeJd expects the { title,
+      // text } DOM-read object and returns { url, title, text }, so feeding it
+      // the innerText/fetch STRING silently produced { text: '' } — destroying
+      // the JD and then throwing `text.matchAll is not a function` downstream
+      // (#1894). compactText is the string-in/string-out helper this wants.
+      try {
+        const { compactText } = await import('./browser-extract.mjs');
+        targetText = compactText(targetText);
+      } catch (e) {}
+    } else {
+      if (existsSync(inputSource)) {
+        targetText = readFileSync(inputSource, 'utf-8');
+      } else {
+        console.error(`Fatal: Target file not found at path: ${inputSource}`);
+        process.exit(1);
+      }
+    }
+
+    // Assemble the known-skills text (cv + profile), matching aggregate mode.
+    // Targeted mode additionally falls back to cv-example.md when cv.md is absent
+    // so a fresh checkout still produces a meaningful comparison.
+    const knownTextChunks = [];
+    if (existsSync(PROFILE_FILE)) {
+      try { knownTextChunks.push(readFileSync(PROFILE_FILE, 'utf-8')); } catch (e) {}
+    }
+    let activeCvFile = CV_FILE;
+    if (!existsSync(activeCvFile)) {
+      activeCvFile = join(CAREER_OPS, 'cv-example.md');
+    }
+    if (existsSync(activeCvFile)) {
+      try { knownTextChunks.push(readFileSync(activeCvFile, 'utf-8')); } catch (e) {}
+    }
+
+    const { gaps: gapList, excludedAsKnown, knownSkills } =
+      computeTargetedGaps(targetText, knownTextChunks.join('\n'));
+
+    console.log(JSON.stringify({
+      mode: 'targeted',
+      source: inputSource,
+      gaps: gapList.map(skill => ({ skill })),
+      excludedAsKnown: excludedAsKnown.map(skill => ({ skill })),
+      knownSkills,
+    }, null, 2));
+
+    process.exit(0);
+  })();
 } else {
-  console.log(JSON.stringify(result, null, 2));
+  // ====== ORIGINAL AGGREGATE MODE PIPELINE ======
+  const minReportsIdx = args.indexOf('--min-reports');
+  const MIN_REPORTS = (() => {
+    if (minReportsIdx === -1 || args[minReportsIdx + 1] === undefined) return 5;
+    const n = parseInt(args[minReportsIdx + 1], 10);
+    return Number.isNaN(n) || n < 1 ? 5 : n;
+  })();
+
+  const result = analyze(MIN_REPORTS);
+  if (args.includes('--summary')) {
+    printSummary(result);
+  } else {
+    console.log(JSON.stringify(result, null, 2));
+  }
 }

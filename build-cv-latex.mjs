@@ -116,6 +116,14 @@ async function main() {
 
   let template = await readFile(TEMPLATE_PATH_RESOLVED, 'utf-8');
 
+  // Projects is the one CV section that's genuinely optional (education,
+  // experience, and skills are effectively always present) — drop the whole
+  // Personal Projects \section when there are no entries, instead of leaving
+  // a bare section header with nothing under it.
+  if (!Array.isArray(payload.projects) || payload.projects.length === 0) {
+    template = template.replace(/%%%%%%%%%%%%%%%%%%%%%%%%%%%%  PROJECTS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%[\s\S]*?(?=%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Technical Skills)/, '');
+  }
+
   const emailUrl = sanitizeUrl(payload.email?.url || '');
   const emailDisplay = payload.email?.display || emailUrl;
   const linkedinUrl = sanitizeUrl(payload.linkedin?.url || '');

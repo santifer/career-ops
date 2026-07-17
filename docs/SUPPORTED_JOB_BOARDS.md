@@ -33,6 +33,7 @@ are shared helpers and are not loaded as providers.
 | LaraJobs | RSS | Reads the board-wide `https://larajobs.com/feed` RSS feed (Laravel / PHP jobs) and parses it in-process. Configure with `provider: larajobs`; company and location come from the feed's `job:` namespace. |
 | Lever | API | Auto-detects `https://jobs.(eu.)?lever.co/<slug>` boards and uses Lever's public postings endpoint. |
 | Local parser | Parser | Runs an in-repo parser command from `portals.yml`. Use this for stable SSR or HTML pages that need a custom extractor. |
+| Meituan Careers | API | Auto-detects `https://zhaopin.meituan.com` URLs (host-matched, HTTPS-only) and posts to the public zero-auth getJobList JSON API (zh-CN social-hiring listings with title, department, city, JD text, refresh date). Each `keywords:` entry is queried server-side separately and results are deduped; omit `keywords:` to pull the whole board. Paginates up to `max_pages` per keyword (default 30, 100 posts/page), retrying empty mid-pagination pages (the board rate-limits sporadically). |
 | No Fluff Jobs | API | Auto-detects `nofluffjobs.com` and reads its public `/api/search/posting` API (Polish/EU tech board); paginates up to `max_pages` (default 5). |
 | NoDesk | RSS | Reads the public `https://nodesk.co/remote-jobs/index.xml` feed and parses it in-process. Configure with `provider: nodesk`. |
 | Personio | RSS | Auto-detects `<slug>.jobs.personio.de` or `.com` hosts and parses the public XML jobs feed. |
