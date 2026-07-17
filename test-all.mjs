@@ -3614,8 +3614,9 @@ try {
   const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
   const historyColumns = historyRow.split('\t');
   if (
-    historyColumns.length === 9 && // 7 metadata + fingerprint (#1597) + postedAt
+    historyColumns.length === 11 && // 7 metadata + fingerprint (#1597) + postedAt + trust score/flags (#1743)
     historyColumns[8] === '' && // no postedAt on hostileOffer → empty trailing col
+    historyColumns[9] === '' && historyColumns[10] === '' && // no trust signal → empty trailing cols
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
@@ -3644,9 +3645,9 @@ try {
   const datedHistory = formatScanHistoryRow(datedOffer, '2026-07-09').split('\t');
   const noDateHistory = formatScanHistoryRow({ ...datedOffer, postedAt: undefined }, '2026-07-09').split('\t');
   if (
-    datedHistory.length === 9 &&
+    datedHistory.length === 11 &&
     datedHistory[8] === '2026-06-18' && // epoch ms → YYYY-MM-DD in the trailing column
-    noDateHistory.length === 9 &&
+    noDateHistory.length === 11 &&
     noDateHistory[8] === '' // missing postedAt → empty trailing column, never a bogus date
   ) {
     pass('scan-history writer appends postedAt as an ISO trailing column (empty when absent)');
@@ -3667,6 +3668,44 @@ try {
     pass('pipeline writer appends a labeled posted: segment (omitted/byte-identical when date missing or invalid)');
   } else {
     fail(`pipeline postedAt segment wrong: dated="${datedPipeline}" / noDate="${noDatePipeline}" / bad="${badDatePipeline}" / nan="${nanDatePipeline}"`);
+  }
+
+  // ── trust/legitimacy signal persistence (#1743) ──
+  // The scanner computes offer.trustScore/trustFlags on every job; surface it only
+  // when flagged (score < 100). scan-history gets trailing score+flags columns
+  // (after postedAt); pipeline.md gets a labeled `trust:` segment. Clean/unset
+  // trust stays byte-identical (empty column / no segment).
+  const trustBase = { url: 'https://jobs.example.com/77', source: 'lever-api', title: 'SRE', company: 'Acme', location: 'Remote', description: '' };
+  const flaggedOffer = { ...trustBase, trustScore: 60, trustFlags: ['missing_apply_url', 'suspicious_domain'] };
+  const cleanOffer = { ...trustBase, trustScore: 100, trustFlags: [] };
+  const untrustedOffer = { ...trustBase }; // no trust fields (trust_filter disabled)
+  const flaggedHist = formatScanHistoryRow(flaggedOffer, '2026-07-09').split('\t');
+  const cleanHist = formatScanHistoryRow(cleanOffer, '2026-07-09').split('\t');
+  if (
+    flaggedHist.length === 11 &&
+    flaggedHist[9] === '60' && flaggedHist[10] === 'missing_apply_url,suspicious_domain' &&
+    cleanHist.length === 11 && cleanHist[9] === '' && cleanHist[10] === '' // score 100 → not flagged → empty
+  ) {
+    pass('scan-history writer appends trust score + flags trailing columns when flagged, empty otherwise (#1743)');
+  } else {
+    fail(`scan-history trust columns wrong: flagged=${JSON.stringify(flaggedHist)} / clean=${JSON.stringify(cleanHist)}`);
+  }
+
+  const flaggedPipeline = formatPipelineOffer(flaggedOffer);
+  const cleanPipeline = formatPipelineOffer(cleanOffer);
+  const untrustedPipeline = formatPipelineOffer(untrustedOffer);
+  const flaggedNoFlags = formatPipelineOffer({ ...trustBase, trustScore: 80, trustFlags: [] });
+  const withDateAndTrust = formatPipelineOffer({ ...trustBase, postedAt: Date.parse('2026-06-18T00:00:00Z'), trustScore: 70, trustFlags: ['invalid_url'], note: 'pick' });
+  if (
+    flaggedPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 60 missing_apply_url,suspicious_domain' &&
+    cleanPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote' && // score 100 → no segment
+    untrustedPipeline === cleanPipeline && // no trust fields → byte-identical
+    flaggedNoFlags === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 80' && // score-only when no flags
+    withDateAndTrust === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | posted: 2026-06-18 | trust: 70 invalid_url | note: pick' // stable order posted→trust→note
+  ) {
+    pass('pipeline writer appends a labeled trust: segment ordered posted→trust→note, byte-identical when clean/unset (#1743)');
+  } else {
+    fail(`pipeline trust segment wrong: flagged="${flaggedPipeline}" / clean="${cleanPipeline}" / untrusted="${untrustedPipeline}" / noFlags="${flaggedNoFlags}" / combo="${withDateAndTrust}"`);
   }
 
   // ── content_filter (#734) ──
@@ -8089,17 +8128,17 @@ try {
     '2026-07-06',
   );
   const cols = withBody.split('\t');
-  if (cols.length === 9 && /^[0-9a-f]{16}$/.test(cols[7])) {
+  if (cols.length === 11 && /^[0-9a-f]{16}$/.test(cols[7])) {
     pass('formatScanHistoryRow appends a fingerprint column for described offers');
   } else {
-    fail(`formatScanHistoryRow columns: ${cols.length}, last=${JSON.stringify(cols[7])}`);
+    fail(`formatScanHistoryRow columns: ${cols.length}, fingerprint=${JSON.stringify(cols[7])}`);
   }
   const withoutBody = formatScanHistoryRow(
     { url: 'https://x.example/j/2', source: 'greenhouse', title: 'Data Engineer', company: 'Acme', location: '' },
     '2026-07-06',
   );
   const cols2 = withoutBody.split('\t');
-  if (cols2.length === 9 && cols2[7] === '') {
+  if (cols2.length === 11 && cols2[7] === '') {
     pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
   } else {
     fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);
@@ -8422,8 +8461,75 @@ try {
   } else {
     fail('computeRunStats should return null for empty/unknown-schema input');
   }
+
+  const portalsYml = 'tracked_companies:\n  - name: Acme\n  - name: GlobalCorp\n  - name: DeadInc\n  - name: NetworkDead\njob_boards: []';
+  const portalHealthTsv = 'timestamp\tcompany\tstatus\n' +
+    '2026-07-01\tDeadInc\tslug_gone\n' +
+    '2026-07-02\tDeadInc\tslug_gone\n' +
+    '2026-07-03\tDeadInc\tslug_gone\n' +
+    '2026-07-01\tNetworkDead\tnetwork\n' +
+    '2026-07-02\tNetworkDead\tnetwork\n' +
+    '2026-07-03\tNetworkDead\tnetwork\n' +
+    '2026-07-01\tGlobalCorp\tnetwork\n' +
+    '2026-07-02\tGlobalCorp\treachable\n' +
+    '2026-07-01\tUnconfiguredDead\tnetwork\n' +
+    '2026-07-02\tUnconfiguredDead\tnetwork\n' +
+    '2026-07-03\tUnconfiguredDead\tnetwork\n';
+  const p = stats.computePortalStats(portalsYml, null, [], portalHealthTsv);
+  if (p && p.persistentlyDead === 2) {
+    pass('computePortalStats tracks persistentlyDead count from portal-health.tsv streaks');
+  } else {
+    fail('computePortalStats failed to compute persistentlyDead streaks');
+  }
+  const pNull = stats.computePortalStats(portalsYml, null, [], null);
+  if (pNull && pNull.persistentlyDead === 0) {
+    pass('computePortalStats gracefully handles null portalHealthTsv');
+  } else {
+    fail('computePortalStats failed on null portalHealthTsv');
+  }
 } catch (e) {
   fail(`test layout guard: ${e.message}`);
+}
+
+// ── STATED-COMP TRACKING (#1852) ────────────────────────────────
+// salary-gap.mjs's own --self-test (invoked above via the CLI-check table)
+// covers stated-observation parsing, backward compatibility, and the
+// getStatedObservations() lookup. This section pins the mode-doc wiring:
+// interview/plan reads it back before generating prep, interview-prep does
+// the same for the initial pass, and interview/debrief writes it.
+
+console.log('\n62. Stated-comp tracking wired into interview modes (#1852)');
+
+try {
+  const planMode = readFile('modes/interview/plan.md');
+  const prepModeDoc = readFile('modes/interview-prep.md');
+  const debriefMode = readFile('modes/interview/debrief.md');
+
+  if (planMode.includes('--stated-for') && planMode.includes('salary-gap.mjs')) {
+    pass('interview/plan reads prior stated-comp observations via salary-gap.mjs --stated-for');
+  } else {
+    fail('interview/plan missing --stated-for lookup for prior stated-comp observations');
+  }
+
+  if (planMode.includes('Compensation — already discussed')) {
+    pass('interview/plan quick-reference carries the "already discussed" comp callout');
+  } else {
+    fail('interview/plan quick-reference missing the "already discussed" comp callout');
+  }
+
+  if (prepModeDoc.includes('--stated-for') && prepModeDoc.includes('salary-gap.mjs')) {
+    pass('interview-prep reads prior stated-comp observations via salary-gap.mjs --stated-for');
+  } else {
+    fail('interview-prep missing --stated-for lookup for prior stated-comp observations');
+  }
+
+  if (debriefMode.includes('stated') && debriefMode.includes('salary-observations.tsv')) {
+    pass('interview/debrief appends a stated observation when a comp number is verbally given');
+  } else {
+    fail('interview/debrief missing the stated-observation append rule');
+  }
+} catch (e) {
+  fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
 await runDiscovered();

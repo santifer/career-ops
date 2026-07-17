@@ -209,21 +209,24 @@ node upskill.mjs --self-test
 
 ## salary-gap
 
-Folds compensation observations into per-application desired/advertised/actual values and gap aggregates. Sources: `reports/*.md` Machine Summary `advertised_comp` (advertised, source `jd` — historical reports backfill automatically), `data/salary-observations.tsv` (desired/actual, append-only), and `config/profile.yml` `compensation.target_range` (desired default). Fold precedence: highest trust tier wins, then latest date (`actual`: contract > offer-letter > recruiter-verbal > user). Aggregates group by (company, role) and per currency — no FX conversion. Unparseable amounts, orphaned tracker numbers, sample sizes, and staleness are always reported.
+Folds compensation observations into per-application desired/advertised/actual values and gap aggregates. Sources: `reports/*.md` Machine Summary `advertised_comp` (advertised, source `jd` — historical reports backfill automatically), `data/salary-observations.tsv` (desired/actual/stated, append-only), and `config/profile.yml` `compensation.target_range` (desired default). Fold precedence: highest trust tier wins, then latest date (`actual`: contract > offer-letter > recruiter-verbal > user). Aggregates group by (company, role) and per currency — no FX conversion. Unparseable amounts, orphaned tracker numbers, sample sizes, and staleness are always reported.
 
 ```bash
 node salary-gap.mjs             # JSON
 node salary-gap.mjs --summary   # table + data-quality section
+node salary-gap.mjs --stated-for <tracker#>   # prior `stated` observations for one tracker#, JSON
 node salary-gap.mjs --self-test
 ```
 
 Observation line format (TSV, one per line, `#`-prefixed lines are comments):
 
 ```text
-{tracker#}\t{YYYY-MM-DD}\t{desired|advertised|actual}\t{amount}\t{currency}\t{source}\t{note}
+{tracker#}\t{YYYY-MM-DD}\t{desired|advertised|actual|stated}\t{amount}\t{currency}\t{source}\t{note}\t{round}\t{interviewer}
 ```
 
 Amounts: number + optional k/K suffix, ranges allowed ("80-90k"), annual gross unless noted. Sources: jd | profile | user | recruiter-verbal | offer-letter | contract.
+
+**`stated` observations** are a narrower-purpose addition (#1852): a specific compensation number the candidate verbally committed to, in a specific interview round, to a specific interviewer — so a later round doesn't accidentally contradict it. `round` and `interviewer` are two optional trailing columns, meaningful only for `stated` rows (existing rows without them still parse — they default to `''`). `stated` observations carry no trust tier and never participate in the desired/advertised/actual fold or gap math; look them up with `getStatedObservations(observations, num)` or `--stated-for`. Interview-prep modes (`modes/interview/plan.md`, `modes/interview-prep.md`) check this before generating comp-related prep content — see their Inputs sections.
 
 **Exit codes:** `0` always (missing sources produce an explanatory empty result), `1` self-test failure.
 
