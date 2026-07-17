@@ -1141,6 +1141,47 @@ export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
   appendFileSync(filePath, row, 'utf-8');
 }
 
+// ── Portal health persistence (#1744) ───────────────────────────────
+
+const PORTAL_HEALTH_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'portal-health.tsv');
+export const PORTAL_HEALTH_HEADER = 'timestamp\tcompany\tstatus\n';
+
+export function appendPortalHealth(healthRecords, filePath = PORTAL_HEALTH_PATH) {
+  if (!existsSync(filePath)) writeFileSync(filePath, PORTAL_HEALTH_HEADER, 'utf-8');
+  let lines = '';
+  for (const r of healthRecords) {
+    lines += [r.timestamp, r.company, r.status].join('\t') + '\n';
+  }
+  if (lines) appendFileSync(filePath, lines, 'utf-8');
+}
+
+export function loadPortalHealth(filePath = PORTAL_HEALTH_PATH) {
+  if (!existsSync(filePath)) return [];
+  const lines = readFileSync(filePath, 'utf-8').split('\n');
+  const records = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const parts = line.split('\t');
+    if (parts.length >= 3) {
+      records.push({ timestamp: parts[0], company: parts[1], status: parts[2] });
+    }
+  }
+  return records;
+}
+
+export function computeConsecutiveFailures(healthRecords) {
+  const streaks = new Map();
+  for (const r of healthRecords) {
+    if (r.status === 'slug_gone' || r.status === 'network') {
+      streaks.set(r.company, (streaks.get(r.company) || 0) + 1);
+    } else if (r.status === 'reachable' || r.status === 'empty') {
+      streaks.set(r.company, 0);
+    }
+  }
+  return streaks;
+}
+
 // ── Parallel fetch with concurrency limit ───────────────────────────
 
 async function parallelFetch(tasks, limit) {
@@ -1722,17 +1763,67 @@ async function main() {
   const unreachableTargets = errors.filter((e) => e.kind === 'slug_gone');
   const networkTargets = errors.filter((e) => e.kind === 'network');
   const otherErrors = errors.filter((e) => e.kind !== 'slug_gone' && e.kind !== 'network');
+  
+  const STREAK_THRESHOLD = config.portal_health_threshold || 3;
+  const nowStr = new Date().toISOString();
+  const healthRecords = [];
+  
+  for (const t of targets) {
+    const isUnreachable = unreachableTargets.some(e => e.company === t.name);
+    const isNetwork = networkTargets.some(e => e.company === t.name);
+    const isEmpty = emptyTargets.includes(t.name);
+    
+    let status = 'reachable';
+    if (isUnreachable) status = 'slug_gone';
+    else if (isNetwork) status = 'network';
+    else if (isEmpty) status = 'empty';
+    
+    healthRecords.push({ timestamp: nowStr, company: t.name, status });
+  }
 
-  if (unreachableTargets.length > 0) {
-    const names = unreachableTargets.map((e) => e.company).join(', ');
-    console.log(`\n⚠️  ${unreachableTargets.length} target(s) unreachable (slug?): ${names} — run: node verify-portals.mjs`);
+  const pastHealth = loadPortalHealth();
+  const currentStreaks = computeConsecutiveFailures(pastHealth);
+  
+  for (const r of healthRecords) {
+    if (r.status === 'slug_gone' || r.status === 'network') {
+      currentStreaks.set(r.company, (currentStreaks.get(r.company) || 0) + 1);
+    } else if (r.status === 'reachable' || r.status === 'empty') {
+      currentStreaks.set(r.company, 0);
+    }
+  }
+
+  const persistentlyDead = [];
+  const newlyDeadSlug = [];
+  const newlyDeadNetwork = [];
+  
+  for (const e of [...unreachableTargets, ...networkTargets]) {
+    const streak = currentStreaks.get(e.company) || 1;
+    if (streak >= STREAK_THRESHOLD) {
+      if (!persistentlyDead.includes(e.company)) persistentlyDead.push(e.company);
+    } else {
+      if (e.kind === 'slug_gone') {
+        if (!newlyDeadSlug.some(x => x.company === e.company)) newlyDeadSlug.push(e);
+      } else {
+        newlyDeadNetwork.push(e);
+      }
+    }
+  }
+
+  if (persistentlyDead.length > 0) {
+    console.log(`\n🚨 FIX NEEDED: ${persistentlyDead.length} target(s) have been unreachable for ${STREAK_THRESHOLD}+ runs:`);
+    console.log(`   ${persistentlyDead.join(', ')}`);
+    console.log(`   Run: node verify-portals.mjs to check if the ATS migrated, or update their board slugs.`);
+  }
+  if (newlyDeadSlug.length > 0) {
+    const names = newlyDeadSlug.map(x => x.company).join(', ');
+    console.log(`\n⚠️  ${newlyDeadSlug.length} target(s) unreachable (slug?): ${names} — run: node verify-portals.mjs`);
   }
   if (emptyTargets.length > 0) {
     console.log(`🟡 ${emptyTargets.length} target(s) live but empty: ${emptyTargets.join(', ')}`);
   }
-  if (networkTargets.length > 0) {
-    console.log(`\nNetwork errors (${networkTargets.length}):`);
-    for (const e of networkTargets) {
+  if (newlyDeadNetwork.length > 0) {
+    console.log(`\nNetwork errors (${newlyDeadNetwork.length}):`);
+    for (const e of newlyDeadNetwork) {
       console.log(`  ✗ ${e.company}: ${e.error}`);
     }
   }
@@ -1762,6 +1853,7 @@ async function main() {
   // Persist this run's counters (#1604) — guarded exactly like the other
   // writes; a --dry-run must leave no trace.
   if (!dryRun) {
+    appendPortalHealth(healthRecords);
     appendScanRunSummary({
       timestamp: new Date().toISOString(), status: 'completed',
       companies: summaryCompanies, boards: summaryBoards, found: totalFound,

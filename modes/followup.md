@@ -6,6 +6,11 @@
 
 Track follow-up cadence for active applications. Flag overdue follow-ups, extract contacts from notes, and generate tailored follow-up email/LinkedIn drafts using report context.
 
+**Not in scope here:** a same-day follow-up after a recruiter/interviewer
+confirmed a specific call time and then didn't call. That's not an
+elapsed-time cadence case — see `confirmed_time_noshow` in `modes/email.md`
+(`/career-ops email noshow`) instead.
+
 ## Inputs
 
 - `data/applications.md` — Application tracker
@@ -109,8 +114,10 @@ Generate a concise email that:
 - asks whether the other person can connect in that window or would prefer to reschedule;
 - stays professional and neutral, without implying bad intent.
 
-Require the user to provide the confirmed time, recipient name, and remaining
-availability. Do not infer any of them from the tracker or scrape them.
+Require the user to provide the confirmed date, confirmed time, time zone,
+recipient name, and remaining availability. The generated email must name the
+confirmed date, time, and time zone explicitly. Do not infer any of these
+values from the tracker or scrape them.
 
 Example subject: `Re: Confirmed call today at {time}`
 
