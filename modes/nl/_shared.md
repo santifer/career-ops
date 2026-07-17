@@ -7,20 +7,31 @@ Dit bestand bevat de deelcontext voor alle modi
 career-ops in de Nederlandse versie. Voordat je career-ops gebruikt, MOET je:
 1. Vul config/profile.yml in met uw persoonlijke gegevens
 2. Maak cv.md aan in de root van het project (CV in Markdown)
-3. (Optioneel) Maak Article-digest.md aan met uw proof points
-4. Pas de secties gebenadrukd met [AANPASSEN] hieronder aan
+3. (Optioneel) Maak article-digest.md aan met je proof points
+4. Vul modes/_profile.md in en pas de secties met [AANPASSEN] hieronder aan
      ============================================================ -->
 
-## Bronnen van waarheid (ALTIJD lezen vóór elke beoordeling)
+## Bronnen van waarheid (UITSLUITEND)
+
+Alleen de onderstaande bestanden mogen worden gebruikt voor kandidaatgerichte inhoud. Automatisch geheugen, bovenliggende repositories en aannames uit eerdere sessies vallen buiten deze grens.
 
 | Bestand | Pad | Wanneer |
 |--------|--------|-------|
 | cv.md | `cv.md` (projectroot) | ALTIJD |
 | article-digest.md | `article-digest.md` (indien aanwezig) | ALTIJD (gedetailleerde proof points) |
 | profile.yml | `config/profile.yml` | ALTIJD (identiteit en doelrollen) |
+| _profile.md | `modes/_profile.md` | ALTIJD (archetypen, verhaal en onderhandeling) |
+| writing-samples/ | `writing-samples/` | Bij kandidaatgerichte tekst; gebruik eerst de gecachte sectie `## Writing Style` in `_profile.md` |
+| voice-dna.md | `voice-dna.md` (indien aanwezig) | Bij kandidaatgerichte tekst; vangt AI-achtige formuleringen af en bewaakt de stem |
+| interview-prep | `interview-prep/story-bank.md`, `interview-prep/{company}-{role}.md` | Voor formulierantwoorden en sollicitatiegesprekken; bevat eigen STAR-verhalen en notities van de gebruiker |
+| _custom.md | `modes/_custom.md` (indien aanwezig) | ALTIJD (vaste opmaak-, inhouds- en workflowregels; geen bron voor feitelijke claims) |
 
 **REGEL: codeer NOOIT metrics uit proof points.** Lees ze uit `cv.md` en `article-digest.md` op het moment van evaluatie.
-**REGEL: Voor artikel-/projectmetrics heeft `article-digest.md` voorrang op `cv.md`** (`cv.md` kan oudere nummers bevatten).
+**REGEL: Voor artikel-/projectmetrics heeft `article-digest.md` voorrang op `cv.md`.**
+**REGEL: Lees `_profile.md` NA dit bestand; persoonlijke instellingen daarin hebben voorrang op de standaardwaarden hier.**
+**REGEL: Lees `_custom.md` (indien aanwezig) NA `_profile.md` en volg die blijvende procedurele regels in elke modus. `_custom.md` mag geen nieuwe feitelijke claims over de kandidaat introduceren.**
+**REGEL: Schrijf een project, repository, library, tool of framework alleen aan de gebruiker toe als `cv.md` of `article-digest.md` dat expliciet ondersteunt.**
+**REGEL: Herformuleer trefwoorden, maar verzin ze nooit. Als een claim niet door een toegestane bron wordt ondersteund, vraag het de gebruiker of laat de claim weg.**
 
 ---
 
@@ -100,33 +111,29 @@ Indien de kandidaat een live demo/dashboard heeft (vink `profile.yml` aan), bied
 <!-- [AANPASSEN] Onderzoek salarisschalen voor je doelrollen en pas de waarden aan. -->
 
 **Algemene tips:**
-- WebSearch voor actuele marktgegevens (Glassdoor, Levels.fyi, Welcome to the Jungle, APEC, Talent.io, Indeed Salarissen)
+- WebSearch voor actuele marktgegevens (Glassdoor, Levels.fyi, Intermediair, Indeed Salarissen, Jobat, StepStone)
 - Frame op functietitel, niet op vaardigheden: titels definiëren salarisschalen
-- Freelancetarieven in Frankrijk liggen over het algemeen 30-50% boven het equivalente bruto CDI-uur per uur (sociale lasten, verlof, ziekte, prospectie)
+- Vergelijk freelance- en loondiensttarieven niet rechtstreeks: houd rekening met belastingen, sociale lasten, pensioen, verzekeringen, verlof en niet-declarabele tijd
 - Geo-arbitrage werkt op afstand: lagere kosten van levensonderhoud = beter netto
 
 ### Nederlandstalige markt -- Bijzonderheden (BELANGRIJK)
 
-Bij Nederlandstalige vacatures en onderhandelingen bestaan ​​bepaalde voorwaarden niet op de EN/ES-markten. Er MOET correct rekening mee worden gehouden:
+Nederland en België gebruiken deels dezelfde taal, maar hebben verschillende arbeidsvoorwaarden en regels. Controleer altijd welk land, welke cao of welk paritair comité van toepassing is:
 
 | Termijn | Betekenis | Impact op de evaluatie |
 |-------|--------------|-----------------------|
-| **CDI** (Contract van onbepaalde duur) | Gelijk aan "vast dienstverband". De graal in Frankrijk | Verwachte standaard. Een contract van bepaalde duur voor een senior is een alarmsignaal |
-| **CDD** (Contract voor bepaalde tijd) | Tijdelijk contract, bepaalde duur | Acceptabel voor specifieke missies. Vraag anders waarom niet CDI |
-| **Proefperiode** | Kader van 3-4 maanden (eenmalig verlengbaar, maximaal 8 maanden in totaal) | Standaard werken. Benadruk indien > 4 maanden aanvankelijk |
-| **Vooraankondiging** | 1-3 maanden afhankelijk van cao en anciënniteit | Plan de startdatum dienovereenkomstig |
-| **Framestatus** | Sociaal-professionele categorie specifiek voor Frankrijk. Betreft dagen met vast tarief, verschillende bijdragen | Bijna alle technische functies zijn leidinggevenden. Controleer of vermeld |
-| **SYNTEC CAO** | Meest voorkomende overeenkomst in IT/consulting. Definieert minimumsalarissen, classificaties | Controleer de classificatie (functie + coëfficiënt) om het salaris te valideren |
-| **RTT** (Verkorting van de arbeidstijd) | Extra rustdagen (in het algemeen 8-12/jaar) voor leidinggevenden tegen een vaste prijs | Een echt pluspunt. Gelijk aan 1-2 weken extra verlof |
-| **13e maand** | Extra maand salaris, veelal uitbetaald in december | Neem mee in de berekening: jaarbruto = maandbruto x 13. Vergeet NOOIT in de vergelijking |
-| **Interesse / Participatie** | Winstdeling. Verplichte deelname > 50 medewerkers | Kan 1-3 maanden salaris vertegenwoordigen. Geschiedenis controleren |
-| **Restaurantvouchers** | Lunchcheques (Swile, Edenred). Werkgeversaandeel ~60% | Klein voordeel maar gebruikelijk. ~1000-1500 EUR/jaar besparing |
-| **Wederzijds** | Verplichte aanvullende zorgverzekering. Werkgeversaandeel >= 50% | Standaard. Controleer of de dekking goed is (familiaal, optisch, tandheelkundig) |
-| **Vooruitziendheid** | Overlijdens-, invaliditeits- en arbeidsongeschiktheidsverzekering | Zeldzamer als verkoopargument, maar belangrijk om te verifiëren |
-| **CSE** (Sociaal en Economisch Comité) | Personeelsvertegenwoordiging | CSE-voordelen (vakantiecheques, cultuur, sport) = aanzienlijke bonus bij grote groepen |
-| **Betaald verlof** | 25 wettelijke dagen (5 weken). Sommige conventies geven meer | < 25 dagen = illegaal in Frankrijk. 25 + RTT = technische standaard. > 30 dagen = uitstekend |
-| **Salarisoverdracht** | Hybride statuut tussen werknemer en freelancer | Alternatief voor pure freelance. Vereenvoudigt de administratie, maar kost ~10% |
-| **Zelfondernemer / Micro-onderneming** | Freelancestatus vereenvoudigd, omzetplafond | Voor korte missies. Let op het plafond en de kosten |
+| **Vast of tijdelijk contract** | Arbeidsovereenkomst voor onbepaalde of bepaalde tijd | Controleer duur, verlenging, opzegging en eventuele aanzegging; regels verschillen tussen NL en BE |
+| **Cao / paritair comité** | NL: collectieve arbeidsovereenkomst. BE: sectorale cao's via een paritair comité | Kan loonbarema's, werktijd, verlof, toeslagen en pensioen bepalen |
+| **Proeftijd** | Alleen geldig binnen de regels van het toepasselijke land en contract | Neem geen standaardduur aan; controleer contract en toepasselijke regelgeving |
+| **Opzegtermijn** | Afhankelijk van land, contract, cao en soms anciënniteit | Verifieer vóór het noemen van een startdatum |
+| **Vakantiedagen en vakantiegeld** | NL kent wettelijke vakantie-uren en minimaal vakantiegeld; BE kent jaarlijkse vakantie en vakantiegeld via een ander stelsel | Vergelijk het volledige pakket en voorkom dubbeltelling |
+| **Dertiende maand / eindejaarsuitkering** | Contractuele of cao-afhankelijke extra betaling | Controleer of deze boven op het genoemde jaarsalaris komt of daarin is inbegrepen |
+| **Bonus / winstdeling / winstpremie** | Variabele beloning op individuele, collectieve of bedrijfsresultaten | Vraag naar voorwaarden, doelstelling, historie en gegarandeerd versus variabel deel |
+| **Pensioen / groepsverzekering** | NL: vaak pensioenregeling; BE: aanvullend pensioen vaak via groepsverzekering | Controleer werkgevers- en werknemersbijdrage en wat precies is verzekerd |
+| **Zorg- en hospitalisatieverzekering** | NL: werknemer sluit doorgaans zelf een zorgverzekering af. BE: hospitalisatieverzekering is een veelvoorkomend extra voordeel | Behandel land en dekking apart; presenteer dit niet als nettoloon |
+| **Maaltijd- en ecocheques** | Vooral gangbare extralegale voordelen in België | Noteer nominale waarde, werknemersbijdrage en gebruiksvoorwaarden |
+| **Mobiliteitsbudget / leaseauto / fietsregeling** | Veelvoorkomende mobiliteitscomponenten, met verschillende fiscale behandeling | Vergelijk totale waarde, eigen bijdrage en gevolgen bij uitdiensttreding |
+| **Freelance / zelfstandig** | Opdrachtrelatie in plaats van arbeidsovereenkomst | Controleer tarief, btw, verzekeringen, pensioen, opzegging en risico op schijnzelfstandigheid |
 
 ### Onderhandelingsscripts
 
@@ -157,6 +164,7 @@ Bij Nederlandstalige vacatures en onderhandelingen bestaan ​​bepaalde voorwa
 - Scoor alleen 1,0 als er expliciet in het vacature staat "verplichte aanwezigheid 4-5 dagen/week, geen uitzonderingen"
 
 ### Prioriteit voor tijd tot vacature
+
 - Functionele demo + metrics > perfectie
 - Solliciteer snel > leer meer
 - 80/20 aanpak, alles is in een timebox vastgelegd
@@ -178,7 +186,7 @@ Bij Nederlandstalige vacatures en onderhandelingen bestaan ​​bepaalde voorwa
 
 ### ALTIJD
 
-0. ** Sollicitatiebrief: ** Als het formulier dit toelaat, voeg er ALTIJD één toe. PDF in hetzelfde visuele ontwerp als het CV. Bied offertes aan die zijn toegewezen aan proof points. Maximaal 1 pagina.
+0. **Sollicitatiebrief:** Als het formulier dit toelaat, voeg er ALTIJD één toe. PDF in hetzelfde visuele ontwerp als het cv. Koppel citaten uit de vacature aan proof points. Maximaal 1 pagina.
 1. Lees `cv.md` en `article-digest.md` (indien aanwezig) voordat u een vacature evalueert
 1b. **Eerste evaluatie van elke sessie:** Voer `node cv-sync-check.mjs` uit via Bash. Bij waarschuwingen de kandidaat hiervan op de hoogte stellen
 2. Detecteer het archetype van de rol en pas de positionering aan
@@ -199,7 +207,7 @@ Bij Nederlandstalige vacatures en onderhandelingen bestaan ​​bepaalde voorwa
 | WebSearch | Onderzoeksbeloningen, trends, bedrijfscultuur, LinkedIn-contacten, uitwijkvacatures |
 | WebFetch | Terugval om vacatures uit statische pagina's te halen |
 | Playwright | Controleer of de vacatures actief zijn (browser_navigate + browser_snapshot), extraheer de vacatures uit SPA's. **KRITIEK: NOOIT 2+ agenten parallel met Playwright -- ze delen dezelfde browserinstantie** |
-| Read | cv.md, article-digest.md, cv-template.html |
-| Write | Tijdelijke HTML voor PDF, applicaties.md, rapporten .md |
-| Edit | Update de tracker |
+| Read | cv.md, article-digest.md, `_profile.md`, `_custom.md`, voice-dna.md, writing-samples/ en cv-template.html |
+| Write | Tijdelijke HTML voor PDF, rapporten .md en TSV-bestanden in `batch/tracker-additions/` |
+| Edit | Bestaande rapportinhoud bijwerken; bewerk `applications.md` nooit rechtstreeks |
 | Bash | `node generate-pdf.mjs` |

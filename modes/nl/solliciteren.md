@@ -4,12 +4,12 @@ Interactieve modus voor wanneer de kandidaat een sollicitatieformulier in Chrome
 
 ## Vereisten
 
-- **Ideaal als toneelschrijver zichtbaar**: in de zichtbare modus ziet de kandidaat de browser en kan Claude communiceren met de pagina.
+- **Ideaal met zichtbare Playwright-browser**: in de zichtbare modus ziet de kandidaat de browser en kan Claude communiceren met de pagina.
 - **Zonder Playwright**: de kandidaat deelt een screenshot of plakt de vragen handmatig.
 
 ## Werkstroom
 
-```
+```text
 1. DETECTEREN     -> Lees het actieve Chrome-tabblad (screenshot/URL/titel)
 2. IDENTIFICEREN  -> Haal bedrijf en functie uit de pagina
 3. ZOEKEN         -> Zoek een match in de bestaande rapporten in reports/
@@ -22,9 +22,9 @@ Interactieve modus voor wanneer de kandidaat een sollicitatieformulier in Chrome
 
 ## Stap 1 -- Ontdek de vacature
 
-**Met toneelschrijver:** Momentopname van de actieve pagina. Lees titel, URL en zichtbare inhoud.
+**Met Playwright:** Maak een snapshot van de actieve pagina. Lees titel, URL en zichtbare inhoud.
 
-**Zonder toneelschrijver:** Vraag de kandidaat om:
+**Zonder Playwright:** Vraag de kandidaat om:
 - Deel een screenshot van het formulier (de Read-tool leest de afbeeldingen)
 - Of plak de vragen uit het formulier in de tekst
 - Of geef bedrijf + rol aan zodat we op zoek kunnen gaan naar de context
@@ -43,7 +43,7 @@ Als de rol op het scherm afwijkt van de geëvalueerde rol:
 - **Waarschuw de kandidaat**: "De rol is veranderd van [X] in [Y]. Wil je dat ik de antwoorden opnieuw evalueer of aanpas aan de nieuwe titel?"
 - **Indien aangepast**: Pas de reacties op de nieuwe rol aan zonder opnieuw te evalueren
 - **Indien opnieuw geëvalueerd**: start de volledige A-F-evaluatie, update het rapport, genereer blok G opnieuw
-- **Update de tracker**: wijzig indien nodig de roltitel in applications.md
+- **Update de tracker**: schrijf de gewijzigde roltitel als TSV-toevoeging in `batch/tracker-additions/` en voer `node merge-tracker.mjs` uit; bewerk `applications.md` niet rechtstreeks
 
 ## Stap 4 -- Analyseer de formuliervragen
 
@@ -51,7 +51,7 @@ Identificeer ALLE zichtbare vragen:
 - Vrije tekstvelden (sollicitatiebrief, "waarom deze functie", motivatie, etc.)
 - Keuzelijsten (hoe kende u het bedrijf, werkvergunning, etc.)
 - Ja/Nee (mobiliteit, visum, beschikbaarheid, enz.)
-- Salarisvelden (bereik, salarisverwachtingen - in bruto jaarbasis voor Frankrijk)
+- Salarisvelden (bereik, salarisverwachtingen en of vakantiegeld/vaste extra's zijn inbegrepen)
 - Upload velden (CV, pdf-sollicitatiebrief, referenties)
 
 Classificeer elke vraag:
@@ -68,16 +68,16 @@ Construeer voor elke vraag het antwoord volgens dit diagram:
 4. **Specificiteit**: citeer iets concreets uit het vacature dat zichtbaar is op het scherm
 5. **career-ops proof point**: vermeld in 'Aanvullende informatie' als een dergelijk veld bestaat
 
-**Velden die specifiek zijn voor veelgebruikte Franse formulieren:**
+**Velden die vaak voorkomen in Nederlandse en Belgische formulieren:**
 - **Salarisverwachtingen (jaarlijks bruto)** -> Bereik van `profile.yml`, in EUR, met vermelding "bespreekbaar volgens het totaalpakket"
-- **Beschikbaarheidsdatum** -> Realistische datum rekening houdend met voorafgaande kennisgeving (vaak 1-3 maanden)
+- **Beschikbaarheidsdatum** -> Realistische datum rekening houdend met de contractuele opzegtermijn
 - **Werkvergunning / Nationaliteit** -> Eerlijk en beknopt; voor EU-burgers: "Geen verblijfsvergunning nodig (EU-burger)"
 - **Talen** -> Niveaus volgens het ERK (A1-C2)
 - **Mobiliteit** -> Specificeer het aanvaardbare geografische gebied en de reisfrequentie
 
 **Uitvoerformaat:**
 
-```
+```text
 ## Antwoorden voor [Bedrijf] -- [Functie]
 
 Basis: Rapport #NNN | Score: X,X/5 | Archetype: [type]

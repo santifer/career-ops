@@ -4,17 +4,19 @@ Processen bieden URL's aan die zijn verzameld in `data/pipeline.md`. De kandidaa
 
 ## Werkstroom
 
-1. **Lees** `data/pipeline.md` -> zoek de items `- [ ]` in de sectie "In afwachting" / "Pending" / "Pendientes"
+1. **Lees** `data/pipeline.md` -> zoek de items `- [ ]` in de sectie "In afwachting" / "Pending" / "Pendientes" / "Offen" / "En attente"
 2. **Voor elke openstaande URL**:
-heeft. Reserveer de volgende opeenvolgende `REPORT_NUM` atomair door `node reserve-report-num.mjs` uit te voeren (en geef de sentinel vrij door `node reserve-report-num.mjs uit te voeren --release <num>` zodra het rapport is geschreven)
-B. **Extraheer de vacature** met Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch
-C. Als de URL niet toegankelijk is -> benadruk als `- [!]` met een opmerking en ga verder
-D. **Voer de volledige auto-pipeline uit**: Evaluatie A-F -> Rapport .md -> PDF (indien score >= 3.0) -> Tracker
-e. **Verplaats van "In afwachting" naar "Verwerkt"**: `- [x] #NNN | URL | Zakelijk | Rol | Score/5 | Pdf ja/nee
+   a. **Extraheer de vacature** met Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch
+   b. Als de URL niet toegankelijk is -> markeer als `- [!]` met een opmerking en ga verder; er is dan nog geen rapportnummer gereserveerd
+   c. Reserveer het volgende `REPORT_NUM` atomair met `node reserve-report-num.mjs`
+   d. Voer de volledige auto-pipeline uit binnen een cleanup-pad: Evaluatie A-F -> Rapport .md -> PDF (indien score >= 3.0) -> tracker-TSV in `batch/tracker-additions/`
+   e. Voer in een `finally`-stap altijd `node reserve-report-num.mjs --release <num>` uit, ook als een vervolgstap, evaluatie, PDF-generatie of trackerregistratie mislukt
+   f. **Verplaats van "In afwachting" naar "Verwerkt"**: `- [x] #NNN | URL | Bedrijf | Rol | Score/5 | PDF ja/nee`
 3. **Als er meer dan 3 URL's wachten**, voer agenten parallel uit (Agent-tool met `run_in_background`) om de snelheid te maximaliseren.
-4. **Aan het einde** geeft u een samenvattende tabel weer:
+4. **Na alle agents:** wacht tot elke agent klaar is en voer daarna, in deze volgorde, `node merge-tracker.mjs`, `node verify-pipeline.mjs`, `node normalize-statuses.mjs` en `node dedup-tracker.mjs` uit.
+5. **Aan het einde** geeft u een samenvattende tabel weer:
 
-```
+```text
 | # | Bedrijf | Functie | Score | PDF | Aanbevolen actie |
 ```
 
@@ -44,14 +46,13 @@ e. **Verplaats van "In afwachting" naar "Verwerkt"**: `- [x] #NNN | URL | Zakeli
 - **LinkedIn**: Mogelijk is een login vereist -> benadruk `[!]` en vraag de kandidaat om de tekst te plakken
 - **PDF**: als de URL naar een PDF verwijst, kunt u deze direct lezen met de Leestool
 - **Prefix `local:`**: Lees het lokale bestand. Voorbeeld: `local:jds/linkedin-pm-ai.md` -> lees `jds/linkedin-pm-ai.md`
-- **Welcome to the Jungle / Indeed FR / APEC**: veelgebruikte Nederlandstalige portalen. Playwright beheert cookiebanners goed
-- **France Travail (ex-Pole emploi)**: Gestructureerde vacatures, duidelijk machinaal leesbaar. WebFetch is meestal voldoende
+- **Indeed NL/BE, Nationale Vacaturebank, Intermediair, Jobat, StepStone, VDAB en Werkenvoor.be**: veelgebruikte bronnen voor Nederlandstalige vacatures. Gebruik Playwright voor dynamische pagina's en cookiebanners
 
 ## Automatische nummering
 
 1. Voer `node reserve-report-num.mjs` uit om het volgende volgnummer atomair te reserveren (stdout retourneert `{###}`).
 2. Schrijf het rapport met dit nummer.
-3. Geef de sentinel vrij door `node reserve-report-num.mjs --release {###}` uit te voeren zodra het rapport is geschreven.
+3. Geef de sentinel in een `finally`-stap altijd vrij met `node reserve-report-num.mjs --release {###}`, zowel na succes als na een fout.
 
 ## Bronsynchronisatie
 

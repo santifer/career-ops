@@ -74,6 +74,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/fr/*` | French language modes |
 | `modes/hi/*` | Hindi language modes |
 | `modes/ja/*` | Japanese language modes |
+| `modes/nl/*` | Dutch language modes |
 | `modes/pl/*` | Polish language modes |
 | `modes/pt/*` | Portuguese language modes |
 | `modes/ru/*` | Russian language modes |

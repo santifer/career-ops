@@ -6,12 +6,12 @@ Dit bestand bevat Nederlandse vertalingen van de belangrijkste carrièremodi voo
 
 Gebruik `modes/nl/` als aan minstens één van deze voorwaarden is voldaan:
 
-- Je solliciteert voornamelijk op **jobvacatures in het Nederlands** (Welcome to the Jungle, Indeed FR, APEC, Pole emploi / France Travail, LinkedIn FR, carrièresites)
-- Je **CV is in het Nederlands** of je wisselt af tussen FR en EN, afhankelijk van het vacature
-- U heeft antwoorden en sollicitatiebrieven nodig in **natuurlijk technisch Nederlands**, niet vertaald door een machine
-- Je beheert **Nederlandstalige contractuele bijzonderheden**: cao, RTT, onderlinge verzekering, vooruitziende blik, 13e maand, proefperiode, opzegtermijn, maaltijdcheques, rente/deelname, salarisoverdracht
+- Je solliciteert voornamelijk op **Nederlandstalige vacatures** (LinkedIn, Indeed NL/BE, Nationale Vacaturebank, VDAB, Werkenvoor.be, bedrijfssites)
+- Je **cv is in het Nederlands** of je wisselt tussen NL en EN, afhankelijk van de vacature
+- Je hebt antwoorden en motivatiebrieven nodig in **natuurlijk technisch Nederlands**, zonder letterlijke vertalingen
+- Je wilt rekening houden met **arbeidsvoorwaarden in Nederland en België**: cao/sectorale afspraken, vakantiegeld, pensioen, bonus of dertiende maand, proefperiode, opzegtermijn en aanvullende verzekeringen
 
-Als de meeste van uw vacatures in het Engels zijn, houd u dan aan de standaardmodi in `modes/`. De Engelse modi werken voor Nederlandstalige vacatures, maar kennen de specifieke kenmerken van de Nederlandstalige markt niet in detail.
+Als de meeste vacatures in het Engels zijn, gebruik dan de standaardmodi in `modes/`. De Engelse modi werken ook voor Nederlandstalige vacatures, maar behandelen de Nederlandse en Belgische arbeidsmarkt minder specifiek.
 
 ## Hoe activeren?
 
@@ -33,7 +33,7 @@ language:
   modes_dir: modes/nl
 ```
 
-Herinner Claude hieraan tijdens je eerste sessie ("Kijk in `profile.yml`, ik heb `taal.modes_dir` geconfigureerd"). Claude gebruikt automatisch de Nederlandse modi.
+Herinner Claude hieraan tijdens je eerste sessie ("Kijk in `profile.yml`, ik heb `language.modes_dir` geconfigureerd"). Claude gebruikt automatisch de Nederlandse modi.
 
 ## Welke modi zijn vertaald?
 
@@ -57,7 +57,7 @@ Opzettelijk niet vertaald vanwege standaard technische woordenschat:
 - Statuswaarden in de tracker (`Geëvalueerd`, `Toegepast`, `Interview`, `Aanbieding`, `Afgewezen`)
 - Codefragmenten, paden, opdrachten
 
-De modi maken gebruik van natuurlijk technisch Nederlands, zoals het wordt gesproken in technische teams in Parijs, Lyon of Genève: alledaagse tekst in het Nederlands, technische termen in het Engels waar het wordt gebruikt. Geen geforceerde vertaling van "Pipeline" naar "Pipeline", noch van "Deploy" naar "Application deployment".
+De modi gebruiken natuurlijk technisch Nederlands zoals dat in teams in Nederland en Vlaanderen wordt gesproken: gewone tekst in het Nederlands, met Engelse technische termen waar die gangbaar zijn. Termen als "pipeline", "deployment" en "stack" worden niet geforceerd vertaald.
 
 ## Referentiewoordenlijst
 
@@ -65,35 +65,34 @@ Om een ​​consistente toon te behouden als u de modi wijzigt of uitbreidt:
 
 | Engels | Nederlands (in deze codebase) |
 |---------|----------------------------|
-| Vacature | Vacature / aankondiging |
-| Toepassing | Toepassing |
+| Job posting | Vacature |
+| Application | Sollicitatie |
 | Sollicitatiebrief | Sollicitatiebrief |
-| CV / CV | CV |
-| Salaris | Salaris / Bezoldiging |
-| Vergoeding | Verloning / Pakket |
-| Vaardigheden | Vaardigheden |
-| Interview | Interview |
-| Wervingsmanager | Recruitermanager / Hiringsmanager |
-| Recruiter | Recruiter (of Recruiter) |
+| Resume / CV | Cv |
+| Salary | Salaris |
+| Compensation | Beloning / arbeidsvoorwaardenpakket |
+| Skills | Vaardigheden |
+| Interview | Sollicitatiegesprek |
+| Hiring manager | Wervende manager / hiring manager |
+| Recruiter | Recruiter |
 | AI | AI (kunstmatige intelligentie) |
-| Vereisten | Vereisten / Vereisten |
-| Carrièregeschiedenis | Professionele carrière |
-| Opzegtermijn | Let op |
-| Proeftijd | Proefperiode |
-| Vakantie | Betaald verlof (CP) |
-| 13e maand salaris | 13e maand / Eindejaarsbonus |
-| Vast dienstverband | CDI (Contract van onbepaalde duur) |
-| Contract van bepaalde duur | CDD (Contract voor bepaalde duur) |
-| Freelance | Freelance / Zelfstandig / Zelfstandig |
-| Collectieve overeenkomst | Collectieve overeenkomst |
-| Ondernemingsraad | CSE (Sociaal en Economisch Comité) |
-| Winstdeling | Interesse / Deelname |
-| Maaltijdcheques | Maaltijdcheques / Lunchcheques |
-| Ziektekostenverzekering | Maatschappelijke onderlinge verzekeringen |
-| Invaliditeits-/levensverzekering | Vooruitziendheid |
-| RTT | RTT (arbeidstijdverkorting) |
-| Statusframe | Kaderstatus |
-| SYNTEK | SYNTEC-conventie (IT/consulting) |
+| Requirements | Vereisten |
+| Career history | Loopbaan / werkervaring |
+| Notice period | Opzegtermijn |
+| Probation | Proeftijd |
+| Vacation | Vakantiedagen / betaald verlof |
+| 13th month salary | Dertiende maand / eindejaarsuitkering |
+| Permanent employment | Arbeidsovereenkomst voor onbepaalde tijd / vast contract |
+| Fixed-term contract | Arbeidsovereenkomst voor bepaalde tijd / tijdelijk contract |
+| Freelance | Freelance / zelfstandig |
+| Collective agreement | Cao (NL) / sectorale cao of paritair comité (BE) |
+| Works council | Ondernemingsraad |
+| Profit sharing | Winstdeling / winstpremie |
+| Meal vouchers | Maaltijdcheques (vooral BE) |
+| Health insurance | Zorgverzekering (NL) / hospitalisatieverzekering (BE) |
+| Disability/life insurance | Arbeidsongeschiktheids- en overlijdensverzekering |
+| Holiday allowance | Vakantiegeld |
+| Pension | Pensioenregeling / groepsverzekering |
 
 ## Bijdragen
 

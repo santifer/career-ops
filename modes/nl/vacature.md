@@ -47,19 +47,19 @@ sectie **Hiaten** met een mitigatiestrategie voor elk. Voor elke opening:
 ## Blok D -- Beloning en vraag
 
 Gebruik WebSearch om:
-- Huidige salarissen voor de functie (Glassdoor, Levels.fyi, Welcome to the Jungle, APEC, Talent.io, Indeed Salarissen)
-- Reputatie van bedrijfsbeloningen (Glassdoor, WTTJ)
+- Huidige salarissen voor de functie (Glassdoor, Levels.fyi, Intermediair, Indeed Salarissen, Jobat, StepStone)
+- Reputatie van de beloning bij het bedrijf (Glassdoor en andere betrouwbare bronnen)
 - Evolutie van de vraag naar de rol op de Nederlandstalige markt
 
 Tabel met gegevens en geciteerde bronnen. Als er geen gegevens zijn, vermeld dit dan duidelijk - verzin het niet.
 
-**Franse markt -- Verplichte verificaties:**
-- 13e maand/eindejaarsbonus genoemd? Neem dit mee in de jaarlijkse brutoberekening.
-- Variabel deel (bonus, commissie, BSPCE / aandelenopties)?
-- Interesse/participatie vermeld? Geschiedenis beschikbaar?
-- CAO (SYNTEC, Metallurgie, etc.) van toepassing? Zo ja, controleer de classificatie.
-- CDI of CDD? Indien CDD: duur, reden, mogelijkheid tot vast contract.
-- Freelance / Salarisoverdracht? TJM, duur van de missie, risico op herkwalificatie.
+**Nederland en België -- Verplichte verificaties:**
+- Welk land, welke cao of welk paritair comité is van toepassing?
+- Is het salaris exclusief of inclusief vakantiegeld, dertiende maand/eindejaarsuitkering en andere vaste componenten?
+- Welk deel is variabel (bonus, commissie, winstdeling, aandelen of opties), en onder welke voorwaarden?
+- Gaat het om een contract voor onbepaalde of bepaalde tijd? Controleer duur, proeftijd, verlenging en opzegtermijn.
+- Welke pensioenregeling of groepsverzekering, zorg-/hospitalisatieverzekering en mobiliteitsvoordelen zijn inbegrepen?
+- Freelance of zelfstandig? Controleer tarief, btw, verzekeringen, pensioen, opdrachtduur en risico op schijnzelfstandigheid.
 
 ## Blok E -- Personalisatieplan
 
@@ -149,7 +149,7 @@ Sla de volledige evaluatie op in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ### 2. Opslaan in tracker
 
-**ALTIJD** opslaan in `data/applications.md`:
+**ALTIJD** registreren via een TSV-bestand in `batch/tracker-additions/`; bewerk `data/applications.md` nooit rechtstreeks. Voer daarna `node merge-tracker.mjs` uit:
 - Volgende opeenvolgende uitgave
 - De datum van vandaag
 - Bedrijf
