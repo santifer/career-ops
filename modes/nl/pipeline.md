@@ -6,13 +6,13 @@ Processen bieden URL's aan die zijn verzameld in `data/pipeline.md`. De kandidaa
 
 1. **Lees** `data/pipeline.md` -> zoek de items `- [ ]` in de sectie "In afwachting" / "Pending" / "Pendientes" / "Offen" / "En attente"
 2. **Voor elke openstaande URL**:
-   a. **Extraheer de vacature** met Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch
-   b. Als de URL niet toegankelijk is -> markeer als `- [!]` met een opmerking en ga verder; er is dan nog geen rapportnummer gereserveerd
+   a. **Extraheer de vacature** met Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch. Alleen geslaagde Playwright-navigatie plus een snapshot mogen bevestigen dat de vacature actief is. WebFetch en WebSearch dienen uitsluitend voor extractie en bevestigen nooit de actieve status
+   b. Als de URL niet toegankelijk is -> laat het item als `- [ ]` staan of markeer het als `- [!]` met de foutdetails, zodat het zichtbaar en opnieuw uitvoerbaar blijft; er is dan nog geen rapportnummer gereserveerd. Als extractie alleen via WebFetch of WebSearch lukt, ga dan verder met `**Verification:** unconfirmed (batch mode)` in het rapport
    c. Reserveer het volgende `REPORT_NUM` atomair met `node reserve-report-num.mjs`
    d. Voer de volledige auto-pipeline uit binnen een cleanup-pad: Evaluatie A-F -> Rapport .md -> PDF (indien score >= 3.0) -> tracker-TSV in `batch/tracker-additions/`
    e. Voer in een `finally`-stap altijd `node reserve-report-num.mjs --release <num>` uit, ook als een vervolgstap, evaluatie, PDF-generatie of trackerregistratie mislukt
-   f. **Verplaats van "In afwachting" naar "Verwerkt"**: `- [x] #NNN | URL | Bedrijf | Rol | Score/5 | PDF ja/nee`
-3. **Als er meer dan 3 URL's wachten**, voer agenten parallel uit (Agent-tool met `run_in_background`) om de snelheid te maximaliseren.
+   f. **Verplaats alleen na volledig succes van "In afwachting" naar "Verwerkt"**: evaluatie, eventuele PDF-generatie en trackerregistratie moeten allemaal zijn geslaagd. Schrijf dan `- [x] #NNN | URL | Bedrijf | Rol | Score/5 | PDF ja/nee`. Laat het item bij elke fout als `- [ ]` staan of markeer het als `- [!]` met de foutdetails, zodat het zichtbaar en opnieuw uitvoerbaar blijft
+3. **Als er meer dan 3 URL's wachten**, voer alleen stappen zonder Playwright parallel uit (Agent-tool met `run_in_background`). Verwerk Playwright-gestuurde vacatures serieel, omdat agenten dezelfde browserinstantie delen.
 4. **Na alle agents:** wacht tot elke agent klaar is en voer daarna, in deze volgorde, `node merge-tracker.mjs`, `node verify-pipeline.mjs`, `node normalize-statuses.mjs` en `node dedup-tracker.mjs` uit.
 5. **Aan het einde** geeft u een samenvattende tabel weer:
 
@@ -37,10 +37,10 @@ Processen bieden URL's aan die zijn verzameld in `data/pipeline.md`. De kandidaa
 
 ## Intelligente vacaturesdetectie via URL
 
-1. **Playwright (bij voorkeur):** `browser_navigate` + `browser_snapshot`. Werkt met alle SPA's.
+1. **Playwright (bij voorkeur):** `browser_navigate` + `browser_snapshot`. Werkt met alle SPA's en is de enige methode waarmee de actieve status van een vacature mag worden bevestigd.
 - **Optie — CLI-extractor (`scan.extractor: cli` in `config/profile.yml`):** voer in plaats daarvan `node browser-extract.mjs <url>` (`--mode jd`) uit — `{ "url", "title", "text" }` compact, minder tokens (afhankelijk van de site). **Stille terugval** naar `browser_navigate` + `browser_snapshot` in geval van een fout of afwezigheid.
-2. **WebFetch (fallback):** Voor statische pagina's of wanneer Playwright niet beschikbaar is.
-3. **WebSearch (laatste redmiddel):** Zoeken op secundaire portals die het vacature indexeren.
+2. **WebFetch (fallback):** Voor statische pagina's of wanneer Playwright niet beschikbaar is. Gebruik de inhoud alleen voor extractie en zet `**Verification:** unconfirmed (batch mode)` in het rapport.
+3. **WebSearch (laatste redmiddel):** Zoek op secundaire portals die de vacature indexeren. Gebruik zoekresultaten nooit als bevestiging dat de vacature actief is en zet `**Verification:** unconfirmed (batch mode)` in het rapport.
 
 **Speciale gevallen:**
 - **LinkedIn**: Mogelijk is een login vereist -> benadruk `[!]` en vraag de kandidaat om de tekst te plakken

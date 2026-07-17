@@ -32,10 +32,11 @@ Interactieve modus voor wanneer de kandidaat een sollicitatieformulier in Chrome
 ## Stap 2 -- Identificeer en laad de context
 
 1. Haal de bedrijfsnaam en functietitel uit de pagina
-2. Zoek `reports/` op bedrijfsnaam (Grep zonder onderscheid tussen hoofdletters en kleine letters)
-3. Indien match -> laad het volledige rapport
-4. Als Blok G aanwezig is -> laad eerdere conceptantwoorden als basis
-5. Indien GEEN match -> waarschuw de kandidaat en stel een snelle auto-pipeline voor
+2. Zoek in `reports/` met een genormaliseerde combinatie van bedrijfsnaam en functietitel (zonder onderscheid tussen hoofdletters en kleine letters of leestekens)
+3. Bevestig de match aan de hand van de vacature-URL wanneer die beschikbaar is. Als er daarna meerdere rapporten mogelijk blijven, vraag de kandidaat welk rapport bij het formulier hoort voordat je iets laadt
+4. Indien precies één gevalideerde match -> laad het volledige rapport
+5. Als Blok G aanwezig is -> laad eerdere conceptantwoorden als basis
+6. Alleen indien er GEEN gevalideerde match is -> waarschuw de kandidaat en stel een snelle auto-pipeline voor
 
 ## Stap 3 -- Detecteer rolwijzigingen
 
@@ -69,9 +70,9 @@ Construeer voor elke vraag het antwoord volgens dit diagram:
 5. **career-ops proof point**: vermeld in 'Aanvullende informatie' als een dergelijk veld bestaat
 
 **Velden die vaak voorkomen in Nederlandse en Belgische formulieren:**
-- **Salarisverwachtingen (jaarlijks bruto)** -> Bereik van `profile.yml`, in EUR, met vermelding "bespreekbaar volgens het totaalpakket"
+- **Salarisverwachtingen (jaarlijks bruto)** -> Bereik uit `config/profile.yml`, in EUR, met vermelding "bespreekbaar volgens het totaalpakket"
 - **Beschikbaarheidsdatum** -> Realistische datum rekening houdend met de contractuele opzegtermijn
-- **Werkvergunning / Nationaliteit** -> Eerlijk en beknopt; voor EU-burgers: "Geen verblijfsvergunning nodig (EU-burger)"
+- **Werkvergunning / Nationaliteit** -> Baseer het antwoord uitsluitend op `config/profile.yml` of een verklaring van de kandidaat in het huidige gesprek. Houd werkvergunning, visumsponsoring, nationaliteit en verblijfsstatus als afzonderlijke feiten; neem niets aan. Laat de kandidaat het antwoord bevestigen voordat je het presenteert
 - **Talen** -> Niveaus volgens het ERK (A1-C2)
 - **Mobiliteit** -> Specificeer het aanvaardbare geografische gebied en de reisfrequentie
 

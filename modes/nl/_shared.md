@@ -104,7 +104,7 @@ wachtwoord: "demo-2026"
 wanneer_to_share: "Rollen LLMOps, AI-platform, observability"
 Lees van config/profile.yml -> narratieve.proof_points en narratieve.dashboard -->
 
-Indien de kandidaat een live demo/dashboard heeft (vink `profile.yml` aan), bied dan toegang aan in de betreffende applicaties.
+Indien de kandidaat een live demo/dashboard heeft (controleer `config/profile.yml`), bied dan toegang aan in de betreffende sollicitaties.
 
 ### Comp-intelligentie
 
@@ -140,7 +140,7 @@ Nederland en België gebruiken deels dezelfde taal, maar hebben verschillende ar
 <!-- [AANPASSEN] Stem dit af op je situatie. -->
 
 **Salarisverwachtingen (algemeen kader):**
-> "Gebaseerd op de huidige marktgegevens voor dit type functie, mik ik op een bereik van [RANGE van profile.yml]. Ik blijf flexibel wat betreft de structuur - het zijn het totale pakket en de vooruitzichten op vooruitgang die tellen."
+> "Gebaseerd op de huidige marktgegevens voor dit type functie, mik ik op een bereik van [RANGE uit config/profile.yml]. Ik blijf flexibel wat betreft de structuur - het zijn het totale pakket en de groeimogelijkheden die tellen."
 
 **Reactie op een geografische korting:**
 > "De rollen waarvoor ik strijd zijn resultaatgericht, niet locatiegericht. Mijn trackrecord verandert niet per postcode."
@@ -156,7 +156,7 @@ Nederland en België gebruiken deels dezelfde taal, maar hebben verschillende ar
 <!-- [AANPASSEN] Stem dit af op je situatie. Wordt gelezen uit config/profile.yml -> location. -->
 
 **In formulieren:**
-- Binaire vragen "Kunt u ter plaatse zijn?" : reageer op basis van daadwerkelijke beschikbaarheid in `profile.yml`
+- Binaire vragen "Kunt u ter plaatse zijn?" : reageer op basis van daadwerkelijke beschikbaarheid in `config/profile.yml`
 - Vrije velden: geef expliciet tijdoverlap en beschikbaarheid aan
 
 **In de evaluaties (score):**
@@ -196,7 +196,7 @@ Nederland en België gebruiken deels dezelfde taal, maar hebben verschillende ar
 6. Genereer de inhoud in de taal van de vacature (Nederlands als de vacature in het Nederlands is, anders Engels)
 7. Wees direct en concreet – geen gebabbel
 8. Natuurlijk technisch Nederlands voor gegenereerde teksten. Korte zinnen, actiewerkwoorden, vermijd het passieve. Vertaal technische termen (stack, pipeline, deployment, embedding) niet met geweld
-8b. **Casestudies-URL's in de professionele samenvatting van de PDF:** Als de PDF casestudies of demo's vermeldt, MOETEN de URL's in de eerste paragraaf (Professionele samenvatting) verschijnen. Recruiters lezen vaak alleen de samenvatting. Alle URL's in HTML met `witruimte: nowrap`
+8b. **Casestudies-URL's in de professionele samenvatting van de PDF:** Als de PDF casestudies of demo's vermeldt, MOETEN de URL's in de eerste paragraaf (Professionele samenvatting) verschijnen. Recruiters lezen vaak alleen de samenvatting. Alle URL's in HTML met `white-space: nowrap`
 9. **TSV-trackergegevens** -- Bewerk applications.md NOOIT rechtstreeks voor nieuwe toevoegingen. Schrijf de TSV in `batch/tracker-additions/`, `merge-tracker.mjs` beheert de samenvoeging
 10. **`**URL:**` in elke rapportkop** -- tussen Score en PDF
 

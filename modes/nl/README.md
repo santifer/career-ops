@@ -33,7 +33,7 @@ language:
   modes_dir: modes/nl
 ```
 
-Herinner Claude hieraan tijdens je eerste sessie ("Kijk in `profile.yml`, ik heb `language.modes_dir` geconfigureerd"). Claude gebruikt automatisch de Nederlandse modi.
+Herinner Claude hieraan tijdens je eerste sessie ("Kijk in `config/profile.yml`, ik heb `language.modes_dir` geconfigureerd"). Claude gebruikt automatisch de Nederlandse modi.
 
 ## Welke modi zijn vertaald?
 
@@ -52,9 +52,8 @@ De andere modi (`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `con
 
 Opzettelijk niet vertaald vanwege standaard technische woordenschat:
 
-- `cv.md`, `pipeline`, `tracker`, `report`, `score`, `archetype`, `bewijspunt`
+- `cv.md`, `pipeline`, `tracker`, `report`, `score`, `archetype`
 - Toolnamen (`Playwright`, `WebSearch`, `WebFetch`, `Read`, `Write`, `Edit`, `Bash`)
-- Statuswaarden in de tracker (`Geëvalueerd`, `Toegepast`, `Interview`, `Aanbieding`, `Afgewezen`)
 - Codefragmenten, paden, opdrachten
 
 De modi gebruiken natuurlijk technisch Nederlands zoals dat in teams in Nederland en Vlaanderen wordt gesproken: gewone tekst in het Nederlands, met Engelse technische termen waar die gangbaar zijn. Termen als "pipeline", "deployment" en "stack" worden niet geforceerd vertaald.
@@ -101,5 +100,5 @@ Om een ​​vertaling te verbeteren of een modus toe te voegen:
 1. Open een probleem met uw voorstel (zie `CONTRIBUTING.md`)
 2. Respecteer de bovenstaande woordenlijst om de toon consistent te houden
 3. Vertaal idiomatisch - geen woord-voor-woordvertaling
-4. Houdt structurele elementen (blokken A-F, tabellen, codeblokken, gereedschapsinstructies) identiek
+4. Houd structurele elementen (blokken A-F, tabellen, codeblokken, gereedschapsinstructies) identiek
 5. Test met een echte Nederlandstalige vacature (LinkedIn, Indeed NL, Nationale Vacaturebank) voordat je de PR indient

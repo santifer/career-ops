@@ -4,7 +4,7 @@ Wanneer de kandidaat een vacature (tekst of URL) plakt, lever dan ALTIJD alle 6 
 
 ## Stap 0 -- Archetypedetectie
 
-Classificeer het vacature in een van de 6 archetypen (zie `_shared.md`). Indien hybride: geef de twee dichtstbijzijnde aan. Dit bepaalt:
+Classificeer de vacature in een van de 6 archetypen (zie `_shared.md`). Indien hybride: geef de twee dichtstbijzijnde aan. Dit bepaalt:
 - Welk bewijs wijst op prioriteit in blok B
 - Hoe herschrijf je de samenvatting in blok E
 - Welke STAR-verhalen moet je voorbereiden in blok F
@@ -18,7 +18,7 @@ Tabel met:
 - Senioriteitsniveau
 - Op afstand (volledig op afstand / hybride / ter plaatse)
 - Teamgrootte (indien vermeld)
--TL;DR in 1 zin
+- TL;DR in 1 zin
 
 ## Blok B - Match met CV
 
@@ -32,7 +32,7 @@ Lees `cv.md`. Maak een tabel waarin elke voorwaarde van de vacature wordt weerge
 - Agentisch -> geef prioriteit aan multi-agent, HITL, orkestratie
 - Transformatie -> prioriteit geven aan verandermanagement, adoptie en opschaling
 
-sectie **Hiaten** met een mitigatiestrategie voor elk. Voor elke opening:
+**Hiaten**: geef voor elk hiaat een mitigatiestrategie:
 1. Is het een harde blokkering of een nice-to-have?
 2. Kan de kandidaat aangrenzende ervaring aantonen?
 3. Bestaat er een portfolioproject dat deze leemte overbrugt?
@@ -40,7 +40,7 @@ sectie **Hiaten** met een mitigatiestrategie voor elk. Voor elke opening:
 
 ## Blok C -- Niveau en strategie
 
-1. **Niveau gedetecteerd** in het vacature versus **natuurlijk niveau van de kandidaat voor dit archetype**
+1. **Niveau gedetecteerd** in de vacature versus **natuurlijk niveau van de kandidaat voor dit archetype**
 2. **Plan “Verkoop senior zonder te liegen”**: specifieke formuleringen aangepast aan het archetype, concrete prestaties om te benadrukken, hoe de ervaring van de oprichter als een troef te positioneren
 3. **Plan "als ik downlevel ben"**: accepteer als de beloning eerlijk is, onderhandel over een evaluatie van zes maanden, duidelijke promotiecriteria
 
