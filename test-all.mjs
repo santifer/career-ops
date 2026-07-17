@@ -27,6 +27,7 @@
 import { execSync, execFileSync, spawn, spawnSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
 import { join, dirname, basename, delimiter } from 'path';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
@@ -1322,6 +1323,56 @@ if (shared.includes('_profile.md')) {
   pass('_shared.md references _profile.md');
 } else {
   fail('_shared.md does NOT reference _profile.md');
+}
+
+// --- _shared.md / _writing.md split (#1710) ---
+// Byte-preservation: concatenating the eval-core (_shared.md) and the writing
+// addendum (_writing.md) must reproduce the pre-split file EXACTLY, so the split
+// can only ever relocate content, never edit/drop it. The hash pins the exact
+// pre-split bytes; regenerate it deliberately (documented) if the content of
+// either file legitimately changes.
+{
+  const PRE_SPLIT_SHA256 = '79fbf68ae9b77409281896aee3b887e8d07fdce381f215e6a24d57b49f37dbc6';
+  const roundTrip = readFile('modes/_shared.md') + readFile('modes/_writing.md');
+  const actual = createHash('sha256').update(roundTrip, 'utf8').digest('hex');
+  if (actual === PRE_SPLIT_SHA256) {
+    pass('_shared.md + _writing.md is byte-identical to the pre-split _shared.md (#1710)');
+  } else {
+    fail(`_shared/_writing round-trip drifted from the pre-split bytes (#1710): ${actual}`);
+  }
+
+  // Each concern lives in exactly ONE file: eval-core headers only in _shared.md,
+  // writing headers only in _writing.md (no loss, no duplication, no misplacement).
+  // Matched as line-anchored HEADERS (`^## …`) so a prose reference to a section
+  // name inside a table cell (e.g. Sources of Truth pointing at `## Writing Style`)
+  // isn't mistaken for the section itself.
+  const writing = readFile('modes/_writing.md');
+  const hasHeader = (src, h) => new RegExp('^' + h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'm').test(src);
+  const coreHeaders = ['## Sources of Truth', '## Scoring System', '## Posting Legitimacy', '## Company Type and Compensation', '## Archetype Detection', '## Global Rules'];
+  const writingHeaders = ['## Voice DNA', '## Writing Style Calibration', '## Writing Style', '## Professional Writing'];
+  const coreOk = coreHeaders.every(h => hasHeader(shared, h) && !hasHeader(writing, h));
+  const writingOk = writingHeaders.every(h => hasHeader(writing, h) && !hasHeader(shared, h));
+  if (coreOk && writingOk) {
+    pass('eval-core sections stay in _shared.md; writing sections live only in _writing.md (#1710)');
+  } else {
+    fail(`_shared/_writing section placement wrong (#1710): coreOk=${coreOk} writingOk=${writingOk}`);
+  }
+
+  // Stale-reference guard: no mode may point at `_shared.md` for a writing
+  // section — those references must target `_writing.md` now, or the writing
+  // guidance silently vanishes for that mode. This is what byte-preservation
+  // alone can't catch.
+  const writingRefRe = /_shared\.md[^.\n]{0,40}(Voice DNA|Writing Style|Professional Writing)|(Voice DNA|Writing Style|Professional Writing)[^.\n]{0,40}_shared\.md/;
+  const stale = [];
+  for (const f of readdirSync(join(ROOT, 'modes'), { recursive: true }).filter(p => typeof p === 'string' && p.endsWith('.md'))) {
+    const src = readFile(`modes/${f.split(/[\\/]/).join('/')}`);
+    if (writingRefRe.test(src)) stale.push(f);
+  }
+  if (stale.length === 0) {
+    pass('no mode references _shared.md for a writing section — all writing refs point at _writing.md (#1710)');
+  } else {
+    fail(`modes still reference _shared.md for writing sections (should be _writing.md): ${stale.join(', ')}`);
+  }
 }
 
 // --- _custom.md must be READ, not just written (#1388): Sources of Truth row +
