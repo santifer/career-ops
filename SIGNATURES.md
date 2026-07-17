@@ -75,3 +75,6 @@ public commit with a stated reason.
 - @drpoutine | 2026-07-16 | "my way to navigate the chaos and land interviews without leaving the terminal" | id:11738103 | src:https://github.com/santifer/career-ops/discussions/1946 | n:27
 - @kriptodonz | 2026-07-16 | "Thanks for helping me in searching, filtering, and applying for jobs. Help me a lot!" | id:208021320 | src:https://github.com/santifer/career-ops/discussions/1949 | n:28
 - @LongLiveSam | SM | 2026-07-16 | "Power to the people!" | id:294989857 | src:https://github.com/santifer/career-ops/discussions/1951 | n:29
+- @thegr8awais | M Awais | 2026-07-16 | "My local-first freelance command center." | id:17950378 | src:https://github.com/santifer/career-ops/discussions/1962 | n:30
+- @beerock | Brock Busby | 2026-07-16 | "Humans first." | id:9371066 | src:https://github.com/santifer/career-ops/discussions/1964 | n:31
+- @NaveenkumarreddyD | 2026-07-16 | id:106174399 | src:https://github.com/santifer/career-ops/discussions/1966 | n:32

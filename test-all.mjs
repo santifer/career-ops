@@ -2201,6 +2201,22 @@ if (
   } else {
     fail('apply mode references browser-extract.mjs — the extractor must not touch the apply/form path');
   }
+
+  // Phase 2b (#1449): the language-market pipeline mirrors must wire the same
+  // opt-in extractor, so non-English users get the token saving too.
+  const langPipelines = readdirSync(join(ROOT, 'modes'), { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => `modes/${e.name}/pipeline.md`)
+    .filter((p) => existsSync(join(ROOT, p)));
+  const langMissing = langPipelines.filter((m) => {
+    const src = readFile(m);
+    return !(src.includes('browser-extract.mjs') && src.includes('scan.extractor'));
+  });
+  if (langPipelines.length > 0 && langMissing.length === 0) {
+    pass(`all ${langPipelines.length} language pipeline mirrors wire the opt-in extractor (#1449 Phase 2b)`);
+  } else {
+    fail(`language pipeline mirrors missing extractor wiring: ${langMissing.join(', ') || '(none found)'}`);
+  }
 }
 
 if (readFile('DATA_CONTRACT.md').includes('data/blacklist.md')) {
@@ -8488,8 +8504,75 @@ try {
   } else {
     fail('computeRunStats should return null for empty/unknown-schema input');
   }
+
+  const portalsYml = 'tracked_companies:\n  - name: Acme\n  - name: GlobalCorp\n  - name: DeadInc\n  - name: NetworkDead\njob_boards: []';
+  const portalHealthTsv = 'timestamp\tcompany\tstatus\n' +
+    '2026-07-01\tDeadInc\tslug_gone\n' +
+    '2026-07-02\tDeadInc\tslug_gone\n' +
+    '2026-07-03\tDeadInc\tslug_gone\n' +
+    '2026-07-01\tNetworkDead\tnetwork\n' +
+    '2026-07-02\tNetworkDead\tnetwork\n' +
+    '2026-07-03\tNetworkDead\tnetwork\n' +
+    '2026-07-01\tGlobalCorp\tnetwork\n' +
+    '2026-07-02\tGlobalCorp\treachable\n' +
+    '2026-07-01\tUnconfiguredDead\tnetwork\n' +
+    '2026-07-02\tUnconfiguredDead\tnetwork\n' +
+    '2026-07-03\tUnconfiguredDead\tnetwork\n';
+  const p = stats.computePortalStats(portalsYml, null, [], portalHealthTsv);
+  if (p && p.persistentlyDead === 2) {
+    pass('computePortalStats tracks persistentlyDead count from portal-health.tsv streaks');
+  } else {
+    fail('computePortalStats failed to compute persistentlyDead streaks');
+  }
+  const pNull = stats.computePortalStats(portalsYml, null, [], null);
+  if (pNull && pNull.persistentlyDead === 0) {
+    pass('computePortalStats gracefully handles null portalHealthTsv');
+  } else {
+    fail('computePortalStats failed on null portalHealthTsv');
+  }
 } catch (e) {
   fail(`test layout guard: ${e.message}`);
+}
+
+// ── STATED-COMP TRACKING (#1852) ────────────────────────────────
+// salary-gap.mjs's own --self-test (invoked above via the CLI-check table)
+// covers stated-observation parsing, backward compatibility, and the
+// getStatedObservations() lookup. This section pins the mode-doc wiring:
+// interview/plan reads it back before generating prep, interview-prep does
+// the same for the initial pass, and interview/debrief writes it.
+
+console.log('\n62. Stated-comp tracking wired into interview modes (#1852)');
+
+try {
+  const planMode = readFile('modes/interview/plan.md');
+  const prepModeDoc = readFile('modes/interview-prep.md');
+  const debriefMode = readFile('modes/interview/debrief.md');
+
+  if (planMode.includes('--stated-for') && planMode.includes('salary-gap.mjs')) {
+    pass('interview/plan reads prior stated-comp observations via salary-gap.mjs --stated-for');
+  } else {
+    fail('interview/plan missing --stated-for lookup for prior stated-comp observations');
+  }
+
+  if (planMode.includes('Compensation — already discussed')) {
+    pass('interview/plan quick-reference carries the "already discussed" comp callout');
+  } else {
+    fail('interview/plan quick-reference missing the "already discussed" comp callout');
+  }
+
+  if (prepModeDoc.includes('--stated-for') && prepModeDoc.includes('salary-gap.mjs')) {
+    pass('interview-prep reads prior stated-comp observations via salary-gap.mjs --stated-for');
+  } else {
+    fail('interview-prep missing --stated-for lookup for prior stated-comp observations');
+  }
+
+  if (debriefMode.includes('stated') && debriefMode.includes('salary-observations.tsv')) {
+    pass('interview/debrief appends a stated observation when a comp number is verbally given');
+  } else {
+    fail('interview/debrief missing the stated-observation append rule');
+  }
+} catch (e) {
+  fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
 await runDiscovered();
