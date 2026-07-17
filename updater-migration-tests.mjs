@@ -7,7 +7,7 @@
  * newly introduced system paths without touching user data.
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 
 let passed = 0;
 let failed = 0;
@@ -44,6 +44,26 @@ function extractArray(name) {
 const systemPaths = extractArray('SYSTEM_PATHS');
 const userPaths = extractArray('USER_PATHS');
 const bootstrapPaths = extractArray('BOOTSTRAP_PATHS');
+
+// Every concrete (non-directory) manifest entry (SYSTEM_PATHS or
+// BOOTSTRAP_PATHS) must exist in the working tree. A path deleted upstream
+// but left in the manifest survives as a permanent `error: pathspec ...` in
+// every user's upgrade output (#2002). Directory entries (trailing '/') are
+// exempt: git checkout of a directory pathspec tolerates content drift
+// inside it. Add an entry to ALLOWED_MISSING_ENTRIES only with a comment
+// justifying why it may legitimately be absent.
+const ALLOWED_MISSING_ENTRIES = new Set([]);
+for (const [listName, entries] of [['SYSTEM_PATHS', systemPaths], ['BOOTSTRAP_PATHS', bootstrapPaths]]) {
+  for (const entry of entries) {
+    if (entry.endsWith('/')) continue;
+    if (ALLOWED_MISSING_ENTRIES.has(entry)) continue;
+    if (existsSync(entry)) {
+      pass(`${listName} entry exists on disk: ${entry}`);
+    } else {
+      fail(`${listName} entry missing from tree (stale manifest entry, #2002): ${entry}`);
+    }
+  }
+}
 
 const requiredSystemPaths = [
   'modes/email.md',
