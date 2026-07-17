@@ -186,6 +186,52 @@ try {
     fail(`aa.fetch() detail lookups = ${JSON.stringify(detailsSeen)}`);
   }
 
+  // fetch() — the detail lookups must stay batched (VERIFY_BATCH = 5). With more
+  // candidates than one batch, peak in-flight requests must never exceed the cap,
+  // and a duplicate refnr across pagination pages must not cost a second lookup.
+  // Both would pass silently under an unbounded Promise.all / an un-deduped list.
+  let inFlight = 0;
+  let peakInFlight = 0;
+  const detailCalls = [];
+  const wideRefs = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'];
+  const batchFetched = await aa.fetch(
+    { name: 'AA', arbeitsagentur: { keywords: ['ML'], wo: 'Berlin', remoteNationwide: true, remoteMatch: 'filter', remoteMaxPages: 5, size: 7 } },
+    {
+      fetchJson: async (url) => {
+        if (url.includes('/jobdetails/')) {
+          const refnr = Buffer.from(url.split('/jobdetails/')[1], 'base64').toString();
+          detailCalls.push(refnr);
+          inFlight++;
+          peakInFlight = Math.max(peakInFlight, inFlight);
+          await new Promise(r => setTimeout(r, 5)); // hold the slot so overlap is observable
+          inFlight--;
+          return { homeofficetyp: 'VOLLSTAENDIG' };
+        }
+        const sp = new URL(url).searchParams;
+        if (sp.has('wo')) return { stellenangebote: [] };
+        // Page 1 is full (== size) so pagination continues; W1 repeats on page 2.
+        return Number(sp.get('page')) === 1
+          ? { stellenangebote: wideRefs.map(r => ({ refnr: r, titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'München' } })) }
+          : { stellenangebote: [{ refnr: 'W1', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'München' } }] };
+      },
+    },
+  );
+  if (peakInFlight > 0 && peakInFlight <= 5) {
+    pass(`aa.fetch() caps concurrent homeofficetyp lookups at VERIFY_BATCH (peak ${peakInFlight})`);
+  } else {
+    fail(`aa.fetch() peak in-flight detail requests = ${peakInFlight} (expected 1..5)`);
+  }
+  if (detailCalls.length === wideRefs.length && new Set(detailCalls).size === wideRefs.length) {
+    pass('aa.fetch() verifies each duplicated refnr only once');
+  } else {
+    fail(`aa.fetch() detail calls = ${detailCalls.length} (${JSON.stringify(detailCalls)}), expected ${wideRefs.length} unique`);
+  }
+  if (batchFetched.length === wideRefs.length && batchFetched.every(j => /Deutschlandweit \(Homeoffice\)/.test(j.location))) {
+    pass('aa.fetch() tags every confirmed VOLLSTAENDIG candidate across batches');
+  } else {
+    fail(`aa.fetch() batched tagging = ${JSON.stringify(batchFetched.map(j => j.location))}`);
+  }
+
   // fetch() — no keywords throws; total outage throws (not silent)
   let noKw = false;
   try { await aa.fetch({ name: 'AA', arbeitsagentur: {} }, mkCtx({})); } catch { noKw = true; }

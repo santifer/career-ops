@@ -198,8 +198,9 @@ export default {
       if (wo && remoteNationwide && remoteMatch !== 'off') {
         try {
           if (remoteMatch === 'filter') {
-            // Server-side home-office filter: every hit is remote-eligible, so just
-            // paginate and keep them all — no per-job calls, no title regex.
+            // Server-side home-office filter: collect the candidates. `nv_true` only
+            // means "home office is possible", so these are not yet known to be
+            // remote — verifyFullyRemote() confirms each below before tagging.
             for (let page = 1; page <= remoteMaxPages; page++) {
               const res = await fetchKeyword(kw, { homeoffice: 'nv_true', page: String(page) });
               wide.push(...res);
@@ -228,7 +229,15 @@ export default {
       //              also returns NACH_VEREINBARUNG (hybrid) roles, so each
       //              candidate's `homeofficetyp` is confirmed via the detail
       //              endpoint. Unconfirmed ones keep their real city.
-      const wideJobs = wide.map(normalizeJob).filter(Boolean).filter(job => !byRef.has(job.refnr));
+      // Dedup by refnr before verifying: paginating a live index can return the same
+      // posting on two pages, and each duplicate would otherwise cost its own detail request.
+      const wideJobs = [...new Map(
+        wide
+          .map(normalizeJob)
+          .filter(Boolean)
+          .filter(job => !byRef.has(job.refnr))
+          .map(job => [job.refnr, job]),
+      ).values()];
       const fullyRemote = remoteMatch === 'filter' && wideJobs.length
         ? await verifyFullyRemote(wideJobs, ctx)
         : null; // null = mode needs no per-job proof
