@@ -207,7 +207,7 @@ Nederland en België gebruiken deels dezelfde taal, maar hebben verschillende ar
 | WebSearch | Onderzoeksbeloningen, trends, bedrijfscultuur, LinkedIn-contacten, uitwijkvacatures |
 | WebFetch | Terugval om vacatures uit statische pagina's te halen |
 | Playwright | Controleer of de vacatures actief zijn (browser_navigate + browser_snapshot), extraheer de vacatures uit SPA's. **KRITIEK: NOOIT 2+ agenten parallel met Playwright -- ze delen dezelfde browserinstantie** |
-| Read | cv.md, article-digest.md, `_profile.md`, `_custom.md`, voice-dna.md, writing-samples/ en cv-template.html |
+| Read | `config/profile.yml`, cv.md, article-digest.md, `_profile.md`, `_custom.md`, voice-dna.md, writing-samples/ en cv-template.html |
 | Write | Tijdelijke HTML voor PDF, rapporten .md en TSV-bestanden in `batch/tracker-additions/` |
 | Edit | Bestaande rapportinhoud bijwerken; bewerk `applications.md` nooit rechtstreeks |
 | Bash | `node generate-pdf.mjs` |

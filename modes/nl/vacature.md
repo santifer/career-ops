@@ -64,7 +64,7 @@ Tabel met gegevens en geciteerde bronnen. Als er geen gegevens zijn, vermeld dit
 ## Blok E -- Personalisatieplan
 
 | # | Sectie | Huidige status | Voorgestelde wijziging | Reden |
-|---|---------|------------|-----------------|---------- ---------|
+| --- | --------- | ------------ | ----------------- | ------------------- |
 | 1 | Samenvatting | ... | ... | ... |
 | ... | ... | ... | ... | ... |
 

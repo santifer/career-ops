@@ -61,6 +61,8 @@ Classificeer elke vraag:
 
 ## Stap 5 -- Genereer de antwoorden
 
+**Scorecontrole:** Als het geladen rapport lager dan 4,0/5 scoort, raad de kandidaat nadrukkelijk af om te solliciteren en stop vóór het genereren van antwoorden. Ga alleen verder nadat de kandidaat expliciet aangeeft de aanbeveling om een specifieke reden te willen negeren; zonder die expliciete bevestiging worden geen antwoorden gegenereerd. Bij een score van 4,0/5 of hoger gaat de normale werkstroom verder.
+
 Construeer voor elke vraag het antwoord volgens dit diagram:
 
 1. **Context van het rapport**: Gebruik de proof points uit blok B, de STAR-verhalen uit blok F
@@ -71,7 +73,7 @@ Construeer voor elke vraag het antwoord volgens dit diagram:
 
 **Velden die vaak voorkomen in Nederlandse en Belgische formulieren:**
 - **Salarisverwachtingen (jaarlijks bruto)** -> Bereik uit `config/profile.yml`, in EUR, met vermelding "bespreekbaar volgens het totaalpakket"
-- **Beschikbaarheidsdatum** -> Realistische datum rekening houdend met de contractuele opzegtermijn
+- **Beschikbaarheidsdatum** -> Baseer op de werkelijke opzegtermijn en beschikbaarheid uit `config/profile.yml` of een verklaring van de kandidaat in het huidige gesprek. Verzin geen datum en laat de kandidaat de berekende datum bevestigen voordat je die gebruikt
 - **Werkvergunning / Nationaliteit** -> Baseer het antwoord uitsluitend op `config/profile.yml` of een verklaring van de kandidaat in het huidige gesprek. Houd werkvergunning, visumsponsoring, nationaliteit en verblijfsstatus als afzonderlijke feiten; neem niets aan. Laat de kandidaat het antwoord bevestigen voordat je het presenteert
 - **Talen** -> Niveaus volgens het ERK (A1-C2)
 - **Mobiliteit** -> Specificeer het aanvaardbare geografische gebied en de reisfrequentie
