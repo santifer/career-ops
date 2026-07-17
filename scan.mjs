@@ -1147,6 +1147,7 @@ const PORTAL_HEALTH_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)
 export const PORTAL_HEALTH_HEADER = 'timestamp\tcompany\tstatus\n';
 
 export function appendPortalHealth(healthRecords, filePath = PORTAL_HEALTH_PATH) {
+  mkdirSync(path.dirname(filePath), { recursive: true });
   if (!existsSync(filePath)) writeFileSync(filePath, PORTAL_HEALTH_HEADER, 'utf-8');
   let lines = '';
   for (const r of healthRecords) {
@@ -1786,15 +1787,7 @@ async function main() {
   }
 
   const pastHealth = loadPortalHealth();
-  const currentStreaks = computeConsecutiveFailures(pastHealth);
-  
-  for (const r of healthRecords) {
-    if (r.status === 'slug_gone' || r.status === 'network') {
-      currentStreaks.set(r.company, (currentStreaks.get(r.company) || 0) + 1);
-    } else if (r.status === 'reachable' || r.status === 'empty') {
-      currentStreaks.set(r.company, 0);
-    }
-  }
+  const currentStreaks = computeConsecutiveFailures([...pastHealth, ...healthRecords]);
 
   const persistentlyDead = [];
   const newlyDeadSlug = [];
