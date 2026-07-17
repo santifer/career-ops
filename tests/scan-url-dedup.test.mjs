@@ -41,10 +41,17 @@ try {
   if (urlDedupKey(plain) === plain) pass('urlDedupKey leaves a tracking-free URL unchanged');
   else fail(`urlDedupKey plain = ${urlDedupKey(plain)}`);
 
-  // pipeline.md supports `local:jds/foo.md`, which is not a parseable URL.
+  // pipeline.md supports `local:jds/foo.md`. `local:` is a valid URL scheme, so this
+  // parses and round-trips unchanged rather than hitting the catch — either way the
+  // key must equal the input, or a local JD would be re-added on every scan.
   const local = 'local:jds/acme-ai-engineer.md';
-  if (urlDedupKey(local) === local) pass('urlDedupKey passes through non-URL values (local: prefix)');
+  if (urlDedupKey(local) === local) pass('urlDedupKey round-trips local: pipeline entries unchanged');
   else fail(`urlDedupKey local = ${urlDedupKey(local)}`);
+
+  // A genuinely unparseable value (no scheme) is what the catch actually handles.
+  const bare = 'jds/acme-ai-engineer.md';
+  if (urlDedupKey(bare) === bare) pass('urlDedupKey passes through scheme-less values unchanged');
+  else fail(`urlDedupKey scheme-less = ${urlDedupKey(bare)}`);
 
   if (urlDedupKey('') === '' && urlDedupKey(null) === '' && urlDedupKey(undefined) === '') {
     pass('urlDedupKey handles empty/nullish input');

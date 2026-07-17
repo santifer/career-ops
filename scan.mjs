@@ -578,7 +578,10 @@ export function urlDedupKey(value) {
   try {
     parsed = new URL(url);
   } catch {
-    return url; // not a URL (e.g. `local:jds/foo.md`) → compare as-is
+    // Scheme-less or malformed values (a bare `jds/foo.md`) → compare as-is.
+    // pipeline.md's `local:jds/foo.md` does NOT land here: `local:` is a valid
+    // scheme, so it parses and round-trips through toString() unchanged.
+    return url;
   }
   for (const key of [...parsed.searchParams.keys()]) {
     if (TRACKING_PARAMS.has(key.toLowerCase())) parsed.searchParams.delete(key);
