@@ -20,6 +20,8 @@ candidate:
   # Switzerland) where a professional photo is expected. Use a local file path or
   # a data: URL — the PDF renderer inlines local images.
   photo: ""
+  # Optional framing for the CV photo: rounded (default), circle, or square.
+  photo_style: rounded
 
 target_roles:
   # Your North Star roles — what you're optimizing for
