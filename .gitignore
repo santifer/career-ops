@@ -9,6 +9,7 @@ data/assessments.tsv
 data/pipeline.md
 data/scan-history.tsv
 data/scan-runs.tsv
+data/portal-health.tsv
 data/blacklist.md
 data/pdf-index.tsv
 data/agent-inbox.md
@@ -67,6 +68,7 @@ modes/_profile.md
 modes/_custom.md
 .update-dismissed
 .update-lock
+.manifesto-noted
 
 # Plugin layer — opt-in toggles + user-installed plugins + integrity lock (never auto-updated)
 config/plugins.yml
