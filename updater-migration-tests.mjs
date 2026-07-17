@@ -160,6 +160,21 @@ const twoPassManifestChecks = [
     name: 'apply captures uncommitted work via git stash create before branching (#915)',
     pattern: /git\('stash',\s*'create'\)/,
   },
+  {
+    // `git add` refuses explicitly named paths that match a .gitignore rule,
+    // even when `git checkout FETCH_HEAD --` already staged them. A clone whose
+    // .gitignore predates the negations for a newly shipped file (e.g. the
+    // #1242 interview-prep/sessions scaffold) aborts the whole update commit.
+    name: 'addPaths force-adds explicitly named file entries so a stale user .gitignore cannot abort the update commit',
+    pattern: /git\('add',\s*'-f',\s*'--',\s*\.\.\.fileEntries\)/,
+  },
+  {
+    // Directory pathspecs must stay un-forced: plain `git add dir/` silently
+    // skips ignored content, while `-f` would drag user files matched by the
+    // PII safety net (*passport*), .env.local or node_modules into the commit.
+    name: 'addPaths never force-adds directory entries — ignored user content must stay skipped',
+    pattern: /git\('add',\s*'--',\s*\.\.\.dirEntries\)/,
+  },
 ];
 
 for (const check of twoPassManifestChecks) {
