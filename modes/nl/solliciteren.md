@@ -42,9 +42,9 @@ Interactieve modus voor wanneer de kandidaat een sollicitatieformulier in Chrome
 
 Als de rol op het scherm afwijkt van de geëvalueerde rol:
 - **Waarschuw de kandidaat**: "De rol is veranderd van [X] in [Y]. Wil je dat ik de antwoorden opnieuw evalueer of aanpas aan de nieuwe titel?"
-- **Indien aangepast**: Pas de reacties op de nieuwe rol aan zonder opnieuw te evalueren
-- **Indien opnieuw geëvalueerd**: start de volledige A-F-evaluatie, update het rapport, genereer blok G opnieuw
-- **Update de tracker**: schrijf de gewijzigde roltitel als TSV-toevoeging in `batch/tracker-additions/` en voer `node merge-tracker.mjs` uit; bewerk `applications.md` niet rechtstreeks
+- **Indien aangepast**: Pas de antwoorden eenmalig aan de zichtbare rol aan zonder opnieuw te evalueren. Laat de oorspronkelijke roltitel in de tracker, de rapportmetadata en blok G ongewijzigd en sla de aangepaste antwoorden niet in het oude rapport op
+- **Indien opnieuw geëvalueerd**: Start de volledige A-F-evaluatie voor de zichtbare rol, werk de rapportmetadata bij en genereer blok G opnieuw. Schrijf de gewijzigde roltitel als TSV-toevoeging in `batch/tracker-additions/`; bewerk `applications.md` niet rechtstreeks
+- **Na herbeoordeling**: Voer in deze volgorde `node merge-tracker.mjs`, `node verify-pipeline.mjs`, `node normalize-statuses.mjs` en `node dedup-tracker.mjs` uit
 
 ## Stap 4 -- Analyseer de formuliervragen
 
@@ -68,15 +68,15 @@ Construeer voor elke vraag het antwoord volgens dit diagram:
 1. **Context van het rapport**: Gebruik de proof points uit blok B, de STAR-verhalen uit blok F
 2. **Vorig blok G**: Als er een concept bestaat, neem dit dan als basis en verfijn het
 3. **“Ik kies jou”-toon**: hetzelfde raamwerk als in de automatische pipeline: zelfverzekerd, niet smekend
-4. **Specificiteit**: citeer iets concreets uit het vacature dat zichtbaar is op het scherm
+4. **Specificiteit**: citeer iets concreets uit de zichtbare vacaturetekst of uit het gevalideerde rapport. Als geen van beide de benodigde informatie bevat, vraag dan eerst om de vacaturetekst; verzin nooit details
 5. **career-ops proof point**: vermeld in 'Aanvullende informatie' als een dergelijk veld bestaat
 
 **Velden die vaak voorkomen in Nederlandse en Belgische formulieren:**
-- **Salarisverwachtingen (jaarlijks bruto)** -> Bereik uit `config/profile.yml`, in EUR, met vermelding "bespreekbaar volgens het totaalpakket"
+- **Salarisverwachtingen (jaarlijks bruto)** -> Bereik uit `config/profile.yml` of de huidige conversatie, in EUR, met vermelding "bespreekbaar volgens het totaalpakket". Laat de kandidaat het bedrag bevestigen voordat je het gebruikt
 - **Beschikbaarheidsdatum** -> Baseer op de werkelijke opzegtermijn en beschikbaarheid uit `config/profile.yml` of een verklaring van de kandidaat in het huidige gesprek. Verzin geen datum en laat de kandidaat de berekende datum bevestigen voordat je die gebruikt
 - **Werkvergunning / Nationaliteit** -> Baseer het antwoord uitsluitend op `config/profile.yml` of een verklaring van de kandidaat in het huidige gesprek. Houd werkvergunning, visumsponsoring, nationaliteit en verblijfsstatus als afzonderlijke feiten; neem niets aan. Laat de kandidaat het antwoord bevestigen voordat je het presenteert
-- **Talen** -> Niveaus volgens het ERK (A1-C2)
-- **Mobiliteit** -> Specificeer het aanvaardbare geografische gebied en de reisfrequentie
+- **Talen** -> Baseer taalniveaus uitsluitend op `config/profile.yml` of een verklaring van de kandidaat in het huidige gesprek, gebruik waar beschikbaar ERK-niveaus (A1-C2) en laat de kandidaat de gegevens bevestigen voordat je ze gebruikt
+- **Mobiliteit** -> Baseer geografisch gebied en reisfrequentie uitsluitend op `config/profile.yml` of een verklaring van de kandidaat in het huidige gesprek en laat de kandidaat de gegevens bevestigen voordat je ze gebruikt
 
 **Uitvoerformaat:**
 
@@ -106,7 +106,7 @@ Opmerkingen:
 
 Als de kandidaat bevestigt dat de sollicitatie is verzonden:
 1. Update de status naar "Applied" via de canonieke CLI: `node set-status.mjs <report#> Applied` (bewerk de tabel `applications.md` niet met de hand)
-2. Update blok G van het rapport met de definitieve antwoorden
+2. Update blok G van het rapport met de definitieve antwoorden alleen als bedrijf en rol nog exact overeenkomen met de rapportmetadata. Na een eenmalige aanpassing aan een andere rol moet eerst een afzonderlijk rapport voor die rol worden gemaakt of de volledige herbeoordeling worden uitgevoerd; overschrijf nooit het rapport van de oorspronkelijke rol
 3. Stel de volgende stap voor: `/career-ops contacto` voor LinkedIn-contact met de rekruteringsmanager
 
 ## Scrollbeheer
