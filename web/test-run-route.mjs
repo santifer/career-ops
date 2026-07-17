@@ -19,6 +19,14 @@ test("/api/run stderr keyword matches are not streamed as fatal job errors", () 
   assert.doesNotMatch(stderrHandler[0], /send\(\s*\{\s*type:\s*"error"/);
 });
 
+test("/api/run stderr snippets are captured around the matched keyword", () => {
+  const stderrHandler = source.match(/child\.stderr\.on\("data",[\s\S]*?\n\s*\}\);/);
+  assert.ok(stderrHandler, "stderr handler not found");
+  assert.match(stderrHandler[0], /const match = STDERR_ERROR_RE\.exec\(s\)/);
+  assert.match(stderrHandler[0], /match\.index - 50/);
+  assert.match(stderrHandler[0], /s\.slice\(start, start \+ 200\)\.trim\(\)/);
+});
+
 test("/api/run stderr detector does not match authorized as auth", () => {
   assert.match(source, /const STDERR_ERROR_RE =/);
   assert.doesNotMatch(source, /\|auth\|/);

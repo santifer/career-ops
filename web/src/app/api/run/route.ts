@@ -225,8 +225,10 @@ export async function POST(req: Request) {
         // Do not stream this as a fatal `{ type: "error" }` immediately. Some
         // CLIs echo normal tool traces and file contents to stderr; the close
         // handler decides whether stderr mattered after it sees the exit code.
-        if (STDERR_ERROR_RE.test(s)) {
-          stderrErrorSnippet ||= s.trim().slice(0, 200);
+        const match = STDERR_ERROR_RE.exec(s);
+        if (match) {
+          const start = Math.max(0, match.index - 50);
+          stderrErrorSnippet ||= s.slice(start, start + 200).trim();
         }
       });
       child.on("error", (e) => { send({ type: "error", msg: e.message }); close(); });
