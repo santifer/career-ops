@@ -74,7 +74,7 @@
 
 **模板（按可用总时长调整各块大小）：**
 
-```
+```text
 Block 1 — Lock your narrative (first, always)
   - Write out your background timeline explicitly
   - Prepare "why this company" with a specific connection to your history

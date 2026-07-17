@@ -215,6 +215,7 @@ HM screen 探的是领导力哲学、判断力与经验深度。回答可以更�
 - "Where are you still growing in your role?"
 
 ### Technical / Domain-Specific (practitioner, 45–60 min)
+
 1. [Core internals of the discipline's main tool or method — e.g., runtime internals for engineering, attribution models for marketing, valuation methods for finance]
 2. [Established pattern or framework relevant to the role — from the JD]
 3. [Fundamental building block deep-dive — e.g., a data structure, a statistical test, an accounting principle]
@@ -223,12 +224,14 @@ HM screen 探的是领导力哲学、判断力与经验深度。回答可以更�
 6. How do you raise the quality bar on a team?
 
 ### Design / Case Study (45–60 min)
+
 1. Design [a system, process, campaign, or product relevant to the role].
 2. [Constraint question — how does your design behave when something fails, scales 10x, or loses budget?]
 3. [Quality/reliability question — how do you guarantee correctness or measure success?]
 4. Walk me through how you'd know it's working after launch.
 
 ### Behavioral Panel
+
 1. Tell me about a time you led a team through a difficult delivery.
 2. Describe a major failure in production or in market — what happened and what changed after?
 3. Tell me about a time you influenced direction across teams or stakeholders.

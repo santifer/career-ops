@@ -151,7 +151,7 @@
 **Next steps:** [what the interviewer said happens next and by when]
 ```
 
-**若本轮口头报出了薪酬数字**（候选人给了具体数字，而不只是"提到了薪酬"），向 `data/salary-observations.tsv` 追加一行 `stated`（文件不存在则创建；格式见 `docs/SCRIPTS.md` → salary-gap），写入 tracker#、本轮日期、金额/币种、来源 `user`、简短备注、轮次标签与面试官姓名。这能让 `interview/plan` 在下一轮前提醒候选人——见该模式 Inputs #9。
+**若本轮口头报出了薪酬数字**（候选人给了具体数字，而不只是"提到了薪酬"），且本轮对应的 tracker# **已知**：向 `data/salary-observations.tsv` 追加一行 `stated`（文件不存在则创建；格式见 `docs/SCRIPTS.md` → salary-gap），写入该 tracker#、本轮日期、金额/币种、来源 `user`、简短备注、轮次标签与面试官姓名。这能让 `interview/plan` 在下一轮前提醒候选人——见该模式 Inputs #9。若 tracker# 尚不可用，**跳过追加**——不要写入不完整或可能错绑的行；等 tracker# 明确后再补记。
 
 ---
 
