@@ -57,7 +57,9 @@ Use visual indicators:
 
 ## Step 3 — Generate Follow-up Drafts
 
-For each **overdue** or **urgent** entry only:
+For each **overdue** or **urgent** entry only. The **Confirmed-Time No-Show**
+scenario below is an explicit exception: generate it on the same day even when
+the cadence entry is neither overdue nor urgent.
 
 1. Read the linked report (`reportPath` from JSON) for company context
 2. Read `cv.md` for proof points
