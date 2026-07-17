@@ -6,7 +6,7 @@ When the candidate pastes a job (text or URL), ALWAYS deliver the 7 blocks (A-F 
 
 When the candidate pastes a **URL** (not JD text), confirm the posting is still live before doing any evaluation. A dead link must never reach Block A — a 404/expired page wastes a full A-G evaluation, report, and PDF on phantom content.
 
-1. Get the page content: if you arrived here from `auto-pipeline` (its Step 0.5 already navigated and cleared the link), reuse that snapshot — do not navigate again. On a direct URL entry, navigate with Playwright (`browser_navigate` + `browser_snapshot`) and read the title, URL, and visible content.
+1. Get the page content: if you arrived here from `auto-pipeline` (its Step 0.5 already navigated and cleared the link), reuse that snapshot — do not navigate again. On a direct URL entry, navigate with Playwright (`browser_navigate` + `browser_snapshot`) and read the title, URL, and visible content. **Opt-in:** if `scan.extractor: cli` is set in `config/profile.yml`, run `node browser-extract.mjs <url>` (default `--mode jd`) instead and use its compact `{ "url", "title", "text" }` (the distilled JD main text rather than the full page a11y tree — fewer tokens for the model, board-dependent), **falling back silently** to `browser_navigate` + `browser_snapshot` if it errors or is missing.
 2. Classify the posting:
    - **active posting evidence:** title/role + a real job description or an application/apply path
    - **closed posting evidence:** expired/closed/"no longer accepting applications", missing JD with only nav/footer, hard redirect to a generic careers/search page, or 404/410
@@ -276,6 +276,23 @@ Check the JD for these three signal classes:
 > ⚠️ **Buzzword/infrastructure mismatch signal:** This JD leans on AI/transformation language ("{specific phrases found}") while {signals observed: small team owning transformation outcomes / scope-seniority mismatch / legacy-heavy industry}. The day-to-day may be foundational digitization and backlog cleanup before any AI work. If you proceed, probe the actual state of their systems directly in interviews — e.g. "What are the top 3 most urgent things this role needs to fix right now?", "Which systems would I be working with, and how mature are they?" — rather than relying on the JD's framing.
 
 This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — the posting can be entirely real and still oversell its AI maturity. It is orthogonal to ghost-job detection and is reported separately.
+
+**8. Benefits/Employment Terminology Country Mismatch** (from JD text; cross-check stated location against jurisdiction-specific benefits/employment terms):
+
+Some JDs are copy-pasted from a template built for a different country's postings, leaving behind benefits or employment-law terminology that belongs to the wrong jurisdiction — e.g. a Canada-located posting that lists "401(k)" or "W-2 employment," which are US-only terms. The posting can be entirely live and real and still describe the wrong country's benefits; this is a template-error detector, not a ghost-job signal. Check the JD's benefits/employment section against the jurisdiction-specific term list below (add a new row to extend to another country — this table is a data reference, not instruction logic, so extending it never requires touching the rule text):
+
+| Jurisdiction | Strong markers (unconditional) | Corroborating-only markers |
+|---|---|---|
+| US only | "401(k)", "W-2 employment" | "PTO" — used in Canada and other jurisdictions too, so it never triggers this signal on its own; count it only when it appears alongside "401(k)" or "W-2 employment" in the same posting |
+| Canada only | "RRSP", "T4" | "Employment Standards Act" spelled out — the bare acronym "ESA" is ambiguous (collides with other jurisdictions' usage) and must never be matched on its own |
+
+Only flag when the JD's stated location is in jurisdiction A, but the benefits/employment section uses a strong marker exclusive to jurisdiction B, or a corroborating-only marker that co-occurs with a strong marker from jurisdiction B. A corroborating-only marker appearing by itself (e.g. "PTO" with no "401(k)"/"W-2," or a bare "ESA" with no expanded "Employment Standards Act") must never trigger this signal on its own. Generic terms ("health benefits," "retirement plan") should never trigger this on their own.
+
+If this mismatch is present, append a short, non-alarmist note to the report:
+
+> ⚠️ **Benefits terminology mismatch signal:** This posting is listed in {location}, but its benefits section uses {jurisdiction B}-specific terms ("{specific phrase found}"). This is often a copy-paste artifact from a template used for a different country's postings, and doesn't necessarily mean the posting is fake — but worth confirming with the employer/recruiter which country's employment terms actually apply before assuming the listed benefits package is accurate.
+
+This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is orthogonal to ghost-job detection and is reported separately.
 
 ### Output format:
 

@@ -70,12 +70,20 @@ type PipelineUpdateStatusMsg struct {
 	NewStatus     string
 }
 
-// PipelineUpdateStatusAndNotesMsg requests updating both status and notes.
+// PipelineUpdateStatusAndNotesMsg requests an atomic status + notes update.
+// Used by the discard reason picker (Issue 1380) to commit both changes in a
+// single tracker write.
 type PipelineUpdateStatusAndNotesMsg struct {
 	CareerOpsPath string
 	App           model.CareerApplication
 	NewStatus     string
-	NewNotes      string
+	NotesAppend   string // text to append to the Notes cell, e.g. "DISCARD: salary_too_low"
+}
+
+// PipelineDiscardReasonsLoadedMsg delivers predicted discard reasons from a
+// report back to the pipeline model so the picker can show them.
+type PipelineDiscardReasonsLoadedMsg struct {
+	Reasons []string
 }
 
 // PipelineRefreshMsg requests a full tracker reload from disk.
@@ -83,6 +91,16 @@ type PipelineRefreshMsg struct{}
 
 // PipelineOpenProgressMsg is emitted when the progress screen should open.
 type PipelineOpenProgressMsg struct{}
+
+var canonicalDiscardReasons = []string{
+	"salary_too_low",
+	"hybrid_required",
+	"tech_stack_mismatch",
+	"seniority_mismatch",
+	"geo_restriction",
+	"size_mismatch",
+	"company_culture",
+}
 
 type reportSummary struct {
 	archetype string
@@ -208,6 +226,18 @@ type PipelineModel struct {
 	// Status picker sub-state
 	statusPicker bool
 	statusCursor int
+	// Discard reason picker sub-state (Issue 1380) — opens when status
+	// transitions to Discarded or SKIP, pre-populated from the report's
+	// predicted discard_reasons, plus canonical fallback options.
+	discardPicker         bool
+	discardCursor         int
+	discardOptions        []string                // predicted + canonical options shown to user
+	discardCustomInput    bool                    // true when "Other…" is selected and user is typing
+	discardCustomText     string                  // free-text typed for "Other…" reason
+	discardPendingApp     model.CareerApplication // app awaiting the reason pick
+	discardPendingStatus  string                  // new status to commit with the reason
+	discardPredictedCount int                     // count of predicted reasons (from report)
+
 	// PDF picker sub-state — shown when one application matches several
 	// generated CVs (role variants from the same company).
 	pdfPicker  bool
@@ -227,19 +257,11 @@ type PipelineModel struct {
 	// Hired win flow sub-state (Issue 1447)
 	hiredApp  model.CareerApplication
 	hiredStep int // 0 = inactive, 1 = celebration, 2 = story invite, 3 = anonymous stat
-
-	// Discard reason picker sub-state (Issue 1380)
-	discardApp      model.CareerApplication
-	discardStatus   string // "Discarded" or "SKIP"
-	discardStep     int    // 0 = inactive, 1 = pick reason, 2 = custom reason input
-	discardOptions  []string
-	discardCursor   int
-	discardInputVal string
 }
 
 // IsTextInputActive returns true if the search or any other text input is currently focused
 func (m PipelineModel) IsTextInputActive() bool {
-	return m.searchInput || m.discardStep == 2
+	return m.searchInput || m.discardCustomInput
 }
 
 // NewPipelineModel creates a new pipeline screen.
@@ -368,14 +390,14 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 		if m.hiredStep > 0 {
 			return m.handleHiredFlow(msg)
 		}
-		if m.discardStep > 0 {
-			return m.handleDiscardFlow(msg)
-		}
 		if m.colPicker {
 			return m.handleColPicker(msg)
 		}
 		if m.statusPicker {
 			return m.handleStatusPicker(msg)
+		}
+		if m.discardPicker {
+			return m.handleDiscardPicker(msg)
 		}
 		if m.pdfPicker {
 			return m.handlePDFPicker(msg)
@@ -394,6 +416,35 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 		} else {
 			m.flash = "PDF regenerated and opened: " + filepath.Base(msg.Path)
 		}
+		return m, nil
+	case pipelineStartDiscardPickerMsg:
+		// Issue 1380: initialise the discard reason picker state.
+		// Merge predicted reasons (from report) with canonical fallback options.
+		seen := make(map[string]bool)
+		var opts []string
+		numPredicted := 0
+		for _, r := range msg.predictedReasons {
+			if !seen[r] {
+				opts = append(opts, r)
+				seen[r] = true
+				numPredicted++
+			}
+		}
+		for _, c := range canonicalDiscardReasons {
+			if !seen[c] {
+				opts = append(opts, c)
+				seen[c] = true
+			}
+		}
+		opts = append(opts, "Other…")
+		m.discardPicker = true
+		m.discardCursor = 0
+		m.discardOptions = opts
+		m.discardPredictedCount = numPredicted
+		m.discardCustomInput = false
+		m.discardCustomText = ""
+		m.discardPendingApp = msg.app
+		m.discardPendingStatus = msg.newStatus
 		return m, nil
 	}
 	return m, nil
@@ -494,6 +545,11 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			return m, func() tea.Msg {
 				return PipelineOpenURLMsg{URL: app.JobURL}
 			}
+		}
+
+	case "m":
+		return m, func() tea.Msg {
+			return PipelineOpenURLMsg{URL: "https://career-ops.org/manifesto?utm_source=dashboard-shortcut"}
 		}
 
 	case "d":
@@ -700,7 +756,9 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 				}
 			}
 			if norm == "discarded" || norm == "skip" {
-				return m.StartDiscardReasonFlow(app, newStatus)
+				return m, func() tea.Msg {
+					return m.startDiscardFlow(app, newStatus)
+				}
 			}
 			return m, func() tea.Msg {
 				return PipelineUpdateStatusMsg{
@@ -712,6 +770,27 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 		}
 	}
 	return m, nil
+}
+
+// startDiscardFlow loads predicted reasons from the report (if any), merges
+// them with the canonical fallback list, and returns a message that triggers
+// the discard picker overlay. Called synchronously inside a Cmd so it can do
+// file I/O without blocking the Bubble Tea event loop.
+func (m PipelineModel) startDiscardFlow(app model.CareerApplication, newStatus string) tea.Msg {
+	predicted := data.LoadReportDiscardReasons(m.careerOpsPath, app.ReportPath)
+	return pipelineStartDiscardPickerMsg{
+		app:              app,
+		newStatus:        newStatus,
+		predictedReasons: predicted,
+	}
+}
+
+// pipelineStartDiscardPickerMsg is an internal message that initialises the
+// discard reason picker state on the model. It is dispatched from startDiscardFlow.
+type pipelineStartDiscardPickerMsg struct {
+	app              model.CareerApplication
+	newStatus        string
+	predictedReasons []string
 }
 
 // handlePDFPicker consumes keys while the PDF picker overlay is open.
@@ -742,6 +821,81 @@ func (m PipelineModel) handlePDFPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 	return m, nil
 }
 
+// handleDiscardPicker consumes keys while the discard reason picker is open
+// (Issue 1380). When "Other…" is focused and Enter is pressed, it enters a
+// free-text sub-mode where the user types a custom reason and confirms with
+// Enter again. Esc at any point skips tagging and just commits the status.
+func (m PipelineModel) handleDiscardPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
+	// Free-text sub-mode for "Other…"
+	if m.discardCustomInput {
+		switch msg.String() {
+		case "enter":
+			reason := strings.TrimSpace(m.discardCustomText)
+			reason = strings.ReplaceAll(reason, ",", " ")
+			reason = strings.ReplaceAll(reason, ";", " ")
+			reason = strings.ReplaceAll(reason, "\n", " ")
+			reason = strings.ReplaceAll(reason, "\r", " ")
+			reason = strings.ReplaceAll(reason, "\t", " ")
+			reason = strings.Join(strings.Fields(reason), " ")
+			reason = strings.TrimSpace(reason)
+			if reason == "" {
+				reason = "other"
+			}
+			return m.commitDiscardReason(reason)
+		case "esc":
+			m.discardCustomInput = false
+			m.discardCustomText = ""
+		case "backspace", "ctrl+h":
+			if len(m.discardCustomText) > 0 {
+				m.discardCustomText = m.discardCustomText[:len(m.discardCustomText)-1]
+			}
+		default:
+			if len(msg.Runes) > 0 {
+				m.discardCustomText += string(msg.Runes)
+			}
+		}
+		return m, nil
+	}
+
+	switch msg.String() {
+	case "esc":
+		// Skip reason tagging — still commit the status change.
+		m.discardPicker = false
+		return m, func() tea.Msg {
+			return PipelineUpdateStatusMsg{
+				CareerOpsPath: m.careerOpsPath,
+				App:           m.discardPendingApp,
+				NewStatus:     m.discardPendingStatus,
+			}
+		}
+
+	case "down", "j":
+		m.discardCursor++
+		if m.discardCursor >= len(m.discardOptions) {
+			m.discardCursor = len(m.discardOptions) - 1
+		}
+
+	case "up", "k":
+		m.discardCursor--
+		if m.discardCursor < 0 {
+			m.discardCursor = 0
+		}
+
+	case "enter":
+		if m.discardCursor < 0 || m.discardCursor >= len(m.discardOptions) {
+			break
+		}
+		chosen := m.discardOptions[m.discardCursor]
+		if chosen == "Other…" {
+			m.discardCustomInput = true
+			m.discardCustomText = ""
+			return m, nil
+		}
+		return m.commitDiscardReason(chosen)
+	}
+	return m, nil
+}
+
 func (m PipelineModel) StartHiredFlow(app model.CareerApplication) (PipelineModel, tea.Cmd) {
 	m.hiredApp = app
 	m.hiredStep = 1
@@ -749,26 +903,32 @@ func (m PipelineModel) StartHiredFlow(app model.CareerApplication) (PipelineMode
 }
 
 func (m PipelineModel) StartDiscardReasonFlow(app model.CareerApplication, status string) (PipelineModel, tea.Cmd) {
-	m.discardApp = app
-	m.discardStatus = status
-	m.discardStep = 1
-
-	reasons := data.LoadReportDiscardReasons(m.careerOpsPath, app.ReportPath)
-	reasons = append(reasons, "Salary below target", "Wrong location/timezone", "Not a fit for target archetypes", "Wrong company size / structure", "Other...")
-
-	keys := make(map[string]bool)
-	var list []string
-	for _, entry := range reasons {
-		if entry == "" {
-			continue
-		}
-		if _, seen := keys[entry]; !seen {
-			keys[entry] = true
-			list = append(list, entry)
+	predicted := data.LoadReportDiscardReasons(m.careerOpsPath, app.ReportPath)
+	seen := make(map[string]bool)
+	var opts []string
+	numPredicted := 0
+	for _, r := range predicted {
+		if !seen[r] {
+			opts = append(opts, r)
+			seen[r] = true
+			numPredicted++
 		}
 	}
-	m.discardOptions = list
+	for _, c := range canonicalDiscardReasons {
+		if !seen[c] {
+			opts = append(opts, c)
+			seen[c] = true
+		}
+	}
+	opts = append(opts, "Other…")
+	m.discardPicker = true
 	m.discardCursor = 0
+	m.discardOptions = opts
+	m.discardPredictedCount = numPredicted
+	m.discardCustomInput = false
+	m.discardCustomText = ""
+	m.discardPendingApp = app
+	m.discardPendingStatus = status
 	return m, nil
 }
 
@@ -803,68 +963,26 @@ func (m PipelineModel) handleHiredFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 	return m, nil
 }
 
-func (m PipelineModel) handleDiscardFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
-	if m.discardStep == 1 {
-		switch msg.String() {
-		case "esc", "q":
-			m.discardStep = 0
-			return m, nil
-		case "down", "j":
-			m.discardCursor++
-			if m.discardCursor >= len(m.discardOptions) {
-				m.discardCursor = len(m.discardOptions) - 1
-			}
-		case "up", "k":
-			m.discardCursor--
-			if m.discardCursor < 0 {
-				m.discardCursor = 0
-			}
-		case "enter":
-			selected := m.discardOptions[m.discardCursor]
-			if selected == "Other..." {
-				m.discardStep = 2
-				m.discardInputVal = ""
-			} else {
-				reasonNotes := fmt.Sprintf("%s: %s", strings.ToUpper(m.discardStatus), selected)
-				m.discardStep = 0
-				return m, func() tea.Msg {
-					return PipelineUpdateStatusAndNotesMsg{
-						CareerOpsPath: m.careerOpsPath,
-						App:           m.discardApp,
-						NewStatus:     m.discardStatus,
-						NewNotes:      reasonNotes,
-					}
-				}
-			}
-		}
-	} else if m.discardStep == 2 {
-		switch msg.String() {
-		case "esc":
-			m.discardStep = 1
-			return m, nil
-		case "backspace", "ctrl+h":
-			runes := []rune(m.discardInputVal)
-			if len(runes) > 0 {
-				m.discardInputVal = string(runes[:len(runes)-1])
-			}
-		case "enter":
-			reasonNotes := fmt.Sprintf("%s: %s", strings.ToUpper(m.discardStatus), strings.TrimSpace(m.discardInputVal))
-			m.discardStep = 0
-			return m, func() tea.Msg {
-				return PipelineUpdateStatusAndNotesMsg{
-					CareerOpsPath: m.careerOpsPath,
-					App:           m.discardApp,
-					NewStatus:     m.discardStatus,
-					NewNotes:      reasonNotes,
-				}
-			}
-		default:
-			if len(msg.Runes) > 0 {
-				m.discardInputVal += string(msg.Runes)
-			}
+// commitDiscardReason closes the picker and emits PipelineUpdateStatusAndNotesMsg
+// to atomically persist the new status plus a DISCARD/SKIP tag in Notes.
+func (m PipelineModel) commitDiscardReason(reason string) (PipelineModel, tea.Cmd) {
+	m.discardPicker = false
+	m.discardCustomInput = false
+	app := m.discardPendingApp
+	newStatus := m.discardPendingStatus
+	prefix := "DISCARD"
+	if strings.ToLower(newStatus) == "skip" {
+		prefix = "SKIP"
+	}
+	notesTag := fmt.Sprintf("%s: %s", prefix, reason)
+	return m, func() tea.Msg {
+		return PipelineUpdateStatusAndNotesMsg{
+			CareerOpsPath: m.careerOpsPath,
+			App:           app,
+			NewStatus:     newStatus,
+			NotesAppend:   notesTag,
 		}
 	}
-	return m, nil
 }
 
 func (m PipelineModel) calculateWeeksToHire() int {
@@ -1156,8 +1274,8 @@ func (m PipelineModel) View() string {
 	}
 
 	// Discard reason picker overlay
-	if m.discardStep > 0 {
-		body = m.overlayDiscardFlow(body)
+	if m.discardPicker {
+		body = m.overlayDiscardPicker(body)
 	}
 
 	sections := []string{header, tabs, metricsBar, sortBar}
@@ -1719,7 +1837,12 @@ func (m PipelineModel) renderHelp() string {
 				keyStyle.Render("Esc") + descStyle.Render(i18n.Current.HelpCancel))
 	}
 
-	brand := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render("career-ops by santifer.io")
+	// The manifesto segment is an OSC 8 hyperlink (utm_source=dashboard);
+	// terminals without support show the same text, just not clickable. The
+	// gap math uses the plain text so the escapes never skew the layout.
+	const brandPlain = "built on the CareerOps Manifesto · career-ops by santifer.io"
+	manifestoLink := "\x1b]8;;https://career-ops.org/manifesto?utm_source=dashboard\x1b\\built on the CareerOps Manifesto\x1b]8;;\x1b\\"
+	brand := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render(manifestoLink + " · career-ops by santifer.io")
 
 	keys := keyStyle.Render("↑↓/jk") + descStyle.Render(i18n.Current.HelpNav) +
 		keyStyle.Render("←→/hl") + descStyle.Render(i18n.Current.HelpTabs) +
@@ -1735,9 +1858,10 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("v") + descStyle.Render(i18n.Current.HelpView) +
 		keyStyle.Render("p") + descStyle.Render(i18n.Current.HelpProgress) +
 		keyStyle.Render("t") + descStyle.Render(i18n.Current.HelpLanguage) +
+		keyStyle.Render("m") + descStyle.Render(i18n.Current.HelpManifesto) +
 		keyStyle.Render("q") + descStyle.Render(i18n.Current.HelpQuit)
 
-	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brand) - 2
+	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brandPlain) - 2
 	if gap < 1 {
 		gap = 1
 	}
@@ -1771,39 +1895,6 @@ func (m PipelineModel) overlayStatusPicker(body string) string {
 	}
 
 	// Append picker to body
-	bodyLines = append(bodyLines, picker...)
-	return strings.Join(bodyLines, "\n")
-}
-
-func (m PipelineModel) overlayDiscardFlow(body string) string {
-	bodyLines := strings.Split(body, "\n")
-
-	pickerWidth := 50
-	padStyle := lipgloss.NewStyle().Padding(0, 2)
-	borderStyle := lipgloss.NewStyle().
-		Foreground(m.theme.Blue).
-		Bold(true)
-
-	var picker []string
-	if m.discardStep == 1 {
-		picker = append(picker, padStyle.Render(borderStyle.Render(fmt.Sprintf("Select %s Reason:", m.discardStatus))))
-		for i, opt := range m.discardOptions {
-			style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth)
-			if i == m.discardCursor {
-				style = style.Background(m.theme.Overlay).Bold(true)
-			}
-			prefix := "  "
-			if i == m.discardCursor {
-				prefix = "> "
-			}
-			picker = append(picker, padStyle.Render(style.Render(prefix+opt)))
-		}
-	} else if m.discardStep == 2 {
-		picker = append(picker, padStyle.Render(borderStyle.Render(fmt.Sprintf("Enter custom %s reason (ESC to cancel):", m.discardStatus))))
-		style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth).Background(m.theme.Overlay)
-		picker = append(picker, padStyle.Render(style.Render("> "+m.discardInputVal+"█")))
-	}
-
 	bodyLines = append(bodyLines, picker...)
 	return strings.Join(bodyLines, "\n")
 }
@@ -1988,4 +2079,60 @@ func truncateRunes(s string, maxRunes int) string {
 
 func statusLabel(norm string) string {
 	return i18n.Current.StatusLabel(norm)
+}
+
+// overlayDiscardPicker renders the discard reason picker inline at the bottom
+// of the body (Issue 1380). Predicted reasons (from the report) are listed
+// first, followed by the canonical fallback options, with an "Other…" entry
+// that switches to free-text input when selected.
+func (m PipelineModel) overlayDiscardPicker(body string) string {
+	bodyLines := strings.Split(body, "\n")
+
+	pickerWidth := m.width - 8
+	if pickerWidth < 36 {
+		pickerWidth = 36
+	}
+	padStyle := lipgloss.NewStyle().Padding(0, 2)
+	titleStyle := lipgloss.NewStyle().Foreground(m.theme.Blue).Bold(true)
+	hintStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
+	inputStyle := lipgloss.NewStyle().Foreground(m.theme.Yellow).Bold(true)
+
+	var picker []string
+
+	if m.discardCustomInput {
+		// Free-text sub-mode
+		picker = append(picker, padStyle.Render(titleStyle.Render("─── Reason (type + Enter) ───────────────")))
+		cursor := lipgloss.NewStyle().Foreground(m.theme.Blue).Render("█")
+		picker = append(picker, padStyle.Render(inputStyle.Render("> "+m.discardCustomText+cursor)))
+		picker = append(picker, padStyle.Render(hintStyle.Render("Enter: confirm   Esc: back")))
+	} else {
+		numPredicted := m.discardPredictedCount
+
+		heading := "─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─"
+		picker = append(picker, padStyle.Render(titleStyle.Render(heading)))
+		if numPredicted > 0 {
+			picker = append(picker, padStyle.Render(hintStyle.Render("  ★ Predicted by agent:")))
+		}
+		for i, opt := range m.discardOptions {
+			if i == numPredicted && numPredicted > 0 {
+				picker = append(picker, padStyle.Render(hintStyle.Render("  ── Other options:")))
+			}
+			style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth)
+			if i == m.discardCursor {
+				style = style.Background(m.theme.Overlay).Bold(true)
+			}
+			prefix := "  "
+			if i == m.discardCursor {
+				prefix = "> "
+			}
+			label := opt
+			if i < numPredicted {
+				label = "★ " + opt
+			}
+			picker = append(picker, padStyle.Render(style.Render(prefix+label)))
+		}
+	}
+
+	bodyLines = append(bodyLines, picker...)
+	return strings.Join(bodyLines, "\n")
 }
