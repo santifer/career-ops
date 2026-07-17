@@ -128,6 +128,7 @@ const (
 	filterEvaluated = "evaluated"
 	filterApplied   = "applied"
 	filterInterview = "interview"
+	filterResponded = "responded"
 	filterSkip      = "skip"
 	filterRejected  = "rejected"
 	filterDiscarded = "discarded"
@@ -145,6 +146,7 @@ func getPipelineTabs() []pipelineTab {
 		{filterEvaluated, i18n.Current.TabEvaluated},
 		{filterApplied, i18n.Current.TabApplied},
 		{filterInterview, i18n.Current.TabInterview},
+		{filterResponded, i18n.Current.TabResponded},
 		{filterTop, i18n.Current.TabTop},
 		{filterSkip, i18n.Current.TabSkip},
 		{filterRejected, i18n.Current.TabRejected},

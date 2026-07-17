@@ -349,6 +349,47 @@ func TestRejectedAndDiscardedTabsFilterCorrectly(t *testing.T) {
 	}
 }
 
+func TestRespondedTabFiltersCorrectly(t *testing.T) {
+	apps := []model.CareerApplication{
+		{
+			Company:    "Acme",
+			Role:       "Backend Engineer",
+			Status:     "Responded",
+			Score:      4.2,
+			ReportPath: "reports/001-acme.md",
+		},
+		{
+			Company:    "Beta",
+			Role:       "Platform Engineer",
+			Status:     "Applied",
+			Score:      3.8,
+			ReportPath: "reports/002-beta.md",
+		},
+		{
+			Company:    "Gamma",
+			Role:       "AI Engineer",
+			Status:     "Interview",
+			Score:      4.6,
+			ReportPath: "reports/003-gamma.md",
+		},
+	}
+
+	pm := NewPipelineModel(
+		theme.NewTheme("catppuccin-mocha"),
+		apps,
+		model.PipelineMetrics{Total: len(apps)},
+		"..",
+		120,
+		40,
+	)
+
+	pm.activeTab = tabIndexForFilter(t, filterResponded)
+	pm.applyFilterAndSort()
+	if len(pm.filtered) != 1 || pm.filtered[0].Status != "Responded" {
+		t.Fatalf("expected responded tab to isolate responded rows, got %+v", pm.filtered)
+	}
+}
+
 // Regression: with no committed search query, Esc must NOT close the screen.
 // The help bar advertises only `q quit`, so Esc quitting silently was a bug
 // that surfaced as accidental exits when users hit Esc to "back out" of the UI.
