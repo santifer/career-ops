@@ -22,8 +22,10 @@ table in `AGENTS.md` (mirrored in `CLAUDE.md`).
 | `batch.md` | `batch` | Mass processing with headless workers |
 | `apply.md` | `apply` | Live application assistant (form filling; never submits) |
 | `pdf.md` | `pdf` | ATS-optimized PDF generation |
-| `latex.md` | `latex` | LaTeX/Overleaf CV export |
+| `latex.md` | `latex` | LaTeX/Overleaf CV export (from `cv.md` into career-ops' own `.tex` template) |
+| `latex-tex.md` | `latex-tex` | Tailor a user-owned hand-tuned LaTeX CV in place (opt-in; preserves the candidate's own layout, gated by a ±5-character-per-slot budget) |
 | `cover.md` | `cover` | Cover letter generator |
+| `cover-letter-tex.md` | `cover-letter-tex` | Tailor a user-owned LaTeX cover letter (`main.tex`+`info.tex`+`body.tex`) in place (opt-in; gated by a post-compile page-length check, not a character budget) |
 | `email.md` | `email` | Application email drafts (draft-only) |
 | `contacto.md` | `contacto` | LinkedIn outreach messages |
 | `deep.md` | `deep` | Deep company-research prompt |

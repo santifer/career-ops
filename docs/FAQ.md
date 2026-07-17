@@ -44,6 +44,15 @@ it means the job description text of two listings from **different companies** i
 
 Yes. Set `cv.template` (and/or `cover_letter.template`) in `config/profile.yml` to the kebab-case name of a template file in `templates/` — a value of `modern` resolves to `templates/cv-template.modern.html` (cover letters use `templates/cover-letter-template.<name>.html`). Leave the field unset and career-ops falls back to the built-in default template (`templates/cv-template.html`). You can also pick a template per generation just by asking (e.g. "use the modern template"). See the commented `cv.template` / `cover_letter.template` fields in `config/profile.example.yml` for the full reference.
 
+## 6b. I already have my own hand-tuned `.tex` CV and cover letter — can I keep them?
+
+Yes, without switching to `cv.md`. Two opt-in modes tailor your own LaTeX files in place instead of replacing them:
+
+- **`latex-tex`** — for a `resume.tex`/`cv.tex` (or the path set by `latex.source` in `config/profile.yml`). Supports two common layout families (`\resumeSubheading`/`\resumeItem` macros, or `tabularx`+`itemize`) plus the LuxSleek-CV macro set (`\headleft`/`\headright`/`\smaller`). It only touches bullet/skill text, never your preamble, macros, colors, or spacing — each patched bullet is held to a ±5-character budget of its original length so nothing can overflow your columns.
+- **`cover-letter-tex`** — for a cover letter split into `main.tex` (layout) + `info.tex` (per-application fields like recipient/company) + `body.tex` (the letter prose). The safety net here is different: instead of a character budget, a post-compile check requires the letter to land at roughly one and a half pages — never a thin single page, never a full page plus a stray orphan line on page 2.
+
+Both require `tectonic` or `pdflatex` on PATH. See [modes/latex-tex.md](../modes/latex-tex.md) and [modes/cover-letter-tex.md](../modes/cover-letter-tex.md) for the full pipeline.
+
 ## How do I stop a company from showing up in scans?
 
 Copy `templates/blacklist.example.md` to `data/blacklist.md`, then list one company per line.

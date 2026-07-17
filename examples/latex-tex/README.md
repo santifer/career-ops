@@ -7,6 +7,7 @@ Do not use real names, emails, or employers from your own CV here.
 |------|--------|
 | `resume-subheading.tex` | `resumeSubheading` — `\resumeItem` bullets + `\textbf{Category}{: items}` skills |
 | `tabularx-itemize.tex` | `tabularx-itemize` — `tabularx` header rows + `itemize` bullets |
+| `luxsleek-cv.tex` | `luxsleekCV` — `\headleft`/`\headright`/`\smaller` macro set, `{\justifying\noindent ... \par}` prose paragraphs, plain `itemize` |
 
 ```bash
 node extract-latex-content.mjs examples/latex-tex/resume-subheading.tex

@@ -131,8 +131,17 @@ export async function compileLatexFile(absPath, content, outputPath, compileOnly
     mkdirSync(targetDir, { recursive: true });
   }
 
+  // Honor a `% !TeX program = pdflatex` pragma (common in Overleaf-authored
+  // templates). Tectonic's engine is XeTeX-based and chokes on pdfTeX-only
+  // features some of these templates rely on (e.g. microtype's `tracking`
+  // option), so a file that pins pdflatex must get pdflatex even though
+  // tectonic is otherwise preferred for its on-demand package fetching.
+  const pragmaMatch = content.match(/^%\s*!TeX program\s*=\s*(\S+)/m);
+  const requestedProgram = pragmaMatch ? pragmaMatch[1].toLowerCase() : null;
+  const engineOrder = requestedProgram === 'pdflatex' ? ['pdflatex', 'tectonic'] : ['tectonic', 'pdflatex'];
+
   let engine = null;
-  for (const candidate of ['tectonic', 'pdflatex']) {
+  for (const candidate of engineOrder) {
     try {
       execFileSync(candidate, ['--version'], { stdio: 'pipe' });
       engine = candidate;
@@ -177,6 +186,23 @@ export async function compileLatexFile(absPath, content, outputPath, compileOnly
     }
 
     report.compiled = true;
+
+    // pdflatex/tectonic both report "Output written on X.pdf (N page(s), ...)"
+    // in the .log file — read that directly rather than scanning the compiled
+    // PDF's bytes for /Type /Page, which misses pages hidden inside compressed
+    // object streams (the default for modern pdflatex/tectonic output).
+    try {
+      const logPath = join(texDir, `${texBase}.log`);
+      const log = await readFile(logPath, 'utf-8');
+      // pdftex/tectonic hard-wrap the log at ~79 columns with no regard for word
+      // boundaries, so "Output written on ... (1 page, N bytes)." can land with
+      // a newline mid-phrase (e.g. right after "page"). Flatten before matching.
+      const flatLog = log.replace(/\r?\n/g, '');
+      const pagesMatch = flatLog.match(/Output written on .*?\((\d+)\s*pages?\s*,/);
+      if (pagesMatch) {
+        report.compiledPageCount = parseInt(pagesMatch[1], 10);
+      }
+    } catch { /* no log, or unexpected format — leave compiledPageCount unset */ }
   } catch (err) {
     const logPath = join(texDir, `${texBase}.log`);
     let latexError = err.message;
@@ -203,9 +229,18 @@ export async function compileLatexFile(absPath, content, outputPath, compileOnly
       }
 
       const pdfStat = await stat(targetPdf);
+      // Prefer the page count the engine itself reported in the .log (accurate
+      // even for compressed object streams); fall back to the same /Type /Page
+      // byte-scan generate-pdf.mjs uses if the log didn't yield one.
+      let pageCount = report.compiledPageCount;
+      if (pageCount === undefined) {
+        const pdfBytes = await readFile(targetPdf, 'latin1');
+        pageCount = (pdfBytes.match(/\/Type\s*\/Page[^s]/g) || []).length;
+      }
       report.pdf = {
         path: targetPdf,
         sizeKB: parseFloat((pdfStat.size / 1024).toFixed(1)),
+        pageCount,
       };
     } catch (err) {
       report.postCompileError = `Failed to finalize PDF: ${err.message}`;
@@ -220,6 +255,7 @@ export async function compileLatexFile(absPath, content, outputPath, compileOnly
     }
   }
 
+  delete report.compiledPageCount; // superseded by report.pdf.pageCount
   return report;
 }
 

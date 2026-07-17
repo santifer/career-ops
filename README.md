@@ -114,6 +114,7 @@ career-ops is the first reference implementation of [the CareerOps Manifesto](ht
 | **ATS PDF Generation**   | Keyword-injected CVs with Space Grotesk + DM Sans design                                                                                 |
 | **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, and A4 PDF via the same HTML + Playwright pipeline as CVs. Auto-drafts on every evaluation; complete and generate on demand via `/career-ops cover` |
 | **Application Email Drafts** | Formal recruiter/referral/cold application emails from a report or pasted JD, with subject line, attachment checklist, source-backed fit points, and a profile-driven contact block. Draft-only -- career-ops never sends, submits, or clicks anything. |
+| **Own-Template LaTeX Tailoring** | Already have a hand-tuned `.tex` CV and cover letter? [`latex-tex`](modes/latex-tex.md) and [`cover-letter-tex`](modes/cover-letter-tex.md) tailor your existing layout in place instead of replacing it. CV edits are gated by a ±5-character-per-bullet budget so nothing overflows your columns; the cover letter body is gated by a post-compile page-length check (never a thin single page, never a one-line orphan on page 2). Compiles via `tectonic` or `pdflatex`. |
 | **Portal Scanner**       | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
 | **Batch Processing**     | Parallel evaluation with headless CLI workers (`claude -p` / `opencode run`)                                                             |
 | **Dashboard TUI**        | Terminal UI to browse, filter, and sort your pipeline                                                                                    |
@@ -411,6 +412,7 @@ career-ops/
 - **Agent**: AI coding CLI with shared skills and modes (`AGENTS.md` + CLI wrapper)
 - **PDF**: Playwright/Puppeteer + HTML template
 - **Cover letters**: HTML template + Playwright (A4 PDF, same pipeline as CVs)
+- **LaTeX (optional path)**: `tectonic` or `pdflatex` — either the career-ops `.tex` template (`latex` mode) or your own hand-tuned `.tex` CV/cover letter, tailored in place (`latex-tex` / `cover-letter-tex` modes)
 - **Scanner**: Playwright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
 - **Data**: Markdown tables + YAML config + TSV batch files

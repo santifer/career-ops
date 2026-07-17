@@ -9,6 +9,8 @@ These files contain your personal data, customizations, and work product. Update
 | File | Purpose |
 |------|---------|
 | `cv.md` | Your CV in markdown |
+| `resume.tex` / `cv.tex` (or the path set by `config/profile.yml → latex.source`) | Your own hand-tuned LaTeX CV, tailored in place by the opt-in `latex-tex` mode — `cv.md` stays the default source of truth |
+| Directory set by `config/profile.yml → coverLetter.source` (e.g. `cover-letter/`) | Your own hand-tuned LaTeX cover letter (`main.tex`+`info.tex`+`body.tex`), tailored in place by the opt-in `cover-letter-tex` mode |
 | `config/profile.yml` | Your identity, targets, comp range |
 | `config/cv-facts.json` | Your CV fact-check allowlist and forbidden phrases |
 | `config/benchmarks.yml` | Your market calibration benchmark overrides (optional; copy `templates/benchmarks.yml` here and edit — read by `funnel-velocity.mjs`) |
@@ -51,6 +53,9 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/_custom.template.md` | Template seed for the user's `modes/_custom.md` |
 | `modes/oferta.md` | Evaluation mode instructions |
 | `modes/pdf.md` | PDF generation instructions |
+| `modes/latex.md` | LaTeX/Overleaf CV export instructions |
+| `modes/latex-tex.md` | User-owned LaTeX CV tailoring instructions (opt-in) |
+| `modes/cover-letter-tex.md` | User-owned LaTeX cover letter tailoring instructions (opt-in) |
 | `modes/scan.md` | Portal scanner instructions |
 | `modes/batch.md` | Batch processing instructions |
 | `modes/apply.md` | Application assistant instructions |

@@ -1,0 +1,37 @@
+% Fictional example CV for latex-tex tests (luxsleekCV family).
+\documentclass[11pt, a4paper]{article}
+\usepackage{xcolor}
+
+\newcommand{\dates}[1]{\hfill\mbox{\textbf{#1}}}
+\newcommand{\is}{\par\vskip.5ex plus .4ex}
+\newcommand{\smaller}[1]{{\small$\diamond$\ #1}}
+\newcommand{\headleft}[1]{\vspace*{3ex}\textsc{\textbf{#1}}\par%
+    \vspace*{-1.5ex}\hrulefill\par\vspace*{0.7ex}}
+\newcommand{\headright}[1]{\vspace*{2.5ex}\textsc{\Large#1}\par%
+     \vspace*{-2ex}\hrulefill\par}
+
+\begin{document}
+
+\headleft{Profile Summary}
+{\justifying\noindent
+Fictional backend engineer with hands-on experience in distributed systems and API design.\par}
+
+\headleft{Technical skills}
+{\justifying\noindent
+\begin{itemize}
+\item Python, Go, SQL
+\item Docker, PostgreSQL, Redis
+\end{itemize}
+\par}
+
+\headright{Relevant experience}
+
+\textbf{\textsc{Backend Engineer}} \\
+\textit{Example Corp} \dates{2022--Present}
+
+\smaller{Built REST APIs in Python serving twenty thousand daily active users across three regions.}
+
+\is
+\smaller{Reduced batch job runtime by thirty five percent by parallelizing worker queues.}
+
+\end{document}

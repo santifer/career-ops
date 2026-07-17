@@ -13,6 +13,7 @@ Opt-in mode for candidates who already maintain a hand-tuned `.tex` CV. **Does n
 |--------|-----------|----------------|
 | `resumeSubheading` | `\resumeSubheading` + `\resumeItem` | `\resumeItem{...}` bullets; `\textbf{Category}{: items}` skill values |
 | `tabularx-itemize` | `tabularx` + `itemize`, no resume macros | `\item` body text in the document body |
+| `luxsleekCV` | `\newcommand{\headleft}` + `\newcommand{\headright}` + `\newcommand{\smaller}` (LuxSleek-CV template, Kostyrka/U. Luxembourg) | `{\justifying\noindent ... \par}` prose paragraphs (e.g. Profile Summary); `\item` body text; `\smaller{...}` bullets |
 
 Any other layout → stop with the script error and suggest `/career-ops latex` (cv.md → career-ops template).
 
@@ -41,6 +42,7 @@ latex:
    - Reorder bullets by relevance (reorder patch list order if needed; patch ids stay stable)
    - Inject keywords into existing achievements — **NEVER invent skills**
    - If `cv.md` exists, cross-check claims against it; omit anything not backed by in-scope sources
+   - **Graphics-safety length budget:** the source template already renders correctly, so every patched `text` must stay within **±5 characters** of its slot's original length (`slots[].text.length`, counted before LaTeX escaping). This is the cheapest reliable proxy against overflowing a fixed-width column or shifting a page break — tighten or pad the wording to fit rather than freely rewriting length. `patch-latex-content.mjs` enforces this as a hard gate (see step 7); do not pre-emptively reach for `--allow-length-drift` — treat a gate failure as a signal to shorten/lengthen the text, not to bypass the check.
 6. Write patches file:
 
 ```json
@@ -52,7 +54,7 @@ latex:
 }
 ```
 
-7. Run: `node patch-latex-content.mjs <source.tex> /tmp/cv-patches-{company}.json output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex`
+7. Run: `node patch-latex-content.mjs <source.tex> /tmp/cv-patches-{company}.json output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex` — exits non-zero and lists the offending slot ids if any patch is outside the ±5-character budget; fix the wording and retry rather than passing `--allow-length-drift`, unless the user explicitly confirms the drift is safe for that specific slot
 8. Run: `node generate-latex.mjs output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --compile-only`
 9. Report: family, slot count, patched count, `.tex` path, `.pdf` path (or compile error)
 
@@ -64,8 +66,9 @@ Same as `modes/latex.md` and `modes/pdf.md`:
 
 - Keywords get **reformulated, never fabricated**
 - Never add tools, skills, or metrics the candidate does not already have in the source `.tex` or `cv.md`
-- Preserve inline LaTeX markup inside bullets when possible; when rewriting, output **plain text** in patch JSON (the patch script escapes special characters)
+- **Never write LaTeX markup (`\textit{...}`, `\&`, etc.) inside a patch's `text` value.** `patch-latex-content.mjs` always LaTeX-escapes patch text — a literal `\textit{Key Contribution:}` in your patch renders as visible backslashes and braces, not italics (confirmed by hitting this exact bug during testing). If a slot's original text has markup you want to keep, **leave that slot unpatched** rather than retyping the markup into the patch; only patch slots where the replacement is pure prose.
 - Do **not** rewrite preamble, macro definitions, section titles, dates, company names, or job titles unless the user explicitly asks
+- Every patch stays within **±5 characters** of its slot's original length — enforced by `patch-latex-content.mjs`, not just a style preference
 
 ## What this mode does NOT do
 

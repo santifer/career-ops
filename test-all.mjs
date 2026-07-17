@@ -6661,7 +6661,10 @@ try {
   const patchJson = join(extractDir, 'patches.json');
   const patchedTex = join(extractDir, 'out.tex');
   writeFileSync(patchJson, JSON.stringify(patchPayload));
-  execFileSync(NODE, ['patch-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), patchJson, patchedTex], { cwd: ROOT, encoding: 'utf-8' });
+  // --allow-length-drift: this fixed test string ("CLI patch path works.") is
+  // for exercising CLI plumbing, not the ±5-character budget — that gate gets
+  // its own dedicated tests below (20c).
+  execFileSync(NODE, ['patch-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), patchJson, patchedTex, '--allow-length-drift'], { cwd: ROOT, encoding: 'utf-8' });
   const patchedContent = readFileSync(patchedTex, 'utf-8');
   if (patchedContent.includes('CLI patch path works.')) {
     pass('extract-latex-content.mjs + patch-latex-content.mjs CLI round-trip');
@@ -6671,6 +6674,197 @@ try {
   rmSync(extractDir, { recursive: true, force: true });
 } catch (e) {
   fail(`LaTeX-tex tailoring test crashed: ${e.message}`);
+}
+
+// ── 20c. LATEX-TEX ±5-CHARACTER LENGTH GATE ─────────────────────
+
+console.log('\n20c. LaTeX-tex ±5-character graphics-safety budget');
+
+try {
+  const gateDir = mkdtempSync(join(tmpdir(), 'latex-tex-gate-'));
+  const gateManifestPath = join(gateDir, 'manifest.json');
+  execFileSync(NODE, ['extract-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), '--out', gateManifestPath], { cwd: ROOT, encoding: 'utf-8' });
+  const gateManifest = JSON.parse(readFileSync(gateManifestPath, 'utf-8'));
+  const gateSlot = gateManifest.slots[0]; // "Software engineer with five years building backend APIs and data pipelines." (75 chars)
+
+  const withinBudget = gateSlot.text.slice(0, gateSlot.text.length - 3) + '...'; // same length, within budget
+  const withinPath = join(gateDir, 'within.json');
+  const withinOut = join(gateDir, 'within.tex');
+  writeFileSync(withinPath, JSON.stringify({ slots: gateManifest.slots, patches: [{ id: gateSlot.id, text: withinBudget }] }));
+  execFileSync(NODE, ['patch-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), withinPath, withinOut], { cwd: ROOT, encoding: 'utf-8' });
+  pass('a patch within the ±5-character budget is accepted');
+
+  const overBudgetPath = join(gateDir, 'over.json');
+  const overOut = join(gateDir, 'over.tex');
+  writeFileSync(overBudgetPath, JSON.stringify({ slots: gateManifest.slots, patches: [{ id: gateSlot.id, text: 'Way too short.' }] }));
+  try {
+    execFileSync(NODE, ['patch-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), overBudgetPath, overOut], { cwd: ROOT, encoding: 'utf-8', stdio: 'pipe' });
+    fail('a patch outside the ±5-character budget should have been rejected');
+  } catch (err) {
+    const stderr = String(err.stderr || '');
+    if (err.status === 1 && /±5-character graphics-safety budget/.test(stderr)) {
+      pass('a patch outside the ±5-character budget is rejected with a clear error');
+    } else {
+      fail(`over-budget patch failed for the wrong reason: ${stderr.slice(0, 200)}`);
+    }
+  }
+
+  execFileSync(NODE, ['patch-latex-content.mjs', join(ROOT, 'examples/latex-tex/resume-subheading.tex'), overBudgetPath, overOut, '--allow-length-drift'], { cwd: ROOT, encoding: 'utf-8' });
+  if (existsSync(overOut)) {
+    pass('--allow-length-drift overrides the budget and proceeds');
+  } else {
+    fail('--allow-length-drift should have still written the output file');
+  }
+
+  rmSync(gateDir, { recursive: true, force: true });
+} catch (e) {
+  fail(`LaTeX-tex length-gate test crashed: ${e.message}`);
+}
+
+// ── 20d. LUXSLEEK-CV FAMILY (extract / patch) ───────────────────
+
+console.log('\n20d. LuxSleek-CV family (extract / patch)');
+
+try {
+  const { detectFamily, buildManifest, extractSlots } = await import(pathToFileURL(join(ROOT, 'lib/latex-content.mjs')).href);
+  const luxFixture = readFileSync(join(ROOT, 'examples/latex-tex/luxsleek-cv.tex'), 'utf-8');
+
+  if (detectFamily(luxFixture) === 'luxsleekCV') {
+    pass('luxsleek-cv fixture detected as luxsleekCV family');
+  } else {
+    fail(`luxsleek-cv fixture family detection failed: ${detectFamily(luxFixture)}`);
+  }
+
+  const luxManifest = buildManifest('luxsleek-cv.tex', luxFixture);
+  const kinds = luxManifest.slots.map(s => s.kind);
+  if (luxManifest.supported && kinds.includes('paragraph') && kinds.includes('item') && kinds.includes('bullet')) {
+    pass(`luxsleekCV manifest exposes paragraph, item, and bullet slots (${luxManifest.slots.length} total)`);
+  } else {
+    fail(`luxsleekCV manifest missing an expected slot kind: ${JSON.stringify(kinds)}`);
+  }
+
+  const luxParagraph = luxManifest.slots.find(s => s.kind === 'paragraph');
+  if (luxParagraph && /Fictional backend engineer/.test(luxParagraph.text) && !/\\headleft/.test(luxParagraph.text)) {
+    pass('luxsleekCV paragraph slot captures prose without the surrounding \\headleft macro');
+  } else {
+    fail(`luxsleekCV paragraph slot content unexpected: ${JSON.stringify(luxParagraph)}`);
+  }
+
+  // Section headers, dates, and company/role names must never become slots.
+  const luxTexts = luxManifest.slots.map(s => s.text).join(' | ');
+  if (!/Example Corp|2022--Present|Backend Engineer/.test(luxTexts)) {
+    pass('luxsleekCV extraction leaves company, dates, and role title untouched');
+  } else {
+    fail(`luxsleekCV extraction leaked protected content into a slot: ${luxTexts}`);
+  }
+} catch (e) {
+  fail(`LuxSleek-CV family test crashed: ${e.message}`);
+}
+
+// ── 20e. COVER-LETTER-TEX (extract / patch / candidate-constant gate) ──
+
+console.log('\n20e. Cover-letter-tex (extract / patch / candidate-constant gate)');
+
+try {
+  const { extractInfoFields, buildLetterManifest, applyLetterPatches, PER_APPLICATION_FIELDS } = await import(pathToFileURL(join(ROOT, 'lib/letter-content.mjs')).href);
+  const letterDir = join(ROOT, 'examples/cover-letter-tex');
+  const infoTex = readFileSync(join(letterDir, 'info.tex'), 'utf-8');
+  const bodyTex = readFileSync(join(letterDir, 'body.tex'), 'utf-8');
+
+  const fields = extractInfoFields(infoTex);
+  const byId = Object.fromEntries(fields.map(f => [f.id, f]));
+  if (byId.company?.kind === 'per-application' && byId.recipient?.kind === 'per-application' && byId.myname?.kind === 'candidate-constant' && byId.closer?.kind === 'candidate-constant') {
+    pass('extractInfoFields classifies per-application vs. candidate-constant fields correctly');
+  } else {
+    fail(`extractInfoFields classification wrong: ${JSON.stringify(byId, null, 2).slice(0, 400)}`);
+  }
+
+  if (PER_APPLICATION_FIELDS.includes('company') && !PER_APPLICATION_FIELDS.includes('myname')) {
+    pass('PER_APPLICATION_FIELDS constant matches the classification');
+  } else {
+    fail(`PER_APPLICATION_FIELDS unexpected: ${JSON.stringify(PER_APPLICATION_FIELDS)}`);
+  }
+
+  const manifest = buildLetterManifest('info.tex', 'body.tex', infoTex, bodyTex);
+  const bodySlot = manifest.slots.find(s => s.id === 'body');
+  if (manifest.supported && bodySlot && bodySlot.text === bodyTex) {
+    pass('buildLetterManifest exposes the full body as a single slot');
+  } else {
+    fail('buildLetterManifest did not expose the body slot correctly');
+  }
+
+  const { infoTex: patchedInfo, bodyTex: patchedBody } = applyLetterPatches(infoTex, bodyTex, [
+    { id: 'company', text: 'Acme Inc.' },
+    { id: 'recipient', text: 'Acme Hiring Team' },
+    { id: 'body', text: 'A fully rewritten fictional body for testing.' },
+  ], manifest.slots);
+  if (patchedInfo.includes('Acme Inc.') && patchedInfo.includes('Acme Hiring Team') && patchedInfo.includes('Alex Example') && patchedBody === 'A fully rewritten fictional body for testing.') {
+    pass('applyLetterPatches rewrites per-application fields and body while preserving candidate-constant fields');
+  } else {
+    fail('applyLetterPatches did not patch/preserve fields as expected');
+  }
+
+  // CLI round-trip: extract-letter-content.mjs + patch-letter-content.mjs, including the
+  // candidate-constant override warning path.
+  const cliDir = mkdtempSync(join(tmpdir(), 'cover-letter-tex-'));
+  const cliManifestPath = join(cliDir, 'manifest.json');
+  execFileSync(NODE, ['extract-letter-content.mjs', letterDir, '--out', cliManifestPath], { cwd: ROOT, encoding: 'utf-8' });
+  const cliManifest = JSON.parse(readFileSync(cliManifestPath, 'utf-8'));
+  const cliPatchesPath = join(cliDir, 'patches.json');
+  const cliOutDir = join(cliDir, 'out');
+  writeFileSync(cliPatchesPath, JSON.stringify({
+    slots: cliManifest.slots,
+    patches: [
+      { id: 'company', text: 'Acme Inc.' },
+      { id: 'closer', text: 'Warm regards' }, // candidate-constant override, on purpose
+    ],
+  }));
+  const cliResult = execFileSync(NODE, ['patch-letter-content.mjs', letterDir, cliPatchesPath, cliOutDir], { cwd: ROOT, encoding: 'utf-8', stdio: 'pipe' });
+  const cliReport = JSON.parse(cliResult.toString());
+  if (cliReport.candidateConstantOverridden.includes('closer') && existsSync(join(cliOutDir, 'main.tex')) && existsSync(join(cliOutDir, 'info.tex')) && existsSync(join(cliOutDir, 'body.tex'))) {
+    pass('extract-letter-content.mjs + patch-letter-content.mjs CLI round-trip, with candidate-constant override reported');
+  } else {
+    fail(`CLI round-trip report unexpected: ${JSON.stringify(cliReport)}`);
+  }
+  const outInfo = readFileSync(join(cliOutDir, 'info.tex'), 'utf-8');
+  if (outInfo.includes('Acme Inc.') && outInfo.includes('Warm regards') && outInfo.includes('Alex Example')) {
+    pass('patched info.tex keeps unpatched candidate-constant fields (name) alongside overridden ones (closer)');
+  } else {
+    fail('patched info.tex missing expected mix of patched/unpatched fields');
+  }
+  rmSync(cliDir, { recursive: true, force: true });
+} catch (e) {
+  fail(`Cover-letter-tex test crashed: ${e.message}`);
+}
+
+// ── 20f. check-letter-length.mjs (CLI shape, no real LaTeX compile) ──
+
+console.log('\n20f. check-letter-length.mjs CLI shape');
+
+try {
+  try {
+    execFileSync(NODE, ['check-letter-length.mjs'], { cwd: ROOT, encoding: 'utf-8', stdio: 'pipe' });
+    fail('check-letter-length.mjs with no argument should exit non-zero');
+  } catch (err) {
+    if (err.status === 1 && /Usage:/.test(String(err.stderr || ''))) {
+      pass('check-letter-length.mjs with no argument prints usage and exits 1');
+    } else {
+      fail(`unexpected failure mode for missing argument: ${String(err.stderr || '')}`);
+    }
+  }
+
+  try {
+    execFileSync(NODE, ['check-letter-length.mjs', join(ROOT, 'examples/cover-letter-tex/does-not-exist.pdf')], { cwd: ROOT, encoding: 'utf-8', stdio: 'pipe' });
+    fail('check-letter-length.mjs on a missing PDF should exit non-zero');
+  } catch (err) {
+    if (err.status === 1 && /not found/.test(String(err.stderr || ''))) {
+      pass('check-letter-length.mjs on a missing PDF reports "not found" and exits 1');
+    } else {
+      fail(`unexpected failure mode for missing PDF: ${String(err.stderr || '')}`);
+    }
+  }
+} catch (e) {
+  fail(`check-letter-length.mjs CLI-shape test crashed: ${e.message}`);
 }
 
 // ── 21. CJK CV RENDERING (lang="ja" font fallback) ──────────────
