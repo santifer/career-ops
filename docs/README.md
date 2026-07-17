@@ -13,6 +13,7 @@ Welcome to the career-ops documentation.
 
 - [Architecture Overview](architecture/README.md) — How career-ops is put together
 - [Vue d'ensemble architecture](architecture/README.fr.md) — Version française
+- [Desktop + Web local-first](architecture/desktop-web-local-first.md) — Target product architecture for synchronized non-technical desktop and web clients
 - [Data Contract](../../DATA_CONTRACT.md) — System vs user file boundary
 
 ## Guides
