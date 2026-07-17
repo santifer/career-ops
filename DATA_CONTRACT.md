@@ -47,7 +47,8 @@ These files contain system logic, scripts, templates, and instructions that impr
 
 | File | Purpose |
 |------|---------|
-| `modes/_shared.md` | Scoring system, global rules, tools |
+| `modes/_shared.md` | Eval-core: scoring system, global rules, tools |
+| `modes/_writing.md` | Writing guardrails (Voice DNA / Writing Style / ATS) — loaded by the CV/cover/apply writing modes, not by evaluation (#1710) |
 | `modes/_custom.template.md` | Template seed for the user's `modes/_custom.md` |
 | `modes/oferta.md` | Evaluation mode instructions |
 | `modes/pdf.md` | PDF generation instructions |
