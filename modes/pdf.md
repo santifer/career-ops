@@ -154,7 +154,7 @@ Write a JSON file with this structure, then run `node build-cv-html.mjs <input.j
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `lang` | string | CV language code (`en`, `es`, `ja`, `ar`). Drives language-specific CSS: `ja` enables a CJK font fallback so Japanese renders instead of tofu (□); `ar` enables RTL + Arabic fonts. Defaults to `en`. |
+| `lang` | string | CV language code (`en`, `es`, `zh-CN`, `ja`, `ar`). Drives language-specific CSS: `zh-CN` enables Simplified Chinese fonts and strict CJK line breaking; `ja` enables a Japanese CJK font fallback; `ar` enables RTL + Arabic fonts. Defaults to `en`. |
 | `page_format` | string | `letter` → `8.5in` page width, `a4` → `210mm`. Defaults to `letter`. Pass the SAME value to `generate-pdf.mjs --format`. |
 | `candidate.name` | string | From `profile.yml`. |
 | `candidate.phone` | string | Optional — **omit or leave empty** to drop the `tel:` link and its separator (no empty cell). |
