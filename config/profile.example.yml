@@ -77,7 +77,8 @@ location:
 
 language:
   # Human-facing output language for reports, tracker notes, PDFs, cover
-  # letters, outreach, and form answers. Use an ISO language code.
+  # letters, outreach, and form answers. Use an ISO language code such as
+  # `en` or `zh-CN`; `zh-CN` also enables Chinese PDF typography rules.
   # This is separate from language.modes_dir: modes_dir selects market
   # vocabulary/rules, while output selects the prose language.
   output: en
