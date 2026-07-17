@@ -315,6 +315,40 @@ This signal does not change the High Confidence / Proceed with Caution / Suspici
 
 ---
 
+## Risk Summary (after Block G)
+
+Close the report body with a `## Risk Summary` block directly after Block G's section — one row per risk signal, fixed order — so the question the candidate actually asks ("is this company safe to join?") is answered on one screen instead of by mentally joining Block A, Block G, and a sidecar file.
+
+**Aggregation only, zero new judgment.** Each row quotes or links the verdict already produced by its source signal. The summary never re-scores, re-weights, or overrides — if a row looks wrong, the fix belongs in the source signal, not here.
+
+Three states per row: `✅ {clear verdict}` / `⚠️ {finding}` / `— not evaluated`. **`— not evaluated` is a first-class state:** when a signal could not run, say so explicitly rather than omitting the row, so an all-✅ summary can be trusted. **Named exception:** the Interview red flags row renders its not-evaluated case as `— no interview sessions yet` — a documented, more specific phrasing of the same "not evaluated" concept for that one row (the cross-reference check did run; it found no redflags file), not a fourth free-floating state.
+
+| Signal | Source | Row rendering |
+|--------|--------|---------------|
+| Posting legitimacy | Block G assessment tier | `✅ High Confidence`, or `⚠️ {tier} — {one-line reason}` for Proceed with Caution / Suspicious |
+| Employment classification | Employment classification signal inside Block G | `✅ clear` when the check ran and found nothing; `⚠️ contractor-style language: "{quoted phrase}"` when the flag fired; `— not evaluated` when the check could not run |
+| Culture screen | Culture screen field in Block A | `✅ pass`, or `⚠️ caution — {evidence}` / `⚠️ fail — {evidence}`; `— not evaluated` when no screen was run |
+| Interview red flags | `interview-prep/{company-slug}-redflags.md` (from `interview-redflag` mode) | **Cross-reference, not a copy:** if the file exists, surface its current warning level plus a relative link — `[{level}](../interview-prep/{company-slug}-redflags.md)` (relative to `reports/`); otherwise `— no interview sessions yet` |
+| AI claims vs. infrastructure | AI/infrastructure mismatch check in Block G, when present | If this report contains that check, mirror its verdict (`✅ consistent` / `⚠️ {finding}`); otherwise `— not evaluated`. The row activates automatically once the check exists — no ordering dependency |
+
+Block format:
+
+```markdown
+## Risk Summary
+
+| Signal | Status |
+|--------|--------|
+| Posting legitimacy | ✅ High Confidence |
+| Employment classification | ⚠️ contractor-style language: "{quoted phrase}" |
+| Culture screen | ⚠️ caution — {evidence} |
+| Interview red flags | — no interview sessions yet |
+| AI claims vs. infrastructure | — not evaluated |
+```
+
+Mirror the block into `## Machine Summary` as a `risk_summary:` map (exact key names and enum values in `batch/batch-prompt.md`, the Machine Summary source of truth) so downstream scripts consume it without re-parsing prose.
+
+---
+
 ## Cover Letter Draft (auto-generated after Block G)
 
 After saving the report and recording in the tracker, append a cover letter draft to the report file under `## Cover Letter Draft`. This is a starting point — not the final letter. The user completes it via `/career-ops cover {slug}`.
@@ -424,6 +458,9 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 ## G) Posting Legitimacy
 (full content of block G)
 
+## Risk Summary
+(one row per risk signal, fixed order — see the Risk Summary section above)
+
 ## H) Draft Application Answers
 (only if score >= 4.5 — draft answers for the application form)
 
@@ -433,7 +470,7 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 (list of 15-20 keywords from the JD for ATS optimization)
 ```
 
-**Machine Summary (required):** every report carries a `## Machine Summary` YAML fence directly after the header — same schema, exact field names, and rules as the "Machine Summary" block in `batch/batch-prompt.md` (do not duplicate the schema here; that file is the source of truth). It includes `advertised_comp`: the JD's own salary figure **verbatim** (e.g. `"80-90k EUR"`), or `null` when the JD states nothing — never estimated, never replaced with researched market data. This key seeds the advertised salary observation read by `node salary-gap.mjs`.
+**Machine Summary (required):** every report carries a `## Machine Summary` YAML fence directly after the header — same schema, exact field names, and rules as the "Machine Summary" block in `batch/batch-prompt.md` (do not duplicate the schema here; that file is the source of truth). It includes `advertised_comp`: the JD's own salary figure **verbatim** (e.g. `"80-90k EUR"`), or `null` when the JD states nothing — never estimated, never replaced with researched market data. This key seeds the advertised salary observation read by `node salary-gap.mjs`. It also includes `risk_summary`: the Risk Summary block mirrored as a map (schema and enum values in `batch/batch-prompt.md`).
 
 ### 2. Record in tracker
 

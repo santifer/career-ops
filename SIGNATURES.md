@@ -78,3 +78,4 @@ public commit with a stated reason.
 - @thegr8awais | M Awais | 2026-07-16 | "My local-first freelance command center." | id:17950378 | src:https://github.com/santifer/career-ops/discussions/1962 | n:30
 - @beerock | Brock Busby | 2026-07-16 | "Humans first." | id:9371066 | src:https://github.com/santifer/career-ops/discussions/1964 | n:31
 - @NaveenkumarreddyD | 2026-07-16 | id:106174399 | src:https://github.com/santifer/career-ops/discussions/1966 | n:32
+- @Scott-Emberson | Scott Emberson | 2026-07-17 | id:8268155 | src:https://github.com/santifer/career-ops/discussions/1983 | n:33
