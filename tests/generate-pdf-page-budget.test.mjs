@@ -183,60 +183,44 @@ try {
   }
 
   const defaultOverflowPdf = join(sandbox, 'default-overflow.pdf');
-  const manifestBeforeDefaultOverflow = readFileSync(manifest, 'utf-8');
   const defaultOverflow = runPdf([defaultOverflowInput, defaultOverflowPdf]);
   if (
-    defaultOverflow.status !== 0 &&
+    defaultOverflow.status === 0 &&
     existsSync(defaultOverflowPdf) &&
     countPages(defaultOverflowPdf) === 3 &&
-    defaultOverflow.output.includes('📐 Page budget: 2') &&
+    defaultOverflow.output.includes('📐 Page budget: 2 (warning only)') &&
+    defaultOverflow.output.includes('⚠️') &&
     defaultOverflow.output.includes('CV is 3 pages') &&
     defaultOverflow.output.includes('allowed maximum is 2 pages') &&
-    !defaultOverflow.output.includes('✅ PDF generated') &&
-    !defaultOverflow.output.includes('Manifest:') &&
-    readFileSync(manifest, 'utf-8') === manifestBeforeDefaultOverflow
+    defaultOverflow.output.includes('--strict-pages') &&
+    defaultOverflow.output.includes('✅ PDF generated') &&
+    defaultOverflow.output.includes('Manifest:') &&
+    manifestHasPdf(defaultOverflowPdf)
   ) {
-    pass('generate-pdf enforces the default two-page budget without publishing overflow');
+    pass('generate-pdf warns loudly and publishes overflow by default');
   } else {
     fail(`generate-pdf default page budget regressed: ${defaultOverflow.output.trim()}`);
   }
 
-  const overflowPdf = join(sandbox, 'overflow.pdf');
-  const manifestBeforeOverflow = readFileSync(manifest, 'utf-8');
-  const overflow = runPdf([input, overflowPdf, '--max-pages=1']);
+  const strictOverflowPdf = join(sandbox, 'strict-overflow.pdf');
+  const manifestBeforeStrictOverflow = readFileSync(manifest, 'utf-8');
+  const strictOverflow = runPdf([input, strictOverflowPdf, '--max-pages=1', '--strict-pages']);
   if (
-    overflow.status !== 0 &&
-    existsSync(overflowPdf) &&
-    countPages(overflowPdf) === 2 &&
-    overflow.output.includes('CV is 2 pages') &&
-    overflow.output.includes('allowed maximum is 1 page') &&
-    overflow.output.includes('Trim') &&
-    overflow.output.includes('--allow-overflow') &&
-    !overflow.output.includes('✅ PDF generated') &&
-    !overflow.output.includes('Manifest:') &&
-    readFileSync(manifest, 'utf-8') === manifestBeforeOverflow
+    strictOverflow.status !== 0 &&
+    existsSync(strictOverflowPdf) &&
+    countPages(strictOverflowPdf) === 2 &&
+    strictOverflow.output.includes('📐 Page budget: 1 (strict)') &&
+    strictOverflow.output.includes('CV is 2 pages') &&
+    strictOverflow.output.includes('allowed maximum is 1 page') &&
+    strictOverflow.output.includes('Trim') &&
+    strictOverflow.output.includes('--strict-pages') &&
+    !strictOverflow.output.includes('✅ PDF generated') &&
+    !strictOverflow.output.includes('Manifest:') &&
+    readFileSync(manifest, 'utf-8') === manifestBeforeStrictOverflow
   ) {
-    pass('generate-pdf fails overflow with guidance without publishing the draft as successful');
+    pass('generate-pdf rejects overflow only with --strict-pages');
   } else {
-    fail(`generate-pdf did not enforce the rendered page count: ${overflow.output.trim()}`);
-  }
-
-  const allowedPdf = join(sandbox, 'allowed-overflow.pdf');
-  const allowed = runPdf([input, allowedPdf, '--max-pages=1', '--allow-overflow']);
-  if (
-    allowed.status === 0 &&
-    existsSync(allowedPdf) &&
-    countPages(allowedPdf) === 2 &&
-    allowed.output.includes('CV is 2 pages') &&
-    allowed.output.includes('--allow-overflow') &&
-    allowed.output.includes('proceeding') &&
-    allowed.output.includes('✅ PDF generated') &&
-    allowed.output.includes('Manifest:') &&
-    manifestHasPdf(allowedPdf)
-  ) {
-    pass('generate-pdf deliberately downgrades overflow only with --allow-overflow');
-  } else {
-    fail(`generate-pdf escape hatch did not produce an explicit overflow warning: ${allowed.output.trim()}`);
+    fail(`generate-pdf strict page budget regressed: ${strictOverflow.output.trim()}`);
   }
 } finally {
   rmSync(sandbox, { recursive: true, force: true });

@@ -4,7 +4,7 @@
  * generate-pdf.mjs — HTML → PDF via Playwright
  *
  * Usage:
- *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder] [--max-pages=N] [--allow-overflow]
+ *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder] [--max-pages=N] [--strict-pages]
  *
  * --report links the generated PDF to its tracker/report number and records
  * the linkage in data/pdf-index.tsv so downstream tools (e.g. the TUI
@@ -17,10 +17,10 @@
  * role) rather than accidentally scrambled by an agent. Without this flag,
  * any divergence from cv.md's section order still fails generation.
  *
- * --max-pages=N sets the largest accepted rendered CV (default: 2 pages).
+ * --max-pages=N sets the preferred rendered CV length (default: 2 pages).
  * The actual page count is checked after Chromium writes the PDF; overflow
- * fails with trimming guidance. --allow-overflow deliberately downgrades that
- * failure to a warning for exceptional longer-form CVs.
+ * warns with trimming guidance by default. --strict-pages turns that warning
+ * into a hard rejection without publishing the render as successful.
  *
  * Requires: @playwright/test (or playwright) installed.
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
@@ -217,10 +217,10 @@ export function validateCvSectionOrder(html, cvMarkdown, { allowReorder = false 
  * force content under the limit.
  *
  * @param {number} pageCount - Actual pages in the rendered PDF.
- * @param {{ maxPages?: number, allowOverflow?: boolean }} [options]
+ * @param {{ maxPages?: number, strictPages?: boolean }} [options]
  * @returns {void}
  */
-export function enforcePageBudget(pageCount, { maxPages = 2, allowOverflow = false } = {}) {
+export function enforcePageBudget(pageCount, { maxPages = 2, strictPages = false } = {}) {
   if (!Number.isInteger(pageCount) || pageCount < 1) {
     throw new Error(`Could not determine the rendered PDF page count (received ${pageCount}).`);
   }
@@ -233,15 +233,13 @@ export function enforcePageBudget(pageCount, { maxPages = 2, allowOverflow = fal
   const allowedLabel = maxPages === 1 ? 'page' : 'pages';
   const message =
     `CV is ${pageCount} ${actualLabel}; the allowed maximum is ${maxPages} ${allowedLabel}. ` +
-    'Trim lower-priority bullets, older roles, secondary projects, or the competencies strip, ' +
-    'then regenerate. Use --allow-overflow only when this role deliberately needs a longer CV.';
+    'Trim lower-priority bullets, older roles, secondary projects, or the competencies strip, then regenerate.';
 
-  if (allowOverflow) {
-    console.warn(`⚠️  ${message} (proceeding because --allow-overflow was requested)`);
-    return;
+  if (strictPages) {
+    throw new Error(`${message} (--strict-pages requested)`);
   }
 
-  throw new Error(message);
+  console.warn(`⚠️  ${message} Continuing because overflow is warning-only by default; use --strict-pages to reject it.`);
 }
 
 /**
@@ -361,7 +359,7 @@ async function generatePDF() {
 
   // Parse arguments
   let inputPath, outputPath, format = 'a4', reportNum = '', allowReorder = false;
-  let maxPages = 2, maxPagesInput = '2', allowOverflow = false;
+  let maxPages = 2, maxPagesInput = '2', strictPages = false;
 
   for (const arg of args) {
     if (arg.startsWith('--format=')) {
@@ -373,8 +371,8 @@ async function generatePDF() {
       maxPages = Number(maxPagesInput);
     } else if (arg === '--allow-reorder') {
       allowReorder = true;
-    } else if (arg === '--allow-overflow') {
-      allowOverflow = true;
+    } else if (arg === '--strict-pages') {
+      strictPages = true;
     } else if (!inputPath) {
       inputPath = arg;
     } else if (!outputPath) {
@@ -383,7 +381,7 @@ async function generatePDF() {
   }
 
   if (!inputPath || !outputPath) {
-    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder] [--max-pages=N] [--allow-overflow]');
+    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder] [--max-pages=N] [--strict-pages]');
     console.error('');
     console.error('This script only converts an already-built HTML file to PDF.');
     console.error('The input HTML is produced by the pdf mode: the agent fills cv-template.html');
@@ -427,7 +425,7 @@ async function generatePDF() {
   console.log(`📄 Input:  ${inputPath}`);
   console.log(`📁 Output: ${outputPath}`);
   console.log(`📏 Format: ${format.toUpperCase()}`);
-  console.log(`📐 Page budget: ${maxPages}${allowOverflow ? ' (overflow allowed)' : ''}`);
+  console.log(`📐 Page budget: ${maxPages}${strictPages ? ' (strict)' : ' (warning only)'}`);
 
   let html = await readFile(inputPath, 'utf-8');
   let cvMarkdown = '';
@@ -453,7 +451,7 @@ async function generatePDF() {
     reportNum,
     inputPath,
     maxPages,
-    allowOverflow,
+    strictPages,
   });
 }
 
@@ -516,7 +514,7 @@ export async function inlineLocalFonts(html) {
  *   reportNum?: string,
  *   inputPath?: string,
  *   maxPages?: number,
- *   allowOverflow?: boolean,
+ *   strictPages?: boolean,
  *   launchBrowser?: (options: {headless: boolean}) => Promise<import('playwright').Browser>
  * }} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
@@ -570,11 +568,11 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     // Read the root page-tree count so page-like text in streams is ignored.
     const pageCount = countRenderedPdfPages(pdfBuffer);
 
-    // The draft stays on disk when over budget, but it is not reported or
-    // indexed as a successful CV unless overflow was explicitly accepted.
+    // Strict overflow leaves the draft on disk but stops before success logs
+    // and manifest publication. Default overflow warns and continues.
     enforcePageBudget(pageCount, {
       maxPages: opts.maxPages ?? 2,
-      allowOverflow: opts.allowOverflow ?? false,
+      strictPages: opts.strictPages ?? false,
     });
 
     console.log(`✅ PDF generated: ${outputPath}`);
