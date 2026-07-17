@@ -69,7 +69,7 @@ Construeer voor elke vraag het antwoord volgens dit diagram:
 2. **Vorig blok G**: Als er een concept bestaat, neem dit dan als basis en verfijn het
 3. **“Ik kies jou”-toon**: hetzelfde raamwerk als in de automatische pipeline: zelfverzekerd, niet smekend
 4. **Specificiteit**: citeer iets concreets uit de zichtbare vacaturetekst of uit het gevalideerde rapport. Als geen van beide de benodigde informatie bevat, vraag dan eerst om de vacaturetekst; verzin nooit details
-5. **career-ops proof point**: vermeld in 'Aanvullende informatie' als een dergelijk veld bestaat
+5. **career-ops proof point**: vermeld dit in 'Aanvullende informatie' als dat veld bestaat, maar alleen wanneer het afkomstig is uit het gevalideerde rapport, `cv.md`, `config/profile.yml` of de huidige conversatie. Laat de kandidaat het bevestigen voordat je het presenteert en gebruik geen onbewezen claims of metrics
 
 **Velden die vaak voorkomen in Nederlandse en Belgische formulieren:**
 - **Salarisverwachtingen (jaarlijks bruto)** -> Bereik uit `config/profile.yml` of de huidige conversatie, in EUR, met vermelding "bespreekbaar volgens het totaalpakket". Laat de kandidaat het bedrag bevestigen voordat je het gebruikt
