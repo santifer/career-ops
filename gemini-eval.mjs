@@ -368,17 +368,18 @@ if (saveReport) {
   let reportSaved = false;
   let reservedNumbers = [];
   try {
-    if (!existsSync(PATHS.reports)) {
-      mkdirSync(PATHS.reports, { recursive: true });
-    }
+    try {
+      if (!existsSync(PATHS.reports)) {
+        mkdirSync(PATHS.reports, { recursive: true });
+      }
 
-    reservedNumbers   = await reserveReportNumbers(1, { rootDir: ROOT, reportsDir: PATHS.reports });
-    const num         = formatReportNumber(reservedNumbers[0]);
-    const today       = new Date().toISOString().split('T')[0];
-    const companySlug = slugifyCompany(company);
-    const filename    = `${num}-${companySlug}-${today}.md`;
-    const reportPath  = join(PATHS.reports, filename);
-    const trackerPath = join(PATHS.trackerAdditions, `${num}-${companySlug}.tsv`);
+      reservedNumbers   = await reserveReportNumbers(1, { rootDir: ROOT, reportsDir: PATHS.reports });
+      const num         = formatReportNumber(reservedNumbers[0]);
+      const today       = new Date().toISOString().split('T')[0];
+      const companySlug = slugifyCompany(company);
+      const filename    = `${num}-${companySlug}-${today}.md`;
+      const reportPath  = join(PATHS.reports, filename);
+      const trackerPath = join(PATHS.trackerAdditions, `${num}-${companySlug}.tsv`);
 
     const reportContent = `# Evaluation: ${company} — ${role}
 
@@ -394,48 +395,49 @@ if (saveReport) {
 ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').trim()}
 `;
 
-    writeFileSync(reportPath, reportContent, 'utf-8');
-    mkdirSync(PATHS.trackerAdditions, { recursive: true });
-    const trackerFields = [
-      String(parseInt(num, 10)),
-      today,
-      tsvSafe(company),
-      tsvSafe(role),
-      'Evaluated',
-      normalizedTrackerScore(score),
-      '❌',
-      `[${num}](reports/${filename})`,
-      'Gemini evaluation',
-    ];
-    writeFileSync(trackerPath, `${trackerFields.join('\t')}\n`, 'utf-8');
-    console.log(`\n✅  Report saved: reports/${filename}`);
-    console.log(`📊  Tracker addition saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
-    reportSaved = true;
-  } catch (err) {
-    console.warn(`⚠️   Could not save report: ${err.message}`);
-    process.exitCode = 1;
-  }
-
-  if (reportSaved) {
-    try {
-      const mergeOutput = execFileSync(process.execPath, [join(ROOT, 'merge-tracker.mjs')], {
-        cwd: ROOT,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      if (mergeOutput.trim()) console.log(mergeOutput.trim());
-      console.log('📊  Tracker merged into data/applications.md.');
+      writeFileSync(reportPath, reportContent, 'utf-8');
+      mkdirSync(PATHS.trackerAdditions, { recursive: true });
+      const trackerFields = [
+        String(parseInt(num, 10)),
+        today,
+        tsvSafe(company),
+        tsvSafe(role),
+        'Evaluated',
+        normalizedTrackerScore(score),
+        '❌',
+        `[${num}](reports/${filename})`,
+        'Gemini evaluation',
+      ];
+      writeFileSync(trackerPath, `${trackerFields.join('\t')}\n`, 'utf-8');
+      console.log(`\n✅  Report saved: reports/${filename}`);
+      console.log(`📊  Tracker addition saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
+      reportSaved = true;
     } catch (err) {
-      console.warn(`⚠️   Report saved, but could not merge tracker addition into data/applications.md: ${err.message}`);
+      console.warn(`⚠️   Could not save report: ${err.message}`);
       process.exitCode = 1;
     }
-  }
 
-  if (reservedNumbers.length > 0) {
-    try {
-      await releaseReportNumbers(reservedNumbers, { reportsDir: PATHS.reports });
-    } catch (err) {
-      console.warn(`⚠️   Could not release report reservation: ${err.message}`);
+    if (reportSaved) {
+      try {
+        const mergeOutput = execFileSync(process.execPath, [join(ROOT, 'merge-tracker.mjs')], {
+          cwd: ROOT,
+          encoding: 'utf-8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        if (mergeOutput.trim()) console.log(mergeOutput.trim());
+        console.log('📊  Tracker merged into data/applications.md.');
+      } catch (err) {
+        console.warn(`⚠️   Report saved, but could not merge tracker addition into data/applications.md: ${err.message}`);
+        process.exitCode = 1;
+      }
+    }
+  } finally {
+    if (reservedNumbers.length > 0) {
+      try {
+        await releaseReportNumbers(reservedNumbers, { reportsDir: PATHS.reports });
+      } catch (err) {
+        console.warn(`⚠️   Could not release report reservation: ${err.message}`);
+      }
     }
   }
 }
