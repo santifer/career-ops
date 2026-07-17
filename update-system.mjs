@@ -169,6 +169,7 @@ const SYSTEM_PATHS = [
   'browser-extract.mjs',
   'analyze-patterns.mjs',
   'upskill.mjs',
+  'skill-extract.mjs',
   'stats.mjs',
   'detect-reposts.mjs',
   'fingerprint-core.mjs',
