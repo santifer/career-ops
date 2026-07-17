@@ -365,6 +365,8 @@ There is also an **experimental web UI** (alpha, opt-in — nothing runs unless 
 
 ## Project Structure
 
+The root looks flat and busy (88+ scripts, no `src/`) — that's deliberate, not clutter. See [ARCHITECTURE.md](ARCHITECTURE.md) for why (path stability, the `SYSTEM_PATHS` allowlist the updater relies on, and how the pieces fit together) before proposing a reorg.
+
 ```
 career-ops/
 ├── AGENTS.md                    # Canonical agent instructions (all CLIs)
