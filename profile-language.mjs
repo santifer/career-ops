@@ -24,5 +24,12 @@ export function parseOutputLanguage(profileYaml) {
 /** Build the canonical output-language rule injected into every model prompt. */
 export function outputLanguageInstruction(language) {
   const outputLanguage = normalizeOutputLanguage(language);
-  return `Write all human-facing output in ${outputLanguage}, regardless of the language of these instructions or the job description. Keep market-specific terms when relevant, but explain them in ${outputLanguage} when needed.`;
+  return [
+    `Write all human-facing output in ${outputLanguage}, including the full A–G`,
+    `evaluation and the machine-readable summary's free-text fields, regardless`,
+    `of the language of these instructions or the job description. Keep`,
+    `market-specific terms when relevant, but explain them in ${outputLanguage}`,
+    `when needed. The configured language.output always wins over the job`,
+    `description's language.`,
+  ].join(' ');
 }
