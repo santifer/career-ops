@@ -178,6 +178,8 @@ async function main() {
     options: {
       payload: { type: "string" },
       out:     { type: "string" },
+      format:  { type: "string" },
+      report:  { type: "string" },
       help:    { type: "boolean", short: "h" },
     },
     strict: false,
@@ -186,10 +188,12 @@ async function main() {
   if (args.help || !args.payload) {
     console.log(`
 Usage:
-  node generate-cover-letter.mjs --payload payload.json [--out output/path.pdf]
+  node generate-cover-letter.mjs --payload payload.json [--out output/path.pdf] [--format letter|a4] [--report NNN]
 
   --payload   Path to the JSON payload file (required)
   --out       Override output path from payload (optional)
+  --format    Override output PDF page format (letter|a4, default: a4)
+  --report    Link the PDF to a tracker report number in data/pdf-index.tsv
 `);
     process.exit(args.help ? 0 : 1);
   }
@@ -232,7 +236,11 @@ Usage:
     // Playwright or create a PDF artifact.
     const { renderHtmlToPdf } = await import("./generate-pdf.mjs");
     const outputPath = resolve(payload.output_path);
-    await renderHtmlToPdf(html, outputPath, { format: "a4" });
+    await renderHtmlToPdf(html, outputPath, {
+      format: args.format || "a4",
+      reportNum: args.report,
+      inputPath: payloadPath,
+    });
     console.log(`\nCover letter PDF: ${payload.output_path}`);
   } catch (err) {
     console.error("ERROR generating cover letter PDF:");
