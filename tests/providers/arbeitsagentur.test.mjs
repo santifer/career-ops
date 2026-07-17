@@ -127,13 +127,25 @@ try {
     fail(`parseArbeitsagenturConfig remote defaults = ${JSON.stringify({ m: rdef.remoteMatch, p: rdef.remoteMaxPages })}`);
   }
 
-  // fetch() — remoteMatch:'filter' uses server-side homeoffice filter, paginates, and tags remote roles
+  // fetch() — remoteMatch:'filter' uses server-side homeoffice filter, paginates, and tags
+  // only the candidates the detail endpoint confirms as homeofficetyp VOLLSTAENDIG.
+  // `homeoffice=nv_true` also returns NACH_VEREINBARUNG (office-anchored hybrid) roles,
+  // which must keep their real city so the commute location_filter still drops them.
   let usedHomeoffice = false;
   const pagesSeen = new Set();
+  const detailsSeen = [];
+  // R1 München = genuinely remote; R2 Stuttgart = hybrid "nach Absprache"; R3 Köln = lookup fails.
+  const HOMEOFFICETYP = { R1: 'VOLLSTAENDIG', R2: 'NACH_VEREINBARUNG' };
   const filterFetched = await aa.fetch(
     { name: 'AA', arbeitsagentur: { keywords: ['ML'], wo: 'Berlin', remoteNationwide: true, remoteMatch: 'filter', remoteMaxPages: 5, size: 2 } },
     {
       fetchJson: async (url) => {
+        if (url.includes('/jobdetails/')) {
+          const refnr = Buffer.from(url.split('/jobdetails/')[1], 'base64').toString();
+          detailsSeen.push(refnr);
+          if (!(refnr in HOMEOFFICETYP)) throw new Error('HTTP 404'); // unverifiable → must stay untagged
+          return { homeofficetyp: HOMEOFFICETYP[refnr] };
+        }
         const sp = new URL(url).searchParams;
         if (sp.has('wo')) {
           return { stellenangebote: [{ refnr: 'L', titel: 'ML Engineer', arbeitgeber: 'Co', arbeitsort: { ort: 'Berlin' } }] };
@@ -150,10 +162,28 @@ try {
     },
   );
   const munich = filterFetched.find(j => j.url.endsWith('R1'));
-  if (usedHomeoffice && pagesSeen.has('1') && pagesSeen.has('2') && munich && /Deutschlandweit \(Homeoffice\)/.test(munich.location)) {
-    pass('aa.fetch() remoteMatch:filter sends homeoffice=nv_true, paginates, and tags far-city remote roles');
+  const stuttgart = filterFetched.find(j => j.url.endsWith('R2'));
+  const koeln = filterFetched.find(j => j.url.endsWith('R3'));
+  const TAG = /Deutschlandweit \(Homeoffice\)/;
+  if (usedHomeoffice && pagesSeen.has('1') && pagesSeen.has('2') && munich && TAG.test(munich.location)) {
+    pass('aa.fetch() remoteMatch:filter sends homeoffice=nv_true, paginates, and tags confirmed VOLLSTAENDIG roles');
   } else {
     fail(`aa.fetch() filter mode = ${JSON.stringify({ usedHomeoffice, pages: [...pagesSeen], munichLoc: munich?.location })}`);
+  }
+  if (stuttgart && !TAG.test(stuttgart.location) && stuttgart.location === 'Stuttgart') {
+    pass('aa.fetch() does not tag NACH_VEREINBARUNG (hybrid) roles as nationwide remote');
+  } else {
+    fail(`aa.fetch() NACH_VEREINBARUNG role = ${JSON.stringify({ loc: stuttgart?.location })}`);
+  }
+  if (koeln && !TAG.test(koeln.location) && koeln.location === 'Köln') {
+    pass('aa.fetch() leaves a posting untagged when the homeofficetyp lookup fails');
+  } else {
+    fail(`aa.fetch() unverifiable role = ${JSON.stringify({ loc: koeln?.location })}`);
+  }
+  if (detailsSeen.length === 3 && ['R1', 'R2', 'R3'].every(r => detailsSeen.includes(r))) {
+    pass('aa.fetch() verifies homeofficetyp once per remote candidate');
+  } else {
+    fail(`aa.fetch() detail lookups = ${JSON.stringify(detailsSeen)}`);
   }
 
   // fetch() — no keywords throws; total outage throws (not silent)
