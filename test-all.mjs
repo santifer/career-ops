@@ -24,7 +24,7 @@
  */
 
 
-import { execSync, execFileSync, spawn } from 'child_process';
+import { execSync, execFileSync, spawn, spawnSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, unlinkSync, realpathSync, symlinkSync } from 'fs';
 import { join, dirname, basename, delimiter } from 'path';
 import { tmpdir } from 'os';
@@ -378,6 +378,39 @@ try {
   } else {
     fail('resolveAtsApi guard failed (bad id or http accepted)');
   }
+  // Workday: per-job CXS endpoint. Job path is genuinely multi-segment (a location
+  // slug + a title slug), which is why resolveAtsApi's SSRF guard uses isSafeValue
+  // (component-by-component) instead of the single-segment SAFE_SEGMENT check.
+  const wdApi = resolveAtsApi('https://acme.wd1.myworkdayjobs.com/en-US/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125');
+  if (wdApi?.ats === 'workday'
+      && wdApi.apiUrl === 'https://acme.wd1.myworkdayjobs.com/wday/cxs/acme/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125'
+      && wdApi.parts?.jobPath === 'Toronto-ON-CAN/Agentic-AI-Engineer_R260010125') {
+    pass('resolveAtsApi maps a Workday posting (with locale prefix) to its per-job CXS API URL');
+  } else {
+    fail(`Workday API URL wrong: ${JSON.stringify(wdApi)}`);
+  }
+  // Same tenant, no locale prefix in the URL.
+  const wdApiNoLocale = resolveAtsApi('https://acme.wd5.myworkdayjobs.com/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125');
+  if (wdApiNoLocale?.ats === 'workday'
+      && wdApiNoLocale.apiUrl === 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125') {
+    pass('resolveAtsApi maps a Workday posting without a locale prefix');
+  } else {
+    fail(`Workday (no locale) API URL wrong: ${JSON.stringify(wdApiNoLocale)}`);
+  }
+  // Directory traversal embedded inside one segment (not a bare ".." dot-segment,
+  // which the URL parser itself would normalize away before we ever see it) must
+  // still be rejected by isSafeValue's per-segment "..": ownership check.
+  if (resolveAtsApi('https://acme.wd1.myworkdayjobs.com/External/job/Toronto-ON-CAN/Role..R1') === null) {
+    pass('resolveAtsApi rejects ".." embedded in a Workday jobPath segment (SSRF guard)');
+  } else {
+    fail('resolveAtsApi should reject ".." embedded in a Workday jobPath segment');
+  }
+  if (resolveAtsApi('https://acme.notworkdayjobs.com/External/job/Toronto-ON-CAN/Role_R1') === null) {
+    pass('resolveAtsApi returns null for a myworkdayjobs.com lookalike host');
+  } else {
+    fail('resolveAtsApi should not match a lookalike Workday host');
+  }
+
   // Ashby: org-level board endpoint. Ashby pages are JS-rendered, so the browser/
   // static rung sees only nav/footer and false-reports live postings as expired —
   // the API rung must resolve the org board and confirm the specific job id.
@@ -438,15 +471,22 @@ try {
     const cvGone = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
     globalThis.fetch = async () => { throw new Error('network down'); };
     const cvErr = await checkLivenessViaApi('https://boards.greenhouse.io/acme/jobs/4567890');
+    const wdUrl = 'https://acme.wd1.myworkdayjobs.com/External/job/Toronto-ON-CAN/Agentic-AI-Engineer_R260010125';
+    globalThis.fetch = async () => ({ status: 200 });
+    const cvWdLive = await checkLivenessViaApi(wdUrl);
+    globalThis.fetch = async () => ({ status: 404 });
+    const cvWdGone = await checkLivenessViaApi(wdUrl);
     if (cvAshbyLive?.result === 'active' && cvAshbyLive?.code === 'ashby_api_ok'
         && cvAshbyGone?.result === 'expired' && cvAshbyGone?.code === 'ashby_api_unlisted'
         && cvAshbyMalformed === null
         && cvGhLive?.result === 'active'
         && cvGone?.result === 'expired'
-        && cvErr === null) {
-      pass('checkLivenessViaApi: 200→interpret (Ashby), malformed→null, greenhouse 200→active, 404→expired, fetch error→null');
+        && cvErr === null
+        && cvWdLive?.result === 'active' && cvWdLive?.code === 'workday_api_ok'
+        && cvWdGone?.result === 'expired' && cvWdGone?.code === 'workday_api_gone') {
+      pass('checkLivenessViaApi: 200→interpret (Ashby), malformed→null, greenhouse/workday 200→active, 404→expired, fetch error→null');
     } else {
-      fail(`checkLivenessViaApi wrong: ashbyLive=${JSON.stringify(cvAshbyLive)} ashbyGone=${JSON.stringify(cvAshbyGone)} malformed=${JSON.stringify(cvAshbyMalformed)} ghLive=${JSON.stringify(cvGhLive)} gone=${JSON.stringify(cvGone)} err=${JSON.stringify(cvErr)}`);
+      fail(`checkLivenessViaApi wrong: ashbyLive=${JSON.stringify(cvAshbyLive)} ashbyGone=${JSON.stringify(cvAshbyGone)} malformed=${JSON.stringify(cvAshbyMalformed)} ghLive=${JSON.stringify(cvGhLive)} gone=${JSON.stringify(cvGone)} err=${JSON.stringify(cvErr)} wdLive=${JSON.stringify(cvWdLive)} wdGone=${JSON.stringify(cvWdGone)}`);
     }
   } finally {
     globalThis.fetch = origFetch;
@@ -744,6 +784,8 @@ const allowedFiles = [
   '.claude-plugin/marketplace.json', '.claude-plugin/plugin.json',
   // Community / governance files (added in v1.3.0, all legitimately reference the maintainer)
   'CODE_OF_CONDUCT.md', 'GOVERNANCE.md', 'SECURITY.md', 'SUPPORT.md',
+  // Manifesto: the author signs it publicly; the ledger carries signers' names by design
+  'MANIFESTO.md', 'SIGNATURES.md', '.github/PULL_REQUEST_TEMPLATE/sign-manifesto.md',
   '.github/SECURITY.md',
   // Dashboard credit string
   'dashboard/internal/ui/screens/pipeline.go',
@@ -2058,6 +2100,22 @@ if (
   } else {
     fail('apply mode references browser-extract.mjs — the extractor must not touch the apply/form path');
   }
+
+  // Phase 2b (#1449): the language-market pipeline mirrors must wire the same
+  // opt-in extractor, so non-English users get the token saving too.
+  const langPipelines = readdirSync(join(ROOT, 'modes'), { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => `modes/${e.name}/pipeline.md`)
+    .filter((p) => existsSync(join(ROOT, p)));
+  const langMissing = langPipelines.filter((m) => {
+    const src = readFile(m);
+    return !(src.includes('browser-extract.mjs') && src.includes('scan.extractor'));
+  });
+  if (langPipelines.length > 0 && langMissing.length === 0) {
+    pass(`all ${langPipelines.length} language pipeline mirrors wire the opt-in extractor (#1449 Phase 2b)`);
+  } else {
+    fail(`language pipeline mirrors missing extractor wiring: ${langMissing.join(', ') || '(none found)'}`);
+  }
 }
 
 if (readFile('DATA_CONTRACT.md').includes('data/blacklist.md')) {
@@ -2214,6 +2272,38 @@ try {
   else fail('scan-ats-full sampleCompanies behaves wrong');
 } catch (e) {
   fail(`scan-ats-full date-gate/sampling test crashed: ${e.message}`);
+}
+
+// Reverse-scan blacklist gate: scan-ats-full must share scan.mjs's
+// user-owned do-not-apply semantics, including audit mode annotation.
+try {
+  const { filterBlacklistedOffers } = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+  const blacklist = new Map([
+    ['acmecorp', { company: 'Acme Corp', reason: 'example reason' }],
+  ]);
+  const offers = [
+    { company: 'Acme Corp.', title: 'Software Engineer', url: 'https://example.com/acme' },
+    { company: 'Globex', title: 'Software Engineer', url: 'https://example.com/globex' },
+  ];
+  const skipped = typeof filterBlacklistedOffers === 'function'
+    ? filterBlacklistedOffers(offers, blacklist, { includeBlacklisted: false })
+    : null;
+  const audited = typeof filterBlacklistedOffers === 'function'
+    ? filterBlacklistedOffers(offers, blacklist, { includeBlacklisted: true })
+    : null;
+  const ok =
+    skipped?.filteredBlacklist === 1 &&
+    skipped.offers.length === 1 &&
+    skipped.offers[0].company === 'Globex' &&
+    audited?.annotatedBlacklisted === 1 &&
+    audited.offers.length === 2 &&
+    audited.offers[0].blacklisted === true &&
+    audited.offers[0].note.includes('blacklisted: example reason') &&
+    offers[0].blacklisted === undefined;
+  if (ok) pass('scan-ats-full filters data/blacklist.md matches by default and annotates them under --include-blacklisted (#1911)');
+  else fail('scan-ats-full missing blacklist filter/audit semantics (#1911)');
+} catch (e) {
+  fail(`scan-ats-full blacklist test crashed: ${e.message}`);
 }
 
 // ── VC Portfolio Seed Fetcher ────────────────────────────────────────
@@ -3524,8 +3614,9 @@ try {
   const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
   const historyColumns = historyRow.split('\t');
   if (
-    historyColumns.length === 9 && // 7 metadata + fingerprint (#1597) + postedAt
+    historyColumns.length === 11 && // 7 metadata + fingerprint (#1597) + postedAt + trust score/flags (#1743)
     historyColumns[8] === '' && // no postedAt on hostileOffer → empty trailing col
+    historyColumns[9] === '' && historyColumns[10] === '' && // no trust signal → empty trailing cols
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
@@ -3554,9 +3645,9 @@ try {
   const datedHistory = formatScanHistoryRow(datedOffer, '2026-07-09').split('\t');
   const noDateHistory = formatScanHistoryRow({ ...datedOffer, postedAt: undefined }, '2026-07-09').split('\t');
   if (
-    datedHistory.length === 9 &&
+    datedHistory.length === 11 &&
     datedHistory[8] === '2026-06-18' && // epoch ms → YYYY-MM-DD in the trailing column
-    noDateHistory.length === 9 &&
+    noDateHistory.length === 11 &&
     noDateHistory[8] === '' // missing postedAt → empty trailing column, never a bogus date
   ) {
     pass('scan-history writer appends postedAt as an ISO trailing column (empty when absent)');
@@ -3577,6 +3668,44 @@ try {
     pass('pipeline writer appends a labeled posted: segment (omitted/byte-identical when date missing or invalid)');
   } else {
     fail(`pipeline postedAt segment wrong: dated="${datedPipeline}" / noDate="${noDatePipeline}" / bad="${badDatePipeline}" / nan="${nanDatePipeline}"`);
+  }
+
+  // ── trust/legitimacy signal persistence (#1743) ──
+  // The scanner computes offer.trustScore/trustFlags on every job; surface it only
+  // when flagged (score < 100). scan-history gets trailing score+flags columns
+  // (after postedAt); pipeline.md gets a labeled `trust:` segment. Clean/unset
+  // trust stays byte-identical (empty column / no segment).
+  const trustBase = { url: 'https://jobs.example.com/77', source: 'lever-api', title: 'SRE', company: 'Acme', location: 'Remote', description: '' };
+  const flaggedOffer = { ...trustBase, trustScore: 60, trustFlags: ['missing_apply_url', 'suspicious_domain'] };
+  const cleanOffer = { ...trustBase, trustScore: 100, trustFlags: [] };
+  const untrustedOffer = { ...trustBase }; // no trust fields (trust_filter disabled)
+  const flaggedHist = formatScanHistoryRow(flaggedOffer, '2026-07-09').split('\t');
+  const cleanHist = formatScanHistoryRow(cleanOffer, '2026-07-09').split('\t');
+  if (
+    flaggedHist.length === 11 &&
+    flaggedHist[9] === '60' && flaggedHist[10] === 'missing_apply_url,suspicious_domain' &&
+    cleanHist.length === 11 && cleanHist[9] === '' && cleanHist[10] === '' // score 100 → not flagged → empty
+  ) {
+    pass('scan-history writer appends trust score + flags trailing columns when flagged, empty otherwise (#1743)');
+  } else {
+    fail(`scan-history trust columns wrong: flagged=${JSON.stringify(flaggedHist)} / clean=${JSON.stringify(cleanHist)}`);
+  }
+
+  const flaggedPipeline = formatPipelineOffer(flaggedOffer);
+  const cleanPipeline = formatPipelineOffer(cleanOffer);
+  const untrustedPipeline = formatPipelineOffer(untrustedOffer);
+  const flaggedNoFlags = formatPipelineOffer({ ...trustBase, trustScore: 80, trustFlags: [] });
+  const withDateAndTrust = formatPipelineOffer({ ...trustBase, postedAt: Date.parse('2026-06-18T00:00:00Z'), trustScore: 70, trustFlags: ['invalid_url'], note: 'pick' });
+  if (
+    flaggedPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 60 missing_apply_url,suspicious_domain' &&
+    cleanPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote' && // score 100 → no segment
+    untrustedPipeline === cleanPipeline && // no trust fields → byte-identical
+    flaggedNoFlags === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 80' && // score-only when no flags
+    withDateAndTrust === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | posted: 2026-06-18 | trust: 70 invalid_url | note: pick' // stable order posted→trust→note
+  ) {
+    pass('pipeline writer appends a labeled trust: segment ordered posted→trust→note, byte-identical when clean/unset (#1743)');
+  } else {
+    fail(`pipeline trust segment wrong: flagged="${flaggedPipeline}" / clean="${cleanPipeline}" / untrusted="${untrustedPipeline}" / noFlags="${flaggedNoFlags}" / combo="${withDateAndTrust}"`);
   }
 
   // ── content_filter (#734) ──
@@ -4173,10 +4302,81 @@ try {
 console.log('\n🧪 Testing reserve-report-num env override and range reservation...');
 try {
   const RESERVE = join(ROOT, 'reserve-report-num.mjs');
-  const reserveRun = (args, dir) => execFileSync(NODE, [RESERVE, ...args], {
+  const reserveRun = (args, dir, tracker = join(dir, 'applications.md')) => execFileSync(NODE, [RESERVE, ...args], {
     encoding: 'utf-8',
-    env: { ...process.env, CAREER_OPS_REPORTS_DIR: dir },
+    env: { ...process.env, CAREER_OPS_REPORTS_DIR: dir, CAREER_OPS_TRACKER: tracker },
   }).trim();
+
+  // Importing the module must expose the same allocator used by the CLI,
+  // without running the CLI as an import side effect.
+  const apiTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-api-'));
+  const apiTracker = join(apiTmp, 'applications.md');
+  const apiProbe = execFileSync(NODE, ['--input-type=module', '--eval', `
+    const api = await import(${JSON.stringify(pathToFileURL(RESERVE).href)});
+    const { existsSync, readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const nums = await api.reserveReportNumbers(1, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    const sentinel = join(process.env.CAREER_OPS_REPORTS_DIR, '001-RESERVED.md');
+    let firstToken = null;
+    try { firstToken = JSON.parse(readFileSync(sentinel, 'utf-8')).token; } catch {}
+    await api.releaseReportNumbers(nums, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    const replacement = await api.reserveReportNumbers(1, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    let replacementToken = null;
+    try { replacementToken = JSON.parse(readFileSync(sentinel, 'utf-8')).token; } catch {}
+    await api.releaseReportNumbers(nums, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    const replacementPreserved = existsSync(sentinel);
+    await api.releaseReportNumbers(replacement, {
+      reportsDir: process.env.CAREER_OPS_REPORTS_DIR,
+      trackerPath: process.env.CAREER_OPS_TRACKER,
+    });
+    console.log(JSON.stringify({
+      nums,
+      formatted: api.formatReportNumber(nums[0]),
+      firstToken,
+      replacementToken,
+      replacementPreserved,
+      replacementCleaned: !existsSync(sentinel),
+    }));
+  `], {
+    encoding: 'utf-8',
+    env: { ...process.env, CAREER_OPS_REPORTS_DIR: apiTmp, CAREER_OPS_TRACKER: apiTracker },
+  }).trim();
+  let apiResult = null;
+  try { apiResult = JSON.parse(apiProbe); } catch {}
+  if (apiResult?.nums?.[0] === 1 && apiResult.formatted === '001'
+      && apiResult.firstToken && apiResult.replacementToken
+      && apiResult.firstToken !== apiResult.replacementToken
+      && apiResult.replacementPreserved && apiResult.replacementCleaned) {
+    pass('reserve-report-num token ownership prevents stale cleanup from deleting a replacement claim');
+  } else {
+    fail(`reserve-report-num import API failed: ${apiProbe}`);
+  }
+  rmSync(apiTmp, { recursive: true, force: true });
+
+  const trackerParseApi = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
+  const complexLinkNums = trackerParseApi.extractTrackerReportNumbers(
+    '[22](../reports/021-acme_(us)-2026-07-15.md "US role")',
+  );
+  const angleLinkNums = trackerParseApi.extractTrackerReportNumbers(
+    '[23](<../reports/023-acme role-(eu)-2026-07-15.md> \'EU role\')',
+  );
+  if (complexLinkNums.join(',') === '22,21' && angleLinkNums.join(',') === '23') {
+    pass('tracker report-link parsing supports balanced parentheses, spaces, and optional titles');
+  } else {
+    fail(`complex tracker report links parsed incorrectly: ${complexLinkNums} / ${angleLinkNums}`);
+  }
 
   const reserveTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-'));
   const single = reserveRun([], reserveTmp);
@@ -4186,6 +4386,79 @@ try {
     fail(`env override failed: stdout=${single}, sentinel in tmp=${existsSync(join(reserveTmp, '001-RESERVED.md'))}`);
   }
   rmSync(reserveTmp, { recursive: true, force: true });
+
+  // Tracker IDs and linked report IDs are occupied even when their report
+  // files are missing (for example after a partial sync or manual archive).
+  const trackerTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-tracker-'));
+  const trackerFile = join(trackerTmp, 'applications.md');
+  writeFileSync(trackerFile,
+    '# Applications Tracker\n\n' +
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+    '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+    '| 7 | 2026-01-01 | Acme | Engineer | 4.0/5 | Evaluated | ❌ | [12](../reports/012-acme-2026-01-01.md) | fixture |\n');
+  const afterTracker = reserveRun([], join(trackerTmp, 'reports'), trackerFile);
+  if (afterTracker === '013') {
+    pass('reservation accounts for tracker row IDs and linked report IDs');
+  } else {
+    fail(`tracker-aware reservation produced ${afterTracker}, expected 013`);
+  }
+  rmSync(trackerTmp, { recursive: true, force: true });
+
+  // Formatting is a minimum width, not a three-digit ceiling.
+  const fourDigitTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-4digit-'));
+  const fourDigitTracker = join(fourDigitTmp, 'applications.md');
+  writeFileSync(fourDigitTracker,
+    '# Applications Tracker\n\n' +
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+    '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+    '| 1000 | 2026-01-01 | Acme | Engineer | 4.0/5 | Evaluated | ❌ | — | fixture |\n');
+  const fourDigit = reserveRun([], join(fourDigitTmp, 'reports'), fourDigitTracker);
+  if (fourDigit === '1001' && existsSync(join(fourDigitTmp, 'reports', '1001-RESERVED.md'))) {
+    pass('reservation continues beyond 999 without truncation or reset');
+  } else {
+    fail(`four-digit reservation produced ${fourDigit}, expected 1001`);
+  }
+  rmSync(fourDigitTmp, { recursive: true, force: true });
+
+  const unsafeRangeTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-unsafe-range-'));
+  const unsafeRangeReports = join(unsafeRangeTmp, 'reports');
+  const unsafeRangeTracker = join(unsafeRangeTmp, 'applications.md');
+  mkdirSync(unsafeRangeReports);
+  writeFileSync(
+    join(unsafeRangeReports, `${Number.MAX_SAFE_INTEGER - 1}-existing.md`),
+    '# fixture',
+  );
+  const allocatorApi = await import(`${pathToFileURL(RESERVE).href}?unsafe-range=${Date.now()}`);
+  let unsafeRangeError = null;
+  try {
+    await allocatorApi.reserveReportNumbers(2, {
+      reportsDir: unsafeRangeReports,
+      trackerPath: unsafeRangeTracker,
+    });
+  } catch (err) {
+    unsafeRangeError = err;
+  }
+  const unsafeRangeLeaked = readdirSync(unsafeRangeReports)
+    .some(name => name.endsWith('-RESERVED.md'));
+  if (unsafeRangeError instanceof RangeError && !unsafeRangeLeaked) {
+    pass('unsafe report-number ranges fail before creating a partial sentinel');
+  } else {
+    fail(`unsafe range guard failed: error=${unsafeRangeError?.message}, leaked=${unsafeRangeLeaked}`);
+  }
+  rmSync(unsafeRangeTmp, { recursive: true, force: true });
+
+  const evaluatorSources = ['ollama-eval.mjs', 'openai-eval.mjs', 'gemini-eval.mjs', 'openrouter-runner.mjs']
+    .map(name => [name, readFile(name)]);
+  const unmigratedEvaluators = evaluatorSources
+    .filter(([, source]) => !/reservedNumbers\s*=\s*await\s+reserveReportNumbers\s*\(/.test(source)
+      || !/await\s+releaseReportNumbers\s*\(\s*reservedNumbers\b/.test(source)
+      || /function\s+nextReport(?:Number|Num)\s*\(/.test(source))
+    .map(([name]) => name);
+  if (unmigratedEvaluators.length === 0) {
+    pass('all headless evaluators use the shared atomic report allocator');
+  } else {
+    fail(`headless evaluators still carry private max+1 allocators: ${unmigratedEvaluators.join(', ')}`);
+  }
 
   // --count N: contiguous range from an empty dir.
   const rangeTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-range-'));
@@ -4233,28 +4506,21 @@ try {
   }
   rmSync(collideTmp, { recursive: true, force: true });
 
-  // Mid-range collision → rollback. reserveRange must claim a partial range,
-  // fail on a later slot, release the partial claims, and restart past the
-  // collision. A blocker visible to maxSlot() can't trigger this (it bumps the
-  // base instead, as the previous test pins), so plant one maxSlot() can't
-  // see: its /^(\d{3})-/ regex skips 4-digit names, while claimSlot's
-  // occupancy check matches any numeric prefix. Seeding max=999 puts the base
-  // at 1000; "1001-taken.md" then collides mid-range exactly like a slot
-  // claimed by a racing process after the base was computed.
-  const rollbackTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-rollback-'));
-  writeFileSync(join(rollbackTmp, '999-acme-2026-07-02.md'), '# stub');
-  writeFileSync(join(rollbackTmp, '1001-taken.md'), '# stub');
-  const rolledBack = reserveRun(['--count', '3'], rollbackTmp);
-  const released1000 = !existsSync(join(rollbackTmp, '1000-RESERVED.md'));
-  const blocker1001 = existsSync(join(rollbackTmp, '1001-taken.md'));
-  const restarted = ['1002', '1003', '1004']
-    .every(n => existsSync(join(rollbackTmp, `${n}-RESERVED.md`)));
-  if (rolledBack === '1002-1004' && released1000 && blocker1001 && restarted) {
-    pass('mid-range collision releases partially claimed slots and restarts past it');
+  // Existing four-digit report names participate in the same occupancy scan.
+  const highRangeTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-high-range-'));
+  writeFileSync(join(highRangeTmp, '999-acme-2026-07-02.md'), '# stub');
+  writeFileSync(join(highRangeTmp, '1001-taken.md'), '# stub');
+  const highRange = reserveRun(['--count', '3'], highRangeTmp);
+  const skipped1000 = !existsSync(join(highRangeTmp, '1000-RESERVED.md'));
+  const blocker1001 = existsSync(join(highRangeTmp, '1001-taken.md'));
+  const reservedHighRange = ['1002', '1003', '1004']
+    .every(n => existsSync(join(highRangeTmp, `${n}-RESERVED.md`)));
+  if (highRange === '1002-1004' && skipped1000 && blocker1001 && reservedHighRange) {
+    pass('four-digit report files advance a contiguous range without truncation');
   } else {
-    fail(`rollback: stdout=${rolledBack} (want 1002-1004), 1000 released=${released1000}, blocker kept=${blocker1001}, restarted sentinels=${restarted}`);
+    fail(`four-digit range: stdout=${highRange} (want 1002-1004), 1000 skipped=${skipped1000}, blocker kept=${blocker1001}, sentinels=${reservedHighRange}`);
   }
-  rmSync(rollbackTmp, { recursive: true, force: true });
+  rmSync(highRangeTmp, { recursive: true, force: true });
 
   // Range-vs-range: two concurrent --count 4 reservations must not overlap.
   // Terminates by construction: each restart strictly advances the base.
@@ -4286,7 +4552,7 @@ try {
       execFileSync(NODE, [RESERVE, ...args], {
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, CAREER_OPS_REPORTS_DIR: dir },
+        env: { ...process.env, CAREER_OPS_REPORTS_DIR: dir, CAREER_OPS_TRACKER: join(dir, 'applications.md') },
       });
       return null;
     } catch (err) {
@@ -4308,10 +4574,13 @@ try {
   const badCount = reserveRunFail(['--count', '0'], relTmp);
   const hugeCount = reserveRunFail(['--count', '999'], relTmp);
   const badRelease = reserveRunFail(['--release', '009-004'], relTmp);
-  if (badCount === 1 && hugeCount === 1 && badRelease === 1) {
-    pass('invalid --count and inverted --release range exit 1');
+  const hugeRelease = reserveRunFail(['--release', '1-9007199254740992'], relTmp);
+  const wideRelease = reserveRunFail(['--release', '1-51'], relTmp);
+  if (badCount === 1 && hugeCount === 1 && badRelease === 1
+      && hugeRelease === 1 && wideRelease === 1) {
+    pass('invalid counts and unsafe, inverted, or oversized release ranges exit 1');
   } else {
-    fail(`validation exits: count0=${badCount}, count999=${hugeCount}, inverted=${badRelease}`);
+    fail(`validation exits: count0=${badCount}, count999=${hugeCount}, inverted=${badRelease}, unsafe=${hugeRelease}, wide=${wideRelease}`);
   }
   rmSync(relTmp, { recursive: true, force: true });
 } catch (e) {
@@ -4490,6 +4759,37 @@ try {
     pass('role matcher still uses short specialty acronyms for true overlaps');
   } else {
     fail('role matcher ignored a real short-acronym overlap');
+  }
+
+  // A generic base title (no suffix of its own) shares every one of its tokens
+  // with a specialized sibling, so the shared tokens alone used to cross the
+  // Jaccard threshold — even though the sibling's extra word is exactly the
+  // signal that these are two different, separately-postable openings.
+  if (!roleFuzzyMatch('Senior Analytics Engineer', 'Senior Analytics Engineer, People Analytics')) {
+    pass('role matcher keeps a base title distinct from its specialized-suffix sibling (#1881)');
+  } else {
+    fail('role matcher collapsed a base title into its specialized-suffix sibling');
+  }
+
+  // A true repost of the same base title must still match.
+  if (roleFuzzyMatch('Senior Analytics Engineer', 'Senior Analytics Engineer')) {
+    pass('role matcher still matches an exact-title repost');
+  } else {
+    fail('role matcher rejected an exact-title repost');
+  }
+
+  // Seniority omitted on one side is not a specialization suffix — still a repost.
+  if (roleFuzzyMatch('Data Engineer', 'Senior Data Engineer')) {
+    pass('role matcher still matches when seniority is only stated on one side');
+  } else {
+    fail('role matcher rejected a repost that only adds a seniority word');
+  }
+
+  // A repost annotation is tracking metadata, not a specialization — must still match.
+  if (roleFuzzyMatch('Learning Development Designer III', 'Learning Development Designer III (Repost)')) {
+    pass('role matcher does not treat a "(Repost)" annotation as a specialization marker');
+  } else {
+    fail('role matcher wrongly treated a "(Repost)" annotation as a distinct sibling role');
   }
 
   const dedupTmp = mkdtempSync(join(tmpdir(), 'career-ops-dedup-'));
@@ -5188,6 +5488,60 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker stale-number collision test crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER RESERVED-NUMBER FIDELITY (#1733) ──────────────
+// Parallel workers may reserve numbers in order but finish out of order. A
+// free reserved number remains valid even when a later number has already
+// reached the tracker; merge-tracker must preserve it, and only renumber on a
+// real collision (with a visible warning).
+console.log('\n🧪 Testing merge-tracker reserved-number fidelity (#1733)...');
+try {
+  const reservedTmp = mkdtempSync(join(tmpdir(), 'career-ops-merge-reserved-'));
+  try {
+    mkdirSync(join(reservedTmp, 'data'));
+    const reservedAdditions = join(reservedTmp, 'additions');
+    mkdirSync(reservedAdditions);
+    const reservedTracker = join(reservedTmp, 'data', 'applications.md');
+    writeFileSync(reservedTracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 10 | 2026-01-10 | LaterCo | Engineer | 4.0/5 | Evaluated | ❌ | — | finished first |\n');
+
+    writeFileSync(join(reservedAdditions, '005-early.tsv'),
+      '5\t2026-01-05\tEarlyCo\tEngineer\tEvaluated\t4.1/5\t❌\t[5](reports/005-early-2026-01-05.md)\treserved first\n');
+    const preserveResult = run(NODE, ['merge-tracker.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: reservedTracker, CAREER_OPS_ADDITIONS: reservedAdditions },
+    });
+    const afterPreserve = readFileSync(reservedTracker, 'utf-8');
+    if (preserveResult !== null && /^\| 5 \|[^\n]*\| EarlyCo \|/m.test(afterPreserve)) {
+      pass('merge-tracker preserves a free reserved ID below the current maximum');
+    } else {
+      fail(`merge-tracker renumbered a free reserved ID\n${afterPreserve}`);
+    }
+
+    writeFileSync(join(reservedAdditions, '005-collision.tsv'),
+      '5\t2026-01-11\tCollisionCo\tAnalyst\tEvaluated\t3.8/5\t❌\t—\tstale reservation\n');
+    const collisionResult = spawnSync(NODE, [join(ROOT, 'merge-tracker.mjs')], {
+      cwd: ROOT,
+      encoding: 'utf-8',
+      env: { ...process.env, CAREER_OPS_TRACKER: reservedTracker, CAREER_OPS_ADDITIONS: reservedAdditions },
+    });
+    const afterCollision = readFileSync(reservedTracker, 'utf-8');
+    const collisionOutput = `${collisionResult.stdout || ''}\n${collisionResult.stderr || ''}`;
+    if (collisionResult.status === 0
+        && /^\| 11 \|[^\n]*\| CollisionCo \|/m.test(afterCollision)
+        && /#5[^\n]*(?:already|collision)[^\n]*#11/i.test(collisionOutput)) {
+      pass('merge-tracker renumbers only a real collision and warns with both IDs');
+    } else {
+      fail(`merge-tracker collision fallback was not loud and deterministic\n${collisionOutput}\n${afterCollision}`);
+    }
+  } finally {
+    rmSync(reservedTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker reserved-number fidelity test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER REQ/JOB-NUMBER DEDUP GUARD (#1524) ─────────────────────
@@ -6135,6 +6489,14 @@ try {
     pass('Known template tokens still substitute under single-pass');
   } else {
     fail('Single-pass substitution left a known token unreplaced');
+  }
+
+  // CLI arguments: --help prints custom --format and --report usage guidelines
+  const usageOut = execFileSync(process.execPath, [join(ROOT, 'generate-cover-letter.mjs'), '--help'], { encoding: 'utf-8' });
+  if (usageOut.includes('--format') && usageOut.includes('--report') && usageOut.includes('[--format letter|a4]')) {
+    pass('Cover letter CLI --help documents format and report options');
+  } else {
+    fail('Cover letter CLI --help does not document format and report options');
   }
 } catch (e) {
   fail(`Cover letter single-pass substitution test crashed: ${e.message}`);
@@ -7747,17 +8109,17 @@ try {
     '2026-07-06',
   );
   const cols = withBody.split('\t');
-  if (cols.length === 9 && /^[0-9a-f]{16}$/.test(cols[7])) {
+  if (cols.length === 11 && /^[0-9a-f]{16}$/.test(cols[7])) {
     pass('formatScanHistoryRow appends a fingerprint column for described offers');
   } else {
-    fail(`formatScanHistoryRow columns: ${cols.length}, last=${JSON.stringify(cols[7])}`);
+    fail(`formatScanHistoryRow columns: ${cols.length}, fingerprint=${JSON.stringify(cols[7])}`);
   }
   const withoutBody = formatScanHistoryRow(
     { url: 'https://x.example/j/2', source: 'greenhouse', title: 'Data Engineer', company: 'Acme', location: '' },
     '2026-07-06',
   );
   const cols2 = withoutBody.split('\t');
-  if (cols2.length === 9 && cols2[7] === '') {
+  if (cols2.length === 11 && cols2[7] === '') {
     pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
   } else {
     fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);
@@ -8080,8 +8442,75 @@ try {
   } else {
     fail('computeRunStats should return null for empty/unknown-schema input');
   }
+
+  const portalsYml = 'tracked_companies:\n  - name: Acme\n  - name: GlobalCorp\n  - name: DeadInc\n  - name: NetworkDead\njob_boards: []';
+  const portalHealthTsv = 'timestamp\tcompany\tstatus\n' +
+    '2026-07-01\tDeadInc\tslug_gone\n' +
+    '2026-07-02\tDeadInc\tslug_gone\n' +
+    '2026-07-03\tDeadInc\tslug_gone\n' +
+    '2026-07-01\tNetworkDead\tnetwork\n' +
+    '2026-07-02\tNetworkDead\tnetwork\n' +
+    '2026-07-03\tNetworkDead\tnetwork\n' +
+    '2026-07-01\tGlobalCorp\tnetwork\n' +
+    '2026-07-02\tGlobalCorp\treachable\n' +
+    '2026-07-01\tUnconfiguredDead\tnetwork\n' +
+    '2026-07-02\tUnconfiguredDead\tnetwork\n' +
+    '2026-07-03\tUnconfiguredDead\tnetwork\n';
+  const p = stats.computePortalStats(portalsYml, null, [], portalHealthTsv);
+  if (p && p.persistentlyDead === 2) {
+    pass('computePortalStats tracks persistentlyDead count from portal-health.tsv streaks');
+  } else {
+    fail('computePortalStats failed to compute persistentlyDead streaks');
+  }
+  const pNull = stats.computePortalStats(portalsYml, null, [], null);
+  if (pNull && pNull.persistentlyDead === 0) {
+    pass('computePortalStats gracefully handles null portalHealthTsv');
+  } else {
+    fail('computePortalStats failed on null portalHealthTsv');
+  }
 } catch (e) {
   fail(`test layout guard: ${e.message}`);
+}
+
+// ── STATED-COMP TRACKING (#1852) ────────────────────────────────
+// salary-gap.mjs's own --self-test (invoked above via the CLI-check table)
+// covers stated-observation parsing, backward compatibility, and the
+// getStatedObservations() lookup. This section pins the mode-doc wiring:
+// interview/plan reads it back before generating prep, interview-prep does
+// the same for the initial pass, and interview/debrief writes it.
+
+console.log('\n62. Stated-comp tracking wired into interview modes (#1852)');
+
+try {
+  const planMode = readFile('modes/interview/plan.md');
+  const prepModeDoc = readFile('modes/interview-prep.md');
+  const debriefMode = readFile('modes/interview/debrief.md');
+
+  if (planMode.includes('--stated-for') && planMode.includes('salary-gap.mjs')) {
+    pass('interview/plan reads prior stated-comp observations via salary-gap.mjs --stated-for');
+  } else {
+    fail('interview/plan missing --stated-for lookup for prior stated-comp observations');
+  }
+
+  if (planMode.includes('Compensation — already discussed')) {
+    pass('interview/plan quick-reference carries the "already discussed" comp callout');
+  } else {
+    fail('interview/plan quick-reference missing the "already discussed" comp callout');
+  }
+
+  if (prepModeDoc.includes('--stated-for') && prepModeDoc.includes('salary-gap.mjs')) {
+    pass('interview-prep reads prior stated-comp observations via salary-gap.mjs --stated-for');
+  } else {
+    fail('interview-prep missing --stated-for lookup for prior stated-comp observations');
+  }
+
+  if (debriefMode.includes('stated') && debriefMode.includes('salary-observations.tsv')) {
+    pass('interview/debrief appends a stated observation when a comp number is verbally given');
+  } else {
+    fail('interview/debrief missing the stated-observation append rule');
+  }
+} catch (e) {
+  fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
 await runDiscovered();
