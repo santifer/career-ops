@@ -112,6 +112,7 @@ cv:
   # templates/cv-template.html. You can also pick per-generation just by asking
   # (e.g. "use the modern template").
   # template: modern
+  # For a restrained Chinese technical CV, use: template: zh-minimal
 
 # ── Culture Screen ───────────────────────────────────────────────────────────
 #
