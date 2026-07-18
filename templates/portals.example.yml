@@ -916,9 +916,8 @@ tracked_companies:
   # -- AI-native platforms (FDE/SA teams) --
 
   - name: Retool
-    careers_url: https://retool.com/careers
-    scan_method: websearch
-    scan_query: 'site:retool.com/careers "Deployed" OR "AI" OR "Solutions"'
+    careers_url: https://jobs.gem.com/retool
+    provider: gem
     notes: "London. Popularized Deployed Engineer role."
     enabled: true
 
