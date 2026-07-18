@@ -1609,6 +1609,80 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+// --- jurisdiction-prohibited content signal (#2018): table + oferta Block G + apply Step 5c ---
+{
+  try {
+    const { load } = await import('js-yaml');
+    const tableSrc = readFile('templates/jurisdiction-prohibited-content.yml');
+    const table = load(tableSrc);
+    const entries = Array.isArray(table?.entries) ? table.entries : [];
+    const byKey = Object.fromEntries(entries.map((e) => [e.jurisdiction, e]));
+    const entryOk = (e) =>
+      e && typeof e.prohibited === 'string' && typeof e.matching === 'string' &&
+      typeof e.legal_basis === 'string' && typeof e.effective === 'string' &&
+      Array.isArray(e.sources) && e.sources.length > 0;
+    const caOn = byKey['CA-ON'];
+    const usCa = byKey['US-CA'];
+    if (
+      entryOk(caOn) && caOn.prohibited.includes('Canadian experience') && caOn.effective === '2026-01-01' &&
+      entryOk(usCa) && usCa.prohibited.toLowerCase().includes('salary history') && usCa.effective === '2018-01-01' &&
+      tableSrc.includes('no entry without a citable legal source')
+    ) {
+      pass('jurisdiction-prohibited-content.yml parses with both verified seed entries, sources, and the contribution rule (#2018)');
+    } else {
+      fail('jurisdiction-prohibited-content.yml missing/incomplete seed entries (CA-ON, US-CA) or contribution rule (#2018)');
+    }
+  } catch (e) {
+    fail(`templates/jurisdiction-prohibited-content.yml failed to load/parse as YAML: ${e.message} (#2018)`);
+  }
+
+  if (
+    ofertaMode.includes('**9. Jurisdiction-Prohibited Content**') &&
+    ofertaMode.includes('templates/jurisdiction-prohibited-content.yml') &&
+    ofertaMode.includes('⚠️ **Jurisdiction-prohibited content signal:**') &&
+    ofertaMode.includes('not legal advice') &&
+    ofertaMode.includes('never naive keyword matching')
+  ) {
+    pass('oferta Block G signal 9 reads the jurisdiction table with agent-judged matching and a not-legal-advice note (#2018)');
+  } else {
+    fail('oferta Block G missing the jurisdiction-prohibited content signal, table reference, or not-legal-advice note (#2018)');
+  }
+
+  if (
+    applyMode.includes('## Step 5c — Jurisdiction-prohibited content check') &&
+    applyMode.includes('templates/jurisdiction-prohibited-content.yml') &&
+    applyMode.includes('⚠️ **Prohibited-content warning:**') &&
+    applyMode.includes('not obligated to answer') &&
+    applyMode.includes('Never auto-answer the field, never auto-skip it, never block')
+  ) {
+    pass('apply Step 5c warns before the candidate answers a prohibited form field — warn-only, candidate decides (#2018)');
+  } else {
+    fail('apply mode missing Step 5c prohibited-content warning or its never-auto-answer/skip/block guarantees (#2018)');
+  }
+
+  // Phrasing discipline (#2018): the new mode text states verifiable facts about
+  // the posting/form only. Outside the explicit "never assert ..." guidance
+  // sentence, the new sections must not contain employer-lawbreaking language.
+  const signal9 = ofertaMode.slice(
+    ofertaMode.indexOf('**9. Jurisdiction-Prohibited Content**'),
+    ofertaMode.indexOf('### Output format:')
+  );
+  const step5c = applyMode.slice(
+    applyMode.indexOf('## Step 5c — Jurisdiction-prohibited content check'),
+    applyMode.indexOf('**Applying to several roles')
+  );
+  const allowedGuidance = /assert that the employer is breaking the law or committing a violation/g;
+  const residue = (signal9 + '\n' + step5c).replace(allowedGuidance, '');
+  if (
+    signal9.length > 0 && step5c.length > 0 &&
+    !/illegal|violat|breaking the law|lawbreak/i.test(residue)
+  ) {
+    pass('jurisdiction-prohibited sections keep phrasing discipline — no employer-lawbreaking assertions outside the guidance sentence (#2018)');
+  } else {
+    fail('jurisdiction-prohibited sections contain employer-lawbreaking language outside the "never assert" guidance (#2018)');
+  }
+}
+
 // --- offer-prep mode: contract reading companion (describes, never judges) ---
 const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
 if (

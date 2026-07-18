@@ -11,6 +11,7 @@ System-layer template files used by career-ops scripts and modes. These files ar
 | `cv-template.tex` | `generate-latex.mjs` | LaTeX/Overleaf template for ATS-optimized CV PDFs |
 | `portals.example.yml` | Onboarding | Example portal scanner configuration (copy to `portals.yml` to activate) |
 | `states.yml` | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases |
+| `jurisdiction-prohibited-content.yml` | `modes/oferta.md` (Block G signal 9), `modes/apply.md` (Step 5c) | Jurisdiction-keyed table of content employers are legally prohibited from requiring/asking for (e.g. "Canadian experience" in Ontario postings, salary-history questions in California). Prompt-level data reference, agent-judged matching — no script reads it. Contribution rule: no entry without a citable legal source and effective date. |
 
 ### cv-template.html
 
