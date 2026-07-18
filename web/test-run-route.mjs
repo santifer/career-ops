@@ -27,6 +27,40 @@ test("/api/run stderr snippets are captured around the matched keyword", () => {
   assert.match(stderrHandler[0], /s\.slice\(start, start \+ 200\)\.trim\(\)/);
 });
 
+// route.ts is a Next.js route with path aliases the plain `node --test` runner
+// can't import directly (see file header), so this mirrors the actual
+// STDERR_ERROR_RE + slice-window logic verbatim to test it behaviorally. The
+// source-guard test above catches drift if someone edits the real algorithm
+// without updating this mirror.
+const STDERR_ERROR_RE =
+  /\b(?:error|denied|fatal|not found|unauthorized|forbidden|login|credential|api[ -]?key|quota|rate limit|not authenticated|auth(?:entication|orization)?)\b/i;
+
+function captureStderrSnippet(s) {
+  const match = STDERR_ERROR_RE.exec(s);
+  if (!match) return "";
+  const start = Math.max(0, match.index - 50);
+  return s.slice(start, start + 200).trim();
+}
+
+test("captureStderrSnippet returns a trimmed 200-char window centered on the first match", () => {
+  const filler = "x".repeat(80);
+  const stderr = `${filler} a fatal error occurred and more context follows after the match`;
+  const snippet = captureStderrSnippet(stderr);
+  assert.ok(snippet.length > 0 && snippet.length <= 200);
+  assert.match(snippet, /fatal/);
+  // The window starts 50 chars before the match, not at the string start.
+  assert.ok(!snippet.startsWith("x".repeat(80)));
+});
+
+test("captureStderrSnippet returns empty string when no keyword matches", () => {
+  assert.equal(captureStderrSnippet("all clear, nothing to see"), "");
+});
+
+test("captureStderrSnippet does not go out of bounds when the match is near the start", () => {
+  const snippet = captureStderrSnippet("error at the very beginning of the stream");
+  assert.match(snippet, /error/);
+});
+
 test("/api/run stderr detector does not match authorized as auth", () => {
   assert.match(source, /const STDERR_ERROR_RE =/);
   assert.doesNotMatch(source, /\|auth\|/);
