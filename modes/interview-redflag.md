@@ -120,7 +120,7 @@ Compute a **red-flag score**:
 - Each signal type present in **2+ sessions** (pattern, not noise): +2
 - Maximum possible: 10 (5 signal types × 2 — the four Step 2 signals plus the Step 2c protected-grounds signal, which counts only for sessions where it cleared its corroboration bar; low-confidence single observations are reported but score 0)
 
-**Scope/Compensation Mismatch (Step 2b) is reported separately and does not feed the red-flag score above.** It's a different category of finding — JD-completeness and pay fairness, not interviewer conduct — and, unlike the four signals above, it's discovered *after* the fact rather than protecting the candidate in the process that produced it. Mixing it into the same 0–8 scale would overstate or understate it depending on session count for reasons unrelated to what it actually measures. Report it in its own output section (Step 5) instead.
+**Scope/Compensation Mismatch (Step 2b) is reported separately and does not feed the red-flag score above.** It's a different category of finding — JD-completeness and pay fairness, not interviewer conduct — and, unlike the four signals above, it's discovered *after* the fact rather than protecting the candidate in the process that produced it. Mixing it into the same 0–10 scale would overstate or understate it depending on session count for reasons unrelated to what it actually measures. Report it in its own output section (Step 5) instead.
 
 ## Step 4 — Assign Warning Level
 
