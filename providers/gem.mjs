@@ -132,7 +132,11 @@ export default {
       redirect: 'error',
     }));
 
-    const postings = json?.[0]?.data?.oatsExternalJobPostings?.jobPostings;
+    const listResult = json?.[0];
+    if (Array.isArray(listResult?.errors) && listResult.errors.length > 0) {
+      throw new Error(`gem: JobBoardList failed: ${listResult.errors[0]?.message || 'unknown GraphQL error'}`);
+    }
+    const postings = listResult?.data?.oatsExternalJobPostings?.jobPostings;
     if (!Array.isArray(postings)) return [];
 
     const validPostings = postings.filter(/** @param {any} p */ p => p.extId && p.title);
