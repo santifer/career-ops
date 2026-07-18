@@ -8562,9 +8562,16 @@ try {
   // would smuggle in fs.writeFileSync/fs.promises), no require(), and no
   // dynamic import of fs — so no mutation API is reachable at all.
   const READ_ONLY_FS = new Set(['readFileSync', 'existsSync']);
-  const fsImports = [...rejectionLatencySrc.matchAll(/import\s*(.*?)\s*from\s*['"](?:node:)?fs['"]/g)];
+  const fsImports = [...rejectionLatencySrc.matchAll(/import\s*(.*?)\s*from\s*['"]((?:node:)?fs(?:\/promises)?)['"]/g)];
   const fsImportViolations = [];
-  for (const [, clause] of fsImports) {
+  for (const [, clause, module] of fsImports) {
+    if (module.endsWith('/promises')) {
+      // fs/promises is rejected wholesale: even its "read-only" surface sits
+      // next to open(), which returns writable FileHandles that bypass any
+      // mutation-name blacklist. The script has no async fs needs.
+      fsImportViolations.push(module);
+      continue;
+    }
     const named = clause.match(/^\{([^}]*)\}$/);
     if (!named) {
       fsImportViolations.push(clause); // default or namespace import — full fs surface
