@@ -187,8 +187,8 @@ const scripts = [
 const scriptTmp = mkdtempSync(join(ROOT, '.tmp-script-test-'));
 try {
   const copyDirSync = (src, dest, exclude = []) => {
-    const pathParts = src.split(/[\\/]/);
-    if (exclude.some(p => pathParts.includes(p))) return;
+    const name = src.split(/[\\/]/).pop();
+    if (exclude.includes(name)) return;
     const stat = statSync(src);
     if (stat.isDirectory()) {
       mkdirSync(dest, { recursive: true });
