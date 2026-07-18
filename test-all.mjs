@@ -8556,8 +8556,38 @@ try {
     fail('rejection-latency.mjs missing the not-legal-advice disclaimer');
   }
 
-  if (!/writeFileSync|appendFileSync|createWriteStream/.test(rejectionLatencySrc)) {
-    pass('rejection-latency.mjs is read-only (no write APIs — suggestion-only by construction)');
+  // Read-only-ness, enforced structurally at the import boundary rather than
+  // by pattern-matching call sites: every `fs` import must be a named import
+  // from a whitelist of read-only APIs (no default/namespace import that
+  // would smuggle in fs.writeFileSync/fs.promises), no require(), and no
+  // dynamic import of fs — so no mutation API is reachable at all.
+  const READ_ONLY_FS = new Set(['readFileSync', 'existsSync']);
+  const fsImports = [...rejectionLatencySrc.matchAll(/import\s*(.*?)\s*from\s*['"](?:node:)?fs['"]/g)];
+  const fsImportViolations = [];
+  for (const [, clause] of fsImports) {
+    const named = clause.match(/^\{([^}]*)\}$/);
+    if (!named) {
+      fsImportViolations.push(clause); // default or namespace import — full fs surface
+      continue;
+    }
+    for (const name of named[1].split(',').map(s => s.trim()).filter(Boolean)) {
+      if (!READ_ONLY_FS.has(name.replace(/\s+as\s+.*$/, ''))) fsImportViolations.push(name);
+    }
+  }
+  if (fsImports.length > 0 && fsImportViolations.length === 0) {
+    pass('rejection-latency.mjs fs imports are restricted to read-only APIs (readFileSync/existsSync)');
+  } else {
+    fail(`rejection-latency.mjs fs import surface is not read-only: ${fsImportViolations.join(', ') || 'no fs import found'}`);
+  }
+
+  if (!/\brequire\s*\(/.test(rejectionLatencySrc) && !/import\s*\(\s*['"](?:node:)?fs/.test(rejectionLatencySrc)) {
+    pass('rejection-latency.mjs has no require() or dynamic fs import escape hatch');
+  } else {
+    fail('rejection-latency.mjs uses require() or a dynamic fs import — read-only guarantee not verifiable');
+  }
+
+  if (!/\b(?:writeFileSync|writeFile|appendFileSync|appendFile|createWriteStream|openSync|writeSync|unlinkSync|rmSync|rmdirSync|mkdirSync|renameSync|truncateSync|copyFileSync)\b/.test(rejectionLatencySrc)) {
+    pass('rejection-latency.mjs references no filesystem mutation APIs (suggestion-only by construction)');
   } else {
     fail('rejection-latency.mjs contains file-write APIs; it must never write user data');
   }

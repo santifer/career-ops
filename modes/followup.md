@@ -46,7 +46,7 @@ Execute:
 node rejection-latency.mjs
 ```
 
-Parse the JSON output. It cross-references `data/active-interviews.md` interview dates with tracker rows still in `Interview` state and flags companies whose post-interview silence exceeds a **statutory** threshold (only `CA-ON: 45` days ships verified — Ontario ESA notification window) or the **courtesy** threshold (30-day default). If `flags` is empty, skip this step silently.
+Parse the JSON output. It cross-references `data/active-interviews.md` interview dates with tracker rows still in `Interview` state (matched per application: company + role) and flags applications whose post-interview silence exceeds a **statutory** threshold (only `CA-ON: 45` days ships verified — Ontario ESA notification window; the script already excludes screening rounds and pre-2026 interviews from this tier) or the **courtesy** threshold (30-day default). If `flags` is empty, skip this step silently.
 
 For each entry in `flags`, surface one reminder line alongside the Step 2 dashboard:
 
@@ -54,7 +54,7 @@ For each entry in `flags`, surface one reminder line alongside the Step 2 dashbo
 [Render in {language.output}: "⏳ {company} — {daysSinceLastInterview} days since your last interview ({lastInterviewDate}) with no recorded response. This {tier === 'statutory' ? 'exceeds the Ontario ESA 45-day notification window (elapsed-time observation only — not legal advice; employer size and posting type are not verifiable from the tracker)' : 'exceeds the {thresholdDays}-day courtesy threshold'}."]
 ```
 
-If the user asks what to do about a flag, show the flag's ready-made `blacklistSuggestion` row and tell them ([Render in {language.output}]) they can copy it into `data/blacklist.md` themselves — this is a suggestion only. **Never write to `data/blacklist.md`, `data/applications.md`, or `data/active-interviews.md` from this step** (#1742 opt-in guarantee, same suggestion-only bridge as `modes/interview-redflag.md`). The two tiers are never conflated: only relay the statutory phrasing when the flag's `tier` is `statutory`.
+If the user asks what to do about a flag, show the flag's ready-made `blacklistSuggestion` row and tell them ([Render in {language.output}]) they can copy it into `data/blacklist.md` themselves — this is a suggestion only. When `language.output` is not English, compose the reminder prose — and, if the user keeps their blacklist reasons in another language, the row's Reason cell — from the flag's structured fields (`reasonCode`, `daysSinceLastInterview`, `thresholdDays`, `lastInterviewDate`) instead of relaying the English `reason` string verbatim; the table's column layout and the literal `company` scope value stay fixed (they must match `data/blacklist.md`'s file format). **Never write to `data/blacklist.md`, `data/applications.md`, or `data/active-interviews.md` from this step** (#1742 opt-in guarantee, same suggestion-only bridge as `modes/interview-redflag.md`). The two tiers are never conflated: only relay the statutory phrasing when the flag's `tier` is `statutory`.
 
 ## Step 2 — Display Dashboard
 
