@@ -45,6 +45,9 @@ import { join, dirname, resolve, relative, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
 import yaml from 'js-yaml';
+import {
+  formatReportNumber, releaseReportNumbers, reserveReportNumbers,
+} from './reserve-report-num.mjs';
 
 // ---------------------------------------------------------------------------
 // Bootstrap: load .env before anything else
@@ -207,16 +210,6 @@ function readFile(path, label) {
   return stripBom(readFileSync(path, 'utf-8')).trim();
 }
 
-function nextReportNumber() {
-  if (!existsSync(PATHS.reports)) return '001';
-  const files = readdirSync(PATHS.reports)
-    .filter(f => /^\d{3}-/.test(f))
-    .map(f => parseInt(f.slice(0, 3)))
-    .filter(n => !isNaN(n));
-  if (files.length === 0) return '001';
-  return String(Math.max(...files) + 1).padStart(3, '0');
-}
-
 function slugifyCompany(value) {
   return String(value || '')
     .toLowerCase()
@@ -233,7 +226,6 @@ function normalizedTrackerScore(value) {
   if (!clean || clean === '?') return 'N/A';
   return /\/5$/i.test(clean) ? clean : `${clean}/5`;
 }
-
 function validateEvaluationShape(text) {
   const issues = [];
   const requiredBlocks = [
@@ -437,12 +429,15 @@ if (summaryMatch) {
 // Save report
 // ---------------------------------------------------------------------------
 if (saveReport) {
+  let reportSaved = false;
+  let reservedNumbers = [];
   try {
     if (!existsSync(PATHS.reports)) {
       mkdirSync(PATHS.reports, { recursive: true });
     }
 
-    const num         = nextReportNumber();
+    reservedNumbers   = await reserveReportNumbers(1, { rootDir: ROOT, reportsDir: PATHS.reports });
+    const num         = formatReportNumber(reservedNumbers[0]);
     const today       = new Date().toISOString().split('T')[0];
     const companySlug = slugifyCompany(company);
     const filename    = `${num}-${companySlug}-${today}.md`;
@@ -494,6 +489,14 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
     process.exitCode = 1;
+  }
+
+  if (reservedNumbers.length > 0) {
+    try {
+      await releaseReportNumbers(reservedNumbers, { reportsDir: PATHS.reports });
+    } catch (err) {
+      console.warn(`⚠️   Could not release report reservation: ${err.message}`);
+    }
   }
 }
 
