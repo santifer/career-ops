@@ -31,6 +31,11 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { TokenAccumulator, formatBreakdown } from './utils/token-tracker.mjs';
+
+const tracker = new TokenAccumulator();
+tracker.recordZeroToken('scan');
+tracker.recordZeroToken('pdf payload');
 import { execFileSync } from 'child_process';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
@@ -298,6 +303,13 @@ try {
     { text: `\n\nJOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
   ]);
   evaluationText = result.response.text();
+  const usage = {
+    prompt_tokens: result.response.usageMetadata?.promptTokenCount ?? 0,
+    completion_tokens: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+    total_tokens: result.response.usageMetadata?.totalTokenCount ?? 0,
+    cached_tokens: result.response.usageMetadata?.cachedContentTokenCount ?? 0
+  };
+  tracker.record('evaluation', usage);
 } catch (err) {
   const sanitizedMsg = (err.message || '').split(apiKey).join('[REDACTED]');
   console.error('❌  Gemini API error:', sanitizedMsg);
@@ -440,3 +452,5 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
 console.log('\n' + '─'.repeat(66));
 console.log(`  Score: ${score}/5  |  Archetype: ${archetype}  |  Legitimacy: ${legitimacy}`);
 console.log('─'.repeat(66) + '\n');
+
+console.log(formatBreakdown(tracker, modelName, 'gemini'));
