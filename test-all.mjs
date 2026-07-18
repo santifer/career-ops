@@ -1685,6 +1685,100 @@ if (
   fail('offer-prep reply-draft step missing (or lost its prep-report gate, reply-draft path, traceability rule, never-send guard, questions-not-demands framing, no-legal-claims rule, checklist, or prep-report+conversation-only source boundary) (#1663)');
 }
 
+// --- offer-prep statutory-context notes for restrictive covenants (#2028) ---
+{
+  // 1. Jurisdiction table exists, parses as YAML, and both seeds are complete
+  const rcPath = join(ROOT, 'templates', 'restrictive-covenants.yml');
+  const RC_STATUS_ENUM = ['prohibited', 'allowed_with_mandatory_compensation', 'allowed_with_limits', 'common_law_reasonableness'];
+  if (!existsSync(rcPath)) {
+    fail('templates/restrictive-covenants.yml missing (#2028)');
+  } else {
+    try {
+      const { load } = await import('js-yaml');
+      const rcRaw = readFileSync(rcPath, 'utf-8');
+      const rc = load(rcRaw);
+      const rows = Array.isArray(rc?.covenants) ? rc.covenants : [];
+      const completeRow = (r) =>
+        r &&
+        typeof r.jurisdiction === 'string' &&
+        typeof r.jurisdiction_name === 'string' &&
+        r.covenant_type === 'non_compete' &&
+        RC_STATUS_ENUM.includes(r.status) &&
+        Array.isArray(r.exceptions) && r.exceptions.length > 0 &&
+        typeof r.effective === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.effective) &&
+        typeof r.legal_basis === 'string' && r.legal_basis.length > 0 &&
+        Array.isArray(r.sources) && r.sources.length > 0 &&
+        typeof r.as_of === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.as_of);
+      const usCa = rows.find((r) => r?.jurisdiction === 'US-CA');
+      const caOn = rows.find((r) => r?.jurisdiction === 'CA-ON');
+      if (
+        completeRow(usCa) && usCa.status === 'prohibited' &&
+        usCa.legal_basis.includes('16600') && usCa.legal_basis.includes('16600.5') &&
+        completeRow(caOn) && caOn.status === 'prohibited' &&
+        caOn.legal_basis.includes('67.2') && caOn.effective === '2021-10-25' &&
+        caOn.exceptions.some((e) => /executive/i.test(e)) &&
+        caOn.exceptions.some((e) => /sale/i.test(e))
+      ) {
+        pass('restrictive-covenants.yml parses; US-CA (§16600/§16600.5) and CA-ON (ESA s.67.2, 2021-10-25) non-compete seeds complete — status enum, exceptions, string dates, legal_basis, sources, as_of (#2028)');
+      } else {
+        fail('restrictive-covenants.yml seed rows incomplete — need US-CA and CA-ON non_compete rows with prohibited status, exceptions, quoted-string effective/as_of dates, legal_basis, sources (#2028)');
+      }
+      if (
+        rcRaw.includes('CONTRIBUTION RULE') &&
+        rcRaw.includes('COVENANT-TYPE DISCIPLINE') &&
+        rcRaw.includes('NEVER conflated') &&
+        rcRaw.includes('NOT LEGAL ADVICE')
+      ) {
+        pass('restrictive-covenants.yml header documents the contribution rule, covenant-type discipline, and not-legal-advice boundary (#2028)');
+      } else {
+        fail('restrictive-covenants.yml header missing the contribution rule, covenant-type (never-conflate) discipline, and/or not-legal-advice note (#2028)');
+      }
+    } catch (e) {
+      fail(`templates/restrictive-covenants.yml does not parse as YAML: ${e.message} (#2028)`);
+    }
+  }
+
+  // 2. offer-prep carries the statutory-context subsection with both output
+  //    integrations (clause-tag note + lawyer question), the covenant-type
+  //    discipline, and the never-assert-application hard rule
+  const rcStart = offerPrepMode.indexOf('Statutory-context notes for restrictive covenants');
+  const rcEnd = offerPrepMode.indexOf('## Step 3', Math.max(rcStart, 0));
+  const rcSection = rcStart >= 0 && rcEnd > rcStart ? offerPrepMode.slice(rcStart, rcEnd) : '';
+  if (
+    rcSection.includes('templates/restrictive-covenants.yml') &&
+    rcSection.includes('statutory-context note') &&
+    rcSection.includes('Questions for your lawyer') &&
+    rcSection.includes('Covenant-type discipline (mandatory)') &&
+    rcSection.includes('never conflated') &&
+    rcSection.includes('Never assert application (HARD RULE)') &&
+    rcSection.includes('cannot self-certify') &&
+    rcSection.includes('always a lawyer question') &&
+    rcSection.includes('not legal advice') &&
+    rcSection.includes('not** online') &&
+    rcSection.includes('Render in {language.output}')
+  ) {
+    pass('offer-prep statutory-context subsection pins table lookup, tag-note + lawyer-question integration, covenant-type discipline, never-assert-application rule, not-legal-advice, no-research reaffirmation, i18n rendering (#2028)');
+  } else {
+    fail('offer-prep statutory-context subsection missing/incomplete — needs table reference, statutory-context note + lawyer-question integration, covenant-type never-conflate discipline, never-assert-application hard rule, not-legal-advice note, local-lookup-is-not-research clarification, {language.output} rendering (#2028)');
+  }
+
+  // 3. Phrasing discipline holds in the report-facing text: the blockquote
+  //    template the agent renders may state what a STATUTE says (which
+  //    legitimately includes words like "prohibited" or "void" describing
+  //    the statute), but must never assert those verdicts about the
+  //    candidate's own clause. Only '>' lines (rendered output templates)
+  //    are scanned, and only for clause-directed assertions.
+  const rcQuoteLines = rcSection.split('\n').filter((l) => l.trimStart().startsWith('>'));
+  const rcAssertive = rcQuoteLines.filter((l) =>
+    /(this|your|the candidate'?s?) (specific )?(clause|covenant|non-compete) (is|would be|will be) (void|illegal|unenforceable|invalid|prohibited)/i.test(l)
+  );
+  if (rcSection && rcQuoteLines.length >= 1 && rcAssertive.length === 0) {
+    pass('restrictive-covenant statutory-context template states statute facts only — no void/illegal/unenforceable assertions about the candidate\'s clause (#2028)');
+  } else {
+    fail(`restrictive-covenant phrasing discipline broken: ${rcAssertive.length ? `clause-directed verdict in blockquote: ${rcAssertive[0].trim().slice(0, 80)}` : 'expected a blockquote output template in the section'} (#2028)`);
+  }
+}
+
 const routerSkill = readFile('.agents/skills/career-ops/SKILL.md');
 if (
   /argument-hint:.*offer-prep/.test(routerSkill) &&
