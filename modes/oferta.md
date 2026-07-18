@@ -294,6 +294,26 @@ If this mismatch is present, append a short, non-alarmist note to the report:
 
 This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is orthogonal to ghost-job detection and is reported separately.
 
+**9. Minimum-Wage Floor Check** (from `advertised_comp` + `templates/minimum-wage.yml`; jurisdiction from the JD's stated location, falling back to `config/profile.yml` → `location` when the JD is silent — same region-aware pattern as the employment-classification signal):
+
+Advertised compensation below the posting location's statutory minimum wage is a concrete, arithmetic red flag: it means an employer that doesn't know its own obligations, a stale posting carrying a pre-increase rate, or a scam. Resolve the posting's governing jurisdiction and look it up in `templates/minimum-wage.yml` (a data reference, not instruction logic — adding a jurisdiction row there never requires touching this rule text; every row carries a legal basis, per-rate effective dates, sources, and an `as_of` verification date). If the jurisdiction has no row in the table, skip this signal entirely.
+
+**Rate normalization:** when `advertised_comp` resolves to an hourly figure, compare it directly against the applicable rate. When it is annual or monthly, convert to hourly using the documented conservative assumption of **2080 hours/year** (52 weeks × 40 hours; monthly × 12 first) — and **disclose the assumption in the output** whenever a conversion was used, since real hours may differ. If `advertised_comp` is `null` or a non-numeric phrase ("competitive"), skip this signal — absence of a figure is the pay-transparency signal's territory, not this one's.
+
+**Date-aware rate selection (mandatory):** each table row carries the current `general_rate`/`effective` and, when officially pre-announced, `next_rate`/`next_effective`. Use `general_rate` while today's date is before `next_effective`; use `next_rate` once today's date is on or after `next_effective`. **Staleness guard:** if today's date is past `next_effective` and the row carries no newer data beyond `next_rate`, the table entry may be stale — say so explicitly ("the table's Ontario rate was last verified {as_of}; a newer rate may be in force") and present the comparison as tentative rather than asserting a floor as current fact. Minimum wages change annually almost everywhere; the `as_of` field exists precisely for this disclosure.
+
+**Carve-out honesty:** each row lists `special_rates` (students, homeworkers, etc.) as informational context. When a special rate plausibly applies to the posting — e.g. the posting is explicitly a student role, an under-18 role, or work-from-home piece work — the output names the applicable special rate and compares against **it**, instead of asserting the general floor against a role it may not govern. When no carve-out plausibly applies, use the general rate.
+
+**This fires as a STRONG, presence-based signal** when the advertised figure (after normalization and rate selection) is below the applicable floor — the evidence is in the JD text itself; aggregator re-posting cannot manufacture it. If present, append a short, non-alarmist note to the report:
+
+> ⚠️ **Minimum-wage floor signal:** [Render in {language.output}: state the arithmetic fact and the published rate with its citation from the table — e.g. a fictional Acme Corp posting in Ontario advertising $15.00/hour reads "advertised $15.00/hour is below Ontario's $17.60 general minimum wage (effective 2025-10-01, ESA 2000)" — disclosing the 2080 hours/year conversion assumption if one was used, and naming the applicable special rate instead when a carve-out plausibly applies. Then note the common benign-to-bad range of explanations: a stale posting carrying a pre-increase rate, an employer unaware of the current rate, or a fabricated posting — and suggest confirming actual compensation with the employer before investing time. Close with a note that this is an observation about the posting's stated figure, not legal advice.]
+
+**Legitimacy corroborator at egregious gaps:** when the advertised figure is far below the floor (roughly 25%+ below, or below floors that have been in force for years), additionally feed this finding into the Posting Legitimacy assessment as a **corroborator** — absurdly-low comp is a classic ghost-posting/scam marker. Corroborator only: this signal **never by itself changes** the High Confidence / Proceed with Caution / Suspicious tier; it only adds weight alongside other signals already pointing the same way.
+
+**Phrasing discipline (mandatory):** state only observable facts — the advertised figure, the normalization arithmetic, and what the jurisdiction's published rate is, with its citation from the table. Never render this finding as "the employer is breaking the law," an "illegal" posting, or a "violation" — special-rate carve-outs, exemptions, and posting provenance are not verifiable from a JD, and this mode never gives legal advice.
+
+Apart from the egregious-gap corroborator path above, this signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is reported separately as its own finding.
+
 ### Output format:
 
 **Assessment:** One of three tiers:
