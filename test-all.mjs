@@ -1609,6 +1609,17 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+if (
+  ofertaMode.includes('### Work-authorization check') &&
+  ofertaMode.includes('⛔ **No sponsorship:** JD states "{verbatim JD line}" and role is outside your authorized_in') &&
+  ofertaMode.includes('**Work Auth:**') &&
+  ofertaMode.includes('this tier is **NEUTRAL**')
+) {
+  pass('oferta cross-checks visa sponsorship against candidate work authorization');
+} else {
+  fail('oferta missing work-authorization / visa-sponsorship signal in Block A');
+}
+
 // --- offer-prep mode: contract reading companion (describes, never judges) ---
 const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
 if (
