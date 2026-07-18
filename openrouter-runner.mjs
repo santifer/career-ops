@@ -749,6 +749,23 @@ async function cmdApply(ref, ctx) {
 
   if (!reportContent) { console.error('Could not read report content.'); return; }
 
+  // Score-gate: warn and confirm before applying to low-fit roles (AGENTS.md Ethical Use)
+  const scoreMatch = reportContent.match(/^\s*\*?\*?\s*(?:score|puntuaci[oó]n)\s*:\s*\*?\*?\s*(\d+(?:\.\d+)?)\s*\/\s*5/im);
+  const scoreValue = scoreMatch ? parseFloat(scoreMatch[1]) : NaN;
+  if (isFinite(scoreValue) && scoreValue < 4.0) {
+    console.log(`\n⚠️  This report scored ${scoreValue.toFixed(1)}/5 — below the 4.0/5 threshold.`);
+    console.log('Strongly discourage low-fit applications. Your time and the recruiter\'s time are both valuable.');
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const answer = await new Promise(resolve => {
+      rl.question('Proceed anyway? (yes/no): ', resolve);
+    });
+    rl.close();
+    if (answer.trim().toLowerCase() !== 'yes') {
+      console.log('Aborted.');
+      return;
+    }
+  }
+
   console.log('Generating application form answers...');
   const systemPrompt = buildSystemPrompt(modeContent, ctx);
 

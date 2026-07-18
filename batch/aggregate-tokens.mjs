@@ -44,9 +44,17 @@ function main() {
     
     if (!id || !report_num || report_num === '-' || report_num === 'report_num') continue;
 
-    const logFile = path.join(LOGS_DIR, `${report_num}-${id}.log`);
-    if (fs.existsSync(logFile)) {
-      workers.push({ id, report_num, status, logFile });
+    // Sanitize to prevent path traversal
+    const safeId = /^[\w-]+$/.test(id) ? id : null;
+    const safeReportNum = /^[\w-]+$/.test(report_num) ? report_num : null;
+    if (!safeId || !safeReportNum) continue;
+
+    const logFile = path.join(LOGS_DIR, `${safeReportNum}-${safeId}.log`);
+    const resolvedLogFile = path.resolve(logFile);
+    if (!resolvedLogFile.startsWith(path.resolve(LOGS_DIR) + path.sep)) continue;
+
+    if (fs.existsSync(resolvedLogFile)) {
+      workers.push({ id: safeId, report_num: safeReportNum, status, logFile: resolvedLogFile });
     }
   }
 
@@ -187,11 +195,14 @@ function main() {
 
     const padTotal = 'total:'.padEnd(15);
     if (model !== null) {
-      const workerUsage = {
-        prompt_tokens: steps.evaluation.prompt,
-        completion_tokens: steps.evaluation.completion,
-        cached_tokens: steps.evaluation.cached
-      };
+      const workerUsage = Object.values(steps).reduce((acc, s) => {
+        if (!s.isZero) {
+          acc.prompt_tokens += s.prompt;
+          acc.completion_tokens += s.completion;
+          acc.cached_tokens += s.cached;
+        }
+        return acc;
+      }, { prompt_tokens: 0, completion_tokens: 0, cached_tokens: 0 });
       const workerCost = estimateCost(model, workerUsage, provider);
       grandCost += workerCost;
       console.log(`  ${padTotal}${formatK(workerTotalTokens)} tokens ($${workerCost.toFixed(4)})`);

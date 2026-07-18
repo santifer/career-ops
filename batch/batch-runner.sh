@@ -695,7 +695,9 @@ print_summary() {
   fi
 
   if [[ -f "$BATCH_DIR/aggregate-tokens.mjs" ]]; then
-    node "$BATCH_DIR/aggregate-tokens.mjs"
+    if ! node "$BATCH_DIR/aggregate-tokens.mjs"; then
+      echo "Warning: token aggregation failed." >&2
+    fi
   fi
 }
 

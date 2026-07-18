@@ -55,10 +55,12 @@ export function estimateCost(model, usage, provider) {
     }
   }
 
+  const promptTokens = usage.prompt_tokens || 0;
+  const completionTokens = usage.completion_tokens || 0;
   const cached = usage.cached_tokens || 0;
-  const promptCost = (usage.prompt_tokens - cached) * rate.input;
+  const promptCost = Math.max(promptTokens - cached, 0) * rate.input;
   const cachedCost = cached * (rate.cachedInput ?? (rate.input * 0.5));
-  const completionCost = usage.completion_tokens * rate.output;
+  const completionCost = completionTokens * rate.output;
   return promptCost + cachedCost + completionCost;
 }
 
