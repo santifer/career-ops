@@ -8513,6 +8513,139 @@ try {
   fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
+// --- immigration-status requirement overreach (#2033): table + oferta Block G + apply Step 5d ---
+{
+  // 1. Table exists, parses as YAML, both seeds complete — INCLUDING a
+  //    non-empty lawful_screening_contrast on EVERY row (the field that
+  //    encodes the authorization-vs-status line; a row without it is invalid)
+  //    — and the header carries the contribution rule.
+  const isPath = join(ROOT, 'templates', 'immigration-status-requirements.yml');
+  if (!existsSync(isPath)) {
+    fail('templates/immigration-status-requirements.yml missing (#2033)');
+  } else {
+    try {
+      const { load } = await import('js-yaml');
+      const isRaw = readFileSync(isPath, 'utf-8');
+      const isTable = load(isRaw);
+      const rows = Array.isArray(isTable?.entries) ? isTable.entries : [];
+      const completeRow = (r) =>
+        r &&
+        typeof r.jurisdiction === 'string' &&
+        typeof r.jurisdiction_name === 'string' &&
+        Array.isArray(r.prohibited_requirement_patterns) && r.prohibited_requirement_patterns.length > 0 &&
+        r.prohibited_requirement_patterns.every((p) => p && typeof p.pattern === 'string' && typeof p.guidance === 'string') &&
+        typeof r.lawful_screening_contrast === 'string' && r.lawful_screening_contrast.trim().length > 0 &&
+        typeof r.exceptions === 'string' && r.exceptions.length > 0 &&
+        typeof r.legal_basis === 'string' && r.legal_basis.length > 0 &&
+        typeof r.enforcement_notes === 'string' && r.enforcement_notes.length > 0 &&
+        Array.isArray(r.sources) && r.sources.length > 0 &&
+        typeof r.as_of === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.as_of);
+      const us = rows.find((r) => r?.jurisdiction === 'US');
+      const caOn = rows.find((r) => r?.jurisdiction === 'CA-ON');
+      if (
+        rows.every(completeRow) &&
+        completeRow(us) && us.legal_basis.includes('1324b') &&
+        us.lawful_screening_contrast.includes('Are you authorized to work in the United States?') &&
+        us.lawful_screening_contrast.includes('Will you now or in the future require sponsorship') &&
+        us.exceptions.includes('government contract') && /ITAR/.test(us.exceptions) &&
+        us.enforcement_notes.includes('19 IER settlements') && us.enforcement_notes.includes('Facebook') &&
+        completeRow(caOn) && caOn.legal_basis.includes('s.5(1)') && caOn.legal_basis.includes('Haseeb') &&
+        caOn.lawful_screening_contrast.includes('Are you legally authorized to work in Canada?') &&
+        caOn.exceptions.includes('s.16') &&
+        caOn.prohibited_requirement_patterns.some((p) => /permanently/i.test(p.pattern))
+      ) {
+        // header checks kept separate for a useful failure message
+        if (
+          isRaw.includes('CONTRIBUTION RULE') &&
+          isRaw.includes('no entry without a citable legal source') &&
+          isRaw.includes('lawful_screening_contrast') &&
+          isRaw.includes('right-to-work') &&
+          isRaw.includes('free-movement')
+        ) {
+          pass('immigration-status-requirements.yml parses with both verified seeds (US §1324b + CA-ON Haseeb), non-empty lawful_screening_contrast on every row, and the header contribution rule + candidate rows as comments (#2033)');
+        } else {
+          fail('immigration-status-requirements.yml header missing the contribution rule (source + as_of + mandatory lawful_screening_contrast) or the commented candidate rows (UK right-to-work / EU free-movement) (#2033)');
+        }
+      } else {
+        fail('immigration-status-requirements.yml seed rows incomplete — need US (§1324b basis, both IER-approved questions in lawful_screening_contrast, government-contract + ITAR notes in exceptions, IER settlements + Facebook in enforcement_notes) and CA-ON (s.5(1) + Haseeb basis, authorization contrast, s.16 exceptions, permanence proxy pattern); every row needs a non-empty lawful_screening_contrast and quoted as_of (#2033)');
+      }
+    } catch (e) {
+      fail(`templates/immigration-status-requirements.yml does not parse as YAML: ${e.message} (#2033)`);
+    }
+  }
+
+  // 2. Mode section structure: oferta signal (jurisdiction derivation,
+  //    exceptions honesty, ITAR note) + apply step (status-vs-authorization
+  //    rule, never-auto-answer guarantees).
+  const ofertaNow = readFile('modes/oferta.md');
+  const applyNow = readFile('modes/apply.md');
+  const sigStart = ofertaNow.indexOf('**9. Immigration-Status Requirement Overreach**');
+  const sigEnd = ofertaNow.indexOf('### Output format:', Math.max(sigStart, 0));
+  const sigSection = sigStart >= 0 && sigEnd > sigStart ? ofertaNow.slice(sigStart, sigEnd) : '';
+  if (
+    sigSection.includes('templates/immigration-status-requirements.yml') &&
+    sigSection.includes('config/profile.yml') &&
+    sigSection.includes('this signal is not evaluated; say nothing') &&
+    sigSection.includes('names the claimed hook instead of flagging cleanly') &&
+    sigSection.includes('15 CFR 772.1 / 22 CFR 120.15') &&
+    sigSection.includes('unlawful unless required by law, regulation, executive order, or government contract for this position') &&
+    sigSection.includes('⚠️ **Immigration-status requirement signal:**') &&
+    sigSection.includes('not legal advice') &&
+    sigSection.includes('Render in {language.output}')
+  ) {
+    pass('oferta Block G immigration-status signal pins jurisdiction derivation, skip-when-no-row, exceptions honesty (named hook instead of clean flag), the ITAR/EAR US-person note, statute-fact phrasing, and the not-legal-advice close (#2033)');
+  } else {
+    fail('oferta Block G immigration-status signal missing/incomplete — needs table + profile.yml jurisdiction derivation, skip-when-no-row, exceptions honesty, ITAR/EAR note, statute-fact phrasing, {language.output} rendering, not-legal-advice note (#2033)');
+  }
+
+  const stepStart = applyNow.indexOf('## Step 5d — Immigration-status screening check');
+  const stepEnd = applyNow.indexOf('**Applying to several roles', Math.max(stepStart, 0));
+  const stepSection = stepStart >= 0 && stepEnd > stepStart ? applyNow.slice(stepStart, stepEnd) : '';
+  if (
+    stepSection.includes('templates/immigration-status-requirements.yml') &&
+    stepSection.includes('immigration STATUS rather than work AUTHORIZATION') &&
+    stepSection.includes('⚠️ **Immigration-status screening warning:**') &&
+    stepSection.includes('Never auto-answer the question, never auto-skip it, never block') &&
+    stepSection.includes('Haseeb') &&
+    stepSection.includes('Acme Corp') &&
+    stepSection.includes('not legal advice')
+  ) {
+    pass('apply Step 5d warns before a status-screening question is answered — status-vs-authorization rule, Haseeb proxy worked example (fictional Acme Corp), never-auto-answer/skip/block, not-legal-advice (#2033)');
+  } else {
+    fail('apply mode missing Step 5d immigration-status screening check or its status-vs-authorization rule / Haseeb proxy example / never-auto-answer guarantees (#2033)');
+  }
+
+  // 3. Phrasing discipline, scoped to rendered-output surfaces (the report
+  //    blockquote templates) with a clause-directed regex — statute
+  //    descriptions ("unlawful unless required by law...") pass; assertions
+  //    directed at the employer do not (the #2029/#2031 approach).
+  const facingLines = (sigSection + '\n' + stepSection)
+    .split('\n')
+    .filter((l) => l.trimStart().startsWith('>'));
+  const assertive = facingLines.filter((l) =>
+    /(this employer|the employer) (is|was|has been) (discriminating|breaking the law|violating|committing)/i.test(l)
+  );
+  if (sigSection && stepSection && facingLines.length >= 2 && assertive.length === 0) {
+    pass('immigration-status rendered templates state posting/form facts + statute context only — no clause-directed "the employer is discriminating/breaking the law" assertions (#2033)');
+  } else {
+    fail(`immigration-status phrasing discipline broken: ${assertive.length ? `employer-directed assertion in rendered template: ${assertive[0].trim().slice(0, 80)}` : 'expected blockquote templates in both the oferta signal and apply Step 5d'} (#2033)`);
+  }
+
+  // 4. NEGATIVE pin (unique to this member): the mode text must explicitly
+  //    state that lawful authorization/sponsorship screening questions are
+  //    NOT flagged. If either literal disappears, the signal has lost the
+  //    authorization-vs-status line — the whole member hinges on it.
+  if (
+    sigSection.includes('are NOT flagged by this signal, ever') &&
+    stepSection.includes('generate NO warning from this step — ever') &&
+    stepSection.includes('Will you now or in the future require sponsorship for employment visa status?')
+  ) {
+    pass('negative pin holds: both mode surfaces explicitly state that authorization/sponsorship screening questions are never flagged (#2033)');
+  } else {
+    fail('negative pin broken: mode text no longer explicitly states that lawful authorization/sponsorship questions are NOT flagged ("are NOT flagged by this signal, ever" / "generate NO warning from this step — ever") (#2033)');
+  }
+}
+
 await runDiscovered();
 
 finish();
