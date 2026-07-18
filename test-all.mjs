@@ -152,6 +152,7 @@ const scripts = [
   { name: 'upskill.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
+  { name: 'rejection-latency.mjs --self-test', expectExit: 0 },
   { name: 'salary-gap.mjs --self-test', expectExit: 0 },
   { name: 'funnel-velocity.mjs --self-test', expectExit: 0 },
   { name: 'img-to-pdf.mjs --self-test', expectExit: 0 },
@@ -8511,6 +8512,57 @@ try {
   }
 } catch (e) {
   fail(`stated-comp tracking wiring check: ${e.message}`);
+}
+
+// ── REJECTION LATENCY (#2013) ───────────────────────────────────
+// rejection-latency.mjs's own --self-test (invoked above via the CLI-check
+// table) covers latency math, tier assignment, jurisdiction resolution, and
+// the suggestion-row format. This section pins the mode-doc wiring and the
+// suggestion-only guarantees.
+
+console.log('\n63. Rejection-latency signal wired into followup mode (#2013)');
+
+try {
+  const followupModeDoc = readFile('modes/followup.md');
+  const rejectionLatencySrc = readFile('rejection-latency.mjs');
+
+  if (followupModeDoc.includes('rejection-latency.mjs')) {
+    pass('followup mode runs rejection-latency.mjs and surfaces flags as reminders');
+  } else {
+    fail('followup mode missing the rejection-latency.mjs check step');
+  }
+
+  if (/Never write to `data\/blacklist\.md`/.test(followupModeDoc)) {
+    pass('followup mode restates the suggestion-only blacklist guarantee (#1742)');
+  } else {
+    fail('followup mode missing the never-write blacklist guarantee for latency flags');
+  }
+
+  if (followupModeDoc.includes('[Render in {language.output}')) {
+    pass('followup latency reminders use the {language.output} localization pattern');
+  } else {
+    fail('followup latency reminders missing the {language.output} localization pattern');
+  }
+
+  if (rejectionLatencySrc.includes("'CA-ON'") && rejectionLatencySrc.includes('45')) {
+    pass('statutory table ships the single verified CA-ON 45-day entry');
+  } else {
+    fail('rejection-latency.mjs missing the verified CA-ON statutory entry');
+  }
+
+  if (rejectionLatencySrc.includes('not legal advice')) {
+    pass('rejection-latency.mjs carries the not-legal-advice disclaimer');
+  } else {
+    fail('rejection-latency.mjs missing the not-legal-advice disclaimer');
+  }
+
+  if (!/writeFileSync|appendFileSync|createWriteStream/.test(rejectionLatencySrc)) {
+    pass('rejection-latency.mjs is read-only (no write APIs — suggestion-only by construction)');
+  } else {
+    fail('rejection-latency.mjs contains file-write APIs; it must never write user data');
+  }
+} catch (e) {
+  fail(`rejection-latency wiring check: ${e.message}`);
 }
 
 await runDiscovered();
