@@ -256,9 +256,13 @@ career-ops/
 
 ## Sobre el autor
 
-Soy Santiago -- Head of Applied AI, ex-fundador (monte y vendi un negocio que sigue funcionando con mi nombre). Construi career-ops para gestionar mi propia busqueda de empleo. Funciono: lo use para conseguir mi puesto actual.
+Soy [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, ex-fundador (monté y vendí un negocio que sigue funcionando con mi nombre). Construí career-ops para gestionar mi propia búsqueda de empleo. Funcionó: lo usé para conseguir mi puesto actual.
+
+¿Curiosidad por cómo se mantiene este repo en ~4 horas a la semana? Lee [Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet).
 
 Mi portfolio y otros proyectos open source → [santifer.io](https://santifer.io)
+
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
 
 ## Documentacion
 

@@ -308,9 +308,11 @@ career-ops/
 
 ## À propos de l'auteur
 
-Je m'appelle Santiago — Head of Applied AI, ancien fondateur (j'ai créé et vendu une entreprise qui fonctionne toujours sous mon nom). J'ai conçu career-ops pour gérer ma propre recherche d'emploi. Cela a fonctionné : je l'ai utilisé pour décrocher mon poste actuel.
+Je m'appelle [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) — Head of Applied AI, ancien fondateur (j'ai créé et vendu une entreprise qui fonctionne toujours sous mon nom). J'ai conçu career-ops pour gérer ma propre recherche d'emploi. Cela a fonctionné : je l'ai utilisé pour décrocher mon poste actuel.
 
 Mon portfolio et mes autres projets open source → [santifer.io](https://santifer.io)
+
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
 
 ## Historique des étoiles
 
