@@ -8673,7 +8673,7 @@ try {
     if (codeRootVars.size === 0) continue;
 
     const varAlt = [...codeRootVars].join('|');
-    const joinRe = new RegExp(`\\b(?:join|resolve)\\(\\s*(?:\${varAlt})\\s*,\\s*'(?:\${segAlt})`, 'g');
+    const joinRe = new RegExp(`\\b(?:join|resolve)\\(\\s*(?:${varAlt})\\s*,\\s*'(?:${segAlt})`, 'g');
 
     lines.forEach((line, i) => {
       const trimmed = line.trim();
