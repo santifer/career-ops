@@ -1,0 +1,59 @@
+# Career-Ops — Pay-Transparency Disclosure Rules (jurisdiction table)
+#
+# Consumed by modes/oferta.md Block G ("Pay-Transparency Disclosure Check").
+# This file is a DATA REFERENCE, not instruction logic: extending it to a new
+# jurisdiction never requires touching the rule text in modes/oferta.md.
+#
+# CONTRIBUTION RULE (mandatory): no entry lands in this table without
+#   1. a citable legal source (statute, regulation, or a reputable law-firm
+#      bulletin summarizing it), AND
+#   2. an explicit effective date.
+# Unverified or "I heard that..." rows will be rejected in review. Seed narrow
+# and verified; extend via community PRs — same discipline as the
+# jurisdiction tables introduced for #2013/#2018.
+#
+# NOT LEGAL ADVICE: these rows describe published disclosure requirements so
+# the agent can state observable facts about a posting. They are never a
+# basis for asserting that any employer is violating any law — employer
+# headcount, exemptions, and posting provenance are not verifiable from a JD.
+#
+# Schema per entry (key = jurisdiction code, e.g. CA-ON, US-CO, US-NYC):
+#   range_required: bool     — must publicly advertised postings include
+#                              expected compensation or a range?
+#   width_cap:               — maximum allowed advertised range width, or null
+#     amount: number           if the jurisdiction caps disclosure but not width
+#     currency: ISO 4217 code
+#     period: year|month|hour
+#   exemptions: list         — carve-outs that mean absence/width is legal
+#   legal_basis: string      — statute/regulation citation
+#   effective: YYYY-MM-DD    — date the requirement is in force
+#   sources: list            — citable bulletins/analyses backing the row
+#
+# CANDIDATE ROWS FOR CONTRIBUTORS (suggestions only — do NOT add without the
+# source + effective-date discipline above):
+#   - US-CO  : Colorado Equal Pay for Equal Work Act (in force since 2021)
+#   - US-NYC : NYC Local Law 32 of 2022 (salary range in ads, 2022)
+#   - US-CA  : California SB 1162 (2023)
+#   - US-WA  : Washington SB 5761 (2023)
+#   - US-IL  : Illinois HB 3129 pay-transparency amendments (2025)
+#   - EU-*   : member-state transpositions of the EU Pay Transparency
+#              Directive (2023/970) as they land (transposition due June 2026)
+
+jurisdictions:
+  CA-ON:
+    range_required: true          # publicly advertised postings by employers with 25+ employees must include expected compensation or a range
+    width_cap:
+      amount: 50000               # advertised range must not exceed $50,000/year in width
+      currency: CAD
+      period: year
+    exemptions:
+      - "Employers with fewer than 25 employees are not covered"
+      - "Requirement does not apply when expected compensation, or the top of the advertised range, exceeds $200,000/year"
+      - "Applies to publicly advertised job postings; non-public/internal postings are out of scope"
+    legal_basis: "Ontario Employment Standards Act, 2000 amendments — Working for Workers Acts, 2024 (as implemented by O. Reg. 476/24)"
+    effective: 2026-01-01
+    sources:
+      - "Fasken — Ontario job posting requirements bulletin (O. Reg. 476/24)"
+      - "Littler — Ontario Working for Workers Acts job-posting analysis"
+      - "Hicks Morley — ESA job posting amendments FTR Now bulletin"
+      - "Hyde HR Law — Ontario pay transparency update"

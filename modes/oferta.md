@@ -294,6 +294,24 @@ If this mismatch is present, append a short, non-alarmist note to the report:
 
 This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is orthogonal to ghost-job detection and is reported separately.
 
+**9. Pay-Transparency Disclosure Check** (from JD text + `templates/pay-transparency.yml`; jurisdiction from the JD's stated location, falling back to `config/profile.yml` → `location` when the JD is silent — same region-aware pattern as the employment-classification signal):
+
+Pay-transparency laws regulate the one field this mode already parses — `advertised_comp`. Resolve the posting's governing jurisdiction and look it up in `templates/pay-transparency.yml` (a data reference, not instruction logic — adding a jurisdiction row there never requires touching this rule text; every row carries a legal basis, effective date, and sources). If the jurisdiction has no row in the table, skip this signal entirely.
+
+Two sub-signals of different evidence strength (same strong vs. corroborating-only split as the terminology-mismatch signal above):
+
+**9a. Over-wide advertised range (STRONG, presence-based):** the posting states a compensation range whose width (top minus bottom, computed from the `advertised_comp` already parsed for Block B — normalize both bounds to the cap's period before subtracting) exceeds the jurisdiction's `width_cap`. Example: a fictional Acme Corp posting in Ontario advertising "$60,000–$150,000" is a $90K width against Ontario's $50K/year cap. The evidence is in the JD text itself; aggregator re-posting cannot manufacture it. If present, append a short, non-alarmist note to the report:
+
+> ⚠️ **Pay-transparency range-width signal:** [Render in {language.output}: state the arithmetic fact and the published rule — e.g. "this advertised range is $90K wide; Ontario's O. Reg. 476/24 caps advertised ranges at $50K/year for covered postings" — then note that unusually wide ranges often mean the actual band for the level is undecided or the posting is templated/aggregated, and suggest asking the recruiter for the real band for this level. Close with a note that this is an observation about the posting, not legal advice.]
+
+**Phrasing discipline (mandatory):** state only observable facts — the computed range width and what the jurisdiction's published rule says, with its citation from the table. Never render this finding as "the employer is breaking the law," an "illegal" posting, or a "violation" — employer headcount, exemptions (e.g. Ontario's >$200K carve-out), and posting provenance are not verifiable from a JD, and this mode never gives legal advice.
+
+**9b. Missing compensation information (CORROBORATING-ONLY, absence-based):** the posting contains no compensation information at all, in a jurisdiction whose row has `range_required: true`. **This sub-signal never fires standalone.** Absence is weak evidence on its own: aggregators routinely strip compliance blocks when re-posting, and lawful exemptions exist (employer-size thresholds; Ontario's >$200K carve-out). Record it only as a corroborating line attached to another Block G signal that is already Concerning — exactly how "PTO" and bare "ESA" are corroborating-only markers in the terminology-mismatch signal above. When it corroborates, append inside that other signal's finding:
+
+> [Render in {language.output}: one sentence noting that the posting also contains no compensation information although the candidate's jurisdiction requires covered public postings to state expected compensation or a range — consistent with an aggregated or stale re-post, though lawful exemptions exist, so this only corroborates the finding it is attached to.]
+
+This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below on its own — sub-signal 9a is orthogonal to ghost-job detection and is reported separately, and sub-signal 9b only ever appears as corroboration attached to another signal's finding, never as a standalone flag.
+
 ### Output format:
 
 **Assessment:** One of three tiers:
