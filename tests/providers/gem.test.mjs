@@ -141,12 +141,16 @@ try {
   const emptyCases = [null, {}, [], [{}], [{ data: null }], [{ data: { oatsExternalJobPostings: null } }]];
   let emptyOk = true;
   for (const body of emptyCases) {
-    let detailCalled = false;
+    let requestCount = 0;
     const out = await gem.fetch(
       { name: 'Retool', careers_url: 'https://jobs.gem.com/retool' },
-      { fetchJson: async () => { detailCalled = true; return body; } },
+      { fetchJson: async () => { requestCount++; return body; } },
     );
-    if (!Array.isArray(out) || out.length !== 0) { emptyOk = false; fail(`gem.fetch() body=${JSON.stringify(body)} → ${JSON.stringify(out)}`); break; }
+    if (!Array.isArray(out) || out.length !== 0 || requestCount !== 1) {
+      emptyOk = false;
+      fail(`gem.fetch() body=${JSON.stringify(body)} → ${JSON.stringify(out)}, requests=${requestCount}`);
+      break;
+    }
   }
   if (emptyOk) pass('gem.fetch() returns [] for null / {} / [] / malformed list response bodies');
 
