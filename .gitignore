@@ -9,6 +9,7 @@ data/assessments.tsv
 data/pipeline.md
 data/scan-history.tsv
 data/scan-runs.tsv
+data/portal-health.tsv
 data/blacklist.md
 data/pdf-index.tsv
 data/agent-inbox.md

@@ -1,6 +1,10 @@
-# Career-Ops
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
 
-[English](README.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Français](README.fr.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Dansk](README.da.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
+<div align="center">
+
+[English](README.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Dansk](README.da.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
+
+</div>
 
 <p align="center">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops 多代理求职系统" width="800"></a>
@@ -293,9 +297,11 @@ career-ops/
 
 ## 关于作者
 
-我是 Santiago，现任 Head of Applied AI，也曾是一名创业者（创建并出售过一家公司，那家公司至今仍以我的名字运营）。我构建 career-ops 是为了管理我自己的求职流程，而它确实奏效了：我用它拿到了现在这份工作。
+我是 [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about)（santifer），现任 Head of Applied AI，也曾是一名创业者（创建并出售过一家公司，那家公司至今仍以我的名字运营）。我构建 career-ops 是为了管理我自己的求职流程，而它确实奏效了：我用它拿到了现在这份工作。
 
 我的作品集和其他开源项目 → [santifer.io](https://santifer.io)
+
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
 
 ## Star 历史
 

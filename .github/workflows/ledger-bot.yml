@@ -314,4 +314,4 @@ jobs:
             }
             await github.graphql(
               'mutation($id:ID!,$b:String!){addDiscussionComment(input:{discussionId:$id,body:$b}){comment{id}}}',
-              { id: disc.id, b: `noted. your certificate will show it shortly: https://career-ops.org/manifesto/s/${login}?fresh=1` });
+              { id: disc.id, b: `done. your certificate now marks it: https://career-ops.org/manifesto/s/${login}?fresh=1` });
