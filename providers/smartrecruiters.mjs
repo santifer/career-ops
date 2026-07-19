@@ -133,7 +133,7 @@ export function parseSmartRecruitersResponse(json, companyName) {
     if (!url && j.id) {
       const companySlug = (companyName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       if (companySlug) {
-        url = `https://jobs.smartrecruiters.com/${companySlug}/${j.id}-${slugified}`;
+        url = `https://jobs.smartrecruiters.com/${companySlug}/${j.id}${slugified ? `-${slugified}` : ''}`;
       }
     }
     return { title: j.name || '', url, location, company: companyName };

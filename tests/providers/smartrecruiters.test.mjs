@@ -174,6 +174,22 @@ try {
     fail(`fallback URL not properly slugified: ${JSON.stringify(slugifiedCompany[0]?.url)}`);
   }
 
+  // A posting with no usable name must not leave a dangling hyphen on either
+  // URL-building path (the id alone resolves fine).
+  const noName = parseSmartRecruitersResponse(
+    { content: [
+      { id: 'N1', ref: 'https://api.smartrecruiters.com/v1/companies/sgs/postings/N1' },
+      { id: 'N2' },
+    ] },
+    'SGS',
+  );
+  if (noName[0]?.url === 'https://jobs.smartrecruiters.com/sgs/N1'
+      && noName[1]?.url === 'https://jobs.smartrecruiters.com/sgs/N2') {
+    pass('parseSmartRecruitersResponse omits the trailing hyphen when the title slug is empty');
+  } else {
+    fail(`empty-title urls = ${JSON.stringify(noName.map(j => j.url))}`);
+  }
+
   // Pagination: fetch() loops until an empty page (or short page) is returned
   let pageRequests = 0;
   const pagedJobs = await sr.fetch(
