@@ -231,18 +231,20 @@ termination provision is walked in a jurisdiction whose row carries a
    > list below. This is statutory context, not legal advice.]
 
 2. The **Questions for your lawyer** list gains targeted, clause-anchored
-   entries:
+   entries, each rendered in `{language.output}` — the English wordings
+   below are semantic templates for the question's content, never text to
+   copy verbatim (statute names, case names, and table figures stay as-is):
    - the generic floor question — e.g. for the fictional Acme Corp offer
-     above: "This clause states 10 vacation days; the table records
-     Ontario's ESA floor as 2 weeks (3 after five years). How do these
-     interact in my situation — does the floor simply override the clause,
-     or does it have wider effects on the contract?"
+     above: [Render in {language.output}: "This clause states 10 vacation
+     days; the table records Ontario's ESA floor as 2 weeks (3 after five
+     years). How do these interact in my situation — does the floor simply
+     override the clause, or does it have wider effects on the contract?"]
    - when the row carries a `void_doctrine` and the walked clause is a
      termination provision, the doctrine-specific question — for Ontario:
-     "Does the 'for cause' definition here match the ESA's
-     wilful-misconduct standard? If not, does Waksdale void the entire
-     termination provision, and what would common-law notice look like
-     for me?"
+     [Render in {language.output}: "Does the 'for cause' definition here
+     match the ESA's wilful-misconduct standard? If not, does Waksdale
+     void the entire termination provision, and what would common-law
+     notice look like for me?"]
 
 **The candidate-empowering angle (state it, neutrally):** under a
 whole-provision voiding doctrine like Ontario's Waksdale line (Waksdale v.
