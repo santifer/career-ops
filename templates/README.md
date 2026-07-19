@@ -10,6 +10,7 @@ System-layer template files used by career-ops scripts and modes. These files ar
 | `resume-template.html` | `generate-pdf.mjs` (via `--template`) | Resume-branded variant of `cv-template.html`. Same layout and placeholder tokens; differs in: `<title>` reads "Resume" instead of "CV", omits Certifications section, targets 1–2 page US/industry format. See detailed section below. |
 | `cv-template.tex` | `generate-latex.mjs` | LaTeX/Overleaf template for ATS-optimized CV PDFs |
 | `portals.example.yml` | Onboarding | Example portal scanner configuration (copy to `portals.yml` to activate) |
+| `statutory-employment-minimums.yml` | `modes/offer-prep.md` (statutory-context notes for sub-statutory terms) | Jurisdiction-keyed table of employment-standards floors (vacation, termination notice, severance, probation limits) plus whole-provision voiding doctrines (v1 seed: Ontario — ESA floors + *Waksdale v. Swegon*, 2020 ONCA 391). Prompt-level data reference — no script reads it; local lookup, never online research. Feeds statutory-context notes and targeted lawyer questions; never a verdict about the candidate's clause. Floors are listed only where the jurisdiction defines them — an absent floor means the check stays silent (the designed "US case"). Contribution rule: no entry without a regulator-grade citable source and an `as_of` verification date. |
 | `states.yml` | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases |
 
 ### cv-template.html

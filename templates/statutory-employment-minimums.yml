@@ -1,0 +1,123 @@
+# Career-Ops — Statutory Employment Minimums (jurisdiction floors table) (#2039)
+#
+# Consumed prompt-level by modes/offer-prep.md ("Statutory-context notes for
+# sub-statutory terms"). This file is a DATA REFERENCE, not instruction
+# logic: extending it to a new jurisdiction never requires touching the rule
+# text in modes/offer-prep.md. No script reads it — the agent does, as a
+# LOCAL file lookup (which is not online research and does not touch
+# offer-prep's no-research guard).
+#
+# CONTRIBUTION RULE (mandatory): no entry lands in this table without
+#   1. a regulator-grade citable source (statute text, official government
+#      page, or a reputable law-firm bulletin summarizing it), AND
+#   2. the statutory basis for every floor the row records, AND
+#   3. an `as_of` date recording when the row was last verified.
+# Unverified or "I heard that..." rows will be rejected in review. Seed
+# narrow and verified; extend via community PRs — same discipline as the
+# jurisdiction tables introduced for #2013/#2018/#2019/#2025/#2028.
+#
+# ABSENT-FLOOR SEMANTICS (mandatory): floors are listed ONLY where the
+# jurisdiction actually defines them. An absent field — or an absent
+# jurisdiction row — means NO statutory floor is recorded, and the
+# offer-prep check stays SILENT for that clause family. This is the
+# designed "US case" (no federal vacation floor exists), not an omission:
+# absence is meaningful. Never pad a row with a floor inferred from a
+# sibling jurisdiction, and never write "none"/"n/a" placeholder floors —
+# omit the field instead.
+#
+# NOT LEGAL ADVICE: these rows describe what published statutes and case
+# law say — floors, doctrines, scopes, and dates. They are never a basis
+# for asserting that any specific contract clause is void, unenforceable,
+# illegal, or in violation of a statute: employer size and payroll,
+# employee-category exemptions, greater-right-or-benefit analysis, and
+# choice-of-law wrinkles are exactly the things a contract document cannot
+# self-certify. Application to a specific clause is always a lawyer
+# question.
+#
+# Schema per entry (list under `minimums`):
+#   jurisdiction: string       — code, e.g. CA-ON, UK, DE, FR, JP
+#   jurisdiction_name: string  — human-readable name for report output
+#   floors: map                — ONLY the floors the jurisdiction defines
+#                                (any of: vacation, notice, severance,
+#                                probation_limits — each a verbatim-close
+#                                summary with its statutory cite)
+#   void_doctrine: string|null — whole-provision voiding doctrine, if the
+#                                jurisdiction has one (e.g. Ontario's
+#                                Waksdale line); omit or null when none
+#   legal_basis: string        — statute/regulation citations + key case law
+#   sources: list              — citable texts/bulletins backing the row
+#   as_of: YYYY-MM-DD          — date this row was last verified against
+#                                sources (quoted string — keep dates as
+#                                strings)
+#
+# CANDIDATE ROWS FOR CONTRIBUTORS (suggestions only — do NOT add without
+# the source + as_of discipline above):
+#   - UK : notice — Employment Rights Act 1996 s.86 (one week per year of
+#          service, up to 12 weeks); vacation — Working Time Regulations
+#          1998 (5.6 weeks statutory holiday). Contract terms below these
+#          are ineffective to that extent.
+#   - DE : notice — BGB §622 tiered notice periods by service; vacation —
+#          BUrlG 24 Werktage (≈ 20 working days on a 5-day week).
+#   - FR : vacation — five weeks congés payés; convention-collective floors
+#          (e.g. SYNTEC) routinely exceed statute — a "check your
+#          convention collective" pointer, not a computable floor.
+#   - EU : vacation baseline — Working Time Directive 2003/88/EC art. 7
+#          (4 weeks paid annual leave) — the floor every member state
+#          builds on; member-state rows should cite the transposition.
+#   - JP : vacation — Labour Standards Act art. 39 (10 days paid leave
+#          after six months of service, scaling with tenure).
+#   - US : federal — NO vacation floor exists; deliberately ABSENT from
+#          this table so the check stays silent (the designed behavior for
+#          floor-less jurisdictions). State-level rows, where a state
+#          defines a floor, would be keyed US-XX with their own sources.
+
+minimums:
+  - jurisdiction: CA-ON
+    jurisdiction_name: "Ontario, Canada"
+    floors:
+      vacation: >-
+        2 weeks of paid vacation per vacation entitlement year; 3 weeks
+        after 5 years of service (ESA, 2000 ss. 33-34; vacation pay 4% / 6%
+        of wages, s. 35.2).
+      notice: >-
+        Termination notice (or pay in lieu) on the ESA scale: 1 week after
+        3 months of service, rising with years of service to a maximum of
+        8 weeks at 8+ years (ESA, 2000 s. 57). NOTE the no-notice window at
+        the start of employment — employees with less than 3 months of
+        service are not entitled to statutory termination notice (ESA, 2000
+        s. 54; O. Reg. 288/01 s. 8(1)); this ~3-month window is the ESA's
+        "probation" reality.
+      severance: >-
+        Severance pay, where applicable (5+ years of service AND employer
+        with an Ontario payroll of $2.5M+ or 50+ terminations within a
+        6-month window): roughly 1 week per year of service, to a maximum
+        of 26 weeks (ESA, 2000 ss. 63-65).
+      probation_limits: >-
+        The ESA defines no standalone "probation" concept — the only
+        statutory effect resembling one is the sub-3-month no-notice window
+        above. A contractual probation clause longer than 3 months does not
+        remove ESA notice entitlements once 3 months of service are passed.
+    void_doctrine: >-
+      Waksdale v. Swegon North America (2020 ONCA 391): termination
+      provisions are read as a whole — if ANY part violates the ESA,
+      including a never-invoked "for cause" section that defines cause more
+      broadly than the ESA's wilful-misconduct standard (O. Reg. 288/01
+      s. 2(1)3), the ENTIRE termination provision is void; courts do not
+      sever the offending part, and the employee falls back to common-law
+      reasonable notice — typically far more than the ESA minimums. The
+      Court of Appeal declined to revisit Waksdale in Dufault (2024);
+      applied and refined in the post-Waksdale case line: Sewell,
+      Lamontagne, Perretta, Kopyl, Bertsch.
+    legal_basis: >-
+      Employment Standards Act, 2000, S.O. 2000, c. 41 — ss. 33-35.2
+      (vacation), s. 54 and s. 57 (termination notice), ss. 63-65
+      (severance pay); O. Reg. 288/01 s. 8(1) (sub-3-month no-notice
+      window) and s. 2(1)3 (wilful-misconduct standard for disentitlement);
+      Waksdale v. Swegon North America Inc., 2020 ONCA 391 (whole-provision
+      voiding doctrine).
+    sources:
+      - "Littler insight — post-Waksdale Ontario termination-provision case law"
+      - "Epstein Becker Green — Waksdale and Ontario termination clauses commentary"
+      - "HTW Law — Waksdale v. Swegon North America case commentary"
+      - "Employment Law Boutique — post-Waksdale case line commentary (Sewell, Lamontagne, Perretta, Kopyl, Bertsch)"
+    as_of: "2026-07-18"
