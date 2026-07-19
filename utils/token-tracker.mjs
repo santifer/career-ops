@@ -93,8 +93,13 @@ export class TokenAccumulator {
       this.steps[stepName] = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, cached_tokens: 0, isZeroToken: false };
     }
     if (usage === 0 || usage === null || usage === undefined) {
-      this.steps[stepName].isZeroToken = true;
+      const step = this.steps[stepName];
+      const hasRealUsage = step.prompt_tokens > 0 || step.completion_tokens > 0 || step.total_tokens > 0 || step.cached_tokens > 0;
+      if (!hasRealUsage) {
+        step.isZeroToken = true;
+      }
     } else {
+      this.steps[stepName].isZeroToken = false;
       this.steps[stepName].prompt_tokens += usage.prompt_tokens || 0;
       this.steps[stepName].completion_tokens += usage.completion_tokens || 0;
       this.steps[stepName].total_tokens += usage.total_tokens || 0;
