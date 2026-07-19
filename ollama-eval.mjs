@@ -28,7 +28,7 @@ import { fileURLToPath } from 'url';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
-import { TokenAccumulator, formatBreakdown } from './utils/token-tracker.mjs';
+import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './utils/token-tracker.mjs';
 
 const tracker = new TokenAccumulator();
 tracker.recordZeroToken('scan');
@@ -279,12 +279,7 @@ try {
 
   const data = await res.json();
   evaluationText = data.choices?.[0]?.message?.content?.trim();
-  const usage = {
-    prompt_tokens: data.usage?.prompt_tokens ?? 0,
-    completion_tokens: data.usage?.completion_tokens ?? 0,
-    total_tokens: data.usage?.total_tokens ?? 0,
-    cached_tokens: data.usage?.prompt_tokens_details?.cached_tokens ?? data.usage?.cached_tokens ?? 0
-  };
+  const usage = normalizeOpenAIUsage(data.usage);
   tracker.record('evaluation', usage);
   if (!evaluationText) {
     console.error('❌  Ollama returned an empty response.');

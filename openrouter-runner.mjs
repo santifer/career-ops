@@ -26,7 +26,7 @@ import yaml from 'js-yaml';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
-import { TokenAccumulator, formatBreakdown } from './utils/token-tracker.mjs';
+import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './utils/token-tracker.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const tracker = new TokenAccumulator();
@@ -237,12 +237,7 @@ async function callOpenRouter(systemPrompt, userMessage) {
       const content = data.choices?.[0]?.message?.content ?? '';
       if (!content) throw new Error('Empty response');
       console.log('OK');
-      const usage = {
-        prompt_tokens: data.usage?.prompt_tokens ?? 0,
-        completion_tokens: data.usage?.completion_tokens ?? 0,
-        total_tokens: data.usage?.total_tokens ?? 0,
-        cached_tokens: data.usage?.prompt_tokens_details?.cached_tokens ?? data.usage?.cached_tokens ?? 0
-      };
+      const usage = normalizeOpenAIUsage(data.usage);
       return { content, usage };
     } catch (e) {
       if (e.name === 'AbortError') throw new Error(`Pinned model timed out after ${MODEL_TIMEOUT_MS / 1000}s`);
@@ -310,12 +305,7 @@ async function callOpenRouter(systemPrompt, userMessage) {
       const content = data.choices?.[0]?.message?.content ?? '';
       if (!content) throw new Error('Empty response');
 
-      const usage = {
-        prompt_tokens: data.usage?.prompt_tokens ?? 0,
-        completion_tokens: data.usage?.completion_tokens ?? 0,
-        total_tokens: data.usage?.total_tokens ?? 0,
-        cached_tokens: data.usage?.prompt_tokens_details?.cached_tokens ?? data.usage?.cached_tokens ?? 0
-      };
+      const usage = normalizeOpenAIUsage(data.usage);
 
       modelIndex = (modelIndex + attempt + 1) % active.length;
       console.log('OK');

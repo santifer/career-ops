@@ -24,6 +24,25 @@ export const RATES = {
   'claude-3-haiku': { input: 0.25 / 1000000, output: 1.25 / 1000000 },
 };
 
+/**
+ * Normalize an OpenAI-compatible usage object, applying safe defaults.
+ *
+ * Four evaluator call sites previously duplicated this exact extraction.
+ * Centralising it here keeps the fallback order (prompt_tokens_details →
+ * cached_tokens → 0) in one authoritative place.
+ *
+ * @param {object|null|undefined} usage - Raw `data.usage` from the API response.
+ * @returns {{ prompt_tokens: number, completion_tokens: number, total_tokens: number, cached_tokens: number }}
+ */
+export function normalizeOpenAIUsage(usage) {
+  return {
+    prompt_tokens: usage?.prompt_tokens ?? 0,
+    completion_tokens: usage?.completion_tokens ?? 0,
+    total_tokens: usage?.total_tokens ?? 0,
+    cached_tokens: usage?.prompt_tokens_details?.cached_tokens ?? usage?.cached_tokens ?? 0
+  };
+}
+
 export function estimateCost(model, usage, provider) {
   if (provider === 'ollama') return 0;
   if (provider === 'openrouter' && !process.env.CAREER_OPS_MODEL) {
