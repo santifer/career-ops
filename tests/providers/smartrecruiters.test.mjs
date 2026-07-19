@@ -84,10 +84,31 @@ try {
     fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Paris, France, Remote"`);
   }
 
-  if (jobs[0]?.url === 'https://jobs.smartrecruiters.com/sgs/postings/abc-123') {
-    pass('parseSmartRecruitersResponse rewrites api.smartrecruiters.com → jobs.smartrecruiters.com');
+  // The public site is /<slug>/<id>-<title-slug> — NOT /<slug>/postings/<id>.
+  // Carrying the API's /postings/ segment over produces a 404 that the liveness
+  // checker misreports as an expired posting (#1612).
+  if (jobs[0]?.url === 'https://jobs.smartrecruiters.com/sgs/abc-123-senior-pm') {
+    pass('parseSmartRecruitersResponse rewrites api ref → public /<slug>/<id>-<title> URL');
   } else {
     fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (!jobs.some(j => j.url.includes('/postings/'))) {
+    pass('parseSmartRecruitersResponse never emits a /postings/ segment (404 on the public site)');
+  } else {
+    fail(`a /postings/ URL leaked: ${JSON.stringify(jobs.map(j => j.url))}`);
+  }
+
+  // Malformed ref (no /postings/<id> tail) must fall through to the id fallback,
+  // not emit a truncated URL.
+  const malformedRef = parseSmartRecruitersResponse(
+    { content: [{ id: 'zz-9', name: 'Odd Role', ref: 'https://api.smartrecruiters.com/v1/companies/sgs' }] },
+    'SGS',
+  );
+  if (malformedRef[0]?.url === 'https://jobs.smartrecruiters.com/sgs/zz-9-odd-role') {
+    pass('parseSmartRecruitersResponse falls back when ref lacks a /postings/<id> tail');
+  } else {
+    fail(`malformed ref url = ${JSON.stringify(malformedRef[0]?.url)}`);
   }
 
   if (jobs[2]?.url && jobs[2].url.startsWith('https://jobs.smartrecruiters.com/sgs/ghi-789')) {
