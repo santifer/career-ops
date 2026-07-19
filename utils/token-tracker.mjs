@@ -70,7 +70,7 @@ export function estimateCost(model, usage, provider) {
     } else if (provider === 'claude' || provider === 'anthropic') {
       rate = RATES['claude-3-5-sonnet'];
     } else {
-      return 0;
+      return null;
     }
   }
 
@@ -160,7 +160,8 @@ export function formatBreakdown(accumulator, model, provider) {
   const cost = estimateCost(model, totals, provider);
   const totalK = formatK(totals.total_tokens);
   const labelTotal = 'total:'.padEnd(15);
-  lines.push(`  ${labelTotal}${totalK} tokens ($${cost.toFixed(4)})`);
+  const costStr = cost === null ? 'cost unavailable' : `$${cost.toFixed(4)}`;
+  lines.push(`  ${labelTotal}${totalK} tokens (${costStr})`);
   lines.push(`  (metadata: model=${model}, provider=${provider})`);
   return lines.join('\n');
 }

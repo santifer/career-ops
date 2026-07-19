@@ -30,6 +30,7 @@ import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './utils
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const tracker = new TokenAccumulator();
+let activeModel = null;
 
 // ---------------------------------------------------------------------------
 // .env loader
@@ -204,7 +205,7 @@ async function callOpenRouter(systemPrompt, userMessage) {
 
   const pinnedModel = process.env.CAREER_OPS_MODEL;
   if (pinnedModel) {
-    tracker.activeModel = pinnedModel;
+    activeModel = pinnedModel;
     process.stdout.write(`[model] ${pinnedModel} (pinned) ... `);
     const body = JSON.stringify({
       model: pinnedModel,
@@ -261,7 +262,7 @@ async function callOpenRouter(systemPrompt, userMessage) {
 
   for (let attempt = 0; attempt < active.length; attempt++) {
     const model = active[(modelIndex % active.length + attempt) % active.length];
-    tracker.activeModel = model;
+    activeModel = model;
     process.stdout.write(`[model] ${model} ... `);
 
     try {
@@ -841,6 +842,6 @@ MODEL SELECTION:
 }
 
 if (invokedDirectly && ['scan', 'evaluate', 'eval', 'pipeline', 'apply'].includes(command)) {
-  const modelName = process.env.CAREER_OPS_MODEL || tracker.activeModel || 'free-rotation';
+  const modelName = process.env.CAREER_OPS_MODEL || activeModel || 'free-rotation';
   console.log('\n' + formatBreakdown(tracker, modelName, 'openrouter'));
 }
