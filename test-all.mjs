@@ -1609,6 +1609,98 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+// --- Block G agency licensing check (#2037) ---
+{
+  // 1. Jurisdiction table exists, parses as YAML, and the CA-ON seed is complete
+  const alPath = join(ROOT, 'templates', 'agency-licensing.yml');
+  if (!existsSync(alPath)) {
+    fail('templates/agency-licensing.yml missing (#2037)');
+  } else {
+    try {
+      const { load } = await import('js-yaml');
+      const alRaw = readFileSync(alPath, 'utf-8');
+      const al = load(alRaw);
+      const on = al?.jurisdictions?.['CA-ON'];
+      if (
+        on &&
+        on.licensing_required_for === 'both' &&
+        String(on.effective) === '2024-07-01' &&
+        typeof on.registry?.url === 'string' && on.registry.url.includes('ontario.ca') &&
+        typeof on.registry?.what_it_shows === 'string' && on.registry.what_it_shows.length > 0 &&
+        typeof on.legal_basis === 'string' && on.legal_basis.includes('O. Reg. 99/23') &&
+        typeof on.client_side_prohibition === 'string' && on.client_side_prohibition.length > 0 &&
+        typeof on.penalties === 'string' && on.penalties.length > 0 &&
+        typeof on.transitional_notes === 'string' && on.transitional_notes.length > 0 &&
+        Array.isArray(on.sources) && on.sources.length > 0 &&
+        Boolean(on.as_of)
+      ) {
+        pass('agency-licensing.yml parses and CA-ON seed carries both-scope licensing, corrected 2024-07-01 effective date, ontario.ca registry, legal basis, client-side prohibition, penalties, transitional notes, sources, as_of (#2037)');
+      } else {
+        fail('agency-licensing.yml CA-ON seed incomplete — needs licensing_required_for both, effective 2024-07-01 (O. Reg. 339/23 delayed commencement — NOT 2024-01-01), registry.url on ontario.ca with what_it_shows, legal_basis (O. Reg. 99/23), client_side_prohibition, penalties, transitional_notes, sources, as_of (#2037)');
+      }
+      if (
+        alRaw.includes('CONTRIBUTION RULE') &&
+        alRaw.includes('NEVER-ASSERT RULE') &&
+        alRaw.includes('never a third-party mirror')
+      ) {
+        pass('agency-licensing.yml header documents the contribution rule, the never-assert rule, and the official-registry-only requirement (#2037)');
+      } else {
+        fail('agency-licensing.yml header missing the contribution rule, never-assert rule, and/or official-registry-only requirement (#2037)');
+      }
+    } catch (e) {
+      fail(`templates/agency-licensing.yml does not parse as YAML: ${e.message} (#2037)`);
+    }
+  }
+
+  // 2. oferta.md carries the agency-licensing section with the agency-mediated
+  //    trigger, registry pointer, tracker-note suggestion, and jurisdiction derivation
+  const alStart = ofertaMode.indexOf('Agency Licensing Check');
+  const alEnd = ofertaMode.indexOf('### Output format:', Math.max(alStart, 0));
+  const alSection = alStart >= 0 && alEnd > alStart ? ofertaMode.slice(alStart, alEnd) : '';
+  if (
+    alSection.includes('templates/agency-licensing.yml') &&
+    alSection.includes('agency-mediated') &&
+    alSection.includes('"our client"') &&
+    alSection.includes('{registry.url}') &&
+    alSection.includes('via={Agency}') &&
+    alSection.includes('never writes the tracker itself') &&
+    alSection.includes('config/profile.yml') &&
+    alSection.includes('skip this signal silently') &&
+    alSection.includes('not legal advice')
+  ) {
+    pass('oferta Block G agency-licensing signal pins the agency-mediated trigger, registry pointer, via={Agency} tracker-note suggestion, jurisdiction derivation, silent skip, not-legal-advice note (#2037)');
+  } else {
+    fail('oferta Block G missing/incomplete agency-licensing section — needs table reference, agency-mediated trigger ("our client"), registry pointer, via={Agency} tracker-note suggestion (mode never writes the tracker), config/profile.yml jurisdiction derivation, silent skip for no-row jurisdictions, not-legal-advice note (#2037)');
+  }
+
+  // 3. Hard-rule pins: the signal never asserts unlicensed status and never
+  //    fetches/scrapes the registry (zero-fetch pillar)
+  if (
+    alSection.includes('never asserts an agency is unlicensed') &&
+    alSection.includes('never fetches or scrapes the registry')
+  ) {
+    pass('oferta agency-licensing signal pins the never-assert-unlicensed and never-fetch/scrape-registry hard rules (#2037)');
+  } else {
+    fail('oferta agency-licensing signal missing the hard rules — must state it "never asserts an agency is unlicensed" and "never fetches or scrapes the registry" (#2037)');
+  }
+
+  // 4. Phrasing discipline holds in the report-facing text: the blockquote
+  //    templates the agent renders describe the regime and hand over the
+  //    registry link — never accusations about a specific agency. Clause-
+  //    directed regex (per #2029/#2031): ban "this/the agency is unlicensed /
+  //    operating illegally" patterns while letting regime descriptions
+  //    ("Ontario has required ... licences since 2024-07-01") pass.
+  const alQuoteLines = alSection.split('\n').filter((l) => l.trimStart().startsWith('>'));
+  const alAccusatory = alQuoteLines.filter((l) =>
+    /(this|the|that|an?y?)\s+(agency|recruiter|operator)\s+(is|was|are|were)\s+(unlicensed|not\s+licensed|operating\s+(illegally|unlawfully)|breaking\s+the\s+law)/i.test(l)
+  );
+  if (alSection && alQuoteLines.length >= 1 && alAccusatory.length === 0) {
+    pass('agency-licensing report template states regime facts + registry pointer only — no "agency is unlicensed/operating illegally" assertions (#2037)');
+  } else {
+    fail(`agency-licensing phrasing discipline broken: ${alAccusatory.length ? `accusatory blockquote line(s): ${alAccusatory[0].trim().slice(0, 80)}` : 'expected a blockquote output template in the section'} (#2037)`);
+  }
+}
+
 // --- offer-prep mode: contract reading companion (describes, never judges) ---
 const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
 if (

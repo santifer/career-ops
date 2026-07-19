@@ -11,6 +11,7 @@ System-layer template files used by career-ops scripts and modes. These files ar
 | `cv-template.tex` | `generate-latex.mjs` | LaTeX/Overleaf template for ATS-optimized CV PDFs |
 | `portals.example.yml` | Onboarding | Example portal scanner configuration (copy to `portals.yml` to activate) |
 | `states.yml` | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases |
+| `agency-licensing.yml` | `modes/oferta.md` (Block G signal 9) | Jurisdiction-keyed table of agency/recruiter licensing regimes with official public registry lookups (e.g. Ontario THA/recruiter licensing mandatory since 2024-07-01, ministry status checker on ontario.ca). Prompt-level data reference — no script reads it, nothing ever fetches or scrapes a registry URL. Contribution rule: no entry without a regulator-grade source, an effective date, an `as_of` verification date, and an official government registry URL (never a third-party mirror). |
 
 ### cv-template.html
 
