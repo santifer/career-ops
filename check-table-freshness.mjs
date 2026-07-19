@@ -26,12 +26,20 @@
  *     the row in a legal cycle.
  *
  * Malformed or missing dates produce a warning entry and the row is skipped —
- * never a crash. All date math is UTC-midnight calendar math (no
- * time-of-day drift). Each finding copies the row's `sources` so whoever
- * picks it up knows exactly where to re-verify.
+ * never a crash (a row missing its mandatory `as_of` inside a qualifying
+ * row-set warns too; it does not silently vanish from validation). All date
+ * math is UTC-midnight calendar math (no time-of-day drift). Each finding
+ * copies the row's `sources` so whoever picks it up knows exactly where to
+ * re-verify.
  *
- * Exit codes (CI-friendly): 1 if any `expired` finding, 0 otherwise —
- * `review-due` alone never fails the run.
+ * Thresholds are strict positive integers: an invalid --max-age-months value
+ * is a usage error (exit 1, fail-fast — never a silent fallback); an invalid
+ * config table_freshness.max_age_months is reported as a warning and the
+ * default applies.
+ *
+ * Exit codes (CI-friendly): 1 if any `expired` finding or on invalid usage
+ * (bad --max-age-months / --today), 0 otherwise — `review-due` alone never
+ * fails the run.
  *
  * Run: node check-table-freshness.mjs                    (JSON to stdout)
  *      node check-table-freshness.mjs --summary          (human-readable table)
@@ -56,11 +64,23 @@ const args = process.argv.slice(2);
 const summaryMode = args.includes('--summary');
 const selfTestMode = args.includes('--self-test');
 const maxAgeIdx = args.indexOf('--max-age-months');
-const maxAgeFlag = maxAgeIdx !== -1 && args[maxAgeIdx + 1] !== undefined
-  ? parseInt(args[maxAgeIdx + 1], 10)
-  : null;
+const maxAgeRaw = maxAgeIdx !== -1 ? args[maxAgeIdx + 1] : null;
 const todayIdx = args.indexOf('--today');
 const todayFlag = todayIdx !== -1 ? args[todayIdx + 1] : null;
+
+// Strict positive-integer parser for freshness thresholds. parseInt would
+// accept "6months" and truncate 6.5 to 6 — a threshold must be an exact whole
+// number of months, so anything else is rejected outright (null). Accepts
+// number values too (YAML config yields real numbers, not strings).
+export function parsePositiveInt(value) {
+  if (typeof value === 'number') {
+    return Number.isInteger(value) && value > 0 ? value : null;
+  }
+  const s = String(value ?? '').trim();
+  if (!/^\d+$/.test(s)) return null;
+  const n = Number(s);
+  return n > 0 ? n : null;
+}
 
 // --- Date helpers (UTC-midnight calendar math — no time-of-day drift) ---
 export function parseDate(dateStr) {
@@ -85,24 +105,32 @@ export function addMonthsUTC(date, deltaMonths) {
 }
 
 // --- Row extraction ---
-// Given a parsed YAML document of any shape, return every object row that
-// carries an `as_of` field, tagged with where it sits (`(top-level)` for a
-// top-level array, or the top-level key for arrays nested one level down).
+// Given a parsed YAML document of any shape, find its jurisdiction row-sets:
+// arrays (top-level, or under any top-level key) where at least one object
+// row carries an `as_of` field. Once an array qualifies as a row-set, EVERY
+// object row in it is returned — rows missing the mandatory `as_of` are
+// tagged `missingAsOf: true` so checkFreshness can warn about them instead of
+// letting them silently vanish from validation. Arrays with no `as_of` rows
+// at all (states.yml's state list, portals.example.yml's companies) never
+// qualify, so unrelated templates stay silently skipped.
 // A file qualifies as a jurisdiction table iff this returns at least one row.
 export function extractRows(doc) {
-  const isRow = (v) => v !== null && typeof v === 'object' && !Array.isArray(v) && Object.hasOwn(v, 'as_of');
-  const rows = [];
+  const isObjectRow = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  const arrays = [];
   if (Array.isArray(doc)) {
-    doc.forEach((item, index) => {
-      if (isRow(item)) rows.push({ row: item, container: '(top-level)', index });
-    });
+    arrays.push({ container: '(top-level)', items: doc });
   } else if (doc !== null && typeof doc === 'object') {
     for (const [key, value] of Object.entries(doc)) {
-      if (!Array.isArray(value)) continue;
-      value.forEach((item, index) => {
-        if (isRow(item)) rows.push({ row: item, container: key, index });
-      });
+      if (Array.isArray(value)) arrays.push({ container: key, items: value });
     }
+  }
+  const rows = [];
+  for (const { container, items } of arrays) {
+    if (!items.some(item => isObjectRow(item) && Object.hasOwn(item, 'as_of'))) continue;
+    items.forEach((item, index) => {
+      if (!isObjectRow(item)) return;
+      rows.push({ row: item, container, index, missingAsOf: !Object.hasOwn(item, 'as_of') });
+    });
   }
   return rows;
 }
@@ -123,11 +151,19 @@ export function checkFreshness(tables, todayDate, maxAgeMonths = DEFAULT_MAX_AGE
     if (rows.length === 0) continue; // not a jurisdiction table — silently skipped
     tablesScanned += 1;
 
-    for (const { row, container, index } of rows) {
+    for (const { row, container, index, missingAsOf } of rows) {
       const jurisdiction = typeof row.jurisdiction === 'string' && row.jurisdiction.trim()
         ? row.jurisdiction.trim()
         : `${container}[${index}]`;
       const sources = row.sources ?? row.source ?? null;
+
+      if (missingAsOf) {
+        warnings.push({
+          type: 'warning', file, jurisdiction, field: 'as_of',
+          detail: 'row is missing the mandatory as_of field — every jurisdiction row must carry one (quoted YYYY-MM-DD); row skipped',
+        });
+        continue;
+      }
 
       const asOf = parseDate(row.as_of);
       if (asOf === null) {
@@ -204,16 +240,32 @@ function loadTables(dir = TEMPLATES_DIR) {
 }
 
 // --- Config (mirrors salary-gap.mjs's profile read: optional, never fatal) ---
+// Returns { months, warning }. A missing profile or absent key is a non-event
+// (both null). A PRESENT but invalid table_freshness.max_age_months is never
+// partially parsed or silently swallowed: months stays null (default applies)
+// and a warning entry reports the rejected value.
 function loadConfigMaxAge() {
   const profilePath = join(CAREER_OPS, 'config/profile.yml');
-  if (!existsSync(profilePath)) return null;
+  if (!existsSync(profilePath)) return { months: null, warning: null };
   try {
     const profile = yaml.load(readFileSync(profilePath, 'utf-8'));
-    const months = profile?.table_freshness?.max_age_months;
-    const n = parseInt(months, 10);
-    return Number.isInteger(n) && n > 0 ? n : null;
+    if (!Object.hasOwn(profile?.table_freshness ?? {}, 'max_age_months')) {
+      return { months: null, warning: null };
+    }
+    const raw = profile.table_freshness.max_age_months;
+    const months = parsePositiveInt(raw);
+    if (months === null) {
+      return {
+        months: null,
+        warning: {
+          type: 'warning', file: 'config/profile.yml', jurisdiction: null, field: 'table_freshness.max_age_months',
+          detail: `invalid value ${JSON.stringify(raw)} — expected a positive integer (whole months); using default ${DEFAULT_MAX_AGE_MONTHS}`,
+        },
+      };
+    }
+    return { months, warning: null };
   } catch {
-    return null; // unreadable profile is a non-event here; doctor.mjs owns that complaint
+    return { months: null, warning: null }; // unreadable profile is a non-event here; doctor.mjs owns that complaint
   }
 }
 
@@ -309,6 +361,10 @@ function runSelfTest() {
     '    rule: "test malformed next_effective"',
     '    as_of: "2026-06-20"',
     '    next_effective: "2026-13-45"',
+    '  # missing as_of entirely: the row-set qualifies (siblings carry as_of),',
+    '  # so this row must WARN, not silently vanish from validation',
+    '  - jurisdiction: "RR-TEST"',
+    '    rule: "test missing as_of"',
   ].join('\n'));
 
   const TOP_LEVEL_ARRAY_TABLE = yaml.load([
@@ -333,10 +389,10 @@ function runSelfTest() {
 
   // Discovery: both table shapes found, non-table ignored.
   check(result.tablesScanned === 2, `both table shapes discovered, non-table skipped (got ${result.tablesScanned})`);
-  check(extractRows(NESTED_TABLE).length === 7, 'nested-under-key shape: all as_of rows extracted');
+  check(extractRows(NESTED_TABLE).length === 8, 'nested-under-key shape: all rows in the qualifying row-set extracted (incl. the missing-as_of one)');
   check(extractRows(TOP_LEVEL_ARRAY_TABLE).length === 1, 'top-level-array shape: as_of row extracted');
   check(extractRows(NOT_A_TABLE).length === 0, 'file without as_of rows yields no rows');
-  check(result.rowsChecked === 6, `6 rows checked (2 malformed skipped), got ${result.rowsChecked}`);
+  check(result.rowsChecked === 6, `6 rows checked (2 malformed + 1 missing as_of skipped), got ${result.rowsChecked}`);
 
   // expired
   const expired = result.findings.filter(f => f.type === 'expired');
@@ -360,12 +416,14 @@ function runSelfTest() {
   check(!flagged.has('SS-TEST'), 'fresh top-level-array row produces no finding');
 
   // warnings
-  check(result.warnings.length === 2, `2 warnings for malformed dates, got ${result.warnings.length}`);
+  check(result.warnings.length === 3, `3 warnings (2 malformed dates + 1 missing as_of), got ${result.warnings.length}`);
   check(result.warnings.some(w => w.jurisdiction === 'UU-TEST' && w.field === 'as_of'),
     'malformed as_of produces a warning and skips the row');
   check(result.warnings.some(w => w.jurisdiction === 'TT-TEST' && w.field === 'next_effective'),
     'malformed next_effective produces a warning and skips the row');
-  check(!flagged.has('UU-TEST') && !flagged.has('TT-TEST'), 'skipped rows never produce findings');
+  check(result.warnings.some(w => w.jurisdiction === 'RR-TEST' && w.field === 'as_of' && w.detail.includes('missing the mandatory as_of')),
+    'row missing as_of inside a qualifying row-set produces a warning, not a silent skip');
+  check(!flagged.has('UU-TEST') && !flagged.has('TT-TEST') && !flagged.has('RR-TEST'), 'skipped rows never produce findings');
 
   // exit-code semantics: expired -> 1, review-due alone -> 0
   check(hasExpired(result.findings) === true, 'expired finding present -> exit 1 path');
@@ -396,6 +454,18 @@ function runSelfTest() {
   check(parseDate('2026-02-30') === null, 'impossible calendar date rejected');
   check(parseDate('2026-6-1') === null, 'non-padded date rejected (tables use quoted YYYY-MM-DD)');
   check(parseDate(20260601) === null, 'non-string date value rejected');
+
+  // threshold parsing is strict: positive integers only, never partial parses
+  check(parsePositiveInt('6') === 6, 'parsePositiveInt accepts "6"');
+  check(parsePositiveInt(' 12 ') === 12, 'parsePositiveInt tolerates surrounding whitespace');
+  check(parsePositiveInt(6) === 6, 'parsePositiveInt accepts a YAML integer');
+  check(parsePositiveInt('6months') === null, 'parsePositiveInt rejects "6months" (no parseInt truncation)');
+  check(parsePositiveInt('6.5') === null, 'parsePositiveInt rejects decimal strings');
+  check(parsePositiveInt(6.5) === null, 'parsePositiveInt rejects a YAML float');
+  check(parsePositiveInt('0') === null, 'parsePositiveInt rejects zero');
+  check(parsePositiveInt('-3') === null, 'parsePositiveInt rejects negatives');
+  check(parsePositiveInt('') === null, 'parsePositiveInt rejects empty string');
+  check(parsePositiveInt(null) === null, 'parsePositiveInt rejects null/missing value');
 
   // empty input: no tables -> clean empty result, exit 0 path
   const empty = checkFreshness([], today, DEFAULT_MAX_AGE_MONTHS);
@@ -433,13 +503,26 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
 
   // Precedence: --max-age-months flag > config table_freshness.max_age_months > default 12.
-  const maxAgeMonths = Number.isInteger(maxAgeFlag) && maxAgeFlag > 0
-    ? maxAgeFlag
-    : (loadConfigMaxAge() ?? DEFAULT_MAX_AGE_MONTHS);
+  // An explicitly passed flag must be a strictly positive integer — anything
+  // else is a usage error, not a silent fall-through to config/default
+  // (fail-fast on bad flag values, same as scan-ats-full.mjs).
+  const configWarnings = [];
+  let maxAgeMonths;
+  if (maxAgeIdx !== -1) {
+    maxAgeMonths = parsePositiveInt(maxAgeRaw);
+    if (maxAgeMonths === null) {
+      console.error(`Error: invalid --max-age-months value ${JSON.stringify(maxAgeRaw ?? null)} — expected a positive integer (whole months)`);
+      process.exit(1);
+    }
+  } else {
+    const cfg = loadConfigMaxAge();
+    if (cfg.warning) configWarnings.push(cfg.warning);
+    maxAgeMonths = cfg.months ?? DEFAULT_MAX_AGE_MONTHS;
+  }
 
   const { tables, parseWarnings } = loadTables();
   const result = checkFreshness(tables, todayDate, maxAgeMonths);
-  result.warnings = [...parseWarnings, ...result.warnings];
+  result.warnings = [...configWarnings, ...parseWarnings, ...result.warnings];
 
   if (summaryMode) {
     printSummary(result, isoDay(todayDate), maxAgeMonths);
