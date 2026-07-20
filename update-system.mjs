@@ -67,6 +67,7 @@ const SYSTEM_PATHS = [
   'modes/cover.md',
   'modes/email.md',
   'modes/add.md',
+  'modes/expand.md',
   'modes/scan.md',
   'modes/batch.md',
   'modes/apply.md',
