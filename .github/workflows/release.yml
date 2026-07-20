@@ -29,7 +29,7 @@ jobs:
       # `on: release` workflows.
       - uses: actions/checkout@v7
         if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
         with:
           node-version: 24
