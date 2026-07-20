@@ -35,12 +35,22 @@ test("/api/run stderr snippets are captured around the matched keyword", () => {
 const STDERR_ERROR_RE =
   /\b(?:error|denied|fatal|not found|unauthorized|forbidden|login|credential|api[ -]?key|quota|rate limit|not authenticated|auth(?:entication|orization)?)\b/i;
 
+function productionStderrRegexLiteral() {
+  const match = source.match(/const STDERR_ERROR_RE =\s*\n\s*(\/.+\/[a-z]*);/);
+  assert.ok(match, "production STDERR_ERROR_RE literal not found");
+  return match[1];
+}
+
 function captureStderrSnippet(s) {
   const match = STDERR_ERROR_RE.exec(s);
   if (!match) return "";
   const start = Math.max(0, match.index - 50);
   return s.slice(start, start + 200).trim();
 }
+
+test("mirrored stderr matcher stays identical to production", () => {
+  assert.equal(STDERR_ERROR_RE.toString(), productionStderrRegexLiteral());
+});
 
 test("captureStderrSnippet returns a trimmed 200-char window centered on the first match", () => {
   const filler = "x".repeat(80);
@@ -64,5 +74,5 @@ test("captureStderrSnippet does not go out of bounds when the match is near the 
 test("/api/run stderr detector does not match authorized as auth", () => {
   assert.match(source, /const STDERR_ERROR_RE =/);
   assert.doesNotMatch(source, /\|auth\|/);
-  assert.doesNotMatch("Authorized to work in the US", /\b(?:error|denied|fatal|not found|unauthorized|forbidden|login|credential|api[ -]?key|quota|rate limit|not authenticated|auth(?:entication|orization)?)\b/i);
+  assert.doesNotMatch("Authorized to work in the US", STDERR_ERROR_RE);
 });
