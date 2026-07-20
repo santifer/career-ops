@@ -149,13 +149,13 @@ Sla de volledige evaluatie op in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ### 2. Opslaan in tracker
 
-**ALTIJD** registreren via een TSV-bestand in `batch/tracker-additions/`; bewerk `data/applications.md` nooit rechtstreeks. Voer daarna `node merge-tracker.mjs` uit:
+**ALTIJD** registreren via een TSV-bestand in `batch/tracker-additions/`; bewerk `data/applications.md` nooit rechtstreeks. Voer vóór voltooiing, in deze volgorde, `node merge-tracker.mjs`, `node verify-pipeline.mjs`, `node normalize-statuses.mjs` en `node dedup-tracker.mjs` uit:
 - Volgend opeenvolgend nummer
 - De datum van vandaag
 - Bedrijf
 - Rol
 - Status: `Evaluated`
-- Score: wedstrijdgemiddelde (1-5)
+- Gemiddelde score (1-5): uitsluitend een numerieke TSV-waarde met een punt als decimaalteken, bijvoorbeeld `4.2/5`; kopieer geen beschrijvende tekst naar dit veld
 - PDF: nee (of ja als de auto-pipeline een PDF heeft gegenereerd)
 - Rapport: relatieve link naar het rapportbestand (bijvoorbeeld: `[001](reports/001-company-2026-01-01.md)`)
 - Notities: optioneel
