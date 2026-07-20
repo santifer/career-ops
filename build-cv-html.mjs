@@ -120,7 +120,7 @@ async function prepareCandidatePhoto(candidate) {
     return c;
   }
 
-  if (/^[a-z][a-z0-9+.-]*:/i.test(photo)) {
+  if (/^[a-z][a-z0-9+.-]+:/i.test(photo)) {
     throw new Error(`Unsupported profile photo URL scheme: ${photo.split(':', 1)[0]}`);
   }
 
