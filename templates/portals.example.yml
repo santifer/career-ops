@@ -170,6 +170,38 @@
 #         - "llm"
 #         - "claude"
 
+# -- Visa / work-authorization filter (optional) --
+# Surfaces roles that sponsor a work visa (H-1B / H-1B1 / O-1 for the US, plus
+# the generic "visa sponsorship" wording) and drops roles that explicitly refuse
+# it. Like content_filter it reads the job DESCRIPTION text, so it only has
+# signal for providers whose list API ships a description (Lever today).
+# Semantics (case-insensitive substring):
+#   - Any `negative` keyword present → reject (an explicit "no sponsorship")
+#   - require_mention: false (default) → after clearing negatives, pass — jobs
+#     with no description included. Use this to only weed out explicit rejections.
+#   - require_mention: true → keep only jobs whose description advertises
+#     sponsorship (contains a `positive` keyword); missing description → reject.
+#   - `positive`/`negative` default to a curated US-sponsorship vocabulary when
+#     omitted, so `visa_filter: { enabled: true }` works out of the box.
+#   - If this entire block is absent, jobs are not filtered on sponsorship.
+#
+# Minimal: drop only the postings that say they won't sponsor
+# visa_filter:
+#   enabled: true
+#
+# Strict: only surface postings that explicitly advertise US sponsorship
+# visa_filter:
+#   enabled: true
+#   require_mention: true
+#   positive:
+#     - "visa sponsorship"
+#     - "h-1b"
+#     - "h1b1"
+#     - "will sponsor"
+#   negative:
+#     - "no sponsorship"
+#     - "unable to sponsor"
+
 # -- Title filter --
 # The scanner uses these keywords to decide if a title is relevant.
 # At least 1 positive must match AND 0 negatives must match (case-insensitive).
@@ -257,6 +289,23 @@ title_filter:
 # The scanner extracts title, URL, and company from results.
 
 search_queries:
+  # -- Visa sponsorship (US) --
+  # Explicitly hunt for roles that sponsor a US work visa. Pair these with the
+  # `visa_filter` block above (require_mention: true) so the scan-side filter
+  # double-checks the description for sponsorship wording. Disabled by default —
+  # flip enabled: true if you need sponsorship.
+  - name: Greenhouse — AI + visa sponsorship
+    query: 'site:boards.greenhouse.io ("AI Engineer" OR "ML Engineer") ("visa sponsorship" OR "H-1B" OR "H1B1")'
+    enabled: false
+
+  - name: Ashby — AI + visa sponsorship
+    query: 'site:jobs.ashbyhq.com ("AI Engineer" OR "LLM Engineer") ("visa sponsorship" OR "will sponsor")'
+    enabled: false
+
+  - name: Lever — AI + visa sponsorship
+    query: 'site:jobs.lever.co ("AI Engineer" OR "Machine Learning") ("visa sponsorship" OR "H-1B")'
+    enabled: false
+
   # -- Ashby --
   - name: Ashby — AI PM
     query: 'site:jobs.ashbyhq.com "AI Product Manager" OR "Senior Product Manager AI" remote'
