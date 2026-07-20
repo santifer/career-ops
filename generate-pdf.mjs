@@ -27,12 +27,20 @@ import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
+import { getCareerOpsRoot } from './path-resolver.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PDF_PAGE_MARGIN = '0.6in';
 
 // Ensure output directory exists (fresh setup)
-mkdirSync(resolve(__dirname, 'output'), { recursive: true });
+const outputDir = resolve(getCareerOpsRoot(), 'output');
+try {
+  mkdirSync(outputDir, { recursive: true });
+} catch (err) {
+  console.error(`ERROR: Could not create output directory at "${outputDir}": ${err.message}`);
+  process.exit(1);
+}
+
 
 /**
  * Normalize text for ATS compatibility by converting problematic Unicode.
@@ -213,7 +221,8 @@ export function validateCvSectionOrder(html, cvMarkdown, { allowReorder = false 
  */
 export function repoRelativeManifestPath(pathValue) {
   if (!pathValue) return '';
-  const rel = relative(__dirname, resolve(pathValue));
+  const dataRoot = getCareerOpsRoot();
+  const rel = relative(dataRoot, resolve(pathValue));
   if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) return '';
   return rel.split(sep).join('/');
 }
@@ -245,8 +254,9 @@ export function injectPrintPageCss(html, format = 'a4') {
  * gitignored output/ artifacts and is meaningless on another machine.
  */
 function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
-  const manifestPath = resolve(__dirname, 'data', 'pdf-index.tsv');
-  const toRel = (p) => relative(__dirname, p).split(sep).join('/');
+  const dataRoot = getCareerOpsRoot();
+  const manifestPath = resolve(dataRoot, 'data', 'pdf-index.tsv');
+  const toRel = (p) => relative(dataRoot, p).split(sep).join('/');
   const relPDF = toRel(pdfPath);
   const relHTML = repoRelativeManifestPath(htmlPath);
   const date = new Date().toISOString().slice(0, 10);
@@ -321,14 +331,16 @@ async function generatePDF() {
   inputPath = resolve(inputPath);
   outputPath = resolve(outputPath);
 
-  // Path-traversal guard: keep the PDF write inside the project directory so a
-  // crafted output argument (e.g. "../../etc/cron.d/x") can't escape the repo.
-  // Anchored to the repo root (__dirname), not process.cwd(): running the script
-  // from outside the repo used to falsely refuse in-repo outputs — and, worse,
+  // Path-traversal guard: keep the PDF write inside the resolved career-ops
+  // root so a crafted output argument (e.g. "../../etc/cron.d/x") can't escape
+  // it. Anchored to getCareerOpsRoot() (repo root, or CAREER_OPS_ROOT /
+  // CAREER_OPS_DATA_DIR when set), not process.cwd(): running the script from
+  // outside the root used to falsely refuse in-root outputs — and, worse,
   // would have allowed writes anywhere under an arbitrary cwd.
-  const relOut = relative(__dirname, outputPath);
+  const dataRoot = getCareerOpsRoot();
+  const relOut = relative(dataRoot, outputPath);
   if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
-    console.error(`Refusing to write the PDF outside the project directory: ${outputPath}`);
+    console.error(`Refusing to write the PDF outside the Career Ops root directory: ${outputPath}`);
     process.exit(1);
   }
 
@@ -346,7 +358,7 @@ async function generatePDF() {
   let html = await readFile(inputPath, 'utf-8');
   let cvMarkdown = '';
   try {
-    cvMarkdown = await readFile(resolve(__dirname, 'cv.md'), 'utf-8');
+    cvMarkdown = await readFile(resolve(dataRoot, 'cv.md'), 'utf-8');
   } catch (err) {
     if (err?.code !== 'ENOENT') throw err;
   }
