@@ -1305,6 +1305,7 @@ const expectedModes = [
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md', 'latex-tex.md', 'email.md', 'add.md', 'titles.md',
+  'expand.md',
   'regional/eu-swe.md',
 ];
 
@@ -1463,6 +1464,20 @@ if (
   pass('apply mode persists filled/submitted answers in an additive report section');
 } else {
   fail('apply mode missing additive Application Answers persistence instructions');
+}
+
+const expandMode = readFile('modes/expand.md');
+if (
+  /never fetch unlinked URLs/i.test(expandMode) &&
+  /halt until explicit approval is given/i.test(expandMode) &&
+  /node add-entry\.mjs/i.test(expandMode) &&
+  /--stdin/i.test(expandMode) &&
+  /Additive Only/i.test(expandMode) &&
+  /Treat fetched evidence text as literal/i.test(expandMode)
+) {
+  pass('expand mode includes url limits, confirm gate, add-entry funneling, additive-only, and literal evidence rules');
+} else {
+  fail('expand mode missing required behavior boundaries (url limits, confirm gate, additive-only, literal evidence, add-entry funneling)');
 }
 
 try {
@@ -2306,6 +2321,73 @@ try {
   fail(`scan-ats-full blacklist test crashed: ${e.message}`);
 }
 
+// Reverse-scan content_filter wiring (#1846) — scan-ats-full.mjs previously
+// imported only buildTitleFilter/buildLocationFilter, so portals.yml's
+// content_filter (incl. #1638's per-title-keyword scoping) had zero effect
+// on reverse scans. passesFilters() is the shared gate runSeedScan() uses;
+// exercise it directly with buildContentFilter/matchedTitleKeywords from
+// scan.mjs the same way scan-ats-full.mjs wires them.
+try {
+  const { passesFilters } = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+  const { buildTitleFilter, buildLocationFilter, buildContentFilter } =
+    await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  const titleFilterConfig = { positive: ['AI Engineer', 'Instructional Designer'] };
+  const titleFilter = buildTitleFilter(titleFilterConfig);
+  const locationFilter = buildLocationFilter(null);
+
+  // (a) A posting that fails the GLOBAL content_filter is rejected.
+  const globalCf = buildContentFilter({ positive: ['gpt', 'llm'] });
+  const failsGlobal = passesFilters(
+    { title: 'AI Engineer', location: '', description: 'Kubernetes and Terraform all day' },
+    { titleFilter, locationFilter, contentFilter: globalCf, titleFilterConfig },
+  );
+  if (failsGlobal === false) {
+    pass('scan-ats-full passesFilters rejects a posting failing the global content_filter');
+  } else {
+    fail('scan-ats-full passesFilters should reject postings failing the global content_filter');
+  }
+
+  // (b) A posting that fails a PER-TITLE-KEYWORD content_filter override is rejected.
+  const scopedCf = buildContentFilter({
+    by_title_keyword: { 'AI Engineer': { positive: ['gpt', 'llm', 'claude'] } },
+  });
+  const failsScoped = passesFilters(
+    { title: 'Senior AI Engineer', location: '', description: 'Build internal tools, no ML involved' },
+    { titleFilter, locationFilter, contentFilter: scopedCf, titleFilterConfig },
+  );
+  if (failsScoped === false) {
+    pass('scan-ats-full passesFilters rejects a posting failing its by_title_keyword override');
+  } else {
+    fail('scan-ats-full passesFilters should reject postings failing a by_title_keyword override');
+  }
+
+  // (c) Regression for #1636: a posting matched via a DIFFERENT title keyword
+  // with no content_filter override for it must NOT be wrongly rejected.
+  const passesUnrelated = passesFilters(
+    { title: 'Instructional Designer II', location: '', description: 'Designs onboarding curricula' },
+    { titleFilter, locationFilter, contentFilter: scopedCf, titleFilterConfig },
+  );
+  if (passesUnrelated === true) {
+    pass('scan-ats-full passesFilters does not leak an unrelated by_title_keyword override onto a different title match');
+  } else {
+    fail('scan-ats-full passesFilters wrongly rejected a posting whose matched keyword has no override (#1636 regression)');
+  }
+
+  // No content_filter configured at all → behaves exactly as before (title/location only).
+  const noCf = passesFilters(
+    { title: 'AI Engineer', location: '', description: 'Kubernetes and Terraform all day' },
+    { titleFilter, locationFilter, contentFilter: null, titleFilterConfig },
+  );
+  if (noCf === true) {
+    pass('scan-ats-full passesFilters passes everything through when content_filter is absent');
+  } else {
+    fail('scan-ats-full passesFilters should pass all postings when content_filter is absent');
+  }
+} catch (e) {
+  fail(`scan-ats-full content_filter wiring test crashed: ${e.message}`);
+}
+
 // ── VC Portfolio Seed Fetcher ────────────────────────────────────────
 // Tests the pure (no-network) parseSeedEntries(), parseYCPayload(),
 // parseA16zPayload(), toPortalEntry(), and the SEED_SOURCES registry.
@@ -2502,6 +2584,7 @@ try {
   const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
   const badContentFilterPath = join(tmp, 'bad-content-filter.yml');
   const deadByTitleKeywordPath = join(tmp, 'dead-by-title-keyword.yml');
+  const badVisaFilterPath = join(tmp, 'bad-visa-filter.yml');
 
   writeFileSync(validPath, `
 title_filter:
@@ -2574,6 +2657,19 @@ tracked_companies:
     careers_url: "https://jobs.lever.co/acme"
 `, 'utf-8');
 
+  // visa_filter with an empty-string keyword or a non-boolean require_mention
+  // must be rejected (an empty keyword would match every description).
+  writeFileSync(badVisaFilterPath, `
+title_filter:
+  positive: ["AI"]
+visa_filter:
+  require_mention: "yes"
+  positive: ["h-1b", "   "]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
   const validResult = run(NODE, ['validate-portals.mjs', '--file', validPath]);
   if (validResult !== null && validResult.includes('0 errors')) {
     pass('validate-portals accepts a minimal valid portals file');
@@ -2628,6 +2724,13 @@ tracked_companies:
     pass('validate-portals warns on a by_title_keyword entry with no matching title_filter.positive keyword');
   } else {
     fail('validate-portals should warn (not error) on a dead by_title_keyword entry');
+  }
+
+  const badVisaFilterResult = run(NODE, ['validate-portals.mjs', '--file', badVisaFilterPath]);
+  if (badVisaFilterResult === null) {
+    pass('validate-portals rejects invalid visa_filter (empty keyword / non-boolean require_mention)');
+  } else {
+    fail('validate-portals should reject invalid visa_filter');
   }
 
   rmSync(tmp, { recursive: true, force: true });
@@ -3418,6 +3521,7 @@ try {
     buildLocationFilter,
     buildContentFilter,
     buildPostingAgeFilter,
+    buildVisaFilter,
     shouldDedupScanHistoryRow,
     formatPipelineOffer,
     formatScanHistoryRow,
@@ -3614,8 +3718,9 @@ try {
   const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
   const historyColumns = historyRow.split('\t');
   if (
-    historyColumns.length === 9 && // 7 metadata + fingerprint (#1597) + postedAt
+    historyColumns.length === 11 && // 7 metadata + fingerprint (#1597) + postedAt + trust score/flags (#1743)
     historyColumns[8] === '' && // no postedAt on hostileOffer → empty trailing col
+    historyColumns[9] === '' && historyColumns[10] === '' && // no trust signal → empty trailing cols
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
@@ -3644,9 +3749,9 @@ try {
   const datedHistory = formatScanHistoryRow(datedOffer, '2026-07-09').split('\t');
   const noDateHistory = formatScanHistoryRow({ ...datedOffer, postedAt: undefined }, '2026-07-09').split('\t');
   if (
-    datedHistory.length === 9 &&
+    datedHistory.length === 11 &&
     datedHistory[8] === '2026-06-18' && // epoch ms → YYYY-MM-DD in the trailing column
-    noDateHistory.length === 9 &&
+    noDateHistory.length === 11 &&
     noDateHistory[8] === '' // missing postedAt → empty trailing column, never a bogus date
   ) {
     pass('scan-history writer appends postedAt as an ISO trailing column (empty when absent)');
@@ -3667,6 +3772,44 @@ try {
     pass('pipeline writer appends a labeled posted: segment (omitted/byte-identical when date missing or invalid)');
   } else {
     fail(`pipeline postedAt segment wrong: dated="${datedPipeline}" / noDate="${noDatePipeline}" / bad="${badDatePipeline}" / nan="${nanDatePipeline}"`);
+  }
+
+  // ── trust/legitimacy signal persistence (#1743) ──
+  // The scanner computes offer.trustScore/trustFlags on every job; surface it only
+  // when flagged (score < 100). scan-history gets trailing score+flags columns
+  // (after postedAt); pipeline.md gets a labeled `trust:` segment. Clean/unset
+  // trust stays byte-identical (empty column / no segment).
+  const trustBase = { url: 'https://jobs.example.com/77', source: 'lever-api', title: 'SRE', company: 'Acme', location: 'Remote', description: '' };
+  const flaggedOffer = { ...trustBase, trustScore: 60, trustFlags: ['missing_apply_url', 'suspicious_domain'] };
+  const cleanOffer = { ...trustBase, trustScore: 100, trustFlags: [] };
+  const untrustedOffer = { ...trustBase }; // no trust fields (trust_filter disabled)
+  const flaggedHist = formatScanHistoryRow(flaggedOffer, '2026-07-09').split('\t');
+  const cleanHist = formatScanHistoryRow(cleanOffer, '2026-07-09').split('\t');
+  if (
+    flaggedHist.length === 11 &&
+    flaggedHist[9] === '60' && flaggedHist[10] === 'missing_apply_url,suspicious_domain' &&
+    cleanHist.length === 11 && cleanHist[9] === '' && cleanHist[10] === '' // score 100 → not flagged → empty
+  ) {
+    pass('scan-history writer appends trust score + flags trailing columns when flagged, empty otherwise (#1743)');
+  } else {
+    fail(`scan-history trust columns wrong: flagged=${JSON.stringify(flaggedHist)} / clean=${JSON.stringify(cleanHist)}`);
+  }
+
+  const flaggedPipeline = formatPipelineOffer(flaggedOffer);
+  const cleanPipeline = formatPipelineOffer(cleanOffer);
+  const untrustedPipeline = formatPipelineOffer(untrustedOffer);
+  const flaggedNoFlags = formatPipelineOffer({ ...trustBase, trustScore: 80, trustFlags: [] });
+  const withDateAndTrust = formatPipelineOffer({ ...trustBase, postedAt: Date.parse('2026-06-18T00:00:00Z'), trustScore: 70, trustFlags: ['invalid_url'], note: 'pick' });
+  if (
+    flaggedPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 60 missing_apply_url,suspicious_domain' &&
+    cleanPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote' && // score 100 → no segment
+    untrustedPipeline === cleanPipeline && // no trust fields → byte-identical
+    flaggedNoFlags === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 80' && // score-only when no flags
+    withDateAndTrust === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | posted: 2026-06-18 | trust: 70 invalid_url | note: pick' // stable order posted→trust→note
+  ) {
+    pass('pipeline writer appends a labeled trust: segment ordered posted→trust→note, byte-identical when clean/unset (#1743)');
+  } else {
+    fail(`pipeline trust segment wrong: flagged="${flaggedPipeline}" / clean="${cleanPipeline}" / untrusted="${untrustedPipeline}" / noFlags="${flaggedNoFlags}" / combo="${withDateAndTrust}"`);
   }
 
   // ── content_filter (#734) ──
@@ -3784,6 +3927,76 @@ try {
     pass('content_filter.by_title_keyword as an array is ignored (falls back to global rule), not silently iterated');
   } else {
     fail('content_filter.by_title_keyword array should be ignored, not treated as a keyed override map');
+  }
+
+  // ── visa_filter (US work-authorization sponsorship) ──
+  // Absent config (or enabled: false) → all jobs pass.
+  const noVisaFilter = buildVisaFilter(null);
+  const offVisaFilter = buildVisaFilter({ enabled: false, negative: ['no sponsorship'] });
+  if (
+    noVisaFilter('no visa sponsorship, must be authorized') === true &&
+    noVisaFilter('') === true &&
+    offVisaFilter('no sponsorship offered') === true
+  ) {
+    pass('visa_filter absent or disabled → all jobs pass');
+  } else {
+    fail('visa_filter absent/disabled should pass all jobs');
+  }
+
+  // Default mode (require_mention: false): drop only explicit rejections,
+  // keep everything else — including jobs with no description.
+  const visa = buildVisaFilter({ enabled: true });
+  if (
+    visa('We are unable to sponsor visas for this role') === false &&
+    visa('This role does not offer visa sponsorship') === false &&
+    visa('Applicants must be authorized to work with no sponsorship') === false
+  ) {
+    pass('visa_filter rejects postings that explicitly refuse sponsorship');
+  } else {
+    fail('visa_filter should reject explicit no-sponsorship postings');
+  }
+  if (
+    visa('We happily provide visa sponsorship including H-1B') === true &&
+    visa('A generic engineering role with a collaborative team') === true &&
+    visa('') === true &&
+    visa(undefined) === true
+  ) {
+    pass('visa_filter default keeps sponsoring and unstated postings');
+  } else {
+    fail('visa_filter default should keep sponsoring and unstated postings');
+  }
+
+  // Strict mode (require_mention: true): keep only postings that advertise
+  // sponsorship; unstated / missing descriptions are rejected.
+  const strictVisa = buildVisaFilter({ enabled: true, require_mention: true });
+  if (
+    strictVisa('We sponsor H1B1 and H-1B candidates') === true &&
+    strictVisa('Relocation and visa sponsorship provided') === true
+  ) {
+    pass('visa_filter strict keeps postings that advertise sponsorship');
+  } else {
+    fail('visa_filter strict should keep sponsoring postings');
+  }
+  if (
+    strictVisa('A generic engineering role with a collaborative team') === false &&
+    strictVisa('') === false &&
+    strictVisa(null) === false &&
+    strictVisa('no visa sponsorship available') === false
+  ) {
+    pass('visa_filter strict drops unstated, empty, and no-sponsorship postings');
+  } else {
+    fail('visa_filter strict should drop unstated/empty/no-sponsorship postings');
+  }
+
+  // Custom keyword lists override the built-in defaults.
+  const customVisa = buildVisaFilter({ enabled: true, require_mention: true, positive: ['tier 2 sponsorship'] });
+  if (
+    customVisa('We hold a Tier 2 sponsorship licence') === true &&
+    customVisa('We sponsor H-1B visas') === false
+  ) {
+    pass('visa_filter honors custom positive keyword lists over defaults');
+  } else {
+    fail('visa_filter should honor custom positive keyword lists');
   }
 
 } catch (e) {
@@ -6673,7 +6886,7 @@ try {
   fail(`LaTeX-tex tailoring test crashed: ${e.message}`);
 }
 
-// ── 21. CJK CV RENDERING (lang="ja" font fallback) ──────────────
+// ── 21. CJK CV RENDERING (Japanese + Simplified Chinese) ─────────
 
 console.log('\n21. CJK CV rendering (lang="ja" font fallback)');
 
@@ -6697,6 +6910,40 @@ try {
     pass('lang="ja" rules name a concrete CJK font family');
   } else {
     fail('lang="ja" rules do not name any CJK font family — CJK fallback will not work');
+  }
+
+  for (const templateName of ['cv-template.html', 'resume-template.html']) {
+    const zhTemplate = readFileSync(join(ROOT, 'templates', templateName), 'utf-8');
+    const zhStart = zhTemplate.indexOf('html[lang="zh-CN"] body');
+    const zhBlock = zhStart >= 0 ? zhTemplate.slice(zhStart) : '';
+    const zhFonts = ['PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', 'Source Han Sans SC'];
+
+    if (zhStart >= 0 && zhFonts.some((font) => zhBlock.includes(font))) {
+      pass(`${templateName} has concrete zh-CN font fallbacks`);
+    } else {
+      fail(`${templateName} is missing concrete zh-CN font fallbacks`);
+    }
+
+    if (/line-break:\s*strict/.test(zhBlock) && /overflow-wrap:\s*break-word/.test(zhBlock)) {
+      pass(`${templateName} applies strict Chinese line breaking without clipping long mixed tokens`);
+    } else {
+      fail(`${templateName} is missing zh-CN line-breaking safeguards`);
+    }
+
+    if (/html\[lang="zh-CN"\]\s+\.contact-row/.test(zhBlock)) {
+      pass(`${templateName} applies an explicit zh-CN fallback to contact details`);
+    } else {
+      fail(`${templateName} is missing an explicit zh-CN contact-row fallback`);
+    }
+  }
+
+  const resumeHtml = readFileSync(join(ROOT, 'templates', 'resume-template.html'), 'utf-8');
+  const resumeZhBlock = resumeHtml.slice(resumeHtml.indexOf('html[lang="zh-CN"] body'));
+  const headingGroup = resumeZhBlock.slice(resumeZhBlock.indexOf('html[lang="zh-CN"] .header h1'), resumeZhBlock.indexOf('html[lang="zh-CN"] .summary-text'));
+  if (!/\.competency-tag|\.skill-category/.test(headingGroup)) {
+    pass('resume-template.html keeps competency and skill labels out of the zh-CN heading-font group');
+  } else {
+    fail('resume-template.html assigns competency or skill labels to the zh-CN heading font');
   }
 } catch (e) {
   fail(`CJK rendering test crashed: ${e.message}`);
@@ -6980,6 +7227,28 @@ try {
   }
 } catch (e) {
   fail(`openrouter-runner prompt-cache test crashed: ${e.message}`);
+}
+
+// ── 44c. openai-eval — host-gated prompt-cache breakpoint (#1709) ────
+// openai-eval.mjs runs on import (arg parse + fetch), so it can't be imported to
+// unit-test the helper — assert the host-gated shape at the source level (same
+// approach updater-migration-tests uses for update-system.mjs).
+console.log('\n44c. openai-eval — host-gated prompt-cache breakpoint (#1709)');
+try {
+  const src = readFileSync(join(ROOT, 'openai-eval.mjs'), 'utf-8');
+  const checks = [
+    // api.openai.com gets a plain-string system message (auto-caches; may reject the field)
+    { name: 'openai-eval gates cache_control off for api.openai.com', re: /host === 'api\.openai\.com'\)\s*return\s*\{\s*role:\s*'system',\s*content:\s*prompt\s*\}/ },
+    // other OpenAI-compatible hosts get the ephemeral cache_control breakpoint, text preserved
+    { name: 'openai-eval sends an ephemeral cache_control breakpoint to compatible gateways', re: /text:\s*prompt,\s*cache_control:\s*\{\s*type:\s*'ephemeral'\s*\}/ },
+    // and it's actually wired into the request, keyed on the resolved endpoint host
+    { name: 'openai-eval builds the system message via buildSystemMessage(systemPrompt, endpointHost)', re: /buildSystemMessage\(systemPrompt,\s*endpointHost\)/ },
+  ];
+  const missing = checks.filter((c) => !c.re.test(src));
+  if (missing.length === 0) pass('openai-eval host-gates the #1709 prompt-cache breakpoint and wires it into the request');
+  else fail(`openai-eval prompt-cache wiring missing: ${missing.map((m) => m.name).join('; ')}`);
+} catch (e) {
+  fail(`openai-eval prompt-cache source test crashed: ${e.message}`);
 }
 
 // ── 45. SCAN COOLDOWN FILTER ──────────────────────────────────
@@ -8070,17 +8339,17 @@ try {
     '2026-07-06',
   );
   const cols = withBody.split('\t');
-  if (cols.length === 9 && /^[0-9a-f]{16}$/.test(cols[7])) {
+  if (cols.length === 11 && /^[0-9a-f]{16}$/.test(cols[7])) {
     pass('formatScanHistoryRow appends a fingerprint column for described offers');
   } else {
-    fail(`formatScanHistoryRow columns: ${cols.length}, last=${JSON.stringify(cols[7])}`);
+    fail(`formatScanHistoryRow columns: ${cols.length}, fingerprint=${JSON.stringify(cols[7])}`);
   }
   const withoutBody = formatScanHistoryRow(
     { url: 'https://x.example/j/2', source: 'greenhouse', title: 'Data Engineer', company: 'Acme', location: '' },
     '2026-07-06',
   );
   const cols2 = withoutBody.split('\t');
-  if (cols2.length === 9 && cols2[7] === '') {
+  if (cols2.length === 11 && cols2[7] === '') {
     pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
   } else {
     fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);
@@ -8365,12 +8634,15 @@ try {
     timestamp: '2026-07-03T14:02:11Z', status: 'completed', companies: 45, boards: 3, found: 120,
     filteredTitle: 40, filteredTier: 5, filteredLocation: 20, filteredPostingAge: 3, filteredSalary: 2,
     filteredContent: 6, filteredCooldown: 1, dupes: 38, newAdded: 8, errors: 0,
+    filteredBlacklist: 4, filteredVisa: 7,
   };
   appendScanRunSummary(counters, runsFile);
   appendScanRunSummary({ ...counters, timestamp: '2026-07-04T09:00:00Z' }, runsFile);
   const runRows = readFileSync(runsFile, 'utf-8').trim().split('\n');
   if (runRows[0] === SCAN_RUNS_HEADER.trim() && runRows.length === 3
       && runRows[1].startsWith('2026-07-03T14:02:11Z\tcompleted\t45\t3\t120\t')
+      // filtered_blacklist + filtered_visa land in the two trailing columns.
+      && runRows[1].endsWith('\t4\t7')
       && runRows[2].startsWith('2026-07-04T09:00:00Z\t')) {
     pass('appendScanRunSummary writes the header once, appends one row per run');
   } else {

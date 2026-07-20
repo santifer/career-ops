@@ -116,12 +116,17 @@ async function main() {
 
   let template = await readFile(TEMPLATE_PATH_RESOLVED, 'utf-8');
 
-  // Projects is the one CV section that's genuinely optional (education,
-  // experience, and skills are effectively always present) — drop the whole
-  // Personal Projects \section when there are no entries, instead of leaving
-  // a bare section header with nothing under it.
+  // Projects and education are the genuinely optional CV sections: a
+  // candidate's projects are often already covered under Work Experience, and
+  // not every candidate has a degree. Drop the whole \section when there are
+  // no entries, instead of leaving a bare section header with nothing under
+  // it. Each pattern runs to the next banner comment, so the two are
+  // independent even when both sections are empty.
   if (!Array.isArray(payload.projects) || payload.projects.length === 0) {
-    template = template.replace(/%%%%%%%%%%%%%%%%%%%%%%%%%%%%  PROJECTS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%[\s\S]*?(?=%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Technical Skills)/, '');
+    template = template.replace(/%{4,}\s+PROJECTS\s+%{4,}[\s\S]*?(?=%{4,}\s)/, '');
+  }
+  if (!Array.isArray(payload.education) || payload.education.length === 0) {
+    template = template.replace(/%{4,}\s+Education\s+%{4,}[\s\S]*?(?=%{4,}\s)/, '');
   }
 
   const emailUrl = sanitizeUrl(payload.email?.url || '');

@@ -67,7 +67,7 @@
 
 Career-Ops transforma qualquer CLI de código com IA em uma central completa de busca de emprego. Em vez de acompanhar candidaturas manualmente em planilha, você tem um pipeline com IA que:
 
-- **Avalia vagas** com um sistema estruturado de pontuação A-F (10 dimensões com pesos)
+- **Avalia vagas** com uma avaliação estruturada A-F (cinco dimensões que geram uma pontuação de 1.0-5.0)
 - **Gera PDFs personalizados** -- CVs otimizados para ATS, ajustados por descrição de vaga
 - **Escaneia portais** automaticamente (Greenhouse, Ashby, Lever, páginas de empresas)
 - **Processa em lote** -- avalia 10+ vagas em paralelo com subagentes
@@ -254,9 +254,11 @@ career-ops/
 
 ## Sobre o autor
 
-Sou o Santiago -- Head of Applied AI, ex-fundador (criei e vendi uma empresa que ainda opera com meu nome). Eu construí o career-ops para gerenciar minha própria busca de emprego. Funcionou: usei o sistema para conquistar meu cargo atual.
+Sou o [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, ex-fundador (criei e vendi uma empresa que ainda opera com meu nome). Eu construí o career-ops para gerenciar minha própria busca de emprego. Funcionou: usei o sistema para conquistar meu cargo atual.
 
 Meu portfólio e outros projetos open source → [santifer.io](https://santifer.io)
+
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
 
 ## Star History
 

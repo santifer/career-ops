@@ -67,6 +67,7 @@ const SYSTEM_PATHS = [
   'modes/cover.md',
   'modes/email.md',
   'modes/add.md',
+  'modes/expand.md',
   'modes/scan.md',
   'modes/batch.md',
   'modes/apply.md',
@@ -270,6 +271,8 @@ const SYSTEM_PATHS = [
   'test/cv-templates.test.mjs',
   'test/cover-resolver.test.mjs',
   'test/profile-photo.test.mjs',
+  'templates/cv-template.zh-minimal.html',
+  'test/zh-minimal-template.test.mjs',
   'scaffolder/',
   'Dockerfile',
   'docker-compose.yml',
@@ -999,7 +1002,7 @@ async function apply() {
     console.log('\n-- The CareerOps Manifesto ------------------------------');
     console.log('A new way of job searching is taking shape. You are');
     console.log('already practicing it. Read it, sign it if you want to help:');
-    console.log('    npm run manifesto  ·  https://career-ops.org/manifesto');
+    console.log('    npm run manifesto  ·  https://career-ops.org/manifesto?utm_source=updater');
 
   } finally {
     // Remove lock
