@@ -277,6 +277,26 @@ career-ops/
 
 - **[cv-santiago](https://github.com/santifer/cv-santiago)** -- Die Portfolio-Website (santifer.io) mit KI-Chatbot, LLMOps-Dashboard und Case Studies. Wenn du ein Portfolio für deine Jobsuche brauchst, fork es und mach es zu deinem eigenen.
 
+## FAQ
+
+**Was ist career-ops?**
+career-ops ist ein quelloffenes, CLI-unabhängiges Kommandozentrum für die Jobsuche. Es macht aus jeder KI-Coding-CLI eine Pipeline, die Stellenangebote gegen deinen Lebenslauf bewertet, ATS-optimierte PDFs erzeugt, die richtige Kontaktperson findet und alles an einem Ort trackt — während du die finale Entscheidung behältst. Es ist die erste Referenzimplementierung des CareerOps Manifesto. Mehr unter [career-ops.org](https://career-ops.org).
+
+**Kann ich career-ops kostenlos oder mit einem günstigeren / lokalen Modell nutzen?**
+Ja. career-ops ist CLI-unabhängig und läuft mit kostenlosen und lokalen Modellen — über kostenlose OpenRouter-Modelle, Ollama oder jeden OpenAI-kompatiblen Endpoint — sodass du nicht an ein kostenpflichtiges Abo gebunden bist. Die vollständige Einrichtung findest du in [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md).
+
+**Mit welchen KI-CLIs funktioniert career-ops?**
+career-ops läuft mit jeder gängigen KI-Coding-CLI — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen und mehr — über den offenen Agent Skill Standard, ist also nie an einen einzelnen Anbieter gebunden. Nutze einfach die CLI, die du bereits hast.
+
+**Wie installiere ich career-ops unter Windows?**
+career-ops läuft unter Windows. Falls Skills während der Installation mit einem Symlink-Fehler nicht laden, steht die Lösung in [docs/FAQ.md](docs/FAQ.md). Die vollständigen Schritte findest du in [docs/SETUP.md](docs/SETUP.md).
+
+**Bewirbt sich career-ops automatisch für mich?**
+Nein. career-ops ist ein Filter, kein Spray-and-Pray-Auto-Bewerber. Die KI bewertet, priorisiert und entwirft; du prüfst und entscheidest. Sie reicht nie etwas ein, sendet oder klickt nichts — die finale Entscheidung liegt immer bei dir. Genau dieses Human-in-the-Loop-Design ist der ganze Sinn.
+
+**Ist career-ops kostenlos und Open Source?**
+Ja. career-ops ist kostenlos und Open Source, und für dich als Bewerber:in wird es das immer bleiben — es ist die erste Referenzimplementierung des [CareerOps Manifesto](https://career-ops.org/manifesto). Lies es, und wenn es ausdrückt, woran du glaubst, unterschreibe es.
+
 ## Über den Autor
 
 Ich bin [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, ehemaliger Gründer (ich habe ein Unternehmen aufgebaut und verkauft, das bis heute mit meinem Namen läuft). Ich habe career-ops gebaut, um meine eigene Jobsuche zu steuern. Es hat funktioniert: Damit habe ich meine aktuelle Rolle bekommen.
