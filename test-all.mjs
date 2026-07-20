@@ -6603,7 +6603,6 @@ try {
   } else {
     fail('Cover letter CLI --help does not document format and report options');
   }
-
   const localized = buildHtml({
     lang: 'tr',
     candidate: { name: 'Ali Yılmaz' },

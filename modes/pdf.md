@@ -27,8 +27,52 @@
 18. Run the fact gate: `node verify-cv-facts.mjs output/cv-{candidate}-{company}.html`
     - This is a hard gate before PDF rendering.
     - If it fails, stop and fix the generated HTML by removing invented metrics or adding verified evidence to `cv.md`, `article-digest.md`, or `config/cv-facts.json`.
-19. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number}` — `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry.
-20. Report: PDF path, number of pages, keyword coverage %, and any skill gaps from Step 4 still unaddressed
+19. Build the metadata sidecar and write it to `output/cv-{candidate}-{company}-{YYYY-MM-DD}.meta.json` (see "PDF Metadata" below) — same basename as the PDF, `.meta.json` instead of `.pdf`, so a future regeneration can reuse it without re-deriving.
+20. Execute: `node generate-pdf.mjs output/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --report={report number} --meta=output/cv-{candidate}-{company}-{YYYY-MM-DD}.meta.json` — `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact PDF. Omit it only for one-off CVs with no tracker entry. `--meta` is not optional for a real application — see below.
+21. Report: PDF path, number of pages, keyword coverage %, and any skill gaps from Step 4 still unaddressed
+
+## PDF Metadata (mandatory for every generation)
+
+Every CV PDF must carry Document Properties metadata — visible in Adobe Acrobat under File > Document Properties > Custom, or via `exiftool output/<file>.pdf`. This is not cosmetic: recruiter-side ATS/CRM tools and a human doing "Get Info" both read it, and a blank Info dict on an otherwise polished CV reads as generated-and-forgotten.
+
+Build a JSON file (see `generatePDF`'s `--meta=<path.json>` flag) with this shape:
+
+```json
+{
+  "title": "Deniz Uelker | Senior Software Engineer | Resume 2026",
+  "author": "Deniz Uelker",
+  "subject": "{Role} Application for {Company}",
+  "keywords": [
+    "Instruct the agent to generate an extensive list (15-25+) of highly relevant ATS keywords here",
+    "{hard skills, tools, frameworks, methodologies, and domains from JD + CV}",
+    "..."
+  ],
+  "custom": {
+    "Role": "{exact JD title}",
+    "Target Company": "{company}",
+    "Target Location": "{city, country}",
+    "Specialisation": "{2-4 comma-separated focus areas}",
+    "Industry Background": "{industries drawn from cv.md, comma-separated}",
+    "Tools": "{tools/stack actually used, from cv.md — never invent}",
+    "Languages": "{from config/profile.yml}",
+    "Work Permit": "{from config/profile.yml}",
+    "Availability": "{from config/profile.yml, or 'Immediate' if unset}",
+    "Certifications": "{from cv.md, e.g. AWS Certified Solutions Architect}",
+    "Education Level": "{Highest degree from cv.md, e.g. MSc Computer Science}",
+    "Years of Experience": "{Total years derived from cv.md, e.g. 10+}",
+    "GitHub": "{GitHub URL from profile.yml}",
+    "Portfolio": "{Portfolio URL from profile.yml}",
+    "LinkedIn": "{LinkedIn URL from profile.yml}",
+    "Willing to Relocate": "{Yes/No based on profile.yml}",
+    "Remote Preference": "{Hybrid/Remote/On-site from profile.yml}"
+  }
+}
+```
+
+Rules:
+- `title`/`author`/`creator`/`producer` get sane defaults from the HTML `<title>` and `config/profile.yml` even if `--meta` is omitted entirely — but `subject`, `keywords`, and everything in `custom` are job-specific and only exist if you build them. **Do not skip `--meta`** for a real application; only a disposable one-off CV can go without it.
+- Every value must trace back to `cv.md`, `config/profile.yml`, or the JD itself — same source-of-truth boundary as the CV content. Never invent a tool, language, or specialisation to pad the field.
+- `keywords` renders as a comma-separated phrase list (not space-joined) — pass full phrases like `"SAP S/4HANA"`, not split words.
 
 ## ATS Rules (clean parsing)
 

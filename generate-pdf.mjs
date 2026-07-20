@@ -4,7 +4,7 @@
  * generate-pdf.mjs — HTML → PDF via Playwright
  *
  * Usage:
- *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder]
+ *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder] [--meta=metadata.json]
  *
  * --report links the generated PDF to its tracker/report number and records
  * the linkage in data/pdf-index.tsv so downstream tools (e.g. the TUI
@@ -17,16 +17,29 @@
  * role) rather than accidentally scrambled by an agent. Without this flag,
  * any divergence from cv.md's section order still fails generation.
  *
- * Requires: @playwright/test (or playwright) installed.
+ * --meta points to a JSON file of PDF metadata to inject via pdf-lib (see
+ * modes/pdf.md "PDF Metadata"). Every field is optional; standard fields
+ * include title/author/subject/keywords/creator/producer. Custom PDF metadata
+ * must be provided under the `custom` object (e.g., "custom": { "Role": "Eng" }).
+ * Unknown top-level fields are ignored. Custom fields are written as Info
+ * dictionary entries, visible in Adobe Acrobat under File > Properties >
+ * Custom, or via `exiftool file.pdf`. Standard fields fall back to sane
+ * defaults (HTML <title>, config/profile.yml full_name) when --meta is
+ * omitted or a field is missing, so every generated CV always carries at
+ * least Title/Author/Producer — never a blank Info dict.
+ *
+ * Requires: @playwright/test (or playwright), pdf-lib installed.
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
  */
 
 import { chromium } from 'playwright';
+import { PDFDocument, PDFName, PDFString, PDFHexString, PDFRawStream, PDFDict } from 'pdf-lib';
 import { resolve, dirname, relative, sep, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
+import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PDF_PAGE_MARGIN = '0.6in';
@@ -286,7 +299,7 @@ async function generatePDF() {
   const args = process.argv.slice(2);
 
   // Parse arguments
-  let inputPath, outputPath, format = 'a4', reportNum = '', allowReorder = false;
+  let inputPath, outputPath, format = 'a4', reportNum = '', allowReorder = false, metaPath = '';
 
   for (const arg of args) {
     if (arg.startsWith('--format=')) {
@@ -295,6 +308,8 @@ async function generatePDF() {
       reportNum = arg.split('=')[1].trim();
     } else if (arg === '--allow-reorder') {
       allowReorder = true;
+    } else if (arg.startsWith('--meta=')) {
+      metaPath = arg.substring(7).trim();
     } else if (!inputPath) {
       inputPath = arg;
     } else if (!outputPath) {
@@ -303,7 +318,7 @@ async function generatePDF() {
   }
 
   if (!inputPath || !outputPath) {
-    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder]');
+    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder] [--meta=metadata.json]');
     console.error('');
     console.error('This script only converts an already-built HTML file to PDF.');
     console.error('The input HTML is produced by the pdf mode: the agent fills cv-template.html');
@@ -311,6 +326,16 @@ async function generatePDF() {
     console.error('mechanical markdown-to-HTML step by design. Run `/career-ops pdf` in your AI');
     console.error('CLI to drive the full flow end to end.');
     process.exit(1);
+  }
+
+  let meta = {};
+  if (metaPath) {
+    try {
+      meta = JSON.parse(readFileSync(resolve(metaPath), 'utf-8'));
+    } catch (err) {
+      console.error(`❌ Failed to read --meta file "${metaPath}": ${err.message}`);
+      process.exit(1);
+    }
   }
 
   if (reportNum && !/^\d+$/.test(reportNum)) {
@@ -361,7 +386,7 @@ async function generatePDF() {
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
-  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath), reportNum, inputPath });
+  return renderHtmlToPdf(html, outputPath, { format, baseDir: dirname(inputPath), reportNum, inputPath, meta });
 }
 
 /**
@@ -402,6 +427,154 @@ export async function inlineLocalFonts(html) {
     }
   }
   return html.replace(FONT_REF, (match, _quote, name) => dataUrls.get(name) || match);
+}
+
+/**
+ * Fill in standard metadata fields (title/author/producer) from the HTML
+ * <title> tag and config/profile.yml when the caller's --meta JSON omits
+ * them, so every PDF gets at least these even without a job-specific
+ * metadata file. Job-specific fields (subject, keywords, custom) pass
+ * through untouched — there's no honest way to auto-derive "Target Company"
+ * from the HTML alone.
+ *
+ * @param {object} meta - Parsed --meta JSON (may be empty).
+ * @param {string} html - Rendered HTML, used to read <title> as a fallback.
+ * @returns {object} meta with title/author/producer/creator defaults filled in.
+ */
+export function resolveMetaDefaults(meta, html) {
+  const resolved = { ...meta };
+
+  if (!resolved.title) {
+    const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
+    if (titleMatch) resolved.title = titleMatch[1].trim();
+  }
+
+  if (!resolved.author) {
+    try {
+      const profile = yaml.load(readFileSync(resolve(__dirname, 'config/profile.yml'), 'utf-8'));
+      if (profile?.candidate?.full_name) resolved.author = profile.candidate.full_name;
+    } catch (err) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
+  }
+
+  resolved.creator = resolved.creator || resolved.author || 'career-ops';
+  resolved.producer = resolved.producer || 'pdf-lib (https://github.com/Hopding/pdf-lib)';
+
+  return resolved;
+}
+
+function xmlEscape(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+}
+
+/**
+ * Build a minimal XMP metadata packet and attach it to the document catalog
+ * as a /Metadata stream.
+ *
+ * pdf-lib only ever writes the legacy PDF Info dictionary — it has no XMP
+ * support. Adobe Acrobat's Document Properties dialog prefers XMP when
+ * present, and for dc:subject (keywords) specifically expects an
+ * rdf:Bag of separate <rdf:li> entries, not one comma-joined string. Without
+ * a matching XMP packet, Acrobat falls back to displaying the raw Info-dict
+ * Keywords string wrapped in quotation marks as a single legacy value —
+ * that's the artifact this fixes. keywords are written as individual Bag
+ * items here so Acrobat renders them as a clean, unquoted list.
+ *
+ * @param {import('pdf-lib').PDFDocument} pdfDoc
+ * @param {object} meta - Resolved metadata (title/author/subject/keywords).
+ * @param {string[]} keywords - Already-split keyword phrases.
+ */
+function attachXmpMetadata(pdfDoc, meta, keywords) {
+  const subjectItems = keywords.map((k) => `<rdf:li>${xmlEscape(k)}</rdf:li>`).join('');
+  const packet = `<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description rdf:about=""
+        xmlns:dc="http://purl.org/dc/elements/1.1/"
+        xmlns:pdf="http://ns.adobe.com/pdf/1.3/"
+        xmlns:xmp="http://ns.adobe.com/xap/1.0/">
+      ${meta.title ? `<dc:title><rdf:Alt><rdf:li xml:lang="x-default">${xmlEscape(meta.title)}</rdf:li></rdf:Alt></dc:title>` : ''}
+      ${meta.author ? `<dc:creator><rdf:Seq><rdf:li>${xmlEscape(meta.author)}</rdf:li></rdf:Seq></dc:creator>` : ''}
+      ${meta.subject ? `<dc:description><rdf:Alt><rdf:li xml:lang="x-default">${xmlEscape(meta.subject)}</rdf:li></rdf:Alt></dc:description>` : ''}
+      ${keywords.length ? `<dc:subject><rdf:Bag>${subjectItems}</rdf:Bag></dc:subject>` : ''}
+      ${keywords.length ? `<pdf:Keywords>${xmlEscape(keywords.join(', '))}</pdf:Keywords>` : ''}
+      <xmp:CreatorTool>${xmlEscape(meta.creator || 'career-ops')}</xmp:CreatorTool> 
+    </rdf:Description> 
+  </rdf:RDF> 
+</x:xmpmeta> 
+<?xpacket end="w"?>`;
+
+  const bytes = Buffer.from(packet, 'utf-8');
+  const stream = PDFRawStream.of(
+    pdfDoc.context.obj({
+      Type: PDFName.of('Metadata'),
+      Subtype: PDFName.of('XML'),
+      Length: bytes.length,
+    }),
+    bytes,
+  ); // Construct raw metadata stream
+  const ref = pdfDoc.context.register(stream);
+  pdfDoc.catalog.set(PDFName.of('Metadata'), ref);
+}
+
+/**
+ * Inject standard + custom PDF Info dictionary metadata via pdf-lib.
+ *
+ * Standard fields (title/author/subject/keywords/creator/producer) use
+ * pdf-lib's typed setters. Everything under meta.custom is written as a
+ * free-form Info dict string entry — these are the fields visible in Adobe
+ * Acrobat under File > Document Properties > Custom, or via
+ * `exiftool file.pdf` (Role, Target Company, Target Location,
+ * Specialisation, Industry Background, Tools, Languages, Work Permit,
+ * Availability, etc. — see modes/pdf.md "PDF Metadata" for the convention).
+ *
+ * @param {Buffer} pdfBuffer - PDF bytes from page.pdf().
+ * @param {object} meta - Resolved metadata (see resolveMetaDefaults).
+ * @returns {Promise<Buffer>} PDF bytes with metadata written.
+ */
+export async function injectPdfMetadata(pdfBuffer, meta) {
+  const pdfDoc = await PDFDocument.load(pdfBuffer);
+
+  if (meta.title) pdfDoc.setTitle(meta.title);
+  if (meta.author) pdfDoc.setAuthor(meta.author);
+  if (meta.subject) pdfDoc.setSubject(meta.subject);
+  pdfDoc.setCreator(meta.creator || 'career-ops');
+  pdfDoc.setProducer(meta.producer || 'pdf-lib (https://github.com/Hopding/pdf-lib)');
+
+  const infoDict = pdfDoc.getInfoDict();
+
+  // Bypass pdfDoc.setKeywords() — it hard-codes keywords.join(' ') with no
+  // delimiter override, which collapses multi-word phrases ("Master Data
+  // Governance", "SAP S/4HANA") into one indistinguishable space-joined
+  // blob. Writing the Info dict entry directly preserves comma-separated
+  // phrase boundaries, matching every prior career-ops CV's Keywords field.
+  const keywords = (meta.keywords)
+    ? (Array.isArray(meta.keywords) ? meta.keywords : String(meta.keywords).split(','))
+        .map((k) => String(k || '').trim())
+        .filter(Boolean)
+    : []; // Fallback to empty array
+  if (keywords.length) {
+    infoDict.set(PDFName.of('Keywords'), PDFHexString.fromText(keywords.join(', ')));
+  }
+
+  for (const [key, value] of Object.entries(meta.custom || {})) {
+    if (value === undefined || value === null || value === '') continue;
+    infoDict.set(PDFName.of(key), PDFHexString.fromText(String(value)));
+  }
+
+  // Info-dict Keywords alone renders wrapped in quotes in Acrobat's
+  // Document Properties dialog without a matching XMP dc:subject array —
+  // attach XMP so keywords display as a clean, unquoted list.
+  attachXmpMetadata(pdfDoc, meta, keywords);
+
+  // useObjectStreams: false keeps objects as plain, uncompressed PDF
+  // structure (matching Playwright's original output) instead of pdf-lib's
+  // default compressed object streams — renderHtmlToPdf's page-count regex
+  // scans the raw PDF text for literal "/Type /Page" markers, which object
+  // streams would hide.
+  const bytes = await pdfDoc.save({ useObjectStreams: false });
+  return Buffer.from(bytes);
 }
 
 /**
@@ -458,7 +631,7 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
     await page.evaluate(() => document.fonts.ready);
 
     // Generate PDF
-    const pdfBuffer = await page.pdf({
+    let pdfBuffer = await page.pdf({
       printBackground: true,
       margin: {
         top: '0',
@@ -468,6 +641,19 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
       },
       preferCSSPageSize: true,
     });
+
+    // Inject document metadata (Title/Author/Subject/Keywords + custom Info
+    // dict fields like Target Company, Role, Tools). Always runs — with
+    // sensible defaults even when the caller passes no --meta — so no PDF
+    // this pipeline produces ever leaves the Info dict blank. See
+    // modes/pdf.md "PDF Metadata".
+    try {
+      pdfBuffer = await injectPdfMetadata(pdfBuffer, resolveMetaDefaults(opts.meta || {}, html));
+      console.log(`🏷️  Metadata: Title/Author set${opts.meta && Object.keys(opts.meta).length ? ` + ${Object.keys(opts.meta.custom || {}).length} custom field(s)` : ' (defaults only — pass --meta for job-specific fields)'}`);
+    } catch (err) {
+      // Metadata is enrichment, not a hard requirement — never fail the render over it.
+      console.error(`⚠️  Metadata injection failed: ${err.message}`);
+    }
 
     // Write PDF
     await writeFile(outputPath, pdfBuffer);
