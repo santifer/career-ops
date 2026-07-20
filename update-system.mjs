@@ -267,6 +267,7 @@ const SYSTEM_PATHS = [
   'package.json',
   'build-cv-latex.mjs',
   'build-cv-html.mjs',
+  'cv-sections-core.mjs',
   'cv-templates.mjs',
   'test/cv-templates.test.mjs',
   'test/cover-resolver.test.mjs',
