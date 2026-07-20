@@ -6724,8 +6724,8 @@ try {
     }
   }
 
-  const resumeZhBlock = readFileSync(join(ROOT, 'templates', 'resume-template.html'), 'utf-8')
-    .slice(readFileSync(join(ROOT, 'templates', 'resume-template.html'), 'utf-8').indexOf('html[lang="zh-CN"] body'));
+  const resumeHtml = readFileSync(join(ROOT, 'templates', 'resume-template.html'), 'utf-8');
+  const resumeZhBlock = resumeHtml.slice(resumeHtml.indexOf('html[lang="zh-CN"] body'));
   const headingGroup = resumeZhBlock.slice(resumeZhBlock.indexOf('html[lang="zh-CN"] .header h1'), resumeZhBlock.indexOf('html[lang="zh-CN"] .summary-text'));
   if (!/\.competency-tag|\.skill-category/.test(headingGroup)) {
     pass('resume-template.html keeps competency and skill labels out of the zh-CN heading-font group');
