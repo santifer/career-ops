@@ -551,6 +551,44 @@ function scanHistoryPolicy(config = {}) {
   };
 }
 
+// Query parameters that carry no job identity and that some boards regenerate on
+// every request, so an exact-match dedup sees the same posting as new on each
+// scan. StepStone's `rltr` is the observed case: one posting accumulated four
+// URLs across four scans. Kept deliberately small — a parameter that *is* part of
+// a posting's identity (Greenhouse's `gh_jid`, for example) must survive, since
+// collapsing two real postings onto one key silently hides a job, which is worse
+// than re-adding a duplicate.
+const TRACKING_PARAMS = new Set([
+  'rltr', // StepStone — regenerated per request
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+]);
+
+/**
+ * Canonical dedup key for a posting URL: the URL minus volatile tracking
+ * parameters. Both sides of the comparison (stored history and freshly scanned
+ * offers) go through this, so the key never has to match a stored string byte
+ * for byte and no scan-history migration is needed.
+ * @param {string} value
+ * @returns {string} Stable key, or the raw input when it isn't a parseable URL.
+ */
+export function urlDedupKey(value) {
+  const url = normalizeScanUrl(value);
+  if (!url) return '';
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    // Scheme-less or malformed values (a bare `jds/foo.md`) → compare as-is.
+    // pipeline.md's `local:jds/foo.md` does NOT land here: `local:` is a valid
+    // scheme, so it parses and round-trips through toString() unchanged.
+    return url;
+  }
+  for (const key of [...parsed.searchParams.keys()]) {
+    if (TRACKING_PARAMS.has(key.toLowerCase())) parsed.searchParams.delete(key);
+  }
+  return parsed.toString();
+}
+
 export function loadSeenUrls(policy = {}) {
   const seen = new Set();
   let recheckEligible = 0;
@@ -561,7 +599,7 @@ export function loadSeenUrls(policy = {}) {
     for (const line of lines.slice(1)) { // skip header
       const [url, firstSeen, , , , status = 'added'] = line.split('\t');
       if (!url) continue;
-      if (shouldDedupScanHistoryRow({ firstSeen, status }, policy)) seen.add(url);
+      if (shouldDedupScanHistoryRow({ firstSeen, status }, policy)) seen.add(urlDedupKey(url));
       else recheckEligible++;
     }
   }
@@ -570,7 +608,7 @@ export function loadSeenUrls(policy = {}) {
   if (existsSync(PIPELINE_PATH)) {
     const text = readFileSync(PIPELINE_PATH, 'utf-8');
     for (const match of text.matchAll(/- \[[ x]\] (https?:\/\/\S+)/g)) {
-      seen.add(match[1]);
+      seen.add(urlDedupKey(match[1]));
     }
   }
 
@@ -578,7 +616,7 @@ export function loadSeenUrls(policy = {}) {
   if (existsSync(APPLICATIONS_PATH)) {
     const text = readFileSync(APPLICATIONS_PATH, 'utf-8');
     for (const match of text.matchAll(/https?:\/\/[^\s|)]+/g)) {
-      seen.add(match[0]);
+      seen.add(urlDedupKey(match[0]));
     }
   }
 
@@ -1594,7 +1632,7 @@ async function main() {
           totalFilteredContent++;
           continue;
         }
-        if (seenUrls.has(job.url)) {
+        if (seenUrls.has(urlDedupKey(job.url))) {
           totalDupes++;
           continue;
         }
@@ -1613,7 +1651,7 @@ async function main() {
           continue;
         }
         // Mark as seen to avoid intra-scan dupes
-        seenUrls.add(job.url);
+        seenUrls.add(urlDedupKey(job.url));
         seenCompanyRoles.add(key);
         // Tag with the company's careers domain so verify can offer a 404/410
         // rediscovery fallback. A null domain (no careers_url) marks the offer
