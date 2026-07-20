@@ -294,6 +294,22 @@ If this mismatch is present, append a short, non-alarmist note to the report:
 
 This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is orthogonal to ghost-job detection and is reported separately.
 
+**9. Third-Party Platform Location Tag vs. Employer's Own Posting Mismatch** (conditional — only when both sources are available):
+
+Possible causes include the job board auto-guessing or mis-scraping the location field, or a recruiter selecting the wrong region tag when cross-posting the same requisition to multiple markets. This can result in a candidate applying based on the platform-displayed location (thinking it's local), when the role is actually in a different country entirely — and not finding out until much later in the process.
+
+This signal only triggers when **both** a third-party platform's displayed location (e.g. LinkedIn, Indeed) **and** the employer's own job page's stated location are available to compare, **and** both sources can be confirmed to refer to the same requisition/job ID (e.g. a matching req number or job ID visible on both sides) — not merely the same title or company, which can still represent two genuinely different requisitions. Evidence may come from what the user pasted/screenshotted, or — only when running the browser-backed `auto-pipeline` (not `openai-eval.mjs`, which passes JD text only into Block G and has no Playwright/browser access) — from `auto-pipeline`'s Playwright snapshot if it captures both. If only one source is available, or the two sources cannot be confirmed to share a requisition/job ID, skip this signal entirely.
+
+When both are available, compare the two stated locations. Flag only if they name **different countries** — not just different cities within the same country, which is a much weaker/more ambiguous signal (e.g. genuine multi-office companies with several valid postings).
+
+If triggered, append a short, non-alarmist note to the report:
+
+> ⚠️ **Location tag mismatch signal:** This posting shows "{platform location}" on {platform name}, but the employer's own job page for the same posting states "{employer-page location}." Confirm the actual work location directly with the employer before assuming the platform-displayed location is accurate — this is sometimes a cross-posting/tagging error, not necessarily deceptive.
+
+This signal does not change the High Confidence / Proceed with Caution / Suspicious tier below — it is orthogonal to ghost-job detection and is reported separately.
+
+**Scope note:** This signal is prompt-instruction-only for now — the agent manually compares the two sources when both are present in what the user provided. It does not modify `check-liveness.mjs` or `liveness-core.mjs` to automatically fetch and compare both pages; that is out of scope for this pass and left as a future decision.
+
 ### Output format:
 
 **Assessment:** One of three tiers:
@@ -312,6 +328,40 @@ This signal does not change the High Confidence / Proceed with Caution / Suspici
 - **Startup / pre-revenue:** Early-stage companies may have vague JDs because the role is genuinely undefined. Weight description vagueness less heavily.
 - **No date available:** If posting age cannot be determined and no other signals are concerning, default to "Proceed with Caution" with a note that limited data was available. NEVER default to "Suspicious" without evidence.
 - **Recruiter-sourced (no public posting):** Freshness signals unavailable. Note that active recruiter contact is itself a positive legitimacy signal.
+
+---
+
+## Risk Summary (after Block G)
+
+Close the report body with a `## Risk Summary` block directly after Block G's section — one row per risk signal, fixed order — so the question the candidate actually asks ("is this company safe to join?") is answered on one screen instead of by mentally joining Block A, Block G, and a sidecar file.
+
+**Aggregation only, zero new judgment.** Each row quotes or links the verdict already produced by its source signal. The summary never re-scores, re-weights, or overrides — if a row looks wrong, the fix belongs in the source signal, not here.
+
+Three states per row: `✅ {clear verdict}` / `⚠️ {finding}` / `— not evaluated`. **`— not evaluated` is a first-class state:** when a signal could not run, say so explicitly rather than omitting the row, so an all-✅ summary can be trusted. **Named exception:** the Interview red flags row renders its not-evaluated case as `— no interview sessions yet` — a documented, more specific phrasing of the same "not evaluated" concept for that one row (the cross-reference check did run; it found no redflags file), not a fourth free-floating state.
+
+| Signal | Source | Row rendering |
+|--------|--------|---------------|
+| Posting legitimacy | Block G assessment tier | `✅ High Confidence`, or `⚠️ {tier} — {one-line reason}` for Proceed with Caution / Suspicious |
+| Employment classification | Employment classification signal inside Block G | `✅ clear` when the check ran and found nothing; `⚠️ contractor-style language: "{quoted phrase}"` when the flag fired; `— not evaluated` when the check could not run |
+| Culture screen | Culture screen field in Block A | `✅ pass`, or `⚠️ caution — {evidence}` / `⚠️ fail — {evidence}`; `— not evaluated` when no screen was run |
+| Interview red flags | `interview-prep/{company-slug}-redflags.md` (from `interview-redflag` mode) | **Cross-reference, not a copy:** if the file exists, surface its current warning level plus a relative link — `[{level}](../interview-prep/{company-slug}-redflags.md)` (relative to `reports/`); otherwise `— no interview sessions yet` |
+| AI claims vs. infrastructure | AI/infrastructure mismatch check in Block G, when present | If this report contains that check, mirror its verdict (`✅ consistent` / `⚠️ {finding}`); otherwise `— not evaluated`. The row activates automatically once the check exists — no ordering dependency |
+
+Block format:
+
+```markdown
+## Risk Summary
+
+| Signal | Status |
+|--------|--------|
+| Posting legitimacy | ✅ High Confidence |
+| Employment classification | ⚠️ contractor-style language: "{quoted phrase}" |
+| Culture screen | ⚠️ caution — {evidence} |
+| Interview red flags | — no interview sessions yet |
+| AI claims vs. infrastructure | — not evaluated |
+```
+
+Mirror the block into `## Machine Summary` as a `risk_summary:` map (exact key names and enum values in `batch/batch-prompt.md`, the Machine Summary source of truth) so downstream scripts consume it without re-parsing prose.
 
 ---
 
@@ -424,6 +474,9 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 ## G) Posting Legitimacy
 (full content of block G)
 
+## Risk Summary
+(one row per risk signal, fixed order — see the Risk Summary section above)
+
 ## H) Draft Application Answers
 (only if score >= 4.5 — draft answers for the application form)
 
@@ -433,7 +486,7 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 (list of 15-20 keywords from the JD for ATS optimization)
 ```
 
-**Machine Summary (required):** every report carries a `## Machine Summary` YAML fence directly after the header — same schema, exact field names, and rules as the "Machine Summary" block in `batch/batch-prompt.md` (do not duplicate the schema here; that file is the source of truth). It includes `advertised_comp`: the JD's own salary figure **verbatim** (e.g. `"80-90k EUR"`), or `null` when the JD states nothing — never estimated, never replaced with researched market data. This key seeds the advertised salary observation read by `node salary-gap.mjs`.
+**Machine Summary (required):** every report carries a `## Machine Summary` YAML fence directly after the header — same schema, exact field names, and rules as the "Machine Summary" block in `batch/batch-prompt.md` (do not duplicate the schema here; that file is the source of truth). It includes `advertised_comp`: the JD's own salary figure **verbatim** (e.g. `"80-90k EUR"`), or `null` when the JD states nothing — never estimated, never replaced with researched market data. This key seeds the advertised salary observation read by `node salary-gap.mjs`. It also includes `risk_summary`: the Risk Summary block mirrored as a map (schema and enum values in `batch/batch-prompt.md`).
 
 ### 2. Record in tracker
 
