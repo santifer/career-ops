@@ -83,3 +83,4 @@ public commit with a stated reason.
 - @funstuie-bit | 2026-07-18 | id:264561520 | src:https://github.com/santifer/career-ops/discussions/2023 | n:35
 - @Thomasevano | tvn | 2026-07-18 | id:22095896 | src:https://github.com/santifer/career-ops/discussions/2035 | n:36
 - @ljz-3291 | 2026-07-19 | id:184739942 | src:https://github.com/santifer/career-ops/discussions/2048 | n:37
+- @freitagdavid | David Freitag | 2026-07-20 | "This has been allowing me to not spam blast every single recruiter and instead carefully curate the best fit jobs for me. Especially using upskill to improve my knowledge for certain positions." | id:26885415 | src:https://github.com/santifer/career-ops/discussions/2071 | n:38
