@@ -1,4 +1,14 @@
 #!/usr/bin/env node
+// Set Windows console to UTF-8 to prevent mojibake in terminal output
+if (process.platform === 'win32') {
+  try {
+    const { execFileSync } = await import('child_process');
+    execFileSync('chcp.com', ['65001'], { stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * gemini-eval.mjs — Gemini-powered Job Offer Evaluator for career-ops
  *
@@ -21,6 +31,8 @@
  *   - gemini-2.0-flash-lite  deprecated 2026-03-31
  *   - gemini-2.5-flash       deprecated 2026-06-17  (current default)
  *   - gemini-2.5-flash-lite  deprecated 2026-07-22
+ *   - gemini-2.5-flash       deprecated 2026-06-17  (current default)
+ *   - gemini-2.5-flash-lite  deprecated 2026-07-22
  * Stable Gemini models follow a 12-month lifecycle from their release date.
  * Source: https://ai.google.dev/gemini-api/docs/models
  *
@@ -29,9 +41,10 @@
  */
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve, relative, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
+import yaml from 'js-yaml';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
@@ -54,7 +67,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const ROOT = dirname(fileURLToPath(import.meta.url));
 
 const PATHS = {
-  // Primary evaluation logic lives in these two mode files
+  // Primary evaluation logic lives in these two mode files (default values)
   shared:      join(ROOT, 'modes', '_shared.md'),
   oferta:      join(ROOT, 'modes', 'oferta.md'),
   // Canonical skill path referenced in Issue #344
@@ -66,6 +79,47 @@ const PATHS = {
   tracker:     join(ROOT, 'data', 'applications.md'),
   trackerAdditions: join(ROOT, 'batch', 'tracker-additions'),
 };
+
+// Determine the localization modes directory and evaluation filename dynamically from config/profile.yml
+let modesDir = 'modes';
+let evalFilename = 'oferta.md';
+
+function stripBom(str) {
+  return str.charCodeAt(0) === 0xFEFF ? str.slice(1) : str;
+}
+
+if (existsSync(PATHS.profileYml)) {
+  try {
+    const yamlContent = stripBom(readFileSync(PATHS.profileYml, 'utf-8'));
+    const profile = yaml.load(yamlContent);
+    if (profile && profile.language && profile.language.modes_dir) {
+      const customModesDir = profile.language.modes_dir;
+      const dirPath = resolve(ROOT, customModesDir);
+      const rel = relative(ROOT, dirPath);
+      if (rel.startsWith('..') || isAbsolute(customModesDir)) {
+        console.warn(`⚠️   modes_dir "${customModesDir}" escapes project root; using default modes/`);
+      } else {
+        if (existsSync(dirPath)) {
+          const candidateFiles = ['oferta.md', 'angebot.md', 'offre.md', 'kyujin.md', 'is-ilani.md', 'naukri.md'];
+          const found = candidateFiles.find((file) => existsSync(join(dirPath, file)));
+          if (found) {
+            modesDir = customModesDir;
+            evalFilename = found;
+          } else {
+            console.warn(`⚠️   No matching evaluation file found in ${customModesDir}; using default modes/oferta.md`);
+          }
+        } else {
+          console.warn(`⚠️   modes_dir "${customModesDir}" not found; using default modes/`);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`⚠️   Could not parse config/profile.yml: ${err.message}`);
+  }
+}
+
+PATHS.shared = join(ROOT, modesDir, '_shared.md');
+PATHS.oferta = join(ROOT, modesDir, evalFilename);
 
 // ---------------------------------------------------------------------------
 // CLI argument parsing
@@ -115,7 +169,7 @@ for (let i = 0; i < args.length; i++) {
       console.error(`❌  File not found: ${filePath}`);
       process.exit(1);
     }
-    jdText = readFileSync(filePath, 'utf-8').trim();
+    jdText = stripBom(readFileSync(filePath, 'utf-8')).trim();
   } else if (args[i] === '--model' && args[i + 1]) {
     modelName = args[++i];
   } else if (args[i] === '--no-save') {
@@ -153,9 +207,25 @@ function readFile(path, label) {
     console.warn(`⚠️   ${label} not found at: ${path}`);
     return `[${label} not found — skipping]`;
   }
-  return readFileSync(path, 'utf-8').trim();
+  return stripBom(readFileSync(path, 'utf-8')).trim();
 }
 
+function slugifyCompany(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '') || 'unknown';
+}
+
+function tsvSafe(value) {
+  return String(value ?? '').replace(/[\t\r\n]+/g, ' ').trim();
+}
+
+function normalizedTrackerScore(value) {
+  const clean = tsvSafe(value);
+  if (!clean || clean === '?') return 'N/A';
+  return /\/5$/i.test(clean) ? clean : `${clean}/5`;
+}
 function validateEvaluationShape(text) {
   const issues = [];
   const requiredBlocks = [
@@ -197,21 +267,15 @@ function validateEvaluationShape(text) {
   }
 }
 
-function slugifyCompany(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') || 'unknown';
-}
 
-function tsvSafe(value) {
-  return String(value ?? '').replace(/[\t\r\n]+/g, ' ').trim();
-}
-
-function normalizedTrackerScore(value) {
-  const clean = tsvSafe(value);
-  if (!clean || clean === '?') return 'N/A';
-  return /\/5$/i.test(clean) ? clean : `${clean}/5`;
+// Lazy import — only used when saving
+let readdirSync;
+try {
+  ({ readdirSync } = await import('fs'));
+} catch { /* already imported above via named exports */ }
+// Use named import fallback
+if (!readdirSync) {
+  readdirSync = (await import('fs')).readdirSync;
 }
 
 // ---------------------------------------------------------------------------
@@ -219,8 +283,10 @@ function normalizedTrackerScore(value) {
 // ---------------------------------------------------------------------------
 console.log('\n📂  Loading context files...');
 
-const sharedContext  = readFile(PATHS.shared,      'modes/_shared.md');
-const ofertaLogic    = readFile(PATHS.oferta,      'modes/oferta.md');
+const sharedLabel = join(modesDir, '_shared.md').replace(/\\/g, '/');
+const ofertaLabel = join(modesDir, evalFilename).replace(/\\/g, '/');
+const sharedContext  = readFile(PATHS.shared,      sharedLabel);
+const ofertaLogic    = readFile(PATHS.oferta,      ofertaLabel);
 const cvContent      = readFile(PATHS.cv,          'cv.md');
 const profileContent = readFile(PATHS.profile,     'modes/_profile.md');
 const profileYml     = readFile(PATHS.profileYml,  'config/profile.yml');
@@ -317,6 +383,7 @@ try {
   process.exit(1);
 }
 
+
 // ---------------------------------------------------------------------------
 // Display evaluation
 // ---------------------------------------------------------------------------
@@ -407,13 +474,6 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
     writeFileSync(trackerPath, `${trackerFields.join('\t')}\n`, 'utf-8');
     console.log(`\n✅  Report saved: reports/${filename}`);
     console.log(`📊  Tracker addition saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
-    reportSaved = true;
-  } catch (err) {
-    console.warn(`⚠️   Could not save report: ${err.message}`);
-    process.exitCode = 1;
-  }
-
-  if (reportSaved) {
     try {
       const mergeOutput = execFileSync(process.execPath, [join(ROOT, 'merge-tracker.mjs')], {
         cwd: ROOT,
@@ -422,10 +482,13 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
       });
       if (mergeOutput.trim()) console.log(mergeOutput.trim());
       console.log('📊  Tracker merged into data/applications.md.');
-    } catch (err) {
-      console.warn(`⚠️   Report saved, but could not merge tracker addition into data/applications.md: ${err.message}`);
+    } catch (mergeErr) {
+      console.warn(`⚠️   Report saved, but tracker merge failed: ${mergeErr.message}`);
       process.exitCode = 1;
     }
+  } catch (err) {
+    console.warn(`⚠️   Could not save report: ${err.message}`);
+    process.exitCode = 1;
   }
 
   if (reservedNumbers.length > 0) {
