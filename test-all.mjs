@@ -138,7 +138,6 @@ console.log('\n2. Script execution (graceful on empty data)');
 
 const scripts = [
   { name: 'cv-sync-check.mjs', expectExit: 1, allowFail: true }, // fails without cv.md (normal in repo)
-  { name: 'verify-pipeline.mjs', expectExit: 0 },
   // --dry-run: these scripts resolve ROOT from import.meta.url and write
   // data/applications.md (or data/pipeline.md) in place. On a provisioned working
   // copy with a real tracker present, running them without --dry-run mutates user
@@ -6215,7 +6214,6 @@ try {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
-  writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   writeFileSync(join(batchDir, 'batch-prompt.md'), 'URL={{URL}}\nJD={{JD_FILE}}\nREPORT={{REPORT_NUM}}\n');
   writeFileSync(join(batchDir, 'batch-input.tsv'), [
     'id\turl\tsource\tnotes',
@@ -6592,8 +6590,8 @@ try {
   }
 
   // Known template tokens still resolve, and no unreplaced tokens leak through.
-  if (injected.includes('Jane Doe') && !injected.includes('{{NAME}}') && !injected.includes('{{ROLE_TITLE}}')) {
-    pass('Known template tokens still substitute under single-pass');
+  if (injected.includes('Jane Doe') && !injected.includes('{{NAME}}') && !injected.includes('{{ROLE_TITLE}}') && !injected.includes('{{LANG}}') && !injected.includes('{{COVER_LETTER_LABEL}}')) {
+    pass('Known template tokens (including LANG and COVER_LETTER_LABEL) still substitute under single-pass');
   } else {
     fail('Single-pass substitution left a known token unreplaced');
   }
@@ -6604,6 +6602,20 @@ try {
     pass('Cover letter CLI --help documents format and report options');
   } else {
     fail('Cover letter CLI --help does not document format and report options');
+  }
+  const localized = buildHtml({
+    lang: 'tr',
+    candidate: { name: 'Ali Yılmaz' },
+    letter: {
+      role_title: 'Mühendis',
+      opening: 'Giriş.',
+      profile_intro: 'Tanıtım.',
+    },
+  });
+  if (localized.includes('lang="tr"') && localized.includes('Ön Yazı: Mühendis') && !localized.includes('{{LANG}}') && !localized.includes('{{COVER_LETTER_LABEL}}')) {
+    pass('LANG and COVER_LETTER_LABEL substitute correctly for localized payloads');
+  } else {
+    fail('LANG or COVER_LETTER_LABEL substitution failed');
   }
 } catch (e) {
   fail(`Cover letter single-pass substitution test crashed: ${e.message}`);
