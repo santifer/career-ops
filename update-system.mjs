@@ -192,6 +192,8 @@ const SYSTEM_PATHS = [
   'eval-golden.mjs',
   'evals/',
   'openrouter-runner.mjs',
+  'jd-similarity.mjs',
+  'jd-similarity.test.mjs',
   'test-all.mjs',
   'detect-reposts.test.mjs',
   'test-salary-filter.mjs',
