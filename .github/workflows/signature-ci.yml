@@ -58,7 +58,7 @@ jobs:
           ' 2> /tmp/reason.txt || { cat /tmp/reason.txt >> "$GITHUB_OUTPUT"; exit 1; }
       - name: Friendly ack (valid)
         if: success()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const login = context.payload.pull_request.user.login;
@@ -68,7 +68,7 @@ jobs:
             });
       - name: Friendly fix-it (invalid)
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const login = context.payload.pull_request.user.login;
