@@ -7128,6 +7128,28 @@ try {
   fail(`openrouter-runner prompt-cache test crashed: ${e.message}`);
 }
 
+// ── 44c. openai-eval — host-gated prompt-cache breakpoint (#1709) ────
+// openai-eval.mjs runs on import (arg parse + fetch), so it can't be imported to
+// unit-test the helper — assert the host-gated shape at the source level (same
+// approach updater-migration-tests uses for update-system.mjs).
+console.log('\n44c. openai-eval — host-gated prompt-cache breakpoint (#1709)');
+try {
+  const src = readFileSync(join(ROOT, 'openai-eval.mjs'), 'utf-8');
+  const checks = [
+    // api.openai.com gets a plain-string system message (auto-caches; may reject the field)
+    { name: 'openai-eval gates cache_control off for api.openai.com', re: /host === 'api\.openai\.com'\)\s*return\s*\{\s*role:\s*'system',\s*content:\s*prompt\s*\}/ },
+    // other OpenAI-compatible hosts get the ephemeral cache_control breakpoint, text preserved
+    { name: 'openai-eval sends an ephemeral cache_control breakpoint to compatible gateways', re: /text:\s*prompt,\s*cache_control:\s*\{\s*type:\s*'ephemeral'\s*\}/ },
+    // and it's actually wired into the request, keyed on the resolved endpoint host
+    { name: 'openai-eval builds the system message via buildSystemMessage(systemPrompt, endpointHost)', re: /buildSystemMessage\(systemPrompt,\s*endpointHost\)/ },
+  ];
+  const missing = checks.filter((c) => !c.re.test(src));
+  if (missing.length === 0) pass('openai-eval host-gates the #1709 prompt-cache breakpoint and wires it into the request');
+  else fail(`openai-eval prompt-cache wiring missing: ${missing.map((m) => m.name).join('; ')}`);
+} catch (e) {
+  fail(`openai-eval prompt-cache source test crashed: ${e.message}`);
+}
+
 // ── 45. SCAN COOLDOWN FILTER ──────────────────────────────────
 
 console.log('\n45. Scan cooldown filter');

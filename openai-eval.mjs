@@ -249,6 +249,24 @@ LEGITIMACY: <High Confidence | Proceed with Caution | Suspicious>
 `;
 
 // ---------------------------------------------------------------------------
+// Prompt caching (#1709) — engine 2 of the four from #1709, same shape as the
+// OpenRouter runner. The static prefix (shared + oferta + cv, ~12K tokens) is
+// byte-identical across every offer, yet was re-sent and re-billed each call.
+//
+// Host-gated on purpose: OpenAI-compatible gateways (OpenRouter, DeepSeek, …)
+// honor an ephemeral `cache_control` breakpoint on the prefix and reuse it
+// across back-to-back calls within the cache TTL. api.openai.com instead caches
+// long prefixes automatically and may reject the non-standard field, so it gets
+// a plain-string system message. Either way the prompt TEXT is unchanged.
+export function buildSystemMessage(prompt, host) {
+  if (host === 'api.openai.com') return { role: 'system', content: prompt };
+  return {
+    role: 'system',
+    content: [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral' } }],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Call the OpenAI-compatible endpoint
 // ---------------------------------------------------------------------------
 const timeoutMs = parseInt(process.env.OPENAI_TIMEOUT_MS || '300000', 10);
@@ -271,8 +289,8 @@ try {
     body: JSON.stringify({
       model:    modelName,
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user',   content: `JOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
+        buildSystemMessage(systemPrompt, endpointHost),
+        { role: 'user', content: `JOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
       ],
       stream:      false,
       temperature: 0.4,

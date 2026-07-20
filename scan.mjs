@@ -1261,6 +1261,7 @@ const PORTAL_HEALTH_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)
 export const PORTAL_HEALTH_HEADER = 'timestamp\tcompany\tstatus\n';
 
 export function appendPortalHealth(healthRecords, filePath = PORTAL_HEALTH_PATH) {
+  mkdirSync(path.dirname(filePath), { recursive: true });
   if (!existsSync(filePath)) writeFileSync(filePath, PORTAL_HEALTH_HEADER, 'utf-8');
   let lines = '';
   for (const r of healthRecords) {
@@ -1816,10 +1817,14 @@ async function main() {
   if (config.max_posting_age_days != null || totalFilteredPostingAge > 0) {
     console.log(`Filtered by age:       ${totalFilteredPostingAge} removed`);
   }
-  console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
-  console.log(`Filtered by content:  ${totalFilteredContent} removed`);
+  if (config.salary_filter || totalFilteredSalary > 0) {
+    console.log(`Filtered by salary:    ${totalFilteredSalary} removed`);
+  }
+  if (config.content_filter || totalFilteredContent > 0) {
+    console.log(`Filtered by content:   ${totalFilteredContent} removed`);
+  }
   if (visaEnabled) {
-    console.log(`Filtered by visa:     ${totalFilteredVisa} removed`);
+    console.log(`Filtered by visa:      ${totalFilteredVisa} removed`);
   }
   if (Object.keys(windows).length > 0 || totalFilteredCooldown > 0) {
     console.log(`Filtered by cooldown:  ${totalFilteredCooldown} removed`);
@@ -1906,15 +1911,7 @@ async function main() {
   }
 
   const pastHealth = loadPortalHealth();
-  const currentStreaks = computeConsecutiveFailures(pastHealth);
-  
-  for (const r of healthRecords) {
-    if (r.status === 'slug_gone' || r.status === 'network') {
-      currentStreaks.set(r.company, (currentStreaks.get(r.company) || 0) + 1);
-    } else if (r.status === 'reachable' || r.status === 'empty') {
-      currentStreaks.set(r.company, 0);
-    }
-  }
+  const currentStreaks = computeConsecutiveFailures([...pastHealth, ...healthRecords]);
 
   const persistentlyDead = [];
   const newlyDeadSlug = [];
