@@ -1305,6 +1305,7 @@ const expectedModes = [
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md', 'latex-tex.md', 'email.md', 'add.md', 'titles.md',
+  'expand.md',
   'regional/eu-swe.md',
 ];
 
@@ -1463,6 +1464,20 @@ if (
   pass('apply mode persists filled/submitted answers in an additive report section');
 } else {
   fail('apply mode missing additive Application Answers persistence instructions');
+}
+
+const expandMode = readFile('modes/expand.md');
+if (
+  /never fetch unlinked URLs/i.test(expandMode) &&
+  /halt until explicit approval is given/i.test(expandMode) &&
+  /node add-entry\.mjs/i.test(expandMode) &&
+  /--stdin/i.test(expandMode) &&
+  /Additive Only/i.test(expandMode) &&
+  /Treat fetched evidence text as literal/i.test(expandMode)
+) {
+  pass('expand mode includes url limits, confirm gate, add-entry funneling, additive-only, and literal evidence rules');
+} else {
+  fail('expand mode missing required behavior boundaries (url limits, confirm gate, additive-only, literal evidence, add-entry funneling)');
 }
 
 try {
@@ -2502,6 +2517,7 @@ try {
   const duplicateCompanyPath = join(tmp, 'duplicate-company.yml');
   const badContentFilterPath = join(tmp, 'bad-content-filter.yml');
   const deadByTitleKeywordPath = join(tmp, 'dead-by-title-keyword.yml');
+  const badVisaFilterPath = join(tmp, 'bad-visa-filter.yml');
 
   writeFileSync(validPath, `
 title_filter:
@@ -2574,6 +2590,19 @@ tracked_companies:
     careers_url: "https://jobs.lever.co/acme"
 `, 'utf-8');
 
+  // visa_filter with an empty-string keyword or a non-boolean require_mention
+  // must be rejected (an empty keyword would match every description).
+  writeFileSync(badVisaFilterPath, `
+title_filter:
+  positive: ["AI"]
+visa_filter:
+  require_mention: "yes"
+  positive: ["h-1b", "   "]
+tracked_companies:
+  - name: "Acme"
+    careers_url: "https://jobs.lever.co/acme"
+`, 'utf-8');
+
   const validResult = run(NODE, ['validate-portals.mjs', '--file', validPath]);
   if (validResult !== null && validResult.includes('0 errors')) {
     pass('validate-portals accepts a minimal valid portals file');
@@ -2628,6 +2657,13 @@ tracked_companies:
     pass('validate-portals warns on a by_title_keyword entry with no matching title_filter.positive keyword');
   } else {
     fail('validate-portals should warn (not error) on a dead by_title_keyword entry');
+  }
+
+  const badVisaFilterResult = run(NODE, ['validate-portals.mjs', '--file', badVisaFilterPath]);
+  if (badVisaFilterResult === null) {
+    pass('validate-portals rejects invalid visa_filter (empty keyword / non-boolean require_mention)');
+  } else {
+    fail('validate-portals should reject invalid visa_filter');
   }
 
   rmSync(tmp, { recursive: true, force: true });
@@ -3418,6 +3454,7 @@ try {
     buildLocationFilter,
     buildContentFilter,
     buildPostingAgeFilter,
+    buildVisaFilter,
     shouldDedupScanHistoryRow,
     formatPipelineOffer,
     formatScanHistoryRow,
@@ -3614,8 +3651,9 @@ try {
   const historyRow = formatScanHistoryRow(hostileOffer, '2026-06-18');
   const historyColumns = historyRow.split('\t');
   if (
-    historyColumns.length === 9 && // 7 metadata + fingerprint (#1597) + postedAt
+    historyColumns.length === 11 && // 7 metadata + fingerprint (#1597) + postedAt + trust score/flags (#1743)
     historyColumns[8] === '' && // no postedAt on hostileOffer → empty trailing col
+    historyColumns[9] === '' && historyColumns[10] === '' && // no trust signal → empty trailing cols
     !historyColumns.some(col => /[\r\n\t]/.test(col)) &&
     historyColumns[0] === 'https://jobs.example.com/123|evil' &&
     historyColumns[3].includes('- [ ] https://evil.example/job') &&
@@ -3644,9 +3682,9 @@ try {
   const datedHistory = formatScanHistoryRow(datedOffer, '2026-07-09').split('\t');
   const noDateHistory = formatScanHistoryRow({ ...datedOffer, postedAt: undefined }, '2026-07-09').split('\t');
   if (
-    datedHistory.length === 9 &&
+    datedHistory.length === 11 &&
     datedHistory[8] === '2026-06-18' && // epoch ms → YYYY-MM-DD in the trailing column
-    noDateHistory.length === 9 &&
+    noDateHistory.length === 11 &&
     noDateHistory[8] === '' // missing postedAt → empty trailing column, never a bogus date
   ) {
     pass('scan-history writer appends postedAt as an ISO trailing column (empty when absent)');
@@ -3667,6 +3705,44 @@ try {
     pass('pipeline writer appends a labeled posted: segment (omitted/byte-identical when date missing or invalid)');
   } else {
     fail(`pipeline postedAt segment wrong: dated="${datedPipeline}" / noDate="${noDatePipeline}" / bad="${badDatePipeline}" / nan="${nanDatePipeline}"`);
+  }
+
+  // ── trust/legitimacy signal persistence (#1743) ──
+  // The scanner computes offer.trustScore/trustFlags on every job; surface it only
+  // when flagged (score < 100). scan-history gets trailing score+flags columns
+  // (after postedAt); pipeline.md gets a labeled `trust:` segment. Clean/unset
+  // trust stays byte-identical (empty column / no segment).
+  const trustBase = { url: 'https://jobs.example.com/77', source: 'lever-api', title: 'SRE', company: 'Acme', location: 'Remote', description: '' };
+  const flaggedOffer = { ...trustBase, trustScore: 60, trustFlags: ['missing_apply_url', 'suspicious_domain'] };
+  const cleanOffer = { ...trustBase, trustScore: 100, trustFlags: [] };
+  const untrustedOffer = { ...trustBase }; // no trust fields (trust_filter disabled)
+  const flaggedHist = formatScanHistoryRow(flaggedOffer, '2026-07-09').split('\t');
+  const cleanHist = formatScanHistoryRow(cleanOffer, '2026-07-09').split('\t');
+  if (
+    flaggedHist.length === 11 &&
+    flaggedHist[9] === '60' && flaggedHist[10] === 'missing_apply_url,suspicious_domain' &&
+    cleanHist.length === 11 && cleanHist[9] === '' && cleanHist[10] === '' // score 100 → not flagged → empty
+  ) {
+    pass('scan-history writer appends trust score + flags trailing columns when flagged, empty otherwise (#1743)');
+  } else {
+    fail(`scan-history trust columns wrong: flagged=${JSON.stringify(flaggedHist)} / clean=${JSON.stringify(cleanHist)}`);
+  }
+
+  const flaggedPipeline = formatPipelineOffer(flaggedOffer);
+  const cleanPipeline = formatPipelineOffer(cleanOffer);
+  const untrustedPipeline = formatPipelineOffer(untrustedOffer);
+  const flaggedNoFlags = formatPipelineOffer({ ...trustBase, trustScore: 80, trustFlags: [] });
+  const withDateAndTrust = formatPipelineOffer({ ...trustBase, postedAt: Date.parse('2026-06-18T00:00:00Z'), trustScore: 70, trustFlags: ['invalid_url'], note: 'pick' });
+  if (
+    flaggedPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 60 missing_apply_url,suspicious_domain' &&
+    cleanPipeline === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote' && // score 100 → no segment
+    untrustedPipeline === cleanPipeline && // no trust fields → byte-identical
+    flaggedNoFlags === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | trust: 80' && // score-only when no flags
+    withDateAndTrust === '- [ ] https://jobs.example.com/77 | Acme | SRE | Remote | posted: 2026-06-18 | trust: 70 invalid_url | note: pick' // stable order posted→trust→note
+  ) {
+    pass('pipeline writer appends a labeled trust: segment ordered posted→trust→note, byte-identical when clean/unset (#1743)');
+  } else {
+    fail(`pipeline trust segment wrong: flagged="${flaggedPipeline}" / clean="${cleanPipeline}" / untrusted="${untrustedPipeline}" / noFlags="${flaggedNoFlags}" / combo="${withDateAndTrust}"`);
   }
 
   // ── content_filter (#734) ──
@@ -3784,6 +3860,76 @@ try {
     pass('content_filter.by_title_keyword as an array is ignored (falls back to global rule), not silently iterated');
   } else {
     fail('content_filter.by_title_keyword array should be ignored, not treated as a keyed override map');
+  }
+
+  // ── visa_filter (US work-authorization sponsorship) ──
+  // Absent config (or enabled: false) → all jobs pass.
+  const noVisaFilter = buildVisaFilter(null);
+  const offVisaFilter = buildVisaFilter({ enabled: false, negative: ['no sponsorship'] });
+  if (
+    noVisaFilter('no visa sponsorship, must be authorized') === true &&
+    noVisaFilter('') === true &&
+    offVisaFilter('no sponsorship offered') === true
+  ) {
+    pass('visa_filter absent or disabled → all jobs pass');
+  } else {
+    fail('visa_filter absent/disabled should pass all jobs');
+  }
+
+  // Default mode (require_mention: false): drop only explicit rejections,
+  // keep everything else — including jobs with no description.
+  const visa = buildVisaFilter({ enabled: true });
+  if (
+    visa('We are unable to sponsor visas for this role') === false &&
+    visa('This role does not offer visa sponsorship') === false &&
+    visa('Applicants must be authorized to work with no sponsorship') === false
+  ) {
+    pass('visa_filter rejects postings that explicitly refuse sponsorship');
+  } else {
+    fail('visa_filter should reject explicit no-sponsorship postings');
+  }
+  if (
+    visa('We happily provide visa sponsorship including H-1B') === true &&
+    visa('A generic engineering role with a collaborative team') === true &&
+    visa('') === true &&
+    visa(undefined) === true
+  ) {
+    pass('visa_filter default keeps sponsoring and unstated postings');
+  } else {
+    fail('visa_filter default should keep sponsoring and unstated postings');
+  }
+
+  // Strict mode (require_mention: true): keep only postings that advertise
+  // sponsorship; unstated / missing descriptions are rejected.
+  const strictVisa = buildVisaFilter({ enabled: true, require_mention: true });
+  if (
+    strictVisa('We sponsor H1B1 and H-1B candidates') === true &&
+    strictVisa('Relocation and visa sponsorship provided') === true
+  ) {
+    pass('visa_filter strict keeps postings that advertise sponsorship');
+  } else {
+    fail('visa_filter strict should keep sponsoring postings');
+  }
+  if (
+    strictVisa('A generic engineering role with a collaborative team') === false &&
+    strictVisa('') === false &&
+    strictVisa(null) === false &&
+    strictVisa('no visa sponsorship available') === false
+  ) {
+    pass('visa_filter strict drops unstated, empty, and no-sponsorship postings');
+  } else {
+    fail('visa_filter strict should drop unstated/empty/no-sponsorship postings');
+  }
+
+  // Custom keyword lists override the built-in defaults.
+  const customVisa = buildVisaFilter({ enabled: true, require_mention: true, positive: ['tier 2 sponsorship'] });
+  if (
+    customVisa('We hold a Tier 2 sponsorship licence') === true &&
+    customVisa('We sponsor H-1B visas') === false
+  ) {
+    pass('visa_filter honors custom positive keyword lists over defaults');
+  } else {
+    fail('visa_filter should honor custom positive keyword lists');
   }
 
 } catch (e) {
@@ -8070,17 +8216,17 @@ try {
     '2026-07-06',
   );
   const cols = withBody.split('\t');
-  if (cols.length === 9 && /^[0-9a-f]{16}$/.test(cols[7])) {
+  if (cols.length === 11 && /^[0-9a-f]{16}$/.test(cols[7])) {
     pass('formatScanHistoryRow appends a fingerprint column for described offers');
   } else {
-    fail(`formatScanHistoryRow columns: ${cols.length}, last=${JSON.stringify(cols[7])}`);
+    fail(`formatScanHistoryRow columns: ${cols.length}, fingerprint=${JSON.stringify(cols[7])}`);
   }
   const withoutBody = formatScanHistoryRow(
     { url: 'https://x.example/j/2', source: 'greenhouse', title: 'Data Engineer', company: 'Acme', location: '' },
     '2026-07-06',
   );
   const cols2 = withoutBody.split('\t');
-  if (cols2.length === 9 && cols2[7] === '') {
+  if (cols2.length === 11 && cols2[7] === '') {
     pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
   } else {
     fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);
@@ -8365,12 +8511,15 @@ try {
     timestamp: '2026-07-03T14:02:11Z', status: 'completed', companies: 45, boards: 3, found: 120,
     filteredTitle: 40, filteredTier: 5, filteredLocation: 20, filteredPostingAge: 3, filteredSalary: 2,
     filteredContent: 6, filteredCooldown: 1, dupes: 38, newAdded: 8, errors: 0,
+    filteredBlacklist: 4, filteredVisa: 7,
   };
   appendScanRunSummary(counters, runsFile);
   appendScanRunSummary({ ...counters, timestamp: '2026-07-04T09:00:00Z' }, runsFile);
   const runRows = readFileSync(runsFile, 'utf-8').trim().split('\n');
   if (runRows[0] === SCAN_RUNS_HEADER.trim() && runRows.length === 3
       && runRows[1].startsWith('2026-07-03T14:02:11Z\tcompleted\t45\t3\t120\t')
+      // filtered_blacklist + filtered_visa land in the two trailing columns.
+      && runRows[1].endsWith('\t4\t7')
       && runRows[2].startsWith('2026-07-04T09:00:00Z\t')) {
     pass('appendScanRunSummary writes the header once, appends one row per run');
   } else {
