@@ -23,6 +23,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline';
 import yaml from 'js-yaml';
+import { outputLanguageInstruction, parseOutputLanguage } from './profile-language.mjs';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
@@ -347,7 +348,8 @@ function loadContext() {
   };
 }
 
-function buildSystemPrompt(modeContent, ctx) {
+export function buildSystemPrompt(modeContent, ctx) {
+  const languageInstruction = outputLanguageInstruction(parseOutputLanguage(ctx.profile));
   return [
     ctx.shared,
     ctx.profileMode,
@@ -358,6 +360,9 @@ function buildSystemPrompt(modeContent, ctx) {
     '---',
     'CV (Markdown):',
     ctx.cv,
+    '---',
+    'OUTPUT LANGUAGE:',
+    languageInstruction,
   ].filter(Boolean).join('\n\n');
 }
 
