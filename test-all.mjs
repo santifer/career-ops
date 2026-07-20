@@ -3454,6 +3454,7 @@ try {
     buildLocationFilter,
     buildContentFilter,
     buildPostingAgeFilter,
+    buildPostedDateFilter,
     buildVisaFilter,
     shouldDedupScanHistoryRow,
     formatPipelineOffer,
@@ -3487,6 +3488,28 @@ try {
     pass('posting-age filter is opt-in: absent / 0 / negative / non-integer config disables it');
   } else {
     fail('posting-age filter should be a pass-all no-op when unconfigured or misconfigured');
+  }
+
+  // ── absolute posted-date filter (--posted-after / --posted-before) ──
+  const JUL17 = Date.parse('2026-07-17T12:00:00Z');
+  const JUL18 = Date.parse('2026-07-18T12:00:00Z');
+  const JUL20 = Date.parse('2026-07-20T12:00:00Z');
+  const JUL21 = Date.parse('2026-07-21T12:00:00Z');
+  if (
+    buildPostedDateFilter(null, null)(JUL17) === true && // no bounds → pass-all
+    buildPostedDateFilter('2026-07-17', '2026-07-20')(JUL18) === true && // inside window
+    buildPostedDateFilter('2026-07-17', '2026-07-20')(JUL17) === true && // on the after-bound (inclusive)
+    buildPostedDateFilter('2026-07-17', '2026-07-20')(Date.parse('2026-07-20T23:59:59.000Z')) === true && // before-bound is end-of-day inclusive
+    buildPostedDateFilter('2026-07-17', '2026-07-20')(JUL21) === false && // after the window
+    buildPostedDateFilter('2026-07-18', null)(JUL17) === false && // after-only bound
+    buildPostedDateFilter('2026-07-18', null)(JUL20) === true &&
+    buildPostedDateFilter(null, '2026-07-18')(JUL20) === false && // before-only bound
+    buildPostedDateFilter('2026-07-17', '2026-07-20')(undefined) === true && // no provider date → pass (don't penalize missing data)
+    buildPostedDateFilter('2026-07-17', '2026-07-20')(Number.NaN) === true
+  ) {
+    pass('posted-date filter gates on an absolute after/before window; missing dates always pass');
+  } else {
+    fail('posted-date filter did not gate on absolute posted-date bounds correctly');
   }
 
   const filter = buildLocationFilter({
@@ -8511,15 +8534,15 @@ try {
     timestamp: '2026-07-03T14:02:11Z', status: 'completed', companies: 45, boards: 3, found: 120,
     filteredTitle: 40, filteredTier: 5, filteredLocation: 20, filteredPostingAge: 3, filteredSalary: 2,
     filteredContent: 6, filteredCooldown: 1, dupes: 38, newAdded: 8, errors: 0,
-    filteredBlacklist: 4, filteredVisa: 7,
+    filteredBlacklist: 4, filteredVisa: 7, filteredPostedDate: 2,
   };
   appendScanRunSummary(counters, runsFile);
   appendScanRunSummary({ ...counters, timestamp: '2026-07-04T09:00:00Z' }, runsFile);
   const runRows = readFileSync(runsFile, 'utf-8').trim().split('\n');
   if (runRows[0] === SCAN_RUNS_HEADER.trim() && runRows.length === 3
       && runRows[1].startsWith('2026-07-03T14:02:11Z\tcompleted\t45\t3\t120\t')
-      // filtered_blacklist + filtered_visa land in the two trailing columns.
-      && runRows[1].endsWith('\t4\t7')
+      // filtered_blacklist + filtered_visa + filtered_posted_date land in the three trailing columns.
+      && runRows[1].endsWith('\t4\t7\t2')
       && runRows[2].startsWith('2026-07-04T09:00:00Z\t')) {
     pass('appendScanRunSummary writes the header once, appends one row per run');
   } else {

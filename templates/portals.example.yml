@@ -98,6 +98,11 @@
 # Absent, 0, or non-positive → disabled (all ages pass).
 #
 # max_posting_age_days: 45
+#
+# Need an ABSOLUTE date window instead (e.g. "only postings from the 17th to
+# the 20th") rather than a relative "N days old" cutoff? Use the CLI flags
+# instead of a portals.yml key: `node scan.mjs --posted-after 2026-07-17
+# --posted-before 2026-07-20`. Same "don't penalize missing data" rule.
 
 # -- Trust filter (optional) --
 # Enriches each scanned job with a trust score (0-100) and flags.

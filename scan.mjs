@@ -193,6 +193,25 @@ export function buildPostingAgeFilter(maxAgeDays, now = Date.now()) {
   };
 }
 
+// ── Absolute posted-date filter ─────────────────────────────────────
+// CLI-only (--posted-after / --posted-before), unlike the config-driven
+// relative max_posting_age_days above. Both bounds optional and inclusive
+// (before is treated as end-of-day). A job with no postedAt always passes —
+// same "don't penalize missing data" convention as buildPostingAgeFilter.
+export function buildPostedDateFilter(afterIso, beforeIso) {
+  const afterMs = afterIso ? Date.parse(afterIso) : NaN;
+  const beforeMs = beforeIso ? Date.parse(`${beforeIso}T23:59:59.999Z`) : NaN;
+  const hasAfter = Number.isFinite(afterMs);
+  const hasBefore = Number.isFinite(beforeMs);
+  if (!hasAfter && !hasBefore) return () => true;
+  return (postedAt) => {
+    if (typeof postedAt !== 'number' || !Number.isFinite(postedAt)) return true;
+    if (hasAfter && postedAt < afterMs) return false;
+    if (hasBefore && postedAt > beforeMs) return false;
+    return true;
+  };
+}
+
 // ── Content filter ──────────────────────────────────────────────────
 // Optional. If `content_filter` is absent from portals.yml, all jobs pass.
 // Filters on the job DESCRIPTION text to separate same-titled roles with
@@ -1237,7 +1256,7 @@ const SCAN_RUNS_PATH = 'data/scan-runs.tsv';
 // 'completed' in v1; a follow-up wires failure-path writes so trend stats can
 // exclude survivorship bias. Consumers MUST parse by header name, never by
 // position — columns may be appended in later versions.
-export const SCAN_RUNS_HEADER = 'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_posting_age\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors\tfiltered_blacklist\tfiltered_visa\n';
+export const SCAN_RUNS_HEADER = 'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_posting_age\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors\tfiltered_blacklist\tfiltered_visa\tfiltered_posted_date\n';
 
 export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
   if (!existsSync(filePath)) writeFileSync(filePath, SCAN_RUNS_HEADER, 'utf-8');
@@ -1251,6 +1270,8 @@ export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
     c.filteredBlacklist ?? 0,
     // filtered_visa appended at the END for the same reason.
     c.filteredVisa ?? 0,
+    // filtered_posted_date appended at the END for the same reason.
+    c.filteredPostedDate ?? 0,
   ].join('\t') + '\n';
   appendFileSync(filePath, row, 'utf-8');
 }
@@ -1458,6 +1479,26 @@ async function main() {
   const includeBlacklisted = args.includes('--include-blacklisted');
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
+  // --posted-after / --posted-before <YYYY-MM-DD>: absolute-date bounds on the
+  // employer's real posting date (job.postedAt), gated against a typo since a
+  // silently-ignored bound would look like "no jobs matched" instead of an error.
+  const isValidIsoDate = (s) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    const d = new Date(`${s}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+  };
+  const postedAfterFlag = args.indexOf('--posted-after');
+  const postedAfter = postedAfterFlag !== -1 ? args[postedAfterFlag + 1] : null;
+  const postedBeforeFlag = args.indexOf('--posted-before');
+  const postedBefore = postedBeforeFlag !== -1 ? args[postedBeforeFlag + 1] : null;
+  if (postedAfter != null && !isValidIsoDate(postedAfter)) {
+    console.error(`Error: --posted-after expects YYYY-MM-DD, got "${postedAfter}"`);
+    process.exit(1);
+  }
+  if (postedBefore != null && !isValidIsoDate(postedBefore)) {
+    console.error(`Error: --posted-before expects YYYY-MM-DD, got "${postedBefore}"`);
+    process.exit(1);
+  }
 
   // 1. Load providers
   const providers = await loadProviders(PROVIDERS_DIR);
@@ -1500,6 +1541,7 @@ async function main() {
 
   const locationFilter = buildLocationFilter(config.location_filter);
   const postingAgeFilter = buildPostingAgeFilter(config.max_posting_age_days);
+  const postedDateFilter = buildPostedDateFilter(postedAfter, postedBefore);
   const salaryFilter = buildSalaryFilter(config.salary_filter);
   const trustValidator = buildTrustValidator(config.trust_filter);
   const contentFilter = buildContentFilter(config.content_filter);
@@ -1586,6 +1628,7 @@ async function main() {
   let totalFilteredTier = 0;
   let totalFilteredLocation = 0;
   let totalFilteredPostingAge = 0;
+  let totalFilteredPostedDate = 0;
   let totalFilteredSalary = 0;
   let totalFilteredContent = 0;
   let totalFilteredBlacklist = 0;
@@ -1665,6 +1708,10 @@ async function main() {
         }
         if (!postingAgeFilter(job.postedAt)) {
           totalFilteredPostingAge++;
+          continue;
+        }
+        if (!postedDateFilter(job.postedAt)) {
+          totalFilteredPostedDate++;
           continue;
         }
         if (!salaryFilter(job.salary)) {
@@ -1815,6 +1862,9 @@ async function main() {
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   if (config.max_posting_age_days != null || totalFilteredPostingAge > 0) {
     console.log(`Filtered by age:       ${totalFilteredPostingAge} removed`);
+  }
+  if (postedAfter || postedBefore) {
+    console.log(`Filtered by posted date: ${totalFilteredPostedDate} removed`);
   }
   console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
   console.log(`Filtered by content:  ${totalFilteredContent} removed`);
@@ -1988,6 +2038,7 @@ async function main() {
       dupes: totalDupes, newAdded: verifiedOffers.length, errors: errors.length,
       filteredBlacklist: totalFilteredBlacklist,
       filteredVisa: totalFilteredVisa,
+      filteredPostedDate: totalFilteredPostedDate,
     });
   }
 
