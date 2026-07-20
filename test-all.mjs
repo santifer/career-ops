@@ -1624,6 +1624,83 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+// --- Block G minimum-wage floor check (#2025) ---
+{
+  // 1. Jurisdiction table exists, parses as YAML, and the CA-ON seed is complete
+  const mwPath = join(ROOT, 'templates', 'minimum-wage.yml');
+  if (!existsSync(mwPath)) {
+    fail('templates/minimum-wage.yml missing (#2025)');
+  } else {
+    try {
+      const { load } = await import('js-yaml');
+      const mwRaw = readFileSync(mwPath, 'utf-8');
+      const mw = load(mwRaw);
+      const on = mw?.jurisdictions?.['CA-ON'];
+      if (
+        on &&
+        on.general_rate === 17.60 &&
+        on.currency === 'CAD' &&
+        String(on.effective).startsWith('2025-10-01') &&
+        on.next_rate === 17.95 &&
+        String(on.next_effective).startsWith('2026-10-01') &&
+        Array.isArray(on.special_rates) && on.special_rates.length > 0 &&
+        typeof on.legal_basis === 'string' && on.legal_basis.includes('Employment Standards Act') &&
+        Array.isArray(on.sources) && on.sources.length > 0 &&
+        Boolean(on.as_of)
+      ) {
+        pass('minimum-wage.yml parses and CA-ON seed carries 17.60→17.95 rates, both effective dates, special_rates, legal_basis, sources, as_of (#2025)');
+      } else {
+        fail('minimum-wage.yml CA-ON seed incomplete — needs general_rate 17.60 CAD (2025-10-01), next_rate 17.95 (2026-10-01), special_rates, legal_basis (ESA 2000), sources, as_of (#2025)');
+      }
+      if (
+        mwRaw.includes('CONTRIBUTION RULE') &&
+        mwRaw.includes('STALENESS RULE') &&
+        mwRaw.includes('may be stale')
+      ) {
+        pass('minimum-wage.yml header documents the contribution rule and the staleness rule (#2025)');
+      } else {
+        fail('minimum-wage.yml header missing the contribution rule and/or staleness rule (#2025)');
+      }
+    } catch (e) {
+      fail(`templates/minimum-wage.yml does not parse as YAML: ${e.message} (#2025)`);
+    }
+  }
+
+  // 2. oferta.md carries the wage-floor section with date-aware selection,
+  //    staleness guard, conversion disclosure, carve-out honesty, and the
+  //    corroborator-not-tier-changer constraint
+  const mwStart = ofertaMode.indexOf('Minimum-Wage Floor Check');
+  const mwEnd = ofertaMode.indexOf('### Output format:', Math.max(mwStart, 0));
+  const mwSection = mwStart >= 0 && mwEnd > mwStart ? ofertaMode.slice(mwStart, mwEnd) : '';
+  if (
+    mwSection.includes('templates/minimum-wage.yml') &&
+    mwSection.includes('Date-aware rate selection (mandatory)') &&
+    mwSection.includes('Staleness guard:') &&
+    mwSection.includes('2080 hours/year') &&
+    mwSection.includes('disclose the assumption in the output') &&
+    mwSection.includes('Carve-out honesty:') &&
+    mwSection.includes('STRONG, presence-based signal') &&
+    mwSection.includes('never by itself changes') &&
+    mwSection.includes('not legal advice')
+  ) {
+    pass('oferta Block G wage-floor signal pins date-aware rates, staleness guard, 2080-hr disclosure, carve-out honesty, corroborator-only tier impact (#2025)');
+  } else {
+    fail('oferta Block G missing/incomplete minimum-wage floor section — needs table reference, date-aware rate selection, staleness guard, 2080 hours/year disclosure, carve-out honesty, corroborator-not-tier-changer constraint, not-legal-advice note (#2025)');
+  }
+
+  // 3. Phrasing discipline holds in the report-facing text: the blockquote
+  //    templates the agent renders must state facts, never legal accusations.
+  //    (The rule text itself may quote the banned phrases to forbid them,
+  //    so only '>' lines — the rendered output templates — are scanned.)
+  const mwQuoteLines = mwSection.split('\n').filter((l) => l.trimStart().startsWith('>'));
+  const mwAccusatory = mwQuoteLines.filter((l) => /illegal|violation|breaking the law/i.test(l));
+  if (mwSection && mwQuoteLines.length >= 1 && mwAccusatory.length === 0) {
+    pass('minimum-wage report template states facts only — no "illegal"/"violation"/"breaking the law" assertions (#2025)');
+  } else {
+    fail(`minimum-wage phrasing discipline broken: ${mwAccusatory.length ? `accusatory blockquote line(s): ${mwAccusatory[0].trim().slice(0, 80)}` : 'expected a blockquote output template in the section'} (#2025)`);
+  }
+}
+
 // --- offer-prep mode: contract reading companion (describes, never judges) ---
 const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
 if (

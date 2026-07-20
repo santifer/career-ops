@@ -1,0 +1,73 @@
+# Career-Ops — Statutory Minimum-Wage Floors (jurisdiction table) (#2025)
+#
+# Consumed prompt-level by modes/oferta.md Block G ("Minimum-Wage Floor
+# Check"). This file is a DATA REFERENCE, not instruction logic: extending it
+# to a new jurisdiction never requires touching the rule text in
+# modes/oferta.md. No script reads it — the agent does.
+#
+# CONTRIBUTION RULE (mandatory): no entry lands in this table without
+#   1. a citable legal source (statute, regulation, official government
+#      announcement, or a reputable law-firm bulletin summarizing it), AND
+#   2. an explicit effective date for every rate carried, AND
+#   3. an `as_of` date recording when the row was last verified.
+# Unverified or "I heard that..." rows will be rejected in review. Seed
+# narrow and verified; extend via community PRs — same discipline as the
+# jurisdiction tables introduced for #2013/#2018/#2019.
+#
+# STALENESS RULE (mandatory — mirrored in modes/oferta.md): minimum wages
+# change annually almost everywhere. Each row carries the current rate AND
+# the officially pre-announced next rate when one exists. Date-aware
+# selection: use `general_rate` while today < `next_effective`; use
+# `next_rate` once today >= `next_effective`. If today is PAST
+# `next_effective` and the row carries no newer data beyond `next_rate`,
+# the agent must say the table entry may be stale and needs re-verification
+# rather than asserting a floor as current fact.
+#
+# NOT LEGAL ADVICE: these rows describe published statutory rates so the
+# agent can state observable arithmetic about a posting's advertised
+# compensation. They are never a basis for asserting that any employer is
+# violating any law — special-rate carve-outs, exemptions, and posting
+# provenance are not verifiable from a JD.
+#
+# Schema per entry (key = jurisdiction code, e.g. CA-ON, US-CA, DE):
+#   jurisdiction_name: string — human-readable name for report output
+#   general_rate: number      — current general minimum wage (per hour)
+#   currency: ISO 4217 code
+#   effective: YYYY-MM-DD     — date general_rate came into force
+#   next_rate: number|null    — officially announced next rate, if any
+#   next_effective: YYYY-MM-DD|null — date next_rate comes into force
+#   special_rates: list       — INFORMATIONAL carve-outs (students, homeworkers,
+#                               tipped workers, ...) so the agent names the
+#                               applicable special rate instead of false-flagging
+#                               against the general floor
+#   legal_basis: string       — statute/regulation citation + indexation rule
+#   sources: list             — citable announcements/bulletins backing the row
+#   as_of: YYYY-MM-DD         — date this row was last verified against sources
+#
+# CANDIDATE ROWS FOR CONTRIBUTORS (suggestions only — do NOT add without the
+# source + effective-date + as_of discipline above):
+#   - CA-BC / CA-AB / CA-QC : other Canadian provinces (annual indexation varies)
+#   - US federal + states   : federal $7.25 floor vs. state/city rates (many
+#                             cities exceed states — key at the finest verified level)
+#   - UK                    : National Living Wage / National Minimum Wage age bands
+#   - DE / FR / EU          : Mindestlohn, SMIC, and other EU statutory minimums
+#   - AU / NZ / JP          : national or prefectural minimum-wage systems
+
+jurisdictions:
+  CA-ON:
+    jurisdiction_name: "Ontario, Canada"
+    general_rate: 17.60            # CAD per hour
+    currency: CAD
+    effective: "2025-10-01"
+    next_rate: 17.95               # officially announced 2026-04-01 by the Ontario Ministry of Labour
+    next_effective: "2026-10-01"
+    special_rates:                 # informational — see carve-out honesty rule in modes/oferta.md
+      - "Student under 18 (and working ≤28 hrs/week during school, or during holidays): $16.60/hr, rising to $16.90/hr on 2026-10-01"
+      - "Homeworkers (paid work done in the worker's own home): $19.35/hr, rising to $19.70/hr on 2026-10-01"
+    legal_basis: "Ontario Employment Standards Act, 2000 — general minimum wage, CPI-indexed annually each October 1"
+    sources:
+      - "Ontario Ministry of Labour — minimum-wage increase announcement (2026-04-01)"
+      - "Hicks Morley — Ontario minimum-wage rates bulletin (2026-04-01)"
+      - "Monkhouse Law — Ontario minimum-wage rate table"
+      - "CFIB — Canadian minimum-wage rate table"
+    as_of: "2026-07-18"

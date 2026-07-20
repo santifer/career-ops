@@ -11,6 +11,7 @@ System-layer template files used by career-ops scripts and modes. These files ar
 | `cv-template.tex` | `generate-latex.mjs` | LaTeX/Overleaf template for ATS-optimized CV PDFs |
 | `portals.example.yml` | Onboarding | Example portal scanner configuration (copy to `portals.yml` to activate) |
 | `states.yml` | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases |
+| `minimum-wage.yml` | `modes/oferta.md` (Block G signal 9) | Jurisdiction-keyed table of statutory minimum-wage floors with date-aware current/next rates (e.g. Ontario $17.60 → pre-announced $17.95 on 2026-10-01) and informational special rates. Prompt-level data reference, agent-judged comparison — no script reads it. Contribution rule: no entry without a citable legal source, per-rate effective dates, and an `as_of` verification date. |
 
 ### cv-template.html
 
