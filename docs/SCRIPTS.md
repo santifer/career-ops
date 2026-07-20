@@ -12,6 +12,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
 | `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
+| `npm run pdf:verify` | `verify-ats-pdf.mjs` | Verify final PDF provenance and text extraction before delivery |
 | `npm run img-to-pdf` | `img-to-pdf.mjs` | Convert a single screenshot/image into a single-page PDF |
 | `npm run build:latex` | `build-cv-latex.mjs` | Build .tex from structured JSON payload |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
@@ -122,7 +123,7 @@ node validate-portals.mjs --self-test
 
 ## pdf
 
-Renders an HTML file to a print-quality, ATS-parseable PDF via headless Chromium. Resolves font paths from `fonts/`, normalizes Unicode for ATS compatibility (em-dashes, smart quotes, zero-width characters), and reports page count and file size.
+Renders an HTML file to a print-quality, ATS-parseable PDF via headless Chromium. Resolves font paths from `fonts/`, normalizes Unicode for ATS compatibility (em-dashes, smart quotes, zero-width characters), and reports page count and file size. Before it records the manifest, it verifies that the exact output has direct Chromium provenance, embedded Unicode fonts, and selectable text.
 
 ```bash
 npm run pdf -- input.html output.pdf
@@ -131,6 +132,18 @@ npm run pdf -- input.html output.pdf --format=a4        # A4 (default)
 ```
 
 **Exit codes:** `0` PDF generated, `1` missing arguments or generation failure.
+
+### pdf:verify
+
+Verifies the final PDF that will actually be uploaded or delivered. It requires Poppler's `pdfinfo`, `pdffonts`, and `pdftotext`, and rejects files that have been rewritten after Career-Ops generated them (for example by Ghostscript or Preview), even if basic text extraction still succeeds.
+
+```bash
+npm run pdf:verify -- output/cv-jane-smith-acme-2026-07-14.pdf --require "Jane Smith" --require "Professional Summary"
+```
+
+Run this after the last copy/rename whenever the file leaves `output/`. No PDF post-processing is supported between a successful verification and upload.
+
+**Exit codes:** `0` verified direct Chromium PDF, `1` missing tools, a malformed/rewritten PDF, missing selectable text, or a required marker that did not extract.
 
 ---
 
