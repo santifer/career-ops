@@ -78,7 +78,7 @@
 
 Career-Ops convierte cualquier CLI de IA en un centro de mando de busqueda de empleo. En vez de trackear aplicaciones en un spreadsheet, tienes un pipeline AI que:
 
-- **Evalua ofertas** con scoring estructurado A-F (10 dimensiones ponderadas)
+- **Evalúa ofertas** con una evaluación estructurada A-F (cinco dimensiones que alimentan una puntuación de 1.0-5.0)
 - **Genera PDFs personalizados** -- CVs ATS-optimizados por oferta
 - **Escanea portales** automaticamente (Greenhouse, Ashby, Lever, webs de empresas)
 - **Procesa en batch** -- evalua 10+ ofertas en paralelo con sub-agentes
@@ -254,11 +254,35 @@ career-ops/
 - **Dashboard**: Go + Bubble Tea + Lipgloss (tema Catppuccin Mocha)
 - **Datos**: Tablas Markdown + config YAML + ficheros TSV batch
 
+## Preguntas frecuentes (FAQ)
+
+**¿Qué es career-ops?**
+career-ops es un centro de mando de búsqueda de empleo, open source e independiente del CLI. Convierte cualquier CLI de IA en un pipeline que evalúa ofertas contra tu CV, genera PDFs optimizados para ATS, encuentra a la persona adecuada a la que escribir y lo registra todo en un solo sitio — y la decisión final siempre es tuya. Es la primera implementación de referencia del CareerOps Manifesto. Más en [career-ops.org](https://career-ops.org).
+
+**¿Puedo usar career-ops gratis, o con un modelo más barato o local?**
+Sí. career-ops es independiente del CLI y funciona con modelos gratuitos y locales — mediante modelos gratuitos de OpenRouter, Ollama o cualquier endpoint compatible con OpenAI — así no dependes de ninguna suscripción de pago. Consulta [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) para la configuración completa.
+
+**¿Con qué CLIs de IA funciona career-ops?**
+career-ops funciona con cualquier CLI de IA importante — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen y más — a través del estándar abierto Agent Skill Standard, así que nunca queda atado a un solo proveedor. Usa el CLI que ya tengas.
+
+**¿Cómo instalo career-ops en Windows?**
+career-ops funciona en Windows. Si las skills no cargan por un error de symlink durante la instalación, la solución está en [docs/FAQ.md](docs/FAQ.md). Los pasos completos están en [docs/SETUP.md](docs/SETUP.md).
+
+**¿career-ops aplica a las ofertas por mí automáticamente?**
+No. career-ops es un filtro, no un aplicador masivo a ciegas. La IA evalúa, ordena y redacta; tú revisas y decides. Nunca envía, manda ni hace clic en nada — la última palabra siempre es tuya. Ese diseño con supervisión humana es justo el punto.
+
+**¿career-ops es gratis y open source?**
+Sí. career-ops es gratis y open source, y para el candidato siempre lo será — es la primera implementación de referencia del [CareerOps Manifesto](https://career-ops.org/manifesto). Léelo y, si dice lo que piensas, fírmalo.
+
 ## Sobre el autor
 
-Soy Santiago -- Head of Applied AI, ex-fundador (monte y vendi un negocio que sigue funcionando con mi nombre). Construi career-ops para gestionar mi propia busqueda de empleo. Funciono: lo use para conseguir mi puesto actual.
+Soy [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, ex-fundador (monté y vendí un negocio que sigue funcionando con mi nombre). Construí career-ops para gestionar mi propia búsqueda de empleo. Funcionó: lo usé para conseguir mi puesto actual.
+
+¿Curiosidad por cómo se mantiene este repo en ~4 horas a la semana? Lee [Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet).
 
 Mi portfolio y otros proyectos open source → [santifer.io](https://santifer.io)
+
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
 
 ## Documentacion
 
