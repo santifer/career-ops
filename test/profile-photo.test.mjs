@@ -57,7 +57,7 @@ test('single-letter Windows drive paths reach local file handling', () => {
   const dir = mkdtempSync(join(tmpdir(), 'photo-windows-path-'));
   const input = join(dir, 'input.json');
   const output = join(dir, 'output.html');
-  writeFileSync(input, JSON.stringify(payload('C:\\Users\\candidate\\headshot.png')));
+  writeFileSync(input, JSON.stringify(payload('Z:\\does-not-exist\\candidate\\headshot.png')));
   const result = spawnSync(process.execPath, ['build-cv-html.mjs', input, output, TEMPLATE], { cwd: ROOT, encoding: 'utf8' });
   assert.notEqual(result.status, 0);
   assert.doesNotMatch(result.stderr, /Unsupported profile photo URL scheme/);
