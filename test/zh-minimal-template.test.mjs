@@ -4,7 +4,7 @@ import { existsSync, readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { listTemplates, resolveTemplate, validateTemplate } from '../cv-templates.mjs';
 import { chromium } from 'playwright';
 
@@ -84,7 +84,7 @@ test('Chinese Minimal keeps long mixed-language contacts inside the A4 page', {
   try {
     const page = await browser.newPage({ viewport: { width: 794, height: 1123 } });
     await page.emulateMedia({ media: 'print' });
-    await page.goto(`file://${output}`);
+    await page.goto(pathToFileURL(output).href);
     const layout = await page.evaluate(() => {
       const printable = document.querySelector('.page');
       const right = printable.getBoundingClientRect().right;
