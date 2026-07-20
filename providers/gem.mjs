@@ -9,12 +9,16 @@
 //   - JobBoardList(boardId): the listing — title, locations, department,
 //     employment/location type, but NO date field.
 //   - ExternalJobPostingQuery(boardId, extId): per-job detail, carries
-//     firstPublishedTsSec (the postedAt source). Since the endpoint is
-//     literally a *batch* endpoint, every job's detail query is folded into
-//     ONE extra POST (one operation per extId) rather than N round-trips.
+//     firstPublishedTsSec (the postedAt source), plus descriptionHtml,
+//     jobPostSectionHtml, and compensationHtml for the job description.
+//     Since the endpoint is literally a *batch* endpoint, every job's
+//     detail query is folded into ONE extra POST (one operation per extId)
+//     rather than N round-trips.
 // The `{boardId}/{extId}` URL pattern is confirmed against a real captured
 // browser session (page referer for a real job matched this exact shape),
 // not just inferred from field naming.
+
+import { decodeEntities } from './_html-entities.mjs';
 
 const GEM_API_URL = 'https://jobs.gem.com/api/public/graphql/batch';
 const ALLOWED_GEM_HOSTS = new Set(['jobs.gem.com']);
@@ -57,6 +61,12 @@ const JOB_DETAIL_QUERY = `query ExternalJobPostingQuery($boardId: String!, $extI
   oatsExternalJobPosting(boardId: $boardId, extId: $extId) {
     extId
     firstPublishedTsSec
+    descriptionHtml
+    jobPostSectionHtml {
+      introHtml
+      outroHtml
+    }
+    compensationHtml
     __typename
   }
 }
@@ -67,6 +77,29 @@ function toEpochMsFromSeconds(value) {
   if (value == null) return undefined;
   const n = Number(value);
   return Number.isFinite(n) && n > 0 ? n * 1000 : undefined;
+}
+
+// Same tag-strip + entity-decode convention as the other scraping providers
+// (deutschebahn.mjs, hecklerkoch.mjs, etc.) that get raw HTML back.
+function htmlToText(html) {
+  if (typeof html !== 'string' || !html) return '';
+  return decodeEntities(html.replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
+// Concatenate intro + body + outro in page order, then append compensationHtml
+// as a labeled trailing section (it's a distinct field, not prose that flows
+// from the outro). Any absent field is dropped rather than leaving a gap, so
+// a posting with only descriptionHtml (the common case) renders identically
+// to before this field list was widened.
+/** @param {any} posting */
+function buildJobDescriptionText(posting) {
+  const intro = htmlToText(posting?.jobPostSectionHtml?.introHtml);
+  const body = htmlToText(posting?.descriptionHtml);
+  const outro = htmlToText(posting?.jobPostSectionHtml?.outroHtml);
+  const compensation = htmlToText(posting?.compensationHtml);
+
+  const text = [intro, body, outro].filter(Boolean).join('\n\n');
+  return compensation ? [text, `Compensation: ${compensation}`].filter(Boolean).join('\n\n') : text;
 }
 
 /** @param {string} url */
@@ -141,10 +174,11 @@ export default {
 
     const validPostings = postings.filter(/** @param {any} p */ p => p.extId && p.title);
 
-    // Enrichment, not core data — postedAt matters for recency filtering but
-    // its absence shouldn't fail the whole board. One extra batched POST
-    // (one ExternalJobPostingQuery op per job) rather than N round-trips.
+    // Enrichment, not core data — postedAt/description matter but their
+    // absence shouldn't fail the whole board. One extra batched POST (one
+    // ExternalJobPostingQuery op per job) rather than N round-trips.
     const postedAtByExtId = new Map();
+    const descriptionByExtId = new Map();
     if (validPostings.length > 0) {
       try {
         const detailBody = JSON.stringify(
@@ -163,11 +197,15 @@ export default {
         if (Array.isArray(detailJson)) {
           for (const entry of detailJson) {
             const posting = entry?.data?.oatsExternalJobPosting;
-            if (posting?.extId) postedAtByExtId.set(posting.extId, toEpochMsFromSeconds(posting.firstPublishedTsSec));
+            if (posting?.extId) {
+              postedAtByExtId.set(posting.extId, toEpochMsFromSeconds(posting.firstPublishedTsSec));
+              descriptionByExtId.set(posting.extId, buildJobDescriptionText(posting));
+            }
           }
         }
       } catch {
-        // Listing still stands without dates — recency filtering just won't apply to this board.
+        // Listing still stands without dates/description — recency filtering
+        // and content_filter just won't apply to this board.
       }
     }
 
@@ -176,6 +214,7 @@ export default {
       url: `https://jobs.gem.com/${boardId}/${p.extId}`,
       company: entry.name,
       location: Array.isArray(p.locations) ? [...new Set(p.locations.map(formatLocation).filter(Boolean))].join(' · ') : '',
+      description: descriptionByExtId.get(p.extId) || '',
       postedAt: postedAtByExtId.get(p.extId),
     }));
   },

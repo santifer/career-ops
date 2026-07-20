@@ -577,6 +577,7 @@ search_queries:
 #   oraclecloud     <tenant>.fa[.<region>][.ocs].oraclecloud.com/hcmUI/CandidateExperience/.../sites/<siteNumber>/jobs
 #                   (Oracle Recruiting Cloud / Fusion CX — JPMorgan, Oracle, BNY, Amex, Honeywell; siteNumber
 #                   auto-derived from the URL, override with provider: oraclecloud + siteNumber: / optional locationId:)
+#   gem             jobs.gem.com/<boardId>
 #
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to

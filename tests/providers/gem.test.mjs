@@ -79,7 +79,15 @@ try {
     },
   }];
   const detailResponse = [
-    { data: { oatsExternalJobPosting: { extId: '1001', firstPublishedTsSec: 1700000000 } } },
+    {
+      data: {
+        oatsExternalJobPosting: {
+          extId: '1001',
+          firstPublishedTsSec: 1700000000,
+          descriptionHtml: '<p>Build &amp; ship <strong>AI</strong> tools.</p><ul><li>Own the roadmap</li></ul>',
+        },
+      },
+    },
   ];
 
   const calls = [];
@@ -137,6 +145,14 @@ try {
     pass('gem.fetch() converts firstPublishedTsSec (unix seconds) to postedAt (epoch ms)');
   else fail(`gem.fetch() row 0 postedAt = ${JSON.stringify(fetched[0]?.postedAt)} (expected ${1700000000 * 1000})`);
 
+  if (calls[1].opts.body.includes('descriptionHtml'))
+    pass('gem.fetch() requests descriptionHtml in the batched detail query');
+  else fail(`gem.fetch() detail query body missing descriptionHtml: ${calls[1].opts.body}`);
+
+  if (fetched[0]?.description === 'Build & ship AI tools. Own the roadmap')
+    pass('gem.fetch() strips tags and decodes entities from descriptionHtml into job.description');
+  else fail(`gem.fetch() row 0 description = ${JSON.stringify(fetched[0]?.description)}`);
+
   // Malformed list response bodies → [], no crash, no detail call attempted.
   const emptyCases = [null, {}, [], [{}], [{ data: null }], [{ data: { oatsExternalJobPostings: null } }]];
   let emptyOk = true;
@@ -165,8 +181,8 @@ try {
       },
     },
   );
-  if (degraded.length === 1 && degraded[0].postedAt === undefined) {
-    pass('gem.fetch() degrades gracefully when the detail batch throws: postings still returned, postedAt omitted');
+  if (degraded.length === 1 && degraded[0].postedAt === undefined && degraded[0].description === '') {
+    pass('gem.fetch() degrades gracefully when the detail batch throws: postings still returned, postedAt/description omitted');
   } else {
     fail(`gem.fetch() degraded = ${JSON.stringify(degraded)}`);
   }
