@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!-- career-ops-template
+name: Chinese Minimal
+version: 1.0.0
+-->
 <html lang="{{LANG}}">
 <head>
 <meta charset="UTF-8">
@@ -141,9 +145,10 @@
     color: #1a1a1a;
   }
 
-  /* Links must never break across lines */
+  /* Keep long contact values inside the printable A4 box. */
   a {
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   /* === CORE COMPETENCIES === */
@@ -453,50 +458,171 @@
       Meiryo, 'MS PGothic', sans-serif;
   }
 
-  /* === Simplified Chinese typography ===
-     Keep Latin-capable system fonts first for stable ATS extraction, then use
-     platform-native and open-source Simplified Chinese faces for Han glyphs.
-     Explicit line-breaking prevents mixed Chinese/English tokens and Chinese
-     punctuation from producing clipped or awkward PDF lines. */
+  /* === CHINESE MINIMAL DESIGN ===
+     An opt-in, restrained visual system for Chinese and mixed-language
+     technical CVs. The document stays single-column and ATS-readable. */
+  :root {
+    --zhm-ink: #172033;
+    --zhm-text: #2f3747;
+    --zhm-muted: #667085;
+    --zhm-rule: #d9dee8;
+    --zhm-accent: #174a7e;
+  }
+
+  body,
   html[lang="zh-CN"] body,
   html[lang="zh"] body {
     font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'PingFang SC',
       'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
       'Noto Sans SC', 'Source Han Sans SC', sans-serif;
+    color: var(--zhm-text);
     line-break: strict;
     word-break: normal;
     overflow-wrap: break-word;
   }
 
-  html[lang="zh-CN"] .header h1,
-  html[lang="zh-CN"] .section-title,
-  html[lang="zh-CN"] .job-company,
-  html[lang="zh-CN"] .project-title,
-  html[lang="zh-CN"] .contact-row,
-  html[lang="zh-CN"] .competency-tag,
-  html[lang="zh-CN"] .skill-category,
-  html[lang="zh"] .header h1,
-  html[lang="zh"] .section-title,
-  html[lang="zh"] .job-company,
-  html[lang="zh"] .project-title,
-  html[lang="zh"] .contact-row,
-  html[lang="zh"] .competency-tag,
-  html[lang="zh"] .skill-category {
-    font-family: 'Liberation Sans', 'Helvetica Neue', Arial, 'PingFang SC',
-      'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
-      'Noto Sans SC', 'Source Han Sans SC', sans-serif;
+  .header {
+    margin-bottom: 18px;
   }
 
-  html[lang="zh-CN"] .summary-text,
-  html[lang="zh"] .summary-text,
-  html[lang="zh-CN"] .job li,
-  html[lang="zh"] .job li {
+  .header h1 {
+    font-family: inherit;
+    font-size: 27px;
+    color: var(--zhm-ink);
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+
+  .header-gradient {
+    height: 1px;
+    margin-bottom: 9px;
+    border-radius: 0;
+    background: var(--zhm-ink);
+  }
+
+  .contact-row,
+  .contact-row a {
+    color: var(--zhm-muted);
+  }
+
+  .section {
+    margin-bottom: 17px;
+  }
+
+  .section-title {
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--zhm-ink);
+    text-transform: none;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--zhm-rule);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+  }
+
+  .summary-text {
+    color: var(--zhm-text);
+    line-height: 1.72;
+  }
+
+  .competencies-grid {
+    display: block;
     line-height: 1.7;
   }
 
-  html[lang="zh-CN"] .section-title,
-  html[lang="zh"] .section-title {
-    letter-spacing: 0.03em;
+  .competency-tag {
+    display: inline;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--zhm-text);
+    background: none;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .competency-tag:not(:last-child)::after {
+    content: '  ·  ';
+    color: #98a2b3;
+  }
+
+  .job {
+    margin-bottom: 15px;
+  }
+
+  .job-header {
+    margin-bottom: 3px;
+  }
+
+  .job-company {
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--zhm-ink);
+  }
+
+  .job-period,
+  .job-location {
+    color: var(--zhm-muted);
+  }
+
+  .job-role {
+    color: var(--zhm-accent);
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .job li {
+    color: var(--zhm-text);
+    line-height: 1.65;
+  }
+
+  .project {
+    margin-bottom: 13px;
+  }
+
+  .project-title {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--zhm-ink);
+  }
+
+  .project-badge {
+    color: var(--zhm-accent);
+    background: none;
+    border: 1px solid var(--zhm-rule);
+    border-radius: 2px;
+  }
+
+  .project-desc {
+    color: var(--zhm-text);
+    line-height: 1.62;
+  }
+
+  .project-tech {
+    color: var(--zhm-muted);
+  }
+
+  .edu-org,
+  .cert-org {
+    color: var(--zhm-accent);
+  }
+
+  .skills-grid {
+    display: block;
+  }
+
+  .skill-item {
+    color: var(--zhm-text);
+    margin-bottom: 4px;
+    line-height: 1.55;
+  }
+
+  .skill-category {
+    font-family: inherit;
+    color: var(--zhm-ink);
   }
 </style>
 </head>
