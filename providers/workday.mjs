@@ -11,6 +11,8 @@
 // "Posted 5 Days Ago", "Posted 30+ Days Ago"); postedAt is derived from it
 // and omitted for the unbounded "30+ Days Ago" form.
 
+import { BROWSER_LIKE_USER_AGENT } from './_http.mjs';
+
 const PAGE_SIZE = 20;
 
 // Safety cap on pagination — applied regardless of what the upstream reports
@@ -116,17 +118,26 @@ function pageIsPastWindow(pageJobs, sinceMs) {
 }
 
 function resolveEndpoint(entry) {
-  const url = entry.careers_url || '';
-  const m = url.match(/^https:\/\/([\w-]+)\.(wd[\w-]*)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([^/?#]+)/);
-  if (!m) return null;
-  const [, tenant, instance, site] = m;
-  const origin = `https://${tenant}.${instance}.myworkdayjobs.com`;
-  return {
-    api: `${origin}/wday/cxs/${tenant}/${site}/jobs`,
-    // externalPath is relative to the site, not the host root — without the
-    // site segment the URL 404s.
-    jobBase: `${origin}/${site}`,
-  };
+  // Try api: first, then careers_url (mirrors greenhouse/ashby), returning the
+  // first that matches the Workday tenant pattern. This lets a branded page
+  // (e.g. https://www.ptc.com/en/careers) stay as careers_url while the Workday
+  // tenant URL is pinned via api: — and, because we fall through on a non-match,
+  // a non-Workday api: value doesn't shadow a valid careers_url.
+  for (const url of [entry.api, entry.careers_url]) {
+    if (typeof url !== 'string' || !url) continue;
+    const m = url.match(/^https:\/\/([\w-]+)\.(wd[\w-]*)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([^/?#]+)/);
+    if (!m) continue;
+    const [, tenant, instance, site] = m;
+    const origin = `https://${tenant}.${instance}.myworkdayjobs.com`;
+    return {
+      api: `${origin}/wday/cxs/${tenant}/${site}/jobs`,
+      // externalPath is relative to the site, not the host root — without the
+      // site segment the URL 404s.
+      jobBase: `${origin}/${site}`,
+      origin,
+    };
+  }
+  return null;
 }
 
 function parsePostedOn(label) {
@@ -176,11 +187,37 @@ export default {
     return ep ? { url: ep.api } : null;
   },
 
+  /**
+   * Fetch all job postings for a Workday-backed entry, paginating through
+   * the tenant's CXS API.
+   *
+   * Some tenants front their CXS API with Cloudflare bot management (seen
+   * live: geico) that 500s requests missing ordinary browser headers — the
+   * default UA/accept-language-less request trips it even over plain HTTPS
+   * with no other red flags. A real Chrome UA + accept-language + matching
+   * origin/referer clears it without needing per-tenant config (same fix
+   * as providers/glints.mjs's firewall).
+   *
+   * @param {{ name?: string, api?: string, careers_url?: string, max_pages?: number }} entry
+   * @param {{ fetchJson: (url: string, opts?: object) => Promise<any>, sinceMs?: number, maxPages?: number }} ctx
+   * @returns {Promise<Array<{title: string, url: string, company: string, location: string, postedAt?: number}>>}
+   */
   async fetch(entry, ctx) {
     const ep = resolveEndpoint(entry);
     if (!ep) throw new Error(`workday: cannot derive CXS endpoint for ${entry.name}`);
 
-    const postOpts = { method: 'POST', redirect: 'error', headers: { 'content-type': 'application/json', accept: 'application/json' } };
+    const postOpts = {
+      method: 'POST',
+      redirect: 'error',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        'user-agent': BROWSER_LIKE_USER_AGENT,
+        'accept-language': 'en-US,en;q=0.9',
+        origin: ep.origin,
+        referer: `${ep.jobBase}/`,
+      },
+    };
     const makeBody = (offset) => JSON.stringify({ limit: PAGE_SIZE, offset, searchText: '', appliedFacets: {} });
     const sinceMs = typeof ctx?.sinceMs === 'number' ? ctx.sinceMs : null;
 
@@ -195,9 +232,22 @@ export default {
     // one): bounded by `total` when the server reports it, always capped at
     // maxPages. When `total` is absent, only probe further pages if the first
     // one was full — a short first page already means there's nothing more.
-    const pagesToFetch = total !== null
+    let pagesToFetch = total !== null
       ? Math.min(Math.ceil(total / PAGE_SIZE), maxPages)
       : (firstPostings.length >= PAGE_SIZE ? maxPages : 1);
+
+    // Honor a context page cap — verify-portals' liveness probe sets
+    // `ctx.maxPages: 1` so it only needs to know a board is live, not its full
+    // count. Without this we'd fetch page 0, then request page 1 and trip the
+    // probe's second-request sentinel; fetchPageWithRetry treats that abort as
+    // transient and retries it MAX_RETRIES times (with backoff) before giving up
+    // — noisy in the logs and rude to the tenant. Capping here makes workday a
+    // "cooperating provider" that stops after one page and reports an exact
+    // first-page count. Kept separate from `maxPages` so the entry-cap warning
+    // below (pagesToFetch === maxPages) stays quiet. No effect on real scans,
+    // which don't set ctx.maxPages.
+    const ctxCap = Number.isInteger(ctx?.maxPages) && ctx.maxPages > 0 ? ctx.maxPages : Infinity;
+    pagesToFetch = Math.min(pagesToFetch, ctxCap);
 
     // Why pagination stopped — drives which warning (if any) fires below.
     // 'fetch-error' must NOT produce the "raise max_pages" advice: that knob

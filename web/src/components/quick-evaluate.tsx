@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useJobs } from "@/components/jobs/job-store";
+import { CostBadge } from "@/components/cost/cost-badge";
 
 // Auto-pipeline, one click: paste a job URL → fire a real evaluation worker
 // (the same kind:"evaluate" that runs modes/oferta.md + writes the A–F report +
@@ -46,7 +47,11 @@ export function QuickEvaluate() {
           Evaluate
         </button>
       </div>
-      {hint && <p className="mt-2 text-xs text-faint">{hint}</p>}
+      <div className="mt-2 flex items-center gap-2">
+        <CostBadge kind="spend" size="xs" />
+        <span className="text-xs text-faint">Evaluation runs on your own AI — your key, your machine.</span>
+      </div>
+      {hint && <p className="mt-1 text-xs text-faint">{hint}</p>}
     </div>
   );
 }

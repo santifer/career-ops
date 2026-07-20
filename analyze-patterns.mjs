@@ -14,10 +14,10 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
-import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { resolveColumns, parseTrackerRow, normalizeVia } from './tracker-parse.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
@@ -43,6 +43,12 @@ const MACHINE_SUMMARY_FIELDS = new Set([
   'seniority',
   'remote',
   'team_size',
+  // Issue 1380: predicted skip/discard reasons from the agent.
+  'discard_reasons',
+  'advertised_comp',
+  'via',
+  'company_confidential',
+  'risk_summary',
 ]);
 
 // --- CLI args ---
@@ -124,6 +130,61 @@ function parseMachineSummary(content) {
   }
 }
 
+// --- Via channel analysis (#1596 follow-up) ---
+// Pure: group submitted applications by their Via channel (agency/recruiter
+// firm) and compute per-agency advance rates, plus the agency-vs-direct
+// aggregate. Channel identity uses the SAME normalizeVia key as the
+// merge-tracker dedup guard (tracker-parse.mjs): NFKC + Unicode letters/digits,
+// so "Hays" / "HAYS " / full-width "ＨＡＹＳ" land in one bucket while distinct
+// non-Latin agencies (リクルートAgent vs パーソルAgent) stay separate. The
+// first raw spelling seen is kept for display. Rows in `submitted` whose Via
+// cell is empty (legacy tracker without the column, or a blank cell — as
+// opposed to the explicit `—` direct marker) belong to neither bucket; they
+// are counted as `unknownVia` so agencySubmitted + directSubmitted can't
+// silently undershoot the submitted total.
+function buildViaChannelAnalysis(submitted, isAdvanced, minSample = MIN_VENDOR_N) {
+  const viaOf = (e) => String(e.via ?? '').trim();
+  const isDirect = (v) => v === '—' || v === '-';
+  const agencySubmitted = submitted.filter(e => { const v = viaOf(e); return v !== '' && !isDirect(v); });
+  const directSubmitted = submitted.filter(e => isDirect(viaOf(e)));
+  const rate = (arr) => (arr.length > 0 ? Math.round((arr.filter(isAdvanced).length / arr.length) * 100) : 0);
+
+  const byAgency = new Map();
+  for (const e of agencySubmitted) {
+    const raw = viaOf(e);
+    // All-symbol names (e.g. "***") normalize to '' — fall back to the
+    // NFKC-lowercased raw string so DISTINCT all-symbol names stay distinct
+    // buckets instead of merging into one shared empty key.
+    const key = normalizeVia(raw) || raw.normalize('NFKC').toLowerCase();
+    if (!byAgency.has(key)) byAgency.set(key, { agency: raw, total: 0, advanced: 0 });
+    const entry = byAgency.get(key);
+    entry.total++;
+    if (isAdvanced(e)) entry.advanced++;
+  }
+  const breakdown = [...byAgency.values()]
+    .map(d => ({
+      agency: d.agency,
+      total: d.total,
+      advanced: d.advanced,
+      advanceRate: d.total > 0 ? Math.round((d.advanced / d.total) * 100) : 0,
+      sufficientSample: d.total >= minSample,
+    }))
+    .sort((a, b) => b.total - a.total);
+
+  return {
+    minSampleForClaim: minSample,
+    agencySubmitted: agencySubmitted.length,
+    directSubmitted: directSubmitted.length,
+    // Coverage honesty: submitted rows with an empty Via cell (no `—` marker)
+    // that fall into neither bucket. Non-zero means the agency/direct split
+    // covers only a subset of submissions.
+    unknownVia: submitted.length - agencySubmitted.length - directSubmitted.length,
+    agencyAdvanceRate: rate(agencySubmitted),
+    directAdvanceRate: rate(directSubmitted),
+    breakdown,
+  };
+}
+
 function runSelfTest() {
   const summary = parseMachineSummary(`
 ## Machine Summary
@@ -143,6 +204,8 @@ top_strengths:
 risk_level: "Medium"
 confidence: "High"
 next_action: "Follow up on ticket #42 with tailored CV"
+via: "Hays"
+company_confidential: true
 \`\`\`
 `);
 
@@ -152,6 +215,40 @@ next_action: "Follow up on ticket #42 with tailored CV"
   if (!Array.isArray(summary?.hard_stops) || summary.hard_stops.length !== 0) failures.push('empty list was not parsed');
   if (summary?.soft_gaps?.[0] !== 'No direct healthcare domain experience') failures.push('list item was not parsed');
   if (summary?.next_action !== 'Follow up on ticket #42 with tailored CV') failures.push('hash-containing scalar field was not parsed');
+  if (summary?.via !== 'Hays') failures.push('via was not preserved from Machine Summary');
+  if (summary?.company_confidential !== true) failures.push('company_confidential boolean was not preserved from Machine Summary');
+
+  // Backward compat (#1737): summaries without risk_summary parse as before, key simply absent.
+  if ('risk_summary' in (summary ?? {})) failures.push('summary without risk_summary must not gain the key');
+
+  // risk_summary preservation (#1737): the nested map must survive the
+  // MACHINE_SUMMARY_FIELDS allowlist intact — nested keys preserved, not
+  // flattened or dropped.
+  const riskSummary = parseMachineSummary(`
+## Machine Summary
+
+\`\`\`yaml
+company: "Acme"
+role: "Staff AI Engineer"
+score: 4.4
+legitimacy_tier: "High Confidence"
+risk_summary:
+  legitimacy: high_confidence
+  classification: clear
+  culture: caution
+  interview_redflags: not_evaluated
+  ai_infra: not_evaluated
+\`\`\`
+`)?.risk_summary;
+  if (!riskSummary || typeof riskSummary !== 'object' || Array.isArray(riskSummary)) {
+    failures.push('risk_summary nested map was dropped or not parsed as a map');
+  } else {
+    if (riskSummary.legitimacy !== 'high_confidence') failures.push('risk_summary.legitimacy was not preserved');
+    if (riskSummary.classification !== 'clear') failures.push('risk_summary.classification was not preserved');
+    if (riskSummary.culture !== 'caution') failures.push('risk_summary.culture was not preserved');
+    if (riskSummary.interview_redflags !== 'not_evaluated') failures.push('risk_summary.interview_redflags was not preserved');
+    if (riskSummary.ai_infra !== 'not_evaluated') failures.push('risk_summary.ai_infra was not preserved');
+  }
 
   // Vendor detection (community ATS only; white-labeled → null)
   const vendorCases = [
@@ -171,12 +268,46 @@ next_action: "Follow up on ticket #42 with tailored CV"
     if (got !== expected) failures.push(`detectVendor(${JSON.stringify(url)}) → ${JSON.stringify(got)}, expected ${JSON.stringify(expected)}`);
   }
 
+  // Via channel analysis (#1596): agency vs direct yield, normalized buckets.
+  const advanced = new Set(['responded', 'interview', 'offer']);
+  const viaRows = [
+    { via: 'Hays', normalizedStatus: 'interview' },
+    { via: 'HAYS ', normalizedStatus: 'rejected' },   // same bucket as Hays
+    { via: 'ＨＡＹＳ', normalizedStatus: 'rejected' }, // full-width → same bucket as Hays (NFKC)
+    { via: 'Randstad', normalizedStatus: 'rejected' },
+    { via: 'リクルートAgent', normalizedStatus: 'interview' }, // non-Latin: distinct agency...
+    { via: 'パーソルAgent', normalizedStatus: 'rejected' },    // ...must NOT merge with the one above
+    { via: '—', normalizedStatus: 'responded' },       // direct
+    { via: '—', normalizedStatus: 'rejected' },        // direct
+    { via: '', normalizedStatus: 'applied' },          // no Via column → unknownVia, neither bucket
+  ];
+  const viaResult = buildViaChannelAnalysis(viaRows, (e) => advanced.has(e.normalizedStatus), 2);
+  if (viaResult.agencySubmitted !== 6) failures.push(`via: agencySubmitted → ${viaResult.agencySubmitted}, expected 6`);
+  if (viaResult.directSubmitted !== 2) failures.push(`via: directSubmitted → ${viaResult.directSubmitted}, expected 2`);
+  if (viaResult.unknownVia !== 1) failures.push(`via: unknownVia → ${viaResult.unknownVia}, expected 1 (submitted row with empty Via must be counted, not silently dropped)`);
+  if (viaResult.directAdvanceRate !== 50) failures.push(`via: directAdvanceRate → ${viaResult.directAdvanceRate}, expected 50`);
+  const hays = viaResult.breakdown.find(a => a.agency === 'Hays');
+  if (!hays || hays.total !== 3 || hays.advanceRate !== 33) {
+    failures.push(`via: Hays bucket wrong (case/space/full-width variants must merge) → ${JSON.stringify(hays)}`);
+  }
+  if (!hays?.sufficientSample) failures.push('via: Hays should meet the n=2 sample bar');
+  const recruit = viaResult.breakdown.find(a => a.agency === 'リクルートAgent');
+  const persol = viaResult.breakdown.find(a => a.agency === 'パーソルAgent');
+  if (!recruit || !persol || recruit.total !== 1 || persol.total !== 1) {
+    failures.push(`via: distinct non-Latin agencies must stay separate buckets → リクルートAgent=${JSON.stringify(recruit)}, パーソルAgent=${JSON.stringify(persol)}`);
+  }
+  const randstad = viaResult.breakdown.find(a => a.agency === 'Randstad');
+  if (randstad?.sufficientSample) failures.push('via: Randstad (n=1) must be flagged as too small for a claim');
+  if (buildViaChannelAnalysis([], () => false).breakdown.length !== 0) {
+    failures.push('via: empty input must produce an empty breakdown');
+  }
+
   if (failures.length > 0) {
     console.error(`analyze-patterns self-test failed: ${failures.join('; ')}`);
     process.exit(1);
   }
 
-  console.log('analyze-patterns self-test OK (Machine Summary parser + vendor detection)');
+  console.log('analyze-patterns self-test OK (Machine Summary parser + vendor detection + via channel analysis)');
   process.exit(0);
 }
 
@@ -214,6 +345,7 @@ function parseReport(reportPath) {
     confidence: null,
     nextAction: null,
     topStrengths: [],
+    discardReasons: [],
     scores: {},
     gaps: [],
   };
@@ -234,6 +366,7 @@ function parseReport(reportPath) {
     report.confidence = normalizeScalar(machineSummary.confidence) || report.confidence;
     report.nextAction = normalizeScalar(machineSummary.next_action) || report.nextAction;
     report.topStrengths = normalizeList(machineSummary.top_strengths);
+    report.discardReasons = normalizeList(machineSummary.discard_reasons);
 
     if (typeof machineSummary.score === 'number') {
       report.scores.global = machineSummary.score;
@@ -414,7 +547,19 @@ function analyze() {
   // Enrich entries with report data and classification
   const enriched = entries.map(e => {
     const reportMatch = e.report.match(/\]\(([^)]+)\)/);
-    const reportPath = reportMatch ? join(CAREER_OPS, reportMatch[1]) : null;
+    // Tracker links are relative to the tracker file's own directory (see
+    // merge-tracker.mjs link normalization); fall back to repo root for
+    // legacy root-relative links.
+    let reportPath = null;
+    if (reportMatch) {
+      const fromTracker = join(dirname(APPS_FILE), reportMatch[1]);
+      const candidate = existsSync(fromTracker) ? fromTracker : join(CAREER_OPS, reportMatch[1]);
+      
+      const repoRelative = relative(CAREER_OPS, candidate).split(sep).join('/');
+      if (repoRelative.startsWith('reports/') && !repoRelative.includes('..')) {
+        reportPath = existsSync(candidate) ? candidate : null;
+      }
+    }
     const reportData = reportPath ? parseReport(reportPath) : null;
     const outcome = classifyOutcome(e.status);
     const trackerScore = parseFloat(e.score);
@@ -603,6 +748,14 @@ function analyze() {
     citation: 'Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026 (arXiv:2605.27371)',
   };
 
+  // --- Via channel analysis (#1596 follow-up): per-agency advance rate ---
+  // Same honesty rules as the vendor analysis above: this reports CHANNEL
+  // YIELD. In an agency-mediated search the highest-leverage decision is which
+  // recruiter relationships to invest in — this shows which ones convert.
+  // Rows only carry `via` when the tracker has the optional Via column
+  // (#1596); without it every bucket is empty and nothing is claimed.
+  const viaChannelAnalysis = buildViaChannelAnalysis(submitted, isAdvanced);
+
   // --- Score threshold analysis ---
   const positiveScores = scoresByOutcome.positive.filter(s => s > 0);
   const minPositiveScore = positiveScores.length > 0 ? Math.min(...positiveScores) : 0;
@@ -616,17 +769,66 @@ function analyze() {
       : 'N/A',
   };
 
+  // --- Generate recommendations ---
+  const recommendations = [];
+
+  // --- Discard reason analysis (Issue 1380) ---
+
+  // Aggregates user-committed `DISCARD: <reason>` or `SKIP: <reason>` tags in the Notes column.
+  const discardReasonCounts = new Map();
+  for (const e of enriched) {
+    if (e.outcome !== 'self_filtered' && e.outcome !== 'negative') continue;
+    // From tracker Notes column: "DISCARD: <reason>" or "SKIP: <reason>"
+    const notesMatch = (e.notes || '').match(/(?:DISCARD|SKIP):\s*([^,;\n]+)/gi);
+    if (notesMatch) {
+      for (const m of notesMatch) {
+        const key = m.replace(/^(?:DISCARD|SKIP):\s*/i, '').trim().toLowerCase();
+        if (key) discardReasonCounts.set(key, (discardReasonCounts.get(key) || 0) + 1);
+      }
+    }
+  }
+  const discardReasonStats = [...discardReasonCounts.entries()]
+    .map(([reason, frequency]) => ({
+      reason,
+      frequency,
+      percentage: Math.round((frequency / enriched.length) * 100),
+    }))
+    .sort((a, b) => b.frequency - a.frequency);
+
+  // Recommend updating _custom.md when a single reason dominates
+  const topDiscardReason = discardReasonStats[0];
+  if (topDiscardReason && topDiscardReason.frequency >= Math.max(3, Math.ceil(enriched.length * 0.15))) {
+    recommendations.push({
+      action: `Add "${topDiscardReason.reason}" filter to modes/_custom.md to avoid wasting evaluation effort`,
+      reasoning: `"${topDiscardReason.reason}" is the most frequent discard reason (${topDiscardReason.frequency}x, ${topDiscardReason.percentage}% of all applications).`,
+      impact: 'high',
+    });
+  }
+
   // --- Tech stack gaps (from negative + self_filtered outcomes) ---
+  // Canonical spellings keyed by lowercased match — the /i regex below returns
+  // the source casing ("react native", "NODEJS"), and without this map each
+  // case variant of the same tech lands in its own techStackGaps bucket.
+  // Keys cover the optional-dot regex variants (node.js/nodejs, vue.js/vuejs).
+  const TECH_CANONICAL = new Map([
+    'JavaScript', 'TypeScript', 'Python', 'Ruby', 'Java', 'Go', 'Rust',
+    'React Native', 'React', 'Angular', 'Django', 'Flask', 'Rails', 'PHP',
+    'Laravel', 'Symfony', 'Kotlin', 'Swift', 'C++', 'C#', '.NET', 'MongoDB',
+    'MySQL', 'PostgreSQL', 'Redis', 'GraphQL', 'REST', 'AWS', 'GCP', 'Azure',
+    'Docker', 'Kubernetes', 'Terraform', 'Supabase', 'Inngest',
+  ].map(t => [t.toLowerCase(), t]));
+  TECH_CANONICAL.set('node.js', 'Node.js').set('nodejs', 'Node.js');
+  TECH_CANONICAL.set('vue.js', 'Vue.js').set('vuejs', 'Vue.js');
   const stackGapCounts = new Map();
   for (const e of enriched) {
     if (e.outcome !== 'negative' && e.outcome !== 'self_filtered') continue;
     if (!e.report?.gaps) continue;
     for (const gap of e.report.gaps) {
       // Extract tech keywords from gap descriptions
-      const techs = gap.description.match(/\b(JavaScript|TypeScript|Python|Ruby|Java|Go|Rust|Node\.?js|React|Angular|Vue\.?js|Django|Flask|Rails|PHP|Laravel|Symfony|Kotlin|Swift|C\+\+|C#|\.NET|MongoDB|MySQL|PostgreSQL|Redis|GraphQL|REST|AWS|GCP|Azure|Docker|Kubernetes|Terraform|Supabase|Inngest|React Native)\b/gi);
+      const techs = gap.description.match(/\b(JavaScript|TypeScript|Python|Ruby|Java|Go|Rust|Node\.?js|React Native|React|Angular|Vue\.?js|Django|Flask|Rails|PHP|Laravel|Symfony|Kotlin|Swift|C\+\+|C#|\.NET|MongoDB|MySQL|PostgreSQL|Redis|GraphQL|REST|AWS|GCP|Azure|Docker|Kubernetes|Terraform|Supabase|Inngest)\b/gi);
       if (techs) {
         for (const tech of techs) {
-          const normalized = tech.charAt(0).toUpperCase() + tech.slice(1);
+          const normalized = TECH_CANONICAL.get(tech.toLowerCase()) || tech;
           stackGapCounts.set(normalized, (stackGapCounts.get(normalized) || 0) + 1);
         }
       }
@@ -636,9 +838,6 @@ function analyze() {
     .map(([skill, frequency]) => ({ skill, frequency }))
     .sort((a, b) => b.frequency - a.frequency)
     .slice(0, 15);
-
-  // --- Generate recommendations ---
-  const recommendations = [];
 
   // Geo-restriction recommendation
   const geoBlocker = blockerAnalysis.find(b => b.blocker === 'geo-restriction');
@@ -716,6 +915,20 @@ function analyze() {
     });
   }
 
+  // Best-converting agency (#1596 follow-up): with a sufficient sample and a
+  // clear lead over the overall pipeline, that recruiter relationship is worth
+  // prioritizing. One recommendation at most — the breakdown shows the rest.
+  const topAgency = viaChannelAnalysis.breakdown
+    .filter(a => a.sufficientSample && a.advanced > 0 && a.advanceRate >= overallAdvanceRate + 10)
+    .sort((a, b) => b.advanceRate - a.advanceRate)[0];
+  if (topAgency) {
+    recommendations.push({
+      action: `Prioritize roles via ${topAgency.agency} -- ${topAgency.advanceRate}% advance rate across ${topAgency.total} submissions (overall: ${overallAdvanceRate}%)`,
+      reasoning: `${topAgency.advanced}/${topAgency.total} applications through ${topAgency.agency} advanced past screening, well above your overall rate. In an agency-mediated search the highest-leverage decision is which recruiter relationships to invest in -- this one converts. Channel yield, not a causal claim.`,
+      impact: 'medium',
+    });
+  }
+
   // Date range
   const dates = enriched.map(e => e.date).filter(Boolean).sort();
 
@@ -738,8 +951,10 @@ function analyze() {
     remotePolicy,
     companySizeBreakdown,
     vendorAnalysis,
+    viaChannelAnalysis,
     scoreThreshold,
     techStackGaps,
+    discardReasonStats,
     recommendations,
   };
 }
@@ -751,7 +966,7 @@ function printSummary(result) {
     return;
   }
 
-  const { metadata, funnel, scoreComparison, archetypeBreakdown, blockerAnalysis, remotePolicy, scoreThreshold, techStackGaps, recommendations } = result;
+  const { metadata, funnel, scoreComparison, archetypeBreakdown, blockerAnalysis, remotePolicy, scoreThreshold, techStackGaps, discardReasonStats, recommendations } = result;
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(`  Pattern Analysis — ${metadata.analysisDate}`);
@@ -803,6 +1018,15 @@ function printSummary(result) {
     }
   }
 
+  // Discard reasons
+  if (discardReasonStats && discardReasonStats.length > 0) {
+    console.log('\nTOP DISCARD / SKIP REASONS');
+    console.log('-'.repeat(40));
+    for (const d of discardReasonStats.slice(0, 10)) {
+      console.log(`  ${d.reason.padEnd(30)} ${String(d.frequency).padStart(2)}x (${d.percentage}%)`);
+    }
+  }
+
   // ATS vendor / channel analysis
   const va = result.vendorAnalysis;
   if (va && va.breakdown.length > 0) {
@@ -814,6 +1038,22 @@ function printSummary(result) {
       console.log(`  ${v.vendor.padEnd(12)} ${String(v.total).padStart(3)} apps  ${String(v.sharePct).padStart(3)}% share  ${String(v.advanceRate).padStart(3)}% advance${flag}`);
     }
     console.log('  Channel yield, not discrimination — see Bommasani et al., FAccT 2026.');
+  }
+
+  // Via channel analysis (#1596): which recruiter relationships convert
+  const via = result.viaChannelAnalysis;
+  if (via && (via.breakdown.length > 0 || via.directSubmitted > 0)) {
+    console.log('\nVIA CHANNEL ANALYSIS (agency vs direct, #1596)');
+    console.log('-'.repeat(40));
+    console.log(`  direct  ${String(via.directSubmitted).padStart(3)} apps  ${String(via.directAdvanceRate).padStart(3)}% advance`);
+    console.log(`  agency  ${String(via.agencySubmitted).padStart(3)} apps  ${String(via.agencyAdvanceRate).padStart(3)}% advance`);
+    if (via.unknownVia > 0) {
+      console.log(`  unknown ${String(via.unknownVia).padStart(3)} apps  (no Via recorded — not counted in either channel)`);
+    }
+    for (const a of via.breakdown) {
+      const flag = a.sufficientSample ? '' : '  (n too small for a claim)';
+      console.log(`    ${a.agency.padEnd(16)} ${String(a.total).padStart(3)} apps  ${String(a.advanceRate).padStart(3)}% advance${flag}`);
+    }
   }
 
   // Score threshold
