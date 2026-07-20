@@ -278,6 +278,23 @@ Log line format (TSV, one per line, `#`-prefixed lines are comments; for `report
 
 ---
 
+## rejection-latency
+
+Post-interview response-latency signal. Cross-references `data/active-interviews.md` (latest interview date per application — company + role, fuzzy role match via `role-matcher.mjs`) with `data/applications.md` (rows still in `Interview` state — i.e. no `Responded`/`Offer`/`Rejected` transition recorded since) and flags applications whose silence exceeds a threshold. Two tiers, never conflated: **statutory** — jurisdiction-backed notification window, seeded with exactly one verified entry (`CA-ON: 45` days — Ontario ESA, Working for Workers Five Act, 2024 + O. Reg. 476/24, in force 2026-01-01; only non-screening rounds on/after 2026-01-01 qualify — preliminary screenings and earlier interviews degrade to the courtesy tier; phrased strictly as "exceeds the Ontario ESA 45-day notification window", a fact about elapsed time, never a legal conclusion — employer size and posting type are unverifiable from tracker data; not legal advice); **courtesy** — soft 30-day default with no legal claim attached. Jurisdiction resolves from `config/profile.yml` `location.country` + `location.province`/`region`/`state` (override: `rejection_latency.jurisdiction` or `--jurisdiction`); courtesy days from `rejection_latency.courtesy_days` or `--courtesy-days`. Each flag carries a ready-to-copy `data/blacklist.md` row (same suggestion-only bridge as `modes/interview-redflag.md`, #1854/#1856) — the script never writes to `data/blacklist.md`, `data/applications.md`, or `data/active-interviews.md` (#1742 opt-in guarantee). Surfaced by the `followup` mode.
+
+```bash
+node rejection-latency.mjs             # JSON
+node rejection-latency.mjs --summary   # human-readable table + suggested blacklist rows
+node rejection-latency.mjs --courtesy-days 21
+node rejection-latency.mjs --jurisdiction CA-ON
+node rejection-latency.mjs --today 2026-07-17   # deterministic runs/tests
+node rejection-latency.mjs --self-test
+```
+
+**Exit codes:** `0` always (missing data files produce an explanatory empty result), `1` self-test failure.
+
+---
+
 ## update:check
 
 Checks whether a newer version of career-ops is available upstream. Outputs JSON to stdout:
