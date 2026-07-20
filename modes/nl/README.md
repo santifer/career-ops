@@ -41,10 +41,10 @@ Deze eerste iteratie omvat de vier modi met de hoogste impact:
 
 | Bestand | Vertaald uit | Rol |
 |--------|----------------|------|
-| `_shared.md` | `modes/_shared.md` (EN) | Gedeelde context, archetypen, algemene regels, Nederlandstalige marktspecifieke kenmerken |
-| `vacature.md` | `modes/oferta.md` (ES) | Volledige evaluatie van een vacature (blokken A-F) |
-| `solliciteren.md` | `modes/apply.md` (EN) | Live assistent bij het invullen van sollicitatieformulieren |
-| `pipeline.md` | `modes/pipeline.md` (ES) | URL inbox / Second Brain voor verzamelde vacatures |
+| `_shared.md` | `modes/fr/_shared.md` (FR) | Gedeelde context, archetypen, algemene regels, Nederlandstalige marktspecifieke kenmerken |
+| `vacature.md` | `modes/fr/offre.md` (FR) | Volledige evaluatie van een vacature (blokken A-F) |
+| `solliciteren.md` | `modes/fr/postuler.md` (FR) | Live assistent bij het invullen van sollicitatieformulieren |
+| `pipeline.md` | `modes/fr/pipeline.md` (FR) | URL inbox / Second Brain voor verzamelde vacatures |
 
 De andere modi (`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `contacto`, `ofertas`, `project`, `training`) blijven in EN/ES. Hun inhoud bestaat voornamelijk uit tools, paden en commando's - het moet taalonafhankelijk blijven.
 
@@ -54,6 +54,7 @@ Opzettelijk niet vertaald vanwege standaard technische woordenschat:
 
 - `cv.md`, `pipeline`, `tracker`, `report`, `score`, `archetype`
 - Toolnamen (`Playwright`, `WebSearch`, `WebFetch`, `Read`, `Write`, `Edit`, `Bash`)
+- Statuswaarden in de tracker (`Evaluated`, `Applied`, `Interview`, `Offer`, `Rejected`)
 - Codefragmenten, paden, opdrachten
 
 De modi gebruiken natuurlijk technisch Nederlands zoals dat in teams in Nederland en Vlaanderen wordt gesproken: gewone tekst in het Nederlands, met Engelse technische termen waar die gangbaar zijn. Termen als "pipeline", "deployment" en "stack" worden niet geforceerd vertaald.
@@ -66,7 +67,7 @@ Om een ​​consistente toon te behouden als u de modi wijzigt of uitbreidt:
 |---------|----------------------------|
 | Job posting | Vacature |
 | Application | Sollicitatie |
-| Sollicitatiebrief | Sollicitatiebrief |
+| Cover letter | Sollicitatiebrief |
 | Resume / CV | Cv |
 | Salary | Salaris |
 | Compensation | Beloning / arbeidsvoorwaardenpakket |

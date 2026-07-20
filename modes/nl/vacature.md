@@ -155,7 +155,7 @@ Sla de volledige evaluatie op in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Bedrijf
 - Rol
 - Score: wedstrijdgemiddelde (1-5)
-- Status: `Geëvalueerd`
+- Status: `Evaluated`
 - PDF: nee (of ja als de auto-pipeline een PDF heeft gegenereerd)
 - Rapport: relatieve link naar het rapportbestand (bijvoorbeeld: `[001](reports/001-company-2026-01-01.md)`)
 

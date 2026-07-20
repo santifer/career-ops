@@ -7,7 +7,7 @@ Processen bieden URL's aan die zijn verzameld in `data/pipeline.md`. De kandidaa
 1. **Lees** `data/pipeline.md` -> zoek de items `- [ ]` in de sectie "In afwachting" / "Pending" / "Pendientes" / "Offen" / "En attente"
 2. **Voor elke openstaande URL**:
    a. **Extraheer de vacature** met Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch. Alleen geslaagde Playwright-navigatie plus een snapshot mogen bevestigen dat de vacature actief is. WebFetch en WebSearch dienen uitsluitend voor extractie en bevestigen nooit de actieve status
-   b. Als de URL niet toegankelijk is -> laat het item als `- [ ]` staan of markeer het als `- [!]` met de foutdetails, zodat het zichtbaar en opnieuw uitvoerbaar blijft; er is dan nog geen rapportnummer gereserveerd. Als extractie alleen via WebFetch of WebSearch lukt, ga dan verder met `**Verification:** unconfirmed (batch mode)` in het rapport
+   b. Als de URL niet toegankelijk is -> laat het item als `- [ ]` staan of markeer het als `- [!]` met de foutdetails, zodat het zichtbaar en opnieuw uitvoerbaar blijft; er is dan nog geen rapportnummer gereserveerd. Als extractie alleen via WebFetch of WebSearch lukt, ga dan verder met `**Verification:** unconfirmed` in het rapport. Gebruik `**Verification:** unconfirmed (batch mode)` uitsluitend bij headless batchverwerking
    c. Gebruik bij seriële verwerking het volgende `REPORT_NUM` via `node reserve-report-num.mjs`. Gebruik bij parallelle verwerking uitsluitend het nummer dat de coördinator vooraf uit de gereserveerde reeks heeft toegewezen; laat workers nooit zelfstandig een nummer reserveren
    d. Voer de volledige auto-pipeline uit binnen een cleanup-pad: Evaluatie A-F -> Rapport .md -> PDF (indien score >= 3.0) -> tracker-TSV in `batch/tracker-additions/`
    e. Voer in een `finally`-stap altijd `node reserve-report-num.mjs --release <num>` uit, ook als een vervolgstap, evaluatie, PDF-generatie of trackerregistratie mislukt
@@ -39,8 +39,8 @@ Processen bieden URL's aan die zijn verzameld in `data/pipeline.md`. De kandidaa
 
 1. **Playwright (bij voorkeur):** `browser_navigate` + `browser_snapshot`. Werkt met alle SPA's en is de enige methode waarmee de actieve status van een vacature mag worden bevestigd.
    - **Optie — CLI-extractor (`scan.extractor: cli` in `config/profile.yml`):** voer in plaats daarvan `node browser-extract.mjs <url>` (`--mode jd`) uit — `{ "url", "title", "text" }` compact, minder tokens (afhankelijk van de site). **Stille terugval** naar `browser_navigate` + `browser_snapshot` in geval van een fout of afwezigheid.
-2. **WebFetch (fallback):** Voor statische pagina's of wanneer Playwright niet beschikbaar is. Gebruik de inhoud alleen voor extractie en zet `**Verification:** unconfirmed (batch mode)` in het rapport.
-3. **WebSearch (laatste redmiddel):** Zoek op secundaire portals die de vacature indexeren. Gebruik zoekresultaten nooit als bevestiging dat de vacature actief is en zet `**Verification:** unconfirmed (batch mode)` in het rapport.
+2. **WebFetch (fallback):** Voor statische pagina's of wanneer Playwright niet beschikbaar is. Gebruik de inhoud alleen voor extractie en zet `**Verification:** unconfirmed` in het rapport, of `**Verification:** unconfirmed (batch mode)` bij headless batchverwerking.
+3. **WebSearch (laatste redmiddel):** Zoek op secundaire portals die de vacature indexeren. Gebruik zoekresultaten nooit als bevestiging dat de vacature actief is en zet `**Verification:** unconfirmed` in het rapport, of `**Verification:** unconfirmed (batch mode)` bij headless batchverwerking.
 
 **Speciale gevallen:**
 - **LinkedIn**: Mogelijk is een login vereist -> benadruk `[!]` en vraag de kandidaat om de tekst te plakken
@@ -62,4 +62,4 @@ Controleer de synchronisatie voordat u een URL verwerkt:
 node cv-sync-check.mjs
 ```
 
-In geval van desynchronisatie dient u de kandidaat te waarschuwen voordat u verdergaat.
+Als `cv-sync-check.mjs` met een niet-nulstatus afsluit, stop dan de URL-verwerking, ook als vereiste bestanden ontbreken. Ga alleen verder bij afsluitstatus 0; toon eventuele waarschuwingen met afsluitstatus 0 aan de kandidaat voordat u doorgaat.

@@ -21,8 +21,7 @@ Alleen de onderstaande bestanden mogen worden gebruikt voor kandidaatgerichte in
 | article-digest.md | `article-digest.md` (indien aanwezig) | ALTIJD (gedetailleerde proof points) |
 | profile.yml | `config/profile.yml` | ALTIJD (identiteit en doelrollen) |
 | _profile.md | `modes/_profile.md` | ALTIJD (archetypen, verhaal en onderhandeling) |
-| writing-samples/ | `writing-samples/` | Bij kandidaatgerichte tekst; gebruik eerst de gecachte sectie `## Writing Style` in `_profile.md` |
-| voice-dna.md | `voice-dna.md` (indien aanwezig) | Bij kandidaatgerichte tekst; vangt AI-achtige formuleringen af en bewaakt de stem |
+| writing-samples/ en voice-dna.md | `writing-samples/`, `voice-dna.md` (indien aanwezig) | Bij kandidaatgerichte tekst; gebruik eerst de gecachte sectie `## Writing Style` in `_profile.md` en gebruik voice-dna.md om AI-achtige formuleringen af te vangen en de stem te bewaken |
 | interview-prep | `interview-prep/story-bank.md`, `interview-prep/{company}-{role}.md` | Voor formulierantwoorden en sollicitatiegesprekken; bevat eigen STAR-verhalen en notities van de gebruiker |
 | _custom.md | `modes/_custom.md` (indien aanwezig) | ALTIJD (vaste opmaak-, inhouds- en workflowregels; geen bron voor feitelijke claims) |
 
