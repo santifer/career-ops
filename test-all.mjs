@@ -8496,12 +8496,15 @@ try {
     timestamp: '2026-07-03T14:02:11Z', status: 'completed', companies: 45, boards: 3, found: 120,
     filteredTitle: 40, filteredTier: 5, filteredLocation: 20, filteredPostingAge: 3, filteredSalary: 2,
     filteredContent: 6, filteredCooldown: 1, dupes: 38, newAdded: 8, errors: 0,
+    filteredBlacklist: 4, filteredVisa: 7,
   };
   appendScanRunSummary(counters, runsFile);
   appendScanRunSummary({ ...counters, timestamp: '2026-07-04T09:00:00Z' }, runsFile);
   const runRows = readFileSync(runsFile, 'utf-8').trim().split('\n');
   if (runRows[0] === SCAN_RUNS_HEADER.trim() && runRows.length === 3
       && runRows[1].startsWith('2026-07-03T14:02:11Z\tcompleted\t45\t3\t120\t')
+      // filtered_blacklist + filtered_visa land in the two trailing columns.
+      && runRows[1].endsWith('\t4\t7')
       && runRows[2].startsWith('2026-07-04T09:00:00Z\t')) {
     pass('appendScanRunSummary writes the header once, appends one row per run');
   } else {
