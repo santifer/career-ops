@@ -130,6 +130,8 @@ const SYSTEM_PATHS = [
   'patch-latex-content.mjs',
   'lib/latex-escape.mjs',
   'lib/latex-content.mjs',
+  'lib/context-budget.mjs',
+  'lib/context-budget.test.mjs',
   'img-to-pdf.mjs',
   'archive-posting.mjs',
   'application-answers.mjs',
