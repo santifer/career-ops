@@ -11,6 +11,7 @@ System-layer template files used by career-ops scripts and modes. These files ar
 | `cv-template.tex` | `generate-latex.mjs` | LaTeX/Overleaf template for ATS-optimized CV PDFs |
 | `portals.example.yml` | Onboarding | Example portal scanner configuration (copy to `portals.yml` to activate) |
 | `states.yml` | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases |
+| `immigration-status-requirements.yml` | `modes/oferta.md` (Block G immigration-status signal), `modes/apply.md` (Step 5d) | Jurisdiction-keyed table of immigration-status requirements employers may not demand (e.g. "US citizens only" under 8 U.S.C. §1324b, the *Haseeb* permanence proxy under Ontario's Human Rights Code). Every row carries a mandatory `lawful_screening_contrast` — authorization/sponsorship questions are lawful and never flagged. Prompt-level data reference, agent-judged matching — no script reads it. Contribution rule: no entry without a citable legal source, `as_of` date, and non-empty `lawful_screening_contrast`. |
 
 ### cv-template.html
 
