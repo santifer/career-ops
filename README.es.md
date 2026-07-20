@@ -78,7 +78,7 @@
 
 Career-Ops convierte cualquier CLI de IA en un centro de mando de busqueda de empleo. En vez de trackear aplicaciones en un spreadsheet, tienes un pipeline AI que:
 
-- **Evalua ofertas** con scoring estructurado A-F (10 dimensiones ponderadas)
+- **Evalúa ofertas** con una evaluación estructurada A-F (cinco dimensiones que alimentan una puntuación de 1.0-5.0)
 - **Genera PDFs personalizados** -- CVs ATS-optimizados por oferta
 - **Escanea portales** automaticamente (Greenhouse, Ashby, Lever, webs de empresas)
 - **Procesa en batch** -- evalua 10+ ofertas en paralelo con sub-agentes
