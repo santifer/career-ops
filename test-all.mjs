@@ -1624,6 +1624,66 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+// --- Block G pay-transparency disclosure signals (#2019) ---
+{
+  // 1. Jurisdiction table exists, parses as YAML, and the CA-ON seed is complete
+  const ptPath = join(ROOT, 'templates', 'pay-transparency.yml');
+  if (!existsSync(ptPath)) {
+    fail('templates/pay-transparency.yml missing (#2019)');
+  } else {
+    try {
+      const { load } = await import('js-yaml');
+      const pt = load(readFileSync(ptPath, 'utf-8'));
+      const on = pt?.jurisdictions?.['CA-ON'];
+      if (
+        on &&
+        on.range_required === true &&
+        on.width_cap?.amount === 50000 &&
+        on.width_cap?.currency === 'CAD' &&
+        Array.isArray(on.exemptions) && on.exemptions.length > 0 &&
+        typeof on.legal_basis === 'string' && on.legal_basis.includes('476/24') &&
+        Boolean(on.effective) &&
+        Array.isArray(on.sources) && on.sources.length > 0
+      ) {
+        pass('pay-transparency.yml parses and CA-ON seed carries width_cap/exemptions/legal_basis/effective/sources (#2019)');
+      } else {
+        fail('pay-transparency.yml CA-ON seed incomplete — needs range_required, width_cap 50000 CAD, exemptions, legal_basis (O. Reg. 476/24), effective date, sources (#2019)');
+      }
+    } catch (e) {
+      fail(`templates/pay-transparency.yml does not parse as YAML: ${e.message} (#2019)`);
+    }
+  }
+
+  // 2. oferta.md carries the dual sub-signal section with the corroborating-only constraint
+  const ptStart = ofertaMode.indexOf('Pay-Transparency Disclosure Check');
+  const ptEnd = ofertaMode.indexOf('### Output format:', Math.max(ptStart, 0));
+  const ptSection = ptStart >= 0 && ptEnd > ptStart ? ofertaMode.slice(ptStart, ptEnd) : '';
+  if (
+    ptSection.includes('templates/pay-transparency.yml') &&
+    ptSection.includes('9a. Over-wide advertised range (STRONG, presence-based)') &&
+    ptSection.includes('9b. Missing compensation information (CORROBORATING-ONLY, absence-based)') &&
+    ptSection.includes('This sub-signal never fires standalone') &&
+    ptSection.includes('Phrasing discipline (mandatory)') &&
+    ptSection.includes('not legal advice')
+  ) {
+    pass('oferta Block G has pay-transparency dual sub-signals: strong range-width + corroborating-only missing-range (#2019)');
+  } else {
+    fail('oferta Block G missing/incomplete pay-transparency section — needs table reference, 9a strong + 9b corroborating-only sub-signals, never-standalone constraint, phrasing discipline, not-legal-advice note (#2019)');
+  }
+
+  // 3. Phrasing discipline holds in the report-facing text: the blockquote
+  //    templates the agent renders must state facts, never legal accusations.
+  //    (The rule text itself may quote the banned phrases to forbid them,
+  //    so only '>' lines — the rendered output templates — are scanned.)
+  const ptQuoteLines = ptSection.split('\n').filter((l) => l.trimStart().startsWith('>'));
+  const accusatory = ptQuoteLines.filter((l) => /illegal|violation|breaking the law/i.test(l));
+  if (ptSection && ptQuoteLines.length >= 2 && accusatory.length === 0) {
+    pass('pay-transparency report templates state facts only — no "illegal"/"violation"/"breaking the law" assertions (#2019)');
+  } else {
+    fail(`pay-transparency phrasing discipline broken: ${accusatory.length ? `accusatory blockquote line(s): ${accusatory[0].trim().slice(0, 80)}` : 'expected 2+ blockquote output templates in the section'} (#2019)`);
+  }
+}
+
 // --- offer-prep mode: contract reading companion (describes, never judges) ---
 const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
 if (
