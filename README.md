@@ -419,6 +419,26 @@ career-ops/
 
 - **[cv-santiago](https://github.com/santifer/cv-santiago)** -- The portfolio website (santifer.io) with AI chatbot, LLMOps dashboard, and case studies. If you need a portfolio to showcase alongside your job search, fork it and make it yours.
 
+## FAQ
+
+**What is career-ops?**
+career-ops is an open-source, CLI-agnostic job-search command center. It turns any AI coding CLI into a pipeline that evaluates job offers against your CV, generates ATS-tailored PDFs, finds the right person to contact, and tracks everything in one place — while you keep the final decision. It is the first reference implementation of the CareerOps Manifesto. More at [career-ops.org](https://career-ops.org).
+
+**Can I run career-ops for free, or on a cheaper / local model?**
+Yes. career-ops is CLI-agnostic and runs on free and local models — via OpenRouter free models, Ollama, or any OpenAI-compatible endpoint — so you are not tied to a paid subscription. See [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for the full setup.
+
+**Which AI CLIs does career-ops work with?**
+career-ops runs on any major AI coding CLI — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen and more — through the open Agent Skill Standard, so it is never locked to a single vendor. Use the CLI you already have.
+
+**How do I install career-ops on Windows?**
+career-ops runs on Windows. If skills fail to load with a symlink error during install, the fix is in [docs/FAQ.md](docs/FAQ.md). Full steps are in [docs/SETUP.md](docs/SETUP.md).
+
+**Does career-ops auto-apply to jobs for me?**
+No. career-ops is a filter, not a spray-and-pray auto-applier. The AI evaluates, ranks and drafts; you review and decide. It never submits, sends, or clicks anything — you always have the final call. That human-in-the-loop design is the whole point.
+
+**Is career-ops free and open source?**
+Yes. career-ops is free and open source, and for the candidate it always will be — it is the first reference implementation of the [CareerOps Manifesto](https://career-ops.org/manifesto). Read it, and if it says what you believe, sign it.
+
 ## About the Author
 
 I'm [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, former founder (built and sold a business that still runs with my name on it). I built career-ops to manage my own job search. It worked: I used it to land my current role.
