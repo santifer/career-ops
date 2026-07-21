@@ -46,6 +46,13 @@ try {
     fail(`resolveConfig jobBase wrong: ${brandSearch.jobBase}`);
   }
 
+  const brandNoSearch = resolveConfig({ name: 'Bluebeam', careers_url: 'https://careers.nemetschek.com/Bluebeam/' });
+  if (brandNoSearch.base === 'https://careers.nemetschek.com/Bluebeam') {
+    pass('resolveConfig: a brand path without a trailing /search/ segment still resolves correctly (#2010)');
+  } else {
+    fail(`resolveConfig brand-no-search wrong: base=${brandNoSearch.base}`);
+  }
+
   // detect() — literal SF hosts auto-claim; branded RMK hosts (jobs.zf.com) do
   // NOT (they carry no "successfactors" string and rely on explicit provider:).
   if (sf.detect({ name: 'X', careers_url: 'https://acme.successfactors.eu/careers' })) {
