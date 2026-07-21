@@ -53,6 +53,12 @@ try {
     fail(`resolveConfig brand-no-search wrong: base=${brandNoSearch.base}`);
   }
 
+  if (resolveConfig({ name: 'X', careers_url: 'not a url' }) === null) {
+    pass('resolveConfig: returns null for an unparseable URL');
+  } else {
+    fail('resolveConfig should return null for an unparseable URL');
+  }
+
   // detect() — literal SF hosts auto-claim; branded RMK hosts (jobs.zf.com) do
   // NOT (they carry no "successfactors" string and rely on explicit provider:).
   if (sf.detect({ name: 'X', careers_url: 'https://acme.successfactors.eu/careers' })) {
