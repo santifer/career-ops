@@ -1,30 +1,41 @@
 #!/usr/bin/env node
 /**
- * invite-match.mjs — Interview-Invite → Tracker Matcher for career-ops
+ * invite-match.mjs — Interview-Invite / Rejection → Tracker Matcher for career-ops
  *
  * Recruiter calendar/ATS invite emails frequently name only the company
  * (generic subject lines like "Schedule Your Phone Screen") with no job
  * title or req number. Finding which `data/applications.md` row an invite
- * belongs to otherwise means a manual grep every time.
+ * belongs to otherwise means a manual grep every time. Rejection emails —
+ * the single most common ATS-generated email — have the exact same problem,
+ * and are the more frequent case in practice (#2098).
  *
  * This script extracts a company name (and, if present, a date and a
- * req/job-ID-looking token) from pasted invite text, fuzzy-matches it
- * against the tracker's Company column, and ranks candidates when the same
- * company has multiple applications — which is common. A silent wrong guess
- * is worse than showing a short ranked list, so ambiguous input always
- * returns all plausible candidates rather than picking one.
+ * req/job-ID-looking token) from pasted email text, fuzzy-matches it against
+ * the tracker's Company column, and ranks candidates when the same company
+ * has multiple applications — which is common. A silent wrong guess is worse
+ * than showing a short ranked list, so ambiguous input always returns all
+ * plausible candidates rather than picking one. The text is also classified
+ * as `invite` / `rejection` / `unknown` (see classifyEmail) — informational
+ * only, never a gate on matching.
+ *
+ * Despite the filename, this now recognizes more than interview invites
+ * (#2098). Kept as-is rather than renamed: a rename would break any doc or
+ * script that already references `invite-match.mjs` (e.g. #1495's own
+ * history) — left as a maintainer call, not blocking.
  *
  * Run: node invite-match.mjs < invite.txt          (JSON to stdout)
  *      node invite-match.mjs --file invite.txt
  *      echo "..." | node invite-match.mjs --summary
+ *      node invite-match.mjs --apply [--id N]      (rejection-classified matches only; advances status to Rejected)
  *      node invite-match.mjs --self-test
  *
- * Issue #1495 — github.com/santifer/career-ops
+ * Issue #1495, #2098 — github.com/santifer/career-ops
  */
 
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { execFileSync } from 'child_process';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
@@ -45,6 +56,23 @@ if (fileIdx !== -1 && (args[fileIdx + 1] === undefined || args[fileIdx + 1].star
   process.exit(1);
 }
 const filePathArg = fileIdx !== -1 ? args[fileIdx + 1] : null;
+
+// --apply advances a matched tracker row's status to Rejected — scoped to
+// that transition only (see issue #2098). It is deliberately NOT the general
+// #1960 "advance to Interview" flag: that issue is unclaimed and unimplemented
+// here, so an invite-classified match is never auto-applied by this flag.
+const applyMode = args.includes('--apply');
+const idIdx = args.indexOf('--id');
+if (idIdx !== -1 && (args[idIdx + 1] === undefined || args[idIdx + 1].startsWith('--'))) {
+  console.error('invite-match: --id requires a tracker # argument');
+  process.exit(1);
+}
+const idArgRaw = idIdx !== -1 ? args[idIdx + 1] : null;
+if (idArgRaw !== null && !/^\d+$/.test(idArgRaw)) {
+  console.error('invite-match: --id must be a tracker # (integer)');
+  process.exit(1);
+}
+const idArg = idArgRaw !== null ? parseInt(idArgRaw, 10) : null;
 
 // Statuses ranked above others when disambiguating same-company candidates —
 // an active application is a far more likely invite match than one already
@@ -243,6 +271,74 @@ export function extractReqId(text) {
   return m ? m[1] : null;
 }
 
+// --- Email-type classification (#2098) ---
+
+// Phrasings that suggest a rejection email. Case-insensitive substring match
+// against the raw text — small, documented, and extensible, same discipline
+// as COMPANY_LINE_PATTERNS above: this is "does this look like a rejection",
+// not an exhaustive NLP classifier. Ordered roughly by how common each
+// phrasing is in real ATS-generated rejection templates.
+const REJECTION_PHRASES = [
+  'unfortunately',
+  'not been selected to advance',
+  'not been selected',
+  'not selected for this position',
+  'not selected for this role',
+  'will not be moving forward',
+  'not be moving forward',
+  'not moving forward with your application',
+  'not successful',
+  'regret to inform',
+  'decided not to move forward',
+  'decided to move forward with other candidates',
+  'pursue other candidates',
+  'pursuing other candidates',
+  'other candidates whose qualifications',
+  'will not be proceeding',
+  'unable to offer you',
+  'not able to offer you a position',
+];
+
+// Phrasings that suggest an interview invite. Mirrors REJECTION_PHRASES for
+// the opposite case; extractCompany's own patterns already do the real work
+// of the invite path, so this list exists purely for classification.
+const INVITE_PHRASES = [
+  'schedule your phone screen',
+  'schedule your interview',
+  'phone screen',
+  'interviewing with',
+  'interview with',
+  'would like to invite you',
+  'invite you to interview',
+  'next steps in the interview process',
+  'move you forward to the next round',
+  'like to set up a time',
+  'like to set up a call',
+  'book a time',
+];
+
+/**
+ * Classify pasted email text as `invite`, `rejection`, or `unknown`.
+ *
+ * Informational only — never a gate on matching. An email that mentions both
+ * (e.g. a rejection that references an earlier phone screen: "Thank you for
+ * interviewing with us. Unfortunately...") is classified `rejection`: that
+ * language is the more decisive signal of the two, and it is also the only
+ * classification the --apply path acts on (#2098).
+ *
+ * @param {string} text - Raw pasted email text.
+ * @returns {'invite'|'rejection'|'unknown'}
+ */
+export function classifyEmail(text) {
+  if (!text) return 'unknown';
+  const lower = text.toLowerCase();
+  const isRejection = REJECTION_PHRASES.some(p => lower.includes(p));
+  const isInvite = INVITE_PHRASES.some(p => lower.includes(p));
+  if (isRejection) return 'rejection';
+  if (isInvite) return 'invite';
+  return 'unknown';
+}
+
 // --- Tracker loading ---
 function loadTracker(appsFile = APPS_FILE) {
   if (!existsSync(appsFile)) return [];
@@ -315,9 +411,9 @@ export function matchInvite(signals, trackerRows) {
  * plus the signals that were extracted (so the caller/CLI can show what was
  * understood from the email, not just the result).
  *
- * @param {string} text - Raw invite email text.
+ * @param {string} text - Raw invite/rejection email text.
  * @param {Array<object>} [trackerRows] - Injectable for tests; defaults to loadTracker().
- * @returns {{signals: object, candidates: Array<object>}}
+ * @returns {{signals: object, classification: 'invite'|'rejection'|'unknown', candidates: Array<object>}}
  */
 export function analyzeInvite(text, trackerRows = null) {
   const signals = {
@@ -327,15 +423,50 @@ export function analyzeInvite(text, trackerRows = null) {
   };
   const rows = trackerRows ?? loadTracker();
   const candidates = matchInvite(signals, rows);
-  return { signals, candidates };
+  const classification = classifyEmail(text);
+  return { signals, classification, candidates };
+}
+
+/**
+ * Advance a single tracker row's status to Rejected, reusing set-status.mjs
+ * as a subprocess — the canonical, locked, atomic write path (#2098) — rather
+ * than duplicating its row-rewrite/locking logic here. set-status.mjs already
+ * imports its atomic-write and locking primitives from tracker-utils.mjs.
+ *
+ * Never call this on an ambiguous match — the CLI layer below is responsible
+ * for confirming a single confident candidate (or an explicit --id) before
+ * reaching this function.
+ *
+ * @param {number} appNumber - Tracker # to update (must be unambiguous).
+ * @param {{appsFile?: string}} [options] - appsFile overrides CAREER_OPS_TRACKER for the child process (tests only).
+ * @returns {object} set-status.mjs's own --json result (or its structured error).
+ */
+export function applyRejectionStatus(appNumber, options = {}) {
+  const scriptPath = join(CAREER_OPS, 'set-status.mjs');
+  const env = options.appsFile ? { ...process.env, CAREER_OPS_TRACKER: options.appsFile } : process.env;
+  try {
+    const out = execFileSync(process.execPath, [scriptPath, String(appNumber), 'Rejected', '--json'], {
+      encoding: 'utf-8', env,
+    });
+    return JSON.parse(out);
+  } catch (err) {
+    // set-status.mjs writes JSON to stdout even on failure when --json is
+    // passed (its failWith/failUsage contract) — prefer that structured
+    // payload over a raw exception when it is present and parseable.
+    if (err.stdout) {
+      try { return JSON.parse(err.stdout); } catch { /* fall through */ }
+    }
+    return { error: err.message, code: 'apply-failed' };
+  }
 }
 
 // --- Summary mode ---
 function printSummary(result) {
   console.log(`\n${'='.repeat(70)}`);
-  console.log('  Interview Invite Matcher — career-ops');
+  console.log('  Interview Invite / Rejection Matcher — career-ops');
   console.log(`${'='.repeat(70)}\n`);
 
+  console.log(`  Classification:    ${result.classification}`);
   console.log(`  Extracted company: ${result.signals.company || '(not found)'}`);
   console.log(`  Extracted date:    ${result.signals.date || '(not found)'}`);
   console.log(`  Extracted req ID:  ${result.signals.reqId || '(not found)'}\n`);
@@ -432,6 +563,24 @@ function runSelfTest() {
   check(result.signals.company === 'Acme', 'analyzeInvite extracts company end-to-end');
   check(result.signals.date === '2026-07-09', 'analyzeInvite extracts date end-to-end');
   check(result.candidates.length === 1 && result.candidates[0].appNumber === 103, 'analyzeInvite returns the matched candidate end-to-end');
+  check(result.classification === 'invite', 'analyzeInvite classifies an invite-phrased email as "invite" (no regression from #2098)');
+
+  // --- classifyEmail (#2098) ---
+  check(classifyEmail('Unfortunately, we have decided not to move forward with your application.') === 'rejection', 'detects "decided not to move forward" as rejection');
+  check(classifyEmail('Thank you for your interest. We regret to inform you that you have not been selected to advance.') === 'rejection', 'detects "regret to inform" / "not been selected to advance" as rejection');
+  check(classifyEmail('After careful consideration, we have decided to move forward with other candidates whose qualifications more closely align with this role.') === 'rejection', 'detects "move forward with other candidates" as rejection');
+  check(classifyEmail('We are sorry to inform you that you were not successful in this process.') === 'rejection', 'detects "not successful" as rejection');
+  check(classifyEmail('We would like to invite you to schedule your phone screen for next week.') === 'invite', 'detects invite phrasing as "invite"');
+  check(classifyEmail('Looking forward to interviewing with you next Tuesday.') === 'invite', 'detects "interviewing with" as "invite"');
+  check(classifyEmail('Thanks for your recent purchase, here is your receipt.') === 'unknown', 'unrelated text classifies as "unknown"');
+  check(classifyEmail('') === 'unknown', 'empty text classifies as "unknown"');
+  check(classifyEmail('Thank you for interviewing with us last week. Unfortunately, we will not be moving forward with your application.') === 'rejection', 'rejection language wins when both invite and rejection phrasing appear (references a past interview)');
+
+  // --- analyzeInvite classification for a rejection email (fixture rows, no file I/O) ---
+  const rejectionText = 'Dear Candidate,\n\nCompany: Example Industries\nThank you for applying. Unfortunately, we have decided not to move forward with your application at this time.';
+  const rejectionResult = analyzeInvite(rejectionText, fixtureRows);
+  check(rejectionResult.classification === 'rejection', 'analyzeInvite classifies a rejection email as "rejection"');
+  check(rejectionResult.candidates.length === 2 && rejectionResult.candidates[0].appNumber === 101, 'a rejection email still returns ranked candidates (matching is unaffected by classification), active row ranked first');
 
   console.log(`\n  invite-match self-test: ${pass} passed, ${fail} failed\n`);
   process.exit(fail > 0 ? 1 : 0);
@@ -454,6 +603,51 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     }
 
     const result = analyzeInvite(text);
+
+    if (applyMode) {
+      // Scoped strictly to the Rejected transition (#2098) — never applies
+      // for an invite/unknown classification, and never for an ambiguous
+      // match unless the caller disambiguates with --id.
+      if (result.classification !== 'rejection') {
+        console.error(`invite-match: --apply only applies the Rejected transition, but this text classified as "${result.classification}" — not applying.`);
+        if (summaryMode) printSummary(result); else console.log(JSON.stringify(result, null, 2));
+        process.exit(1);
+      }
+
+      let target = null;
+      if (idArg !== null) {
+        target = result.candidates.find(c => c.appNumber === idArg);
+        if (!target) {
+          console.error(`invite-match: --id ${idArg} is not among the matched candidates — not applying.`);
+          if (summaryMode) printSummary(result); else console.log(JSON.stringify(result, null, 2));
+          process.exit(2);
+        }
+      } else if (result.candidates.length === 1) {
+        target = result.candidates[0];
+      } else if (result.candidates.length === 0) {
+        console.error('invite-match: no matching tracker entries found — not applying.');
+        if (summaryMode) printSummary(result); else console.log(JSON.stringify(result, null, 2));
+        process.exit(2);
+      } else {
+        console.error(`invite-match: ${result.candidates.length} candidates matched — ambiguous, refusing to auto-apply. Re-run with --id <#> to disambiguate:`);
+        for (const c of result.candidates) {
+          console.error(`  #${c.appNumber}\t${c.company}\t${c.role}\t${c.status}\t${c.matchConfidence}`);
+        }
+        process.exit(3);
+      }
+
+      const applyResult = applyRejectionStatus(target.appNumber);
+      const output = { ...result, applied: applyResult };
+      if (summaryMode) {
+        printSummary(result);
+        console.log(applyResult.error
+          ? `  Apply FAILED: ${applyResult.error}\n`
+          : `  Applied: #${applyResult.num} ${applyResult.company} — ${applyResult.role}: ${applyResult.oldStatus} → ${applyResult.newStatus}\n`);
+      } else {
+        console.log(JSON.stringify(output, null, 2));
+      }
+      process.exit(applyResult.error ? 1 : 0);
+    }
 
     if (summaryMode) {
       printSummary(result);

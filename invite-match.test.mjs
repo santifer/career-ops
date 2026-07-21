@@ -1,12 +1,16 @@
 /**
  * invite-match.test.mjs — regression tests for invite-match.mjs's ambiguous-
  * match ranking, which is the part most likely to silently regress: a wrong
- * top candidate is worse than no candidate at all.
+ * top candidate is worse than no candidate at all. Also covers the #2098
+ * rejection-classification and --apply-to-Rejected additions.
  *
  * Run: node invite-match.test.mjs
  */
 
-import { matchInvite, normalizeCompanyName } from './invite-match.mjs';
+import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { matchInvite, normalizeCompanyName, classifyEmail, analyzeInvite, applyRejectionStatus } from './invite-match.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -86,6 +90,68 @@ eq(
   normalizeCompanyName('Northwind Solutions Group') === normalizeCompanyName('Northwind Technologies Holdings'),
   false
 );
+
+// --- #2098: rejection classification is unaffected-invite-classification regression check ---
+
+eq('invite-phrased text still classifies as "invite" (no regression)', classifyEmail('Looking forward to interviewing with you next week for the Analyst role.'), 'invite');
+eq('rejection-phrased text classifies as "rejection"', classifyEmail('Unfortunately, we have decided to move forward with other candidates.'), 'rejection');
+eq('unrelated text classifies as "unknown"', classifyEmail('Your order has shipped.'), 'unknown');
+
+const invitePastRows = [
+  { num: 401, company: 'Fabrikam', role: 'Engineer', status: 'Applied', date: '2026-06-01', notes: '' },
+];
+const inviteAnalysis = analyzeInvite('Schedule Your Phone Screen – Fabrikam Opportunity', invitePastRows);
+eq('analyzeInvite classification for an invite email is "invite" (matching behavior unchanged from before #2098)', inviteAnalysis.classification, 'invite');
+eq('analyzeInvite still returns the same candidates for an invite email as before #2098', inviteAnalysis.candidates.length, 1);
+
+// --- #2098: --apply-to-Rejected path (applyRejectionStatus, real sandboxed tracker) ---
+
+function makeSandboxTracker(rows) {
+  const dir = mkdtempSync(join(tmpdir(), 'co-invitematch-unit-'));
+  const tracker = join(dir, 'applications.md');
+  writeFileSync(tracker, [
+    '# Applications Tracker',
+    '',
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|------|---------|------|-------|--------|-----|--------|-------|',
+    ...rows,
+    '',
+  ].join('\n'));
+  return { dir, tracker };
+}
+
+{
+  const sb = makeSandboxTracker([
+    '| 1 | 2026-06-01 | Fabrikam | Engineer | 4.0/5 | Applied | ❌ | — | — |',
+  ]);
+  const applied = applyRejectionStatus(1, { appsFile: sb.tracker });
+  eq('applyRejectionStatus (single confident match) reports the Rejected transition', applied.newStatus, 'Rejected');
+  eq('applyRejectionStatus (single confident match) reports changed:true', applied.changed, true);
+  const content = readFileSync(sb.tracker, 'utf-8');
+  eq('applyRejectionStatus actually writes Rejected to the tracker on disk', /\|\s*Rejected\s*\|/.test(content), true);
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+{
+  // Re-running against an already-Rejected row must be a safe no-op, not an error.
+  const sb = makeSandboxTracker([
+    '| 1 | 2026-06-01 | Fabrikam | Engineer | 4.0/5 | Rejected | ❌ | — | — |',
+  ]);
+  const applied = applyRejectionStatus(1, { appsFile: sb.tracker });
+  eq('applyRejectionStatus is idempotent — no-op re-run reports changed:false', applied.changed, false);
+  eq('applyRejectionStatus idempotent re-run still reports newStatus Rejected', applied.newStatus, 'Rejected');
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+{
+  // A tracker # that doesn't exist must fail structured, not throw uncaught.
+  const sb = makeSandboxTracker([
+    '| 1 | 2026-06-01 | Fabrikam | Engineer | 4.0/5 | Applied | ❌ | — | — |',
+  ]);
+  const applied = applyRejectionStatus(999, { appsFile: sb.tracker });
+  eq('applyRejectionStatus on a nonexistent tracker # reports a structured error, not a thrown exception', typeof applied.error, 'string');
+  rmSync(sb.dir, { recursive: true, force: true });
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {
