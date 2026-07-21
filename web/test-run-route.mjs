@@ -36,7 +36,7 @@ const STDERR_ERROR_RE =
   /\b(?:error|denied|fatal|not found|unauthorized|forbidden|login|credential|api[ -]?key|quota|rate limit|not authenticated|auth(?:entication|orization)?)\b/i;
 
 function productionStderrRegexLiteral() {
-  const match = source.match(/const STDERR_ERROR_RE =\s*\n\s*(\/.+\/[a-z]*);/);
+  const match = source.match(/const STDERR_ERROR_RE\s*=\s*(\/.+\/[a-z]*);/);
   assert.ok(match, "production STDERR_ERROR_RE literal not found");
   return match[1];
 }
