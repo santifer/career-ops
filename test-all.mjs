@@ -2018,6 +2018,35 @@ try {
   fail(`scan.mjs fresh-install pipeline test crashed: ${err.message}`);
 }
 
+// URL dedup normalization (#2065): a cosmetic query-suffix variant of an
+// already-processed URL (locale/tracking params, trailing slash, case) must
+// still dedup against the bare form, while an identity-bearing param (e.g.
+// Greenhouse's gh_jid) must NOT be stripped.
+try {
+  const { normalizeUrlForDedup } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  const bare = 'https://acme.jobs.personio.com/job/2670127';
+  const withLang = `${bare}?language=en`;
+  const withTrailingSlash = `${bare}/`;
+  const withUtm = `${bare}?utm_source=newsletter`;
+  const ghJid = 'https://boards.greenhouse.io/acme/jobs/123?gh_jid=123';
+  const malformed = 'not a url';
+
+  if (
+    normalizeUrlForDedup(withLang) === normalizeUrlForDedup(bare) &&
+    normalizeUrlForDedup(withTrailingSlash) === normalizeUrlForDedup(bare) &&
+    normalizeUrlForDedup(withUtm) === normalizeUrlForDedup(bare) &&
+    normalizeUrlForDedup(ghJid).includes('gh_jid=123') &&
+    normalizeUrlForDedup(malformed) === malformed
+  ) {
+    pass('scan.mjs normalizeUrlForDedup strips cosmetic params/trailing slash but preserves identity params and malformed input (#2065)');
+  } else {
+    fail(`scan.mjs normalizeUrlForDedup wrong: withLang=${normalizeUrlForDedup(withLang)} withTrailingSlash=${normalizeUrlForDedup(withTrailingSlash)} withUtm=${normalizeUrlForDedup(withUtm)} ghJid=${normalizeUrlForDedup(ghJid)} malformed=${normalizeUrlForDedup(malformed)}`);
+  }
+} catch (err) {
+  fail(`scan.mjs normalizeUrlForDedup test crashed: ${err.message}`);
+}
+
 // Company blacklist (#1742): data/blacklist.md is the user's do-not-apply
 // list. parseBlacklist keys rows by the shared normalizeCompany() so matching
 // is case- and punctuation-insensitive; loadBlacklist on an absent file is a
