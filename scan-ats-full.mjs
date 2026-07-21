@@ -397,7 +397,7 @@ export async function runSeedScan(seedId, opts, ctx, seenUrls, label) {
         contentFilter: opts.contentFilter,
         titleFilterConfig: opts.titleFilterConfig,
       })) continue;
-      if (seenUrls.has(job.url)) continue;
+      if (seenUrls.has(normalizeUrlForDedup(job.url))) continue;
       seenUrls.add(job.url);
       offers.push({ ...job, source: sourceName, dateStatus: job.postedAt ? 'dated' : 'unknown' });
     }
