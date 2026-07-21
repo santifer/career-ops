@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { isFatalCodexStderr, parseClaudeEvent, parseCodexEvent } from "./run-cli-support.mjs";
 
 // Server-only (node imports). The agnostic runtimes career-ops can delegate to
 // in headless mode (AGENTS.md). Install URLs from career-ops-docs.
@@ -12,11 +13,18 @@ export type CliSpec = {
   url: string;
   /** headless invocation args for a single prompt */
   args: (prompt: string) => string[];
+  /** Structured-output CLIs only: parse one stdout line into dashboard events.
+   * Absent → the route streams stdout as raw text (the default for every CLI
+   * without its own structured output format). */
+  parseEvent?: (line: string) => import("./run-cli-support.mjs").ParsedEvent | null;
+  /** Structured-output CLIs only: decide whether a stderr chunk is fatal.
+   * Absent → the route falls back to the shared generic error regex. */
+  stderrIsFatal?: (chunk: string) => boolean;
 };
 
 export const KNOWN: CliSpec[] = [
-  { id: "claude", name: "Claude Code", bin: "claude", run: "claude -p", url: "https://claude.ai/code", args: (p) => ["-p", p] },
-  { id: "codex", name: "Codex", bin: "codex", run: "codex exec", url: "https://github.com/openai/codex", args: (p) => ["exec", p] },
+  { id: "claude", name: "Claude Code", bin: "claude", run: "claude -p", url: "https://claude.ai/code", args: (p) => ["-p", p], parseEvent: parseClaudeEvent },
+  { id: "codex", name: "Codex", bin: "codex", run: "codex exec", url: "https://github.com/openai/codex", args: (p) => ["exec", "--json", "--color", "never", p], parseEvent: parseCodexEvent, stderrIsFatal: isFatalCodexStderr },
   { id: "gemini", name: "Gemini CLI", bin: "gemini", run: "gemini -p", url: "https://github.com/google-gemini/gemini-cli", args: (p) => ["-p", p] },
   { id: "opencode", name: "OpenCode", bin: "opencode", run: "opencode run", url: "https://opencode.ai", args: (p) => ["run", p] },
   { id: "copilot", name: "GitHub Copilot CLI", bin: "copilot", run: "copilot -p", url: "https://docs.github.com/en/copilot/github-copilot-in-the-cli", args: (p) => ["-p", p] },

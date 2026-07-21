@@ -1,6 +1,6 @@
-import { spawn } from "node:child_process";
 import { resolveCli } from "@/lib/clis";
 import { careerOpsRoot, readMemory, doctorState } from "@/lib/career-ops";
+import { spawnHeadlessCli } from "@/lib/spawn-cli.mjs";
 
 export const runtime = "nodejs"; // child_process (spawn) requires the Node runtime
 export const dynamic = "force-dynamic";
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
       ]
     : spec.args(prompt);
 
-  const child = spawn(binPath, args, { cwd: careerOpsRoot(), env: process.env });
+  const child = spawnHeadlessCli(binPath, args, { cwd: careerOpsRoot(), env: process.env });
 
   const encoder = new TextEncoder();
   // `closed` + kill timer in the OUTER scope so cancel() can flip `closed` before
