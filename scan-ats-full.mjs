@@ -539,7 +539,7 @@ async function main() {
           if (!titleFilter(job.title)) continue;
           if (!locationFilter(job.location)) continue;
           if (!contentFilter(job.description, matchedTitleKeywords(job.title, config?.title_filter))) { droppedContent++; continue; }
-          if (seenUrls.has(job.url)) continue;
+          if (seenUrls.has(normalizeUrlForDedup(job.url))) continue;
           seenUrls.add(job.url); // intra-scan dedup
           newOffers.push({ ...job, source: `${name}-full`, dateStatus: job.postedAt ? 'dated' : 'unknown' });
         }
