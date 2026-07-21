@@ -161,6 +161,7 @@ const scripts = [
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'upskill.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
+  { name: 'check-table-freshness.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
   { name: 'salary-gap.mjs --self-test', expectExit: 0 },
   { name: 'funnel-velocity.mjs --self-test', expectExit: 0 },
@@ -8938,6 +8939,92 @@ try {
   }
 } catch (e) {
   fail(`stated-comp tracking wiring check: ${e.message}`);
+}
+
+// ── TABLE-FRESHNESS VALIDATOR (#2036) ───────────────────────────
+// check-table-freshness.mjs's own --self-test (invoked above via the
+// CLI-check table) covers discovery shapes, finding semantics, date-math
+// boundaries, and malformed-date handling on its own fixtures. This section
+// pins the wiring: the script ships, updates, is documented — and stays
+// strictly read-only (it reports stale jurisdiction rows; it must never be
+// able to "fix" them, or any other file, itself).
+
+console.log('\n63. Table-freshness validator wiring + read-only boundary (#2036)');
+
+try {
+  const freshnessSrc = readFile('check-table-freshness.mjs');
+
+  const updaterSrc = readFile('update-system.mjs');
+  const freshSysBlock = (updaterSrc.match(/SYSTEM_PATHS\s*=\s*\[([\s\S]*?)\]/) || [, ''])[1];
+  if (freshSysBlock.includes("'check-table-freshness.mjs'")) {
+    pass('check-table-freshness.mjs is in update-system.mjs SYSTEM_PATHS (shipped + updatable)');
+  } else {
+    fail('check-table-freshness.mjs is NOT in SYSTEM_PATHS — updates would never deliver it');
+  }
+
+  const pkg = JSON.parse(readFile('package.json'));
+  if (pkg.scripts && pkg.scripts.freshness === 'node check-table-freshness.mjs') {
+    pass('package.json exposes npm run freshness');
+  } else {
+    fail('package.json missing the freshness script entry');
+  }
+
+  const scriptsDoc = readFile('docs/SCRIPTS.md');
+  if (scriptsDoc.includes('## check-table-freshness') && scriptsDoc.includes('--max-age-months')) {
+    pass('docs/SCRIPTS.md documents check-table-freshness (section + threshold flag)');
+  } else {
+    fail('docs/SCRIPTS.md missing the check-table-freshness section');
+  }
+  if (/`review-due` alone never fails the run/.test(scriptsDoc)) {
+    pass('docs/SCRIPTS.md documents the CI-friendly exit-code semantics (expired=1, review-due alone=0)');
+  } else {
+    fail('docs/SCRIPTS.md missing the exit-code semantics for check-table-freshness');
+  }
+
+  const agentsDoc = readFile('AGENTS.md');
+  if (agentsDoc.includes('`check-table-freshness.mjs`')) {
+    pass('AGENTS.md Main Files table lists check-table-freshness.mjs');
+  } else {
+    fail('AGENTS.md Main Files table missing check-table-freshness.mjs');
+  }
+
+  // Read-only import boundary: the ONLY fs capabilities the script may hold
+  // are readFileSync / readdirSync / existsSync. No write-capable named
+  // imports, no fs/promises, no require(), no dynamic import of fs — so a
+  // future edit that adds a write path fails CI instead of shipping quietly.
+  const FS_READ_WHITELIST = new Set(['readFileSync', 'readdirSync', 'existsSync']);
+  const fsImports = [...freshnessSrc.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"](?:node:)?fs['"]/g)];
+  const fsNames = fsImports.flatMap(m => m[1].split(',').map(s => s.trim()).filter(Boolean));
+  const nonWhitelisted = fsNames.filter(n => !FS_READ_WHITELIST.has(n));
+  if (fsImports.length > 0 && nonWhitelisted.length === 0) {
+    pass('check-table-freshness.mjs fs imports are read-only (readFileSync/readdirSync/existsSync only)');
+  } else {
+    fail(`check-table-freshness.mjs fs import boundary violated: ${nonWhitelisted.join(', ') || 'no fs import matched'}`);
+  }
+  if (!/from\s*['"](?:node:)?fs\/promises['"]/.test(freshnessSrc)) {
+    pass('check-table-freshness.mjs does not import fs/promises');
+  } else {
+    fail('check-table-freshness.mjs imports fs/promises — write-capable API surface');
+  }
+  if (!/\brequire\s*\(/.test(freshnessSrc)) {
+    pass('check-table-freshness.mjs has no require() escape hatch');
+  } else {
+    fail('check-table-freshness.mjs uses require() — bypasses the import whitelist');
+  }
+  if (!/import\s*\(\s*['"](?:node:)?fs/.test(freshnessSrc)) {
+    pass('check-table-freshness.mjs has no dynamic fs import');
+  } else {
+    fail('check-table-freshness.mjs dynamically imports fs — bypasses the import whitelist');
+  }
+  const writeTokens = ['writeFileSync', 'appendFileSync', 'mkdirSync', 'rmSync', 'unlinkSync', 'renameSync', 'createWriteStream', 'copyFileSync'];
+  const foundWrite = writeTokens.filter(t => freshnessSrc.includes(t));
+  if (foundWrite.length === 0) {
+    pass('check-table-freshness.mjs contains no write-capable fs tokens');
+  } else {
+    fail(`check-table-freshness.mjs mentions write-capable fs APIs: ${foundWrite.join(', ')}`);
+  }
+} catch (e) {
+  fail(`table-freshness wiring check: ${e.message}`);
 }
 
 await runDiscovered();

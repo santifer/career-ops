@@ -173,6 +173,7 @@ const SYSTEM_PATHS = [
   'upskill.mjs',
   'stats.mjs',
   'detect-reposts.mjs',
+  'check-table-freshness.mjs',
   'fingerprint-core.mjs',
   'process-quality.mjs',
   'process-quality.test.mjs',
