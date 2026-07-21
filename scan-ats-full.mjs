@@ -397,8 +397,9 @@ export async function runSeedScan(seedId, opts, ctx, seenUrls, label) {
         contentFilter: opts.contentFilter,
         titleFilterConfig: opts.titleFilterConfig,
       })) continue;
-      if (seenUrls.has(normalizeUrlForDedup(job.url))) continue;
-      seenUrls.add(normalizeUrlForDedup(job.url));
+      const dedupUrl = normalizeUrlForDedup(job.url);
+      if (seenUrls.has(dedupUrl)) continue;
+      seenUrls.add(dedupUrl);
       offers.push({ ...job, source: sourceName, dateStatus: job.postedAt ? 'dated' : 'unknown' });
     }
   });
@@ -539,8 +540,9 @@ async function main() {
           if (!titleFilter(job.title)) continue;
           if (!locationFilter(job.location)) continue;
           if (!contentFilter(job.description, matchedTitleKeywords(job.title, config?.title_filter))) { droppedContent++; continue; }
-          if (seenUrls.has(normalizeUrlForDedup(job.url))) continue;
-          seenUrls.add(normalizeUrlForDedup(job.url)); // intra-scan dedup
+          const dedupUrl = normalizeUrlForDedup(job.url);
+          if (seenUrls.has(dedupUrl)) continue;
+          seenUrls.add(dedupUrl); // intra-scan dedup
           newOffers.push({ ...job, source: `${name}-full`, dateStatus: job.postedAt ? 'dated' : 'unknown' });
         }
       } catch (err) {

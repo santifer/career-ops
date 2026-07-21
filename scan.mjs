@@ -1769,7 +1769,8 @@ async function main() {
           totalFilteredVisa++;
           continue;
         }
-        if (seenUrls.has(normalizeUrlForDedup(job.url))) {
+        const dedupUrl = normalizeUrlForDedup(job.url);
+        if (seenUrls.has(dedupUrl)) {
           totalDupes++;
           continue;
         }
@@ -1788,7 +1789,7 @@ async function main() {
           continue;
         }
         // Mark as seen to avoid intra-scan dupes
-        seenUrls.add(normalizeUrlForDedup(job.url));
+        seenUrls.add(dedupUrl);
         seenCompanyRoles.add(key);
         // Tag with the company's careers domain so verify can offer a 404/410
         // rediscovery fallback. A null domain (no careers_url) marks the offer
