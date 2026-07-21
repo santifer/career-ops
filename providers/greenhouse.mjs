@@ -151,7 +151,11 @@ export default {
           // fail because the secondary lookup did. Logged so a persistent
           // regression is distinguishable from a board that simply has no
           // /offices, which is expected and harmless.
-          console.error(`⚠️  greenhouse: ${entry.name} /offices enrichment failed — ${err.message} (keeping work-model-only locations)`);
+          // `err` is not guaranteed to be an Error — a promise may reject with
+          // anything, and reading .message off null would throw *inside* the
+          // catch, defeating the guarantee above.
+          const cause = err instanceof Error ? err.message : String(err);
+          console.error(`⚠️  greenhouse: ${entry.name} /offices enrichment failed — ${cause} (keeping work-model-only locations)`);
           officeMap = null;
         }
       }

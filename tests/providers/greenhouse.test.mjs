@@ -292,6 +292,36 @@ try {
     pass('greenhouse.fetch() logs the board and cause when /offices enrichment fails');
   else fail(`greenhouse.fetch() should warn on failed enrichment, got: ${JSON.stringify(degradedWarnings)}`);
 
+  // A promise may reject with a non-Error. Reading .message off null would
+  // throw *inside* the catch and abort the whole board — the exact failure the
+  // best-effort fallback exists to prevent.
+  for (const thrown of [null, undefined, 'plain string', 42]) {
+    const nonErrWarnings = [];
+    const nonErrConsole = console.error;
+    console.error = (m) => nonErrWarnings.push(m);
+    let nonErrRows;
+    let threw = null;
+    try {
+      nonErrRows = await greenhouse.fetch(
+        { name: 'Cloudflare', careers_url: 'https://job-boards.greenhouse.io/cloudflare' },
+        {
+          fetchJson: async (url) => {
+            if (url.endsWith('/offices')) throw thrown;
+            return { jobs: [{ id: 201, title: 'Systems Engineer', absolute_url: 'https://job-boards.greenhouse.io/cloudflare/jobs/201', location: { name: 'In-Office' } }] };
+          },
+        },
+      );
+    } catch (e) {
+      threw = e;
+    } finally {
+      console.error = nonErrConsole;
+    }
+    const label = String(thrown);
+    if (!threw && nonErrRows?.length === 1 && nonErrRows[0]?.location === 'In-Office' && nonErrWarnings.length === 1)
+      pass(`greenhouse.fetch() survives a non-Error /offices rejection (${label}) and still warns`);
+    else fail(`greenhouse.fetch() non-Error rejection (${label}): threw=${threw?.message}, rows=${JSON.stringify(nonErrRows)}, warnings=${JSON.stringify(nonErrWarnings)}`);
+  }
+
   // Underivable entry → typed error, no request.
   try {
     await greenhouse.fetch(
