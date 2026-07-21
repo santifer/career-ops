@@ -1769,7 +1769,7 @@ async function main() {
           totalFilteredVisa++;
           continue;
         }
-        if (seenUrls.has(job.url)) {
+        if (seenUrls.has(normalizeUrlForDedup(job.url))) {
           totalDupes++;
           continue;
         }
