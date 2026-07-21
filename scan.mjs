@@ -646,6 +646,48 @@ function scanHistoryPolicy(config = {}) {
   };
 }
 
+// Query params that carry no identity information for a job posting — safe to
+// strip when computing the dedup key. Deliberately an allowlist rather than
+// "strip everything": several ATSes key the posting off a query param (e.g.
+// Greenhouse's `gh_jid`), so a blanket strip would collapse distinct roles.
+const DEDUP_STRIP_PARAMS = new Set([
+  'language', 'lang', 'locale',
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+  'ref', 'src', 'source', 'gh_src', 'lever-origin', 'lever-source',
+]);
+
+/**
+ * Normalize a job posting URL into a stable dedup key.
+ *
+ * Strips cosmetic query params (locale/tracking), drops a trailing slash,
+ * and lowercases scheme + host. Only used to compute the *comparison* key —
+ * callers keep writing/displaying the original URL so links stay clickable
+ * and scan-history/pipeline.md stay faithful to what the provider returned.
+ *
+ * Falls back to the raw string when the URL is malformed, preserving the
+ * old byte-for-byte behavior for unparsable history rows.
+ *
+ * @param {string} url
+ * @returns {string}
+ */
+export function normalizeUrlForDedup(url) {
+  if (typeof url !== 'string' || !url) return url;
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return url;
+  }
+  for (const param of Array.from(parsed.searchParams.keys())) {
+    if (DEDUP_STRIP_PARAMS.has(param.toLowerCase())) {
+      parsed.searchParams.delete(param);
+    }
+  }
+  parsed.hash = '';
+  parsed.pathname = parsed.pathname.replace(/\/+$/, '') || '/';
+  return parsed.toString();
+}
+
 export function loadSeenUrls(policy = {}) {
   const seen = new Set();
   let recheckEligible = 0;
