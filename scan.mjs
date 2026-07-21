@@ -715,7 +715,7 @@ export function loadSeenUrls(policy = {}) {
   if (existsSync(APPLICATIONS_PATH)) {
     const text = readFileSync(APPLICATIONS_PATH, 'utf-8');
     for (const match of text.matchAll(/https?:\/\/[^\s|)]+/g)) {
-      seen.add(match[0]);
+      seen.add(normalizeUrlForDedup(match[0]));
     }
   }
 
