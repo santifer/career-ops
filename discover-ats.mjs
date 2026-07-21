@@ -261,9 +261,12 @@ export function parseWorkdayHint(company) {
     if (tenant && site) return { tenant, instance: instance || null, site };
   }
 
-  // 2. URL form — check every field that might carry a Workday link.
+  // 2. URL form — check every field that might carry a Workday link. No
+  // substring pre-filter here (CodeQL js/incomplete-url-substring-sanitization):
+  // the anchored regex below is the actual gate and already rejects anything
+  // that isn't a well-formed *.myworkdayjobs.com URL.
   const urlCandidates = [company.workday, company.careers_url, company.website]
-    .filter((v) => typeof v === 'string' && v.includes('myworkdayjobs.com'));
+    .filter((v) => typeof v === 'string');
   for (const raw of urlCandidates) {
     // Mirrors the tenant regex in providers/workday.mjs resolveEndpoint().
     const m = raw.match(/https?:\/\/([\w-]+)\.(wd[\w-]*)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([^/?#]+)/);

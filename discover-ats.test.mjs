@@ -264,7 +264,7 @@ eq('buildWorkdayCandidates known instance URL', wc1[0].careers_url, 'https://nvi
 
 const wc2 = buildWorkdayCandidates({ tenant: 'sf', instance: null, site: 'CS' });
 ok('buildWorkdayCandidates null instance → expands', wc2.length > 1);
-ok('buildWorkdayCandidates first candidate is wd1', wc2[0].careers_url.includes('sf.wd1.myworkdayjobs.com'));
+ok('buildWorkdayCandidates first candidate is wd1', new URL(wc2[0].careers_url).hostname === 'sf.wd1.myworkdayjobs.com');
 ok('buildWorkdayCandidates every URL well-formed', wc2.every(c => /^https:\/\/sf\.wd[\w-]+\.myworkdayjobs\.com\/CS$/.test(c.careers_url)));
 
 // Workday entry rendering
