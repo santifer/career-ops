@@ -77,12 +77,27 @@ export function resolveConfig(entry) {
     return null;
   }
   if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+  // Preserve a brand/tenant path prefix when the configured URL carries one —
+  // some holding companies run several acquired brands off one shared RMK
+  // instance, disambiguated by a path segment instead of a separate domain
+  // (e.g. careers.nemetschek.com/Bluebeam/ vs. .../Vectorworks/). Strip a
+  // trailing /search/ (the page tenants commonly configure as careers_url)
+  // and any trailing slash, so a bare-origin config and a brand-scoped
+  // /search/ config both collapse to the same base. Single-domain tenants
+  // (the common case) have an empty pathname, so base === origin unchanged.
+  const path = u.pathname.replace(/\/search\/?$/i, '').replace(/\/+$/, '');
+  const base = u.origin + path;
   return {
     origin: u.origin,
-    tileApi: `${u.origin}/tile-search-results/`,
+    base,
+    tileApi: `${base}/tile-search-results/`,
+    // jobBase stays origin-only: RMK tile data-url paths for a brand-scoped
+    // tenant already carry the brand segment (confirmed against Nemetschek's
+    // /Bluebeam/tile-search-results/ output), so prefixing base here would
+    // double it up.
     jobBase: u.origin,
-    jobsApi: `${u.origin}/services/recruiting/v1/jobs`,
-    searchPage: `${u.origin}/search/`,
+    jobsApi: `${base}/services/recruiting/v1/jobs`,
+    searchPage: `${base}/search/`,
   };
 }
 
