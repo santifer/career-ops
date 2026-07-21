@@ -10,13 +10,16 @@
 // key in memory only), run 2 re-seeded from applications.md, found the key
 // absent, and the DC req cleared both the URL check and the role check.
 //
-// These exercise `loadSeenCompanyRoles` (the filesystem wrapper) rather than the
-// pure collector, because the defect was in which sources get wired in, not in
-// how any one source is parsed.
-import { pass, fail } from './helpers.mjs';
-import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'fs';
+// The unit checks exercise `loadSeenCompanyRoles` (the filesystem wrapper)
+// rather than the pure collector, because the defect was in which sources get
+// wired in, not in how any one source is parsed. The last check is end-to-end —
+// two real `scan.mjs` runs over a fixture board — because the defect is in the
+// wiring between the loader and main(), which no unit test observes.
+import { pass, fail, ROOT, NODE } from './helpers.mjs';
+import { mkdtempSync, writeFileSync, readFileSync, existsSync, rmSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { execFileSync } from 'child_process';
 import { loadSeenCompanyRoles, companyRoleDedupKey } from '../scan.mjs';
 
 console.log('\nscan.mjs — company+role dedupe survives between runs');
@@ -172,4 +175,66 @@ const KEY = companyRoleDedupKey('Anduril', 'Strategic Finance');
     fail(`absent sources threw: ${err.message}`);
   }
   rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 8. END-TO-END: two real scan runs over a three-city board ───────────────
+// The only check here that would have caught the original bug. Every unit above
+// passes against a build where main() simply never passes the extra sources —
+// the defect lived in the wiring, so it has to be observed through the CLI.
+//
+// scan.mjs resolves data/ relative to process.cwd(), so the child runs with cwd
+// pinned to a sandbox. The fixture board is reached through local-parser, which
+// requires an in-repo script (realpath-guarded) and runs it with cwd at the repo
+// root — hence the repo-relative `script:` against an absolute portals path.
+// No network is involved.
+{
+  const dir = mkdtempSync(join(tmpdir(), 'scan-e2e-'));
+  try {
+    mkdirSync(join(dir, 'data'), { recursive: true });
+    writeFileSync(join(dir, 'data', 'applications.md'), `# Applications Tracker
+
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|------|-------|--------|-----|--------|-------|
+`);
+    writeFileSync(join(dir, 'data', 'pipeline.md'), '# Pipeline\n\n');
+
+    const portals = join(dir, 'portals.yml');
+    writeFileSync(portals, `title_filter:
+  positive:
+    - "Strategic Finance"
+tracked_companies:
+  - name: Fixture Defense
+    careers_url: https://boards.example.com/fixture
+    parser:
+      command: node
+      script: tests/fixtures/three-city-board.mjs
+`);
+
+    const scan = () => execFileSync(NODE, [join(ROOT, 'scan.mjs')], {
+      cwd: dir,
+      env: { ...process.env, CAREER_OPS_PORTALS: portals },
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const entries = () => {
+      const p = join(dir, 'data', 'pipeline.md');
+      if (!existsSync(p)) return [];
+      return readFileSync(p, 'utf-8').split('\n').filter(l => /^- \[[ x]\]\s+https?:\/\//.test(l));
+    };
+
+    scan();
+    const afterFirst = entries().length;
+    scan();
+    const afterSecond = entries().length;
+
+    if (afterFirst === 1 && afterSecond === 1) {
+      pass('two scan runs over a one-role/three-city board yield exactly 1 pipeline entry');
+    } else {
+      fail(`same-role/different-city leak: ${afterFirst} entr(y/ies) after run 1, ${afterSecond} after run 2 (want 1 and 1)`);
+    }
+  } catch (err) {
+    fail(`e2e scan run failed: ${err.message}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
