@@ -145,10 +145,13 @@ export default {
         try {
           assertGreenhouseUrl(officesUrl);
           officeMap = buildOfficeMap(await ctx.fetchJson(officesUrl, { redirect: 'error' }));
-        } catch {
+        } catch (err) {
           // No /offices on this board, or it failed — fall back to the bare
           // work-model string. Enrichment is best-effort; a scan must never
-          // fail because the secondary lookup did.
+          // fail because the secondary lookup did. Logged so a persistent
+          // regression is distinguishable from a board that simply has no
+          // /offices, which is expected and harmless.
+          console.error(`⚠️  greenhouse: ${entry.name} /offices enrichment failed — ${err.message} (keeping work-model-only locations)`);
           officeMap = null;
         }
       }

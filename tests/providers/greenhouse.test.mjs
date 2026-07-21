@@ -264,19 +264,33 @@ try {
     pass('greenhouse.fetch() skips /offices entirely when locations already carry geography');
   else fail(`greenhouse.fetch() made ${geoRequests.length} requests for a geo-location board (expected 1)`);
 
-  // Enrichment is best-effort: a failing /offices must not fail the scan.
-  const degraded = await greenhouse.fetch(
-    { name: 'Cloudflare', careers_url: 'https://job-boards.greenhouse.io/cloudflare' },
-    {
-      fetchJson: async (url) => {
-        if (url.endsWith('/offices')) throw new Error('404');
-        return { jobs: [{ id: 201, title: 'Systems Engineer', absolute_url: 'https://job-boards.greenhouse.io/cloudflare/jobs/201', location: { name: 'In-Office' } }] };
+  // Enrichment is best-effort: a failing /offices must not fail the scan, but
+  // it must say so — a silent catch makes a systemic /offices regression
+  // indistinguishable from a board that simply has no /offices.
+  const degradedWarnings = [];
+  const originalConsoleError = console.error;
+  console.error = (m) => degradedWarnings.push(m);
+  let degraded;
+  try {
+    degraded = await greenhouse.fetch(
+      { name: 'Cloudflare', careers_url: 'https://job-boards.greenhouse.io/cloudflare' },
+      {
+        fetchJson: async (url) => {
+          if (url.endsWith('/offices')) throw new Error('404');
+          return { jobs: [{ id: 201, title: 'Systems Engineer', absolute_url: 'https://job-boards.greenhouse.io/cloudflare/jobs/201', location: { name: 'In-Office' } }] };
+        },
       },
-    },
-  );
+    );
+  } finally {
+    console.error = originalConsoleError;
+  }
   if (degraded.length === 1 && degraded[0]?.location === 'In-Office')
     pass('greenhouse.fetch() degrades to the bare work-model string when /offices fails');
   else fail(`greenhouse.fetch() degraded = ${JSON.stringify(degraded)}`);
+
+  if (degradedWarnings.some((w) => /greenhouse: Cloudflare .*404/.test(String(w))))
+    pass('greenhouse.fetch() logs the board and cause when /offices enrichment fails');
+  else fail(`greenhouse.fetch() should warn on failed enrichment, got: ${JSON.stringify(degradedWarnings)}`);
 
   // Underivable entry → typed error, no request.
   try {
