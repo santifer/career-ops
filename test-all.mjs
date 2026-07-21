@@ -3673,6 +3673,7 @@ try {
     buildPostingAgeFilter,
     buildPostedDateFilter,
     buildVisaFilter,
+    buildCountryEligibilityFilter,
     shouldDedupScanHistoryRow,
     formatPipelineOffer,
     formatScanHistoryRow,
@@ -4170,6 +4171,77 @@ try {
     pass('visa_filter honors custom positive keyword lists over defaults');
   } else {
     fail('visa_filter should honor custom positive keyword lists');
+  }
+
+  // ── country_eligibility_filter (#2093) ──
+  // Absent config → all jobs pass, regardless of candidate country.
+  const noCountryFilter = buildCountryEligibilityFilter(null, 'Canada');
+  if (
+    noCountryFilter('Must be located in the United States') === true &&
+    noCountryFilter('') === true
+  ) {
+    pass('country_eligibility_filter absent config → all jobs pass');
+  } else {
+    fail('country_eligibility_filter absent config should pass all jobs');
+  }
+
+  const countryCfg = {
+    exclusionary: ['must be located in the united states', 'us-based candidates only'],
+    inclusive: ['united states or canada', 'north america'],
+  };
+
+  // Missing / empty description → pass (no signal to act on).
+  const caFilter = buildCountryEligibilityFilter(countryCfg, 'Canada');
+  if (
+    caFilter('') === true &&
+    caFilter(undefined) === true &&
+    caFilter(null) === true
+  ) {
+    pass('country_eligibility_filter passes jobs with no description text');
+  } else {
+    fail('country_eligibility_filter should pass jobs with no description text');
+  }
+
+  // Ambiguous text (no exclusionary or inclusive phrase) → pass unchanged.
+  if (caFilter('A generic remote engineering role with a collaborative team') === true) {
+    pass('country_eligibility_filter passes ambiguous text with no matched phrases');
+  } else {
+    fail('country_eligibility_filter should pass ambiguous text unchanged');
+  }
+
+  // Exclusionary phrase matched, no inclusive phrase, candidate's own
+  // country ("Canada") not named anywhere → rejected.
+  if (caFilter('This role is open only to US-based candidates only.') === false) {
+    pass('country_eligibility_filter rejects an exclusionary-only US posting for a Canadian candidate');
+  } else {
+    fail('country_eligibility_filter should reject exclusionary-only postings for a non-US candidate');
+  }
+
+  // Exclusionary phrase matched, but an inclusive phrase widens eligibility → pass.
+  if (caFilter('Must be located in the United States or Canada to apply.') === true) {
+    pass('country_eligibility_filter passes when an inclusive phrase widens eligibility');
+  } else {
+    fail('country_eligibility_filter should pass when an inclusive phrase is also present');
+  }
+
+  // Exclusionary phrase matched, candidate's own country literally named
+  // elsewhere in the text (even without a configured "inclusive" phrase) → pass.
+  if (caFilter('US-based candidates only. Note: our Canada office handles onboarding.') === true) {
+    pass('country_eligibility_filter passes when the candidate\'s own country is literally named in the text');
+  } else {
+    fail('country_eligibility_filter should pass when the candidate\'s own country is named in the text');
+  }
+
+  // Candidate's own location.country is "United States" → filter no-ops
+  // entirely, even against an explicit US-only exclusionary phrase.
+  const usFilter = buildCountryEligibilityFilter(countryCfg, 'United States');
+  if (
+    usFilter('US-based candidates only, no exceptions.') === true &&
+    usFilter('Must be located in the United States') === true
+  ) {
+    pass('country_eligibility_filter no-ops for a candidate whose own country is United States');
+  } else {
+    fail('country_eligibility_filter should no-op entirely for a US-based candidate');
   }
 
 } catch (e) {
@@ -8854,8 +8926,9 @@ try {
   const runRows = readFileSync(runsFile, 'utf-8').trim().split('\n');
   if (runRows[0] === SCAN_RUNS_HEADER.trim() && runRows.length === 3
       && runRows[1].startsWith('2026-07-03T14:02:11Z\tcompleted\t45\t3\t120\t')
-      // filtered_blacklist + filtered_visa + filtered_posted_date land in the three trailing columns.
-      && runRows[1].endsWith('\t4\t7\t2')
+      // filtered_blacklist + filtered_visa + filtered_posted_date + filtered_country_eligibility
+      // land in the four trailing columns (last defaults to 0 — not supplied above).
+      && runRows[1].endsWith('\t4\t7\t2\t0')
       && runRows[2].startsWith('2026-07-04T09:00:00Z\t')) {
     pass('appendScanRunSummary writes the header once, appends one row per run');
   } else {

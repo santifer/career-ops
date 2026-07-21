@@ -278,6 +278,77 @@ export function buildContentFilter(contentFilter) {
   };
 }
 
+// ── Country-eligibility filter (#2093) ──────────────────────────────
+// Optional, opt-in. If `country_eligibility_filter` is absent from
+// portals.yml, all jobs pass — byte-identical to pre-#2093 behavior.
+//
+// Problem it solves: `location_filter` only reads the ATS provider's
+// STRUCTURED location field (e.g. "Remote"), which many US companies use
+// identically regardless of actual country eligibility. The real
+// restriction — "US-based candidates only" vs. "US or Canada eligible" —
+// often lives only in the JD DESCRIPTION body text, which this filter reads
+// (same field `content_filter` already reads — `job.description`).
+//
+// Semantics (case-insensitive substring), mirroring location_filter's
+// "don't penalize missing data" discipline exactly:
+//   - Candidate's own `location.country` (config/profile.yml) is "United
+//     States" → always pass, unconditionally. An exclusionary "US only"
+//     phrase can never legitimately block a US-based candidate, so the
+//     filter no-ops entirely rather than special-casing every keyword check.
+//   - Empty / whitespace-only / non-string description → pass (no signal).
+//   - No `exclusionary` phrase matched → pass (ambiguous stays ambiguous,
+//     never guessed — this also means an `inclusive`-only match with no
+//     exclusionary wording present is a no-op pass, same as having no
+//     signal at all).
+//   - `exclusionary` phrase matched AND an `inclusive` phrase is also
+//     present → pass (the posting explicitly widens eligibility).
+//   - `exclusionary` phrase matched AND the candidate's own country is
+//     literally named in the JD text (e.g. a Canadian candidate scanning a
+//     posting that separately mentions "Canada" elsewhere) → pass.
+//   - `exclusionary` phrase matched, no `inclusive` phrase, and the
+//     candidate's own country isn't named → reject.
+//
+// Config shape (portals.yml):
+//   country_eligibility_filter:
+//     exclusionary: ["must be located in the united states", ...]
+//     inclusive: ["united states or canada", "north america", ...]
+//
+// Kept as a sibling block to `content_filter` rather than folded into its
+// positive/negative shape: this filter cross-references
+// `config/profile.yml`'s `location.country` and has its own three-way
+// exclusionary/inclusive/candidate-country-named semantics, which doesn't
+// fit content_filter's simpler two-list reject/require shape.
+
+export function buildCountryEligibilityFilter(countryEligibilityFilter, candidateCountry) {
+  if (!countryEligibilityFilter) return () => true;
+
+  const candidateCountryLower = typeof candidateCountry === 'string'
+    ? candidateCountry.toLowerCase().trim()
+    : '';
+
+  // A "US-based candidates only" restriction can never legitimately exclude
+  // a candidate who is themselves US-based — no-op the whole filter rather
+  // than relying on the literal-country-name check below (which would miss
+  // phrasing like "US-based candidates only" that never spells out "united
+  // states").
+  if (candidateCountryLower === 'united states') return () => true;
+
+  const exclusionary = normalizeKeywordList(countryEligibilityFilter.exclusionary);
+  const inclusive = normalizeKeywordList(countryEligibilityFilter.inclusive);
+
+  return (description) => {
+    if (typeof description !== 'string' || description.trim() === '') return true;
+    const lower = description.toLowerCase();
+
+    if (exclusionary.length === 0) return true;
+    if (!exclusionary.some(k => lower.includes(k))) return true;
+    if (inclusive.length > 0 && inclusive.some(k => lower.includes(k))) return true;
+    if (candidateCountryLower && lower.includes(candidateCountryLower)) return true;
+
+    return false;
+  };
+}
+
 // ── Visa / work-authorization filter ────────────────────────────────
 // Optional. If `visa_filter` is absent (or `enabled: false`), all jobs pass.
 // Surfaces roles that sponsor a work visa (H-1B / H-1B1 / O-1 for the US, plus
@@ -435,6 +506,25 @@ export function addDays(dateStr, days) {
   const date = new Date(`${dateStr}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
+}
+
+// Reads config/profile.yml's `location.country` (already a documented
+// profile field — see config/profile.example.yml) for the country-
+// eligibility filter (#2093). Missing file, missing field, or a malformed
+// profile all resolve to '' — buildCountryEligibilityFilter treats an empty
+// candidate country the same as "not the candidate's own country's US
+// no-op" and simply skips the literal-country-name pass-through, which is
+// the same conservative "don't penalize missing data" default used
+// throughout this file.
+export function loadCandidateCountry(profilePath = PROFILE_PATH) {
+  if (!existsSync(profilePath)) return '';
+  try {
+    const raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};
+    const country = raw?.location?.country;
+    return typeof country === 'string' ? country.trim() : '';
+  } catch {
+    return '';
+  }
 }
 
 export function loadReApplyWindows(profilePath = PROFILE_PATH) {
@@ -1383,7 +1473,7 @@ const SCAN_RUNS_PATH = 'data/scan-runs.tsv';
 // 'completed' in v1; a follow-up wires failure-path writes so trend stats can
 // exclude survivorship bias. Consumers MUST parse by header name, never by
 // position — columns may be appended in later versions.
-export const SCAN_RUNS_HEADER = 'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_posting_age\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors\tfiltered_blacklist\tfiltered_visa\tfiltered_posted_date\n';
+export const SCAN_RUNS_HEADER = 'timestamp\tstatus\tcompanies\tboards\tfound\tfiltered_title\tfiltered_tier\tfiltered_location\tfiltered_posting_age\tfiltered_salary\tfiltered_content\tfiltered_cooldown\tdupes\tnew_added\terrors\tfiltered_blacklist\tfiltered_visa\tfiltered_posted_date\tfiltered_country_eligibility\n';
 
 export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
   if (!existsSync(filePath)) writeFileSync(filePath, SCAN_RUNS_HEADER, 'utf-8');
@@ -1399,6 +1489,8 @@ export function appendScanRunSummary(c, filePath = SCAN_RUNS_PATH) {
     c.filteredVisa ?? 0,
     // filtered_posted_date appended at the END for the same reason.
     c.filteredPostedDate ?? 0,
+    // filtered_country_eligibility (#2093) appended at the END for the same reason.
+    c.filteredCountryEligibility ?? 0,
   ].join('\t') + '\n';
   appendFileSync(filePath, row, 'utf-8');
 }
@@ -1673,6 +1765,8 @@ async function main() {
   const salaryFilter = buildSalaryFilter(config.salary_filter);
   const trustValidator = buildTrustValidator(config.trust_filter);
   const contentFilter = buildContentFilter(config.content_filter);
+  const candidateCountry = loadCandidateCountry();
+  const countryEligibilityFilter = buildCountryEligibilityFilter(config.country_eligibility_filter, candidateCountry);
   const visaFilter = buildVisaFilter(config.visa_filter);
   const visaEnabled = Boolean(config.visa_filter) && config.visa_filter.enabled !== false;
 
@@ -1759,6 +1853,7 @@ async function main() {
   let totalFilteredPostedDate = 0;
   let totalFilteredSalary = 0;
   let totalFilteredContent = 0;
+  let totalFilteredCountryEligibility = 0;
   let totalFilteredBlacklist = 0;
   let annotatedBlacklisted = 0;
   let totalFilteredVisa = 0;
@@ -1848,6 +1943,10 @@ async function main() {
         }
         if (!contentFilter(job.description, matchedTitleKeywords(job.title, config.title_filter))) {
           totalFilteredContent++;
+          continue;
+        }
+        if (!countryEligibilityFilter(job.description)) {
+          totalFilteredCountryEligibility++;
           continue;
         }
         if (!visaFilter(job.description)) {
@@ -2000,6 +2099,9 @@ async function main() {
   }
   if (config.content_filter || totalFilteredContent > 0) {
     console.log(`Filtered by content:   ${totalFilteredContent} removed`);
+  }
+  if (config.country_eligibility_filter || totalFilteredCountryEligibility > 0) {
+    console.log(`Filtered by country eligibility: ${totalFilteredCountryEligibility} removed`);
   }
   if (visaEnabled) {
     console.log(`Filtered by visa:      ${totalFilteredVisa} removed`);
@@ -2164,6 +2266,7 @@ async function main() {
       filteredBlacklist: totalFilteredBlacklist,
       filteredVisa: totalFilteredVisa,
       filteredPostedDate: totalFilteredPostedDate,
+      filteredCountryEligibility: totalFilteredCountryEligibility,
     });
   }
 
