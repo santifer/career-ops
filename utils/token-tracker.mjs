@@ -165,7 +165,7 @@ export function formatBreakdown(accumulator, model, provider) {
   const cost = estimateCost(model, totals, provider);
   const totalK = formatK(totals.total_tokens);
   const labelTotal = 'total:'.padEnd(15);
-  const costStr = cost === null ? 'cost unavailable' : `$${cost.toFixed(4)}`;
+  const costStr = cost === null ? 'est. cost n/a' : `$${cost.toFixed(4)}`;
   lines.push(`  ${labelTotal}${totalK} tokens (${costStr})`);
   lines.push(`  (metadata: model=${model}, provider=${provider})`);
   return lines.join('\n');

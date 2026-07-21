@@ -4,7 +4,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { estimateCost } from '../utils/token-tracker.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -13,7 +13,7 @@ const STATE_FILE = path.join(ROOT, 'batch', 'batch-state.tsv');
 const LOGS_DIR = path.join(ROOT, 'batch', 'logs');
 const REPORTS_DIR = path.join(ROOT, 'reports');
 
-function parseTokenVal(str) {
+export function parseTokenVal(str) {
   if (!str) return 0;
   str = str.toLowerCase().replace(/,/g, '').trim();
   if (str.endsWith('k')) {
@@ -204,10 +204,14 @@ function main() {
         return acc;
       }, { prompt_tokens: 0, completion_tokens: 0, cached_tokens: 0 });
       const workerCost = estimateCost(model, workerUsage, provider);
-      grandCost += workerCost;
-      console.log(`  ${padTotal}${formatK(workerTotalTokens)} tokens ($${workerCost.toFixed(4)})`);
+      if (workerCost !== null) {
+        grandCost += workerCost;
+        console.log(`  ${padTotal}${formatK(workerTotalTokens)} tokens ($${workerCost.toFixed(4)})`);
+      } else {
+        console.log(`  ${padTotal}${formatK(workerTotalTokens)} tokens (est. cost n/a)`);
+      }
     } else {
-      console.log(`  ${padTotal}${formatK(workerTotalTokens)} tokens (cost unavailable — no model metadata found)`);
+      console.log(`  ${padTotal}${formatK(workerTotalTokens)} tokens (est. cost n/a — no model metadata found)`);
     }
   }
 
@@ -236,4 +240,6 @@ function main() {
   console.log(`  ${padTotal}${formatK(grandTotalTokens)} tokens ($${grandCost.toFixed(4)})\n`);
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}
