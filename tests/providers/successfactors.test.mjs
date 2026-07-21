@@ -9,10 +9,21 @@ console.log('\nProvider — successfactors (SAP RMK tile parser)');
 try {
   const successfactorsModule = await import(pathToFileURL(join(ROOT, 'providers/successfactors.mjs')).href);
   const sf = successfactorsModule.default;
-  const { parseTiles, cityFromSlug } = successfactorsModule;
+  const { parseTiles, cityFromSlug, resolveConfig } = successfactorsModule;
 
   if (sf.id === 'successfactors') pass('successfactors.id is "successfactors"');
   else fail(`successfactors.id is ${JSON.stringify(sf.id)}`);
+
+  // resolveConfig — multi-brand RMK tenants (#2010): a brand/tenant path
+  // segment in the configured URL (careers.nemetschek.com/Bluebeam/) must
+  // survive into tileApi/jobsApi/searchPage, not collapse to the shared
+  // origin (which would silently return the parent brand's postings).
+  const single = resolveConfig({ name: 'ZF', careers_url: 'https://jobs.zf.com' });
+  if (single.base === 'https://jobs.zf.com' && single.tileApi === 'https://jobs.zf.com/tile-search-results/') {
+    pass('resolveConfig: single-domain tenant is unaffected (base === origin, #2010)');
+  } else {
+    fail(`resolveConfig single-domain wrong: base=${single.base} tileApi=${single.tileApi}`);
+  }
 
   // detect() — literal SF hosts auto-claim; branded RMK hosts (jobs.zf.com) do
   // NOT (they carry no "successfactors" string and rely on explicit provider:).
