@@ -92,6 +92,7 @@ const SYSTEM_PATHS = [
   'modes/patterns.md',
   'modes/titles.md',
   'modes/upskill.md',
+  'modes/ats-score.md',
   'modes/update.md',
   'modes/agent-inbox.md',
   'modes/reply-watch.md',

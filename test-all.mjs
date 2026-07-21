@@ -1316,7 +1316,7 @@ const expectedModes = [
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md', 'latex-tex.md', 'email.md', 'add.md', 'titles.md',
-  'expand.md',
+  'expand.md', 'ats-score.md',
   'regional/eu-swe.md',
 ];
 
@@ -1489,6 +1489,23 @@ if (
   pass('expand mode includes url limits, confirm gate, add-entry funneling, additive-only, and literal evidence rules');
 } else {
   fail('expand mode missing required behavior boundaries (url limits, confirm gate, additive-only, literal evidence, add-entry funneling)');
+}
+
+const atsScoreMode = readFile('modes/ats-score.md');
+if (
+  /never.{0,10}depend on:.{0,10}name, gender/i.test(atsScoreMode) &&
+  /hiring-agent/i.test(atsScoreMode) &&
+  /MIT licensed/i.test(atsScoreMode) &&
+  /Open Source \(0-35/i.test(atsScoreMode) &&
+  /Self Projects \(0-30/i.test(atsScoreMode) &&
+  /Production \(0-25/i.test(atsScoreMode) &&
+  /Technical Skills \(0-10/i.test(atsScoreMode) &&
+  /interview-prep\/ats-score\.md.{0,20}create if missing/i.test(atsScoreMode) &&
+  /do not overwrite prior runs/i.test(atsScoreMode)
+) {
+  pass('ats-score mode includes fairness constraint, HackerRank attribution, all 4 scoring categories, and append-only output rule');
+} else {
+  fail('ats-score mode missing required elements (fairness constraint, HackerRank attribution, scoring categories, or append-only output rule)');
 }
 
 try {

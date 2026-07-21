@@ -105,6 +105,7 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `generate-latex.mjs` | LaTeX CV validator + pdflatex compiler |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
+| `interview-prep/ats-score.md` | Dated history of candidate ATS self-scores (see `ats-score` mode) |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output). Includes ATS channel analysis (per-vendor advance rate; motivated by Bommasani et al., Algorithmic Monocultures in Hiring, FAccT 2026). |
 | `upskill.mjs` | Aggregate skill-gap analyzer — weighted gap map from tracked reports, known skills from `cv.md`/`config/profile.yml` excluded (JSON output) |
