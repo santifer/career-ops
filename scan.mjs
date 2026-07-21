@@ -660,9 +660,22 @@ const DEDUP_STRIP_PARAMS = new Set([
  * Normalize a job posting URL into a stable dedup key.
  *
  * Strips cosmetic query params (locale/tracking), drops a trailing slash,
- * and lowercases scheme + host. Only used to compute the *comparison* key —
- * callers keep writing/displaying the original URL so links stay clickable
- * and scan-history/pipeline.md stay faithful to what the provider returned.
+ * and lowercases scheme, host, and path. Only used to compute the
+ * *comparison* key — callers keep writing/displaying the original URL so
+ * links stay clickable and scan-history/pipeline.md stay faithful to what
+ * the provider returned.
+ *
+ * The path is lowercased because scan.mjs and scan-ats-full.mjs run as
+ * separate processes and can independently produce different casing for the
+ * identical posting — a Workday tenant/site path segment reached via the
+ * curated portals.yml entry vs. the reverse-ATS dataset, for instance. A
+ * case-sensitive key silently treats those as two distinct URLs, so the same
+ * role lands in pipeline.md twice. Path casing is not meaningfully distinct
+ * for any provider these scanners target.
+ *
+ * Query *values* keep their original casing — those can be identity-bearing
+ * (Greenhouse's `gh_jid`), which is also why DEDUP_STRIP_PARAMS is an
+ * allowlist rather than a blanket strip.
  *
  * Falls back to the raw string when the URL is malformed, preserving the
  * old byte-for-byte behavior for unparsable history rows.
@@ -684,7 +697,7 @@ export function normalizeUrlForDedup(url) {
     }
   }
   parsed.hash = '';
-  parsed.pathname = parsed.pathname.replace(/\/+$/, '') || '/';
+  parsed.pathname = parsed.pathname.replace(/\/+$/, '').toLowerCase() || '/';
   return parsed.toString();
 }
 

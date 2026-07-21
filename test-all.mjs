@@ -2044,6 +2044,25 @@ try {
     fail(`scan.mjs normalizeUrlForDedup wrong: withLang=${normalizeUrlForDedup(withLang)} withTrailingSlash=${normalizeUrlForDedup(withTrailingSlash)} withUtm=${normalizeUrlForDedup(withUtm)} ghJid=${normalizeUrlForDedup(ghJid)} malformed=${normalizeUrlForDedup(malformed)}`);
   }
 
+  // Path casing: scan.mjs and scan-ats-full.mjs can reach the identical Workday
+  // posting via different path casing (curated portals.yml entry vs. reverse-ATS
+  // dataset). A case-sensitive key files them as two roles and pipeline.md gets
+  // a duplicate, so the path is lowercased.
+  const wdMixed = 'https://Kyndryl.wd5.myworkdayjobs.com/KyndrylProfessionalCareers/job/Network-Engineer_R-64949';
+  const wdLower = 'https://kyndryl.wd5.myworkdayjobs.com/kyndrylprofessionalcareers/job/network-engineer_r-64949';
+  if (normalizeUrlForDedup(wdMixed) === normalizeUrlForDedup(wdLower)) {
+    pass('normalizeUrlForDedup collapses a case-only path difference (same posting via two scanners)');
+  } else {
+    fail(`normalizeUrlForDedup left a case-only duplicate: ${normalizeUrlForDedup(wdMixed)} vs ${normalizeUrlForDedup(wdLower)}`);
+  }
+
+  // ...but query values stay case-sensitive: they can be identity-bearing.
+  if (normalizeUrlForDedup('https://boards.greenhouse.io/acme/jobs/9?gh_jid=AbC').includes('gh_jid=AbC')) {
+    pass('normalizeUrlForDedup preserves query-value casing (identity-bearing params)');
+  } else {
+    fail('normalizeUrlForDedup must not lowercase query values — gh_jid is identity-bearing');
+  }
+
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-seen-urls-'));
   const originalCwd = process.cwd();
   try {
