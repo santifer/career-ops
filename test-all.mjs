@@ -2061,6 +2061,26 @@ try {
     } else {
       fail(`scan.mjs loadSeenUrls did not dedup query-suffix variant: has(bare)=${seen.has(normalizeUrlForDedup(bare))} has(withLang)=${seen.has(normalizeUrlForDedup(withLang))}`);
     }
+
+    // Same dedupUrl-once pattern the main-loop and runSeedScan/scan-ats-full
+    // loops use: a job re-fetched under either URL variant of an already-seen
+    // history row must be counted as a dupe (never re-added to seenUrls).
+    let dupeCount = 0;
+    let newCount = 0;
+    for (const jobUrl of [bare, withLang, withTrailingSlash]) {
+      const dedupUrl = normalizeUrlForDedup(jobUrl);
+      if (seen.has(dedupUrl)) {
+        dupeCount++;
+      } else {
+        seen.add(dedupUrl);
+        newCount++;
+      }
+    }
+    if (dupeCount === 3 && newCount === 0) {
+      pass('scan.mjs main-loop dedup pattern treats every cosmetic URL variant of a seen row as a duplicate, never re-adds (#2065)');
+    } else {
+      fail(`scan.mjs main-loop dedup pattern wrong: dupeCount=${dupeCount} newCount=${newCount} (expected 3/0)`);
+    }
   } finally {
     process.chdir(originalCwd);
     rmSync(fixtureRoot, { recursive: true, force: true });
