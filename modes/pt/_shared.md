@@ -204,6 +204,7 @@ Em vagas e negociações brasileiras, existem termos e práticas que não aparec
 8b. **URLs de case studies no PDF Professional Summary:** Se o PDF menciona case studies ou demos, as URLs DEVEM aparecer já no primeiro parágrafo (Professional Summary). Recrutadores frequentemente só leem o resumo. Todos os URLs no HTML com `white-space: nowrap`
 9. **Entradas no tracker como TSV** — NUNCA editar `applications.md` diretamente para novos registros. Escrever TSV em `batch/tracker-additions/`, `merge-tracker.mjs` cuida do merge
 10. **Incluir `**URL:**` em todo header de report** — entre Score e PDF
+11. **Seções Bloqueadas:** Se `cv.locked_sections` estiver definido em `profile.yml`, NUNCA remova, encurte ou parafraseie essas seções durante a geração ou adaptação do CV. Elas devem aparecer literalmente.
 
 ### Tools
 

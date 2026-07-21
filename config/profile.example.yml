@@ -83,6 +83,11 @@ cv:
   # The ID starts with "D" and is 11 characters long.
   # canva_resume_design_id: "DAxxxxxxxxx"
 
+  # Sections that the AI must never remove, shorten, or paraphrase during tailoring.
+  # locked_sections:
+  #   - "Open Source Contributions"
+  #   - "GitHub Projects"
+
 # ── Cover Letter Settings ──────────────────────────────────────────────────
 #
 # Used by `/career-ops cover` and the cover letter sub-flow in `/career-ops pdf`.

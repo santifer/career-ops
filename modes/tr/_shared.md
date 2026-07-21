@@ -233,6 +233,7 @@ Türkçe iş ilanlarında ve sözleşme müzakerelerinde, yabancı piyasalarda k
 8b. **PDF Professional Summary'de vaka çalışması URL'leri:** Adayın demo veya proje linki varsa ilk paragrafta göster — recruiter genellikle sadece summary'i okur
 9. **Takipçi eklemeleri TSV olarak** — `applications.md`'ye doğrudan yeni satır ekleme. TSV'yi `batch/tracker-additions/` klasörüne yaz, `merge-tracker.mjs` halleder
 10. Her rapor başlığına `**URL:**` alanını ekle — Puan ile PDF arasına
+11. **Kilitli Bölümler:** Eğer `profile.yml` içinde `cv.locked_sections` tanımlanmışsa, CV oluşturma veya uyarlama sırasında bu bölümleri ASLA kaldırma, kısaltma veya farklı ifadelerle yeniden yazma. Birebir aynı görünmelidirler.
 
 ### Araçlar
 

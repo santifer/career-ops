@@ -187,6 +187,7 @@ In deutschen Stellenanzeigen und Vertragsverhandlungen tauchen Begriffe auf, die
 8b. **Case-Study-URLs in der PDF Professional Summary:** Wenn das PDF Case Studies oder Demos erwähnt, MÜSSEN die URLs schon im ersten Absatz (Professional Summary) auftauchen. Recruiter lesen oft nur die Summary. Alle URLs im HTML mit `white-space: nowrap`
 9. **Tracker-Einträge als TSV** — `applications.md` NIEMALS direkt für neue Einträge editieren. TSV in `batch/tracker-additions/` schreiben, `merge-tracker.mjs` übernimmt das Mergen
 10. **`**URL:**` in jedem Report-Header** — zwischen Score und PDF
+11. **Gesperrte Bereiche:** Wenn `cv.locked_sections` in `profile.yml` definiert ist, dürfen diese Bereiche bei der Lebenslauf-Anpassung NIEMALS entfernt, gekürzt oder umformuliert werden. Sie müssen wörtlich übernommen werden.
 
 ### Tools
 
