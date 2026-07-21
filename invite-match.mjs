@@ -278,8 +278,20 @@ export function extractReqId(text) {
 // as COMPANY_LINE_PATTERNS above: this is "does this look like a rejection",
 // not an exhaustive NLP classifier. Ordered roughly by how common each
 // phrasing is in real ATS-generated rejection templates.
-const REJECTION_PHRASES = [
-  'unfortunately',
+//
+// Split into a strong tier and a corroborating-only tier (mirrors the
+// strong-marker / corroborating-only-marker distinction modes/oferta.md
+// already uses for its jurisdiction-mismatch signal, and the "single
+// instance vs. corroborated" framing in modes/interview-redflag.md) — the
+// asymmetry matters because `--apply` performs an irreversible tracker write
+// gated on a `rejection` classification (#2098). A false `rejection` is the
+// unsafe direction (it can mark an active application Rejected); a false
+// `invite`/`unknown` merely causes `--apply` to safely refuse. Any phrase
+// here that is common in *non-rejection* professional correspondence
+// (reschedules, apologies for delays, unrelated bad news) must never be
+// sufficient on its own to classify as `rejection` — see CodeRabbit review
+// on PR #2100.
+const REJECTION_PHRASES_STRONG = [
   'not been selected to advance',
   'not been selected',
   'not selected for this position',
@@ -299,7 +311,17 @@ const REJECTION_PHRASES = [
   'not able to offer you a position',
 ];
 
-// Phrasings that suggest an interview invite. Mirrors REJECTION_PHRASES for
+// Corroborating-only: too generic to trigger a `rejection` classification by
+// itself (e.g. "Unfortunately we need to reschedule your interview" is a
+// benign reschedule, not a rejection). Only counts toward `rejection` when
+// it co-occurs with a strong phrase above, or with a second distinct
+// corroborating phrase — never alone. See classifyEmail() below.
+const REJECTION_PHRASES_WEAK = [
+  'unfortunately',
+];
+
+// Phrasings that suggest an interview invite. Mirrors the rejection phrase
+// lists above for
 // the opposite case; extractCompany's own patterns already do the real work
 // of the invite path, so this list exists purely for classification.
 const INVITE_PHRASES = [
@@ -318,25 +340,38 @@ const INVITE_PHRASES = [
 ];
 
 /**
- * Classify pasted email text as `invite`, `rejection`, or `unknown`.
+ * Classify pasted email text as `invite`, `rejection`, or `unknown`, and
+ * report which phrase(s) drove the call — so a human/agent can sanity-check
+ * a `rejection` classification before `--apply` performs its irreversible
+ * tracker write (#2098, CodeRabbit review on PR #2100).
+ *
+ * Rejection requires either a strong phrase (unambiguous on its own) or two
+ * distinct corroborating-only phrases together — a single corroborating-only
+ * phrase (e.g. "unfortunately") is never sufficient by itself, since it is
+ * common in unrelated professional correspondence (reschedules, delays) and
+ * a false `rejection` is the unsafe misclassification direction here.
  *
  * Informational only — never a gate on matching. An email that mentions both
  * (e.g. a rejection that references an earlier phone screen: "Thank you for
- * interviewing with us. Unfortunately...") is classified `rejection`: that
- * language is the more decisive signal of the two, and it is also the only
- * classification the --apply path acts on (#2098).
+ * interviewing with us. Unfortunately, we regret to inform you...") is
+ * classified `rejection`: that language is the more decisive signal of the
+ * two, and it is also the only classification the --apply path acts on.
  *
  * @param {string} text - Raw pasted email text.
- * @returns {'invite'|'rejection'|'unknown'}
+ * @returns {{classification: 'invite'|'rejection'|'unknown', matchedPhrases: string[]}}
  */
 export function classifyEmail(text) {
-  if (!text) return 'unknown';
+  if (!text) return { classification: 'unknown', matchedPhrases: [] };
   const lower = text.toLowerCase();
-  const isRejection = REJECTION_PHRASES.some(p => lower.includes(p));
-  const isInvite = INVITE_PHRASES.some(p => lower.includes(p));
-  if (isRejection) return 'rejection';
-  if (isInvite) return 'invite';
-  return 'unknown';
+  const strongMatches = REJECTION_PHRASES_STRONG.filter(p => lower.includes(p));
+  const weakMatches = REJECTION_PHRASES_WEAK.filter(p => lower.includes(p));
+  const isRejection = strongMatches.length > 0 || weakMatches.length >= 2;
+  if (isRejection) return { classification: 'rejection', matchedPhrases: [...strongMatches, ...weakMatches] };
+
+  const inviteMatches = INVITE_PHRASES.filter(p => lower.includes(p));
+  if (inviteMatches.length > 0) return { classification: 'invite', matchedPhrases: inviteMatches };
+
+  return { classification: 'unknown', matchedPhrases: [] };
 }
 
 // --- Tracker loading ---
@@ -413,7 +448,7 @@ export function matchInvite(signals, trackerRows) {
  *
  * @param {string} text - Raw invite/rejection email text.
  * @param {Array<object>} [trackerRows] - Injectable for tests; defaults to loadTracker().
- * @returns {{signals: object, classification: 'invite'|'rejection'|'unknown', candidates: Array<object>}}
+ * @returns {{signals: object, classification: 'invite'|'rejection'|'unknown', matchedPhrases: string[], candidates: Array<object>}}
  */
 export function analyzeInvite(text, trackerRows = null) {
   const signals = {
@@ -423,8 +458,8 @@ export function analyzeInvite(text, trackerRows = null) {
   };
   const rows = trackerRows ?? loadTracker();
   const candidates = matchInvite(signals, rows);
-  const classification = classifyEmail(text);
-  return { signals, classification, candidates };
+  const { classification, matchedPhrases } = classifyEmail(text);
+  return { signals, classification, matchedPhrases, candidates };
 }
 
 /**
@@ -467,6 +502,7 @@ function printSummary(result) {
   console.log(`${'='.repeat(70)}\n`);
 
   console.log(`  Classification:    ${result.classification}`);
+  console.log(`  Matched phrase(s): ${result.matchedPhrases && result.matchedPhrases.length ? result.matchedPhrases.join(', ') : '(none)'}`);
   console.log(`  Extracted company: ${result.signals.company || '(not found)'}`);
   console.log(`  Extracted date:    ${result.signals.date || '(not found)'}`);
   console.log(`  Extracted req ID:  ${result.signals.reqId || '(not found)'}\n`);
@@ -566,21 +602,42 @@ function runSelfTest() {
   check(result.classification === 'invite', 'analyzeInvite classifies an invite-phrased email as "invite" (no regression from #2098)');
 
   // --- classifyEmail (#2098) ---
-  check(classifyEmail('Unfortunately, we have decided not to move forward with your application.') === 'rejection', 'detects "decided not to move forward" as rejection');
-  check(classifyEmail('Thank you for your interest. We regret to inform you that you have not been selected to advance.') === 'rejection', 'detects "regret to inform" / "not been selected to advance" as rejection');
-  check(classifyEmail('After careful consideration, we have decided to move forward with other candidates whose qualifications more closely align with this role.') === 'rejection', 'detects "move forward with other candidates" as rejection');
-  check(classifyEmail('We are sorry to inform you that you were not successful in this process.') === 'rejection', 'detects "not successful" as rejection');
-  check(classifyEmail('We would like to invite you to schedule your phone screen for next week.') === 'invite', 'detects invite phrasing as "invite"');
-  check(classifyEmail('Looking forward to interviewing with you next Tuesday.') === 'invite', 'detects "interviewing with" as "invite"');
-  check(classifyEmail('Thanks for your recent purchase, here is your receipt.') === 'unknown', 'unrelated text classifies as "unknown"');
-  check(classifyEmail('') === 'unknown', 'empty text classifies as "unknown"');
-  check(classifyEmail('Thank you for interviewing with us last week. Unfortunately, we will not be moving forward with your application.') === 'rejection', 'rejection language wins when both invite and rejection phrasing appear (references a past interview)');
+  check(classifyEmail('Unfortunately, we have decided not to move forward with your application.').classification === 'rejection', 'detects "decided not to move forward" as rejection');
+  check(classifyEmail('Thank you for your interest. We regret to inform you that you have not been selected to advance.').classification === 'rejection', 'detects "regret to inform" / "not been selected to advance" as rejection');
+  check(classifyEmail('After careful consideration, we have decided to move forward with other candidates whose qualifications more closely align with this role.').classification === 'rejection', 'detects "move forward with other candidates" as rejection');
+  check(classifyEmail('We are sorry to inform you that you were not successful in this process.').classification === 'rejection', 'detects "not successful" as rejection');
+  check(classifyEmail('We would like to invite you to schedule your phone screen for next week.').classification === 'invite', 'detects invite phrasing as "invite"');
+  check(classifyEmail('Looking forward to interviewing with you next Tuesday.').classification === 'invite', 'detects "interviewing with" as "invite"');
+  check(classifyEmail('Thanks for your recent purchase, here is your receipt.').classification === 'unknown', 'unrelated text classifies as "unknown"');
+  check(classifyEmail('').classification === 'unknown', 'empty text classifies as "unknown"');
+  check(classifyEmail('Thank you for interviewing with us last week. Unfortunately, we will not be moving forward with your application.').classification === 'rejection', 'rejection language wins when both invite and rejection phrasing appear (references a past interview)');
+
+  // --- CodeRabbit PR #2100: "unfortunately" alone must never be sufficient ---
+  const rescheduleOnly = classifyEmail('Unfortunately we need to push your interview to next Tuesday due to a scheduling conflict.');
+  check(rescheduleOnly.classification !== 'rejection', '"unfortunately" alone (benign reschedule) does NOT classify as rejection');
+  check(rescheduleOnly.classification === 'unknown', '"unfortunately"-only reschedule email classifies as unknown, not invite or rejection');
+
+  const weakPlusStrong = classifyEmail('Unfortunately, we have decided not to move forward with your application at this time.');
+  check(weakPlusStrong.classification === 'rejection', '"unfortunately" alongside a strong rejection phrase still classifies as rejection');
+  check(weakPlusStrong.matchedPhrases.includes('unfortunately') && weakPlusStrong.matchedPhrases.includes('decided not to move forward'), 'matchedPhrases includes both the weak and strong phrase that co-occurred');
+
+  const rejectionPhraseCheck = classifyEmail('We regret to inform you that you have not been selected.');
+  check(Array.isArray(rejectionPhraseCheck.matchedPhrases) && rejectionPhraseCheck.matchedPhrases.length > 0, 'matchedPhrases is populated for a rejection classification');
+
+  const invitePhraseCheck = classifyEmail('We would like to invite you to schedule your phone screen for next week.');
+  check(Array.isArray(invitePhraseCheck.matchedPhrases) && invitePhraseCheck.matchedPhrases.includes('schedule your phone screen'), 'matchedPhrases is populated for an invite classification');
 
   // --- analyzeInvite classification for a rejection email (fixture rows, no file I/O) ---
   const rejectionText = 'Dear Candidate,\n\nCompany: Example Industries\nThank you for applying. Unfortunately, we have decided not to move forward with your application at this time.';
   const rejectionResult = analyzeInvite(rejectionText, fixtureRows);
   check(rejectionResult.classification === 'rejection', 'analyzeInvite classifies a rejection email as "rejection"');
   check(rejectionResult.candidates.length === 2 && rejectionResult.candidates[0].appNumber === 101, 'a rejection email still returns ranked candidates (matching is unaffected by classification), active row ranked first');
+  check(Array.isArray(rejectionResult.matchedPhrases) && rejectionResult.matchedPhrases.length > 0, 'analyzeInvite exposes matchedPhrases for a rejection classification');
+
+  // --- analyzeInvite: the false-positive CodeRabbit named must not enable --apply ---
+  const rescheduleText = 'Dear Candidate,\n\nCompany: Example Industries\nUnfortunately we need to push your interview to next Tuesday due to a scheduling conflict.';
+  const rescheduleResult = analyzeInvite(rescheduleText, fixtureRows);
+  check(rescheduleResult.classification !== 'rejection', 'analyzeInvite does not classify a benign reschedule email (containing only "unfortunately") as rejection — --apply would refuse this');
 
   console.log(`\n  invite-match self-test: ${pass} passed, ${fail} failed\n`);
   process.exit(fail > 0 ? 1 : 0);
