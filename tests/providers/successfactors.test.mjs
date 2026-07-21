@@ -36,6 +36,15 @@ try {
   } else {
     fail(`resolveConfig multi-brand wrong: ${JSON.stringify(brandSearch)}`);
   }
+  // jobBase deliberately stays origin-only: live RMK data-url paths for a
+  // brand-scoped tenant already carry the brand segment (confirmed against
+  // Nemetschek's own /Bluebeam/tile-search-results/ output), so prefixing
+  // base there would double it up.
+  if (brandSearch.jobBase === 'https://careers.nemetschek.com') {
+    pass('resolveConfig: jobBase stays origin-only for a brand-scoped tenant (#2010)');
+  } else {
+    fail(`resolveConfig jobBase wrong: ${brandSearch.jobBase}`);
+  }
 
   // detect() — literal SF hosts auto-claim; branded RMK hosts (jobs.zf.com) do
   // NOT (they carry no "successfactors" string and rely on explicit provider:).
