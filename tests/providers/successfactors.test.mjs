@@ -25,6 +25,18 @@ try {
     fail(`resolveConfig single-domain wrong: base=${single.base} tileApi=${single.tileApi}`);
   }
 
+  const brandSearch = resolveConfig({ name: 'Bluebeam', api: 'https://careers.nemetschek.com/Bluebeam/search/' });
+  if (
+    brandSearch.base === 'https://careers.nemetschek.com/Bluebeam' &&
+    brandSearch.tileApi === 'https://careers.nemetschek.com/Bluebeam/tile-search-results/' &&
+    brandSearch.jobsApi === 'https://careers.nemetschek.com/Bluebeam/services/recruiting/v1/jobs' &&
+    brandSearch.searchPage === 'https://careers.nemetschek.com/Bluebeam/search/'
+  ) {
+    pass('resolveConfig: multi-brand tenant keeps the brand path in tileApi/jobsApi/searchPage (#2010)');
+  } else {
+    fail(`resolveConfig multi-brand wrong: ${JSON.stringify(brandSearch)}`);
+  }
+
   // detect() — literal SF hosts auto-claim; branded RMK hosts (jobs.zf.com) do
   // NOT (they carry no "successfactors" string and rely on explicit provider:).
   if (sf.detect({ name: 'X', careers_url: 'https://acme.successfactors.eu/careers' })) {
