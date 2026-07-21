@@ -67,6 +67,7 @@ const SYSTEM_PATHS = [
   'modes/cover.md',
   'modes/email.md',
   'modes/add.md',
+  'modes/expand.md',
   'modes/scan.md',
   'modes/batch.md',
   'modes/apply.md',
@@ -115,6 +116,7 @@ const SYSTEM_PATHS = [
   'modes/heuristics/',
   'modes/regional/',
   'modes/zh/',
+  'modes/zh/interview/',
   'modes/zh-TW/',
   'CLAUDE.md',
   'CODEX.md',
@@ -184,6 +186,7 @@ const SYSTEM_PATHS = [
   'agent-inbox.mjs',
   'followup-seed.mjs',
   'followup-seed-tests.mjs',
+  'profile-language.mjs',
   'gemini-eval.mjs',
   'ollama-eval.mjs',
   'openai-eval.mjs',
@@ -196,6 +199,7 @@ const SYSTEM_PATHS = [
   'test-salary-filter.mjs',
   'test-trust-validator.mjs',
   'tracker-columns-tests.mjs',
+  'tracker-writer-lock-tests.mjs',
   'agent-inbox-tests.mjs',
   'validate-portals.mjs',
   'verify-portals.mjs',
@@ -208,7 +212,9 @@ const SYSTEM_PATHS = [
   'paste-reply-tests.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
+  'batch/aggregate-tokens.mjs',
   'batch/README.md',
+  'utils/token-tracker.mjs',
   'dashboard/',
   'templates/',
   'config/cv-facts.example.json',
@@ -267,9 +273,13 @@ const SYSTEM_PATHS = [
   'package.json',
   'build-cv-latex.mjs',
   'build-cv-html.mjs',
+  'cv-sections-core.mjs',
   'cv-templates.mjs',
   'test/cv-templates.test.mjs',
   'test/cover-resolver.test.mjs',
+  'test/profile-photo.test.mjs',
+  'templates/cv-template.zh-minimal.html',
+  'test/zh-minimal-template.test.mjs',
   'scaffolder/',
   'Dockerfile',
   'docker-compose.yml',
@@ -279,7 +289,6 @@ const SYSTEM_PATHS = [
   'plugins/',
   'plugins.mjs',
   'plugins-registry/',
-  'plugins-registry.json',
   'plugin-install.mjs',
   'plugin-audit.mjs',
   'validate-plugin-registry.mjs',
@@ -307,7 +316,6 @@ const BOOTSTRAP_PATHS = [
   'plugins/',
   'plugins.mjs',
   'plugins-registry/',
-  'plugins-registry.json',
   'plugin-install.mjs',
   'plugin-audit.mjs',
   'validate-plugin-registry.mjs',
@@ -999,7 +1007,7 @@ async function apply() {
     console.log('\n-- The CareerOps Manifesto ------------------------------');
     console.log('A new way of job searching is taking shape. You are');
     console.log('already practicing it. Read it, sign it if you want to help:');
-    console.log('    npm run manifesto  ·  https://career-ops.org/manifesto');
+    console.log('    npm run manifesto  ·  https://career-ops.org/manifesto?utm_source=updater');
 
   } finally {
     // Remove lock
