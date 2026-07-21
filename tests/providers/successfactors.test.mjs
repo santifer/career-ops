@@ -207,6 +207,16 @@ try {
   const c2 = csbJobs[1];
   if (c2 && !/[?#&]|&amp;/.test(new URL(c2.url).pathname)) pass('parseCsbJobs sanitizes &amp; / URL-structural chars out of the slug');
   else fail(`parseCsbJobs slug not sanitized: ${JSON.stringify(c2 && c2.url)}`);
+
+  // parseCsbJobs (#2010): a brand-scoped cfg.base (from resolveConfig) must
+  // flow into the built job URL, for a hypothetical multi-brand CSB tenant.
+  const csbBrandCfg = { origin: 'https://careers.example.com', base: 'https://careers.example.com/Acme' };
+  const csbBrandJobs = parseCsbJobs(csbJson, csbBrandCfg, 'en_US');
+  if (csbBrandJobs[0]?.url === 'https://careers.example.com/Acme/job/Analytical-Lab-Technician/31099-en_US') {
+    pass('parseCsbJobs uses cfg.base (brand-scoped) when present (#2010)');
+  } else {
+    fail(`parseCsbJobs did not honor cfg.base: ${JSON.stringify(csbBrandJobs[0]?.url)}`);
+  }
 } catch (err) {
   fail(`successfactors provider test threw: ${err.message}`);
 }
