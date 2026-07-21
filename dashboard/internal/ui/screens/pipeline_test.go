@@ -390,6 +390,21 @@ func TestRespondedTabFiltersCorrectly(t *testing.T) {
 	}
 }
 
+// The tab row follows the funnel order used by statusGroupOrder, where a
+// responded posting sits between interview and applied.
+func TestRespondedTabSitsBetweenInterviewAndApplied(t *testing.T) {
+	interview := tabIndexForFilter(t, filterInterview)
+	responded := tabIndexForFilter(t, filterResponded)
+	applied := tabIndexForFilter(t, filterApplied)
+
+	if !(interview < responded && responded < applied) {
+		t.Fatalf(
+			"expected tab order interview < responded < applied, got %d, %d, %d",
+			interview, responded, applied,
+		)
+	}
+}
+
 // Regression: with no committed search query, Esc must NOT close the screen.
 // The help bar advertises only `q quit`, so Esc quitting silently was a bug
 // that surfaced as accidental exits when users hit Esc to "back out" of the UI.
