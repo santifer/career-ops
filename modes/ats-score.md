@@ -96,7 +96,7 @@ Link quality is already scored in the Self Projects link penalty above, so it do
 **Key strengths** (max 5, evidence-backed)
 1. ...
 
-**Areas for improvement** (max 3, concrete and actionable, e.g. "Add a live demo link to Manaakhah," not "improve projects")
+**Areas for improvement** (max 3, concrete and actionable, e.g. "Add a live demo link to your top project," not "improve projects")
 1. ...
 ```
 
