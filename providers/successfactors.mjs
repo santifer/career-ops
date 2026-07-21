@@ -81,11 +81,16 @@ export function resolveConfig(entry) {
   // some holding companies run several acquired brands off one shared RMK
   // instance, disambiguated by a path segment instead of a separate domain
   // (e.g. careers.nemetschek.com/Bluebeam/ vs. .../Vectorworks/). Strip a
-  // trailing /search/ (the page tenants commonly configure as careers_url)
-  // and any trailing slash, so a bare-origin config and a brand-scoped
-  // /search/ config both collapse to the same base. Single-domain tenants
-  // (the common case) have an empty pathname, so base === origin unchanged.
-  const path = u.pathname.replace(/\/search\/?$/i, '').replace(/\/+$/, '');
+  // trailing known-endpoint segment — /search/ (the page tenants commonly
+  // configure as careers_url), or one of the API paths this module itself
+  // builds below (/tile-search-results/, /services/recruiting/v1/jobs), in
+  // case an `api:` override points straight at one — plus any trailing
+  // slash, so all of those collapse to the same brand-scoped base instead of
+  // doubling the endpoint segment onto itself. Single-domain tenants (the
+  // common case) have an empty pathname, so base === origin unchanged.
+  const path = u.pathname
+    .replace(/\/(?:search|tile-search-results|services\/recruiting\/v1\/jobs)\/?$/i, '')
+    .replace(/\/+$/, '');
   const base = u.origin + path;
   return {
     origin: u.origin,
