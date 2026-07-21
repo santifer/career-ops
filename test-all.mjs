@@ -8988,7 +8988,7 @@ try {
   }
 
   if (
-    planFlat.includes('interview-prep.md`\'s "Step 1 — Research" WebSearch queries') &&
+    planFlat.includes('`interview-prep.md`\'s "Step 1 — Research" WebSearch queries') &&
     planFlat.includes('[inferred from JD]')
   ) {
     pass('interview/plan cross-references interview-prep.md Step 1 queries and the [inferred from JD] tag convention (no duplicated query table)');
