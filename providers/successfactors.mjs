@@ -68,7 +68,7 @@ const CSB_DEFAULT_LOCALES = ['de_DE', 'en_US'];
 const CSB_LOCALE_PRIORITY = ['de_DE', 'en_US', 'en_GB', 'en_EN'];
 
 /** @param {import('./_types.js').PortalEntry} entry */
-function resolveConfig(entry) {
+export function resolveConfig(entry) {
   const raw = entry.api || entry.careers_url || '';
   let u;
   try {
