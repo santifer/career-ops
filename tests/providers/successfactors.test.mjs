@@ -59,6 +59,23 @@ try {
     fail('resolveConfig should return null for an unparseable URL');
   }
 
+  // An `api:` override pointing straight at one of the endpoints this module
+  // itself builds (rather than at the brand root or /search/) must not
+  // double the segment onto the derived base (e.g. …/tile-search-results/
+  // tile-search-results/).
+  const brandTileEndpoint = resolveConfig({ name: 'Bluebeam', api: 'https://careers.nemetschek.com/Bluebeam/tile-search-results/' });
+  if (brandTileEndpoint.base === 'https://careers.nemetschek.com/Bluebeam' && brandTileEndpoint.tileApi === 'https://careers.nemetschek.com/Bluebeam/tile-search-results/') {
+    pass('resolveConfig: api: pointing at tile-search-results/ directly does not double the segment (#2010)');
+  } else {
+    fail(`resolveConfig tile-endpoint-as-api wrong: base=${brandTileEndpoint.base} tileApi=${brandTileEndpoint.tileApi}`);
+  }
+  const brandJobsEndpoint = resolveConfig({ name: 'Bluebeam', api: 'https://careers.nemetschek.com/Bluebeam/services/recruiting/v1/jobs' });
+  if (brandJobsEndpoint.base === 'https://careers.nemetschek.com/Bluebeam' && brandJobsEndpoint.jobsApi === 'https://careers.nemetschek.com/Bluebeam/services/recruiting/v1/jobs') {
+    pass('resolveConfig: api: pointing at services/recruiting/v1/jobs directly does not double the segment (#2010)');
+  } else {
+    fail(`resolveConfig jobs-endpoint-as-api wrong: base=${brandJobsEndpoint.base} jobsApi=${brandJobsEndpoint.jobsApi}`);
+  }
+
   // detect() — literal SF hosts auto-claim; branded RMK hosts (jobs.zf.com) do
   // NOT (they carry no "successfactors" string and rely on explicit provider:).
   if (sf.detect({ name: 'X', careers_url: 'https://acme.successfactors.eu/careers' })) {
