@@ -262,7 +262,7 @@ export function cleanCsbLocation(raw) {
 // Map one CSB jobs-API response to raw {id, title, url, location, postedAt}.
 // Records nest the useful fields under `.response`; a record without an id or a
 // title is skipped (can't build a stable dedup key or a meaningful listing).
-/** @param {any} json @param {{origin:string}} cfg @param {string} locale */
+/** @param {any} json @param {{origin:string, base?:string}} cfg @param {string} locale */
 export function parseCsbJobs(json, cfg, locale) {
   const list = Array.isArray(json?.jobSearchResult) ? json.jobSearchResult : [];
   const out = [];
@@ -282,7 +282,7 @@ export function parseCsbJobs(json, cfg, locale) {
     const slug = decodeEntities(String(r.unifiedUrlTitle || r.urlTitle || 'job'))
       .replace(/[?#&]+/g, '-')
       .replace(/-{2,}/g, '-');
-    const url = `${cfg.origin}/job/${slug}/${id}-${locale}`;
+    const url = `${cfg.base || cfg.origin}/job/${slug}/${id}-${locale}`;
     out.push({
       id,
       title,
