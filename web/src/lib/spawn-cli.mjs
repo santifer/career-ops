@@ -21,6 +21,6 @@ import { spawn } from "node:child_process";
  */
 export function spawnHeadlessCli(binPath, args, options) {
   const child = spawn(binPath, args, options);
-  child.stdin.end();
+  child.stdin?.end();
   return child;
 }
