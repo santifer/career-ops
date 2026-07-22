@@ -132,6 +132,7 @@ const SYSTEM_PATHS = [
   'lib/latex-content.mjs',
   'lib/context-budget.mjs',
   'lib/context-budget.test.mjs',
+  'lib/golden-budget-analysis.mjs',
   'img-to-pdf.mjs',
   'archive-posting.mjs',
   'application-answers.mjs',
