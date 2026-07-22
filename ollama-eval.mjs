@@ -29,6 +29,11 @@ import { outputLanguageInstruction, parseOutputLanguage } from './profile-langua
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
+import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './utils/token-tracker.mjs';
+
+const tracker = new TokenAccumulator();
+tracker.recordZeroToken('scan');
+tracker.recordZeroToken('pdf payload');
 
 try {
   const { config } = await import('dotenv');
@@ -282,6 +287,8 @@ try {
 
   const data = await res.json();
   evaluationText = data.choices?.[0]?.message?.content?.trim();
+  const usage = normalizeOpenAIUsage(data.usage);
+  tracker.record('evaluation', usage);
   if (!evaluationText) {
     console.error('❌  Ollama returned an empty response.');
     process.exit(1);
@@ -379,3 +386,5 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
 console.log('\n' + '─'.repeat(66));
 console.log(`  Score: ${score}/5  |  Archetype: ${archetype}  |  Legitimacy: ${legitimacy}`);
 console.log('─'.repeat(66) + '\n');
+
+console.log(formatBreakdown(tracker, modelName, 'ollama'));
