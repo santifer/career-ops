@@ -450,6 +450,56 @@ function git(...args) {
   return gitIn(ROOT, ...args);
 }
 
+/**
+ * git(), but with the child's stderr piped instead of inherited.
+ *
+ * execFileSync inherits stderr by default, so a command whose failure is
+ * expected and handled still prints git's raw error to the console. Use this
+ * where a non-zero exit is a normal outcome the caller reports itself.
+ *
+ * @param {...string} args - git arguments.
+ * @returns {string} Trimmed stdout.
+ */
+function gitQuiet(...args) {
+  const timeout = gitTimeoutMs(args);
+  try {
+    return execFileSync('git', args, {
+      cwd: ROOT, encoding: 'utf-8', timeout, stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch (err) {
+    if (isTimeoutLikeError(err)) {
+      throw new Error(`${describeGitCommand(args)} timed out after ${timeoutSeconds(timeout)}s. If your network is slow, retry or set ${gitTimeoutEnvVar(args)} to a larger value.`);
+    }
+    throw err;
+  }
+}
+
+/**
+ * Paths the target manifest ships that did not materialize on disk.
+ *
+ * apply() reports success without checking that the checkout loop actually
+ * produced a coherent install, so a client whose local manifest predates the
+ * target's silently ends up missing every path added since — and only finds
+ * out when the next script crashes with ERR_MODULE_NOT_FOUND (#1998).
+ *
+ * @param {string[]} targetPaths - SYSTEM_PATHS read from the target updater.
+ * @returns {string[]} Entries present in FETCH_HEAD but absent locally.
+ */
+function missingFromTargetManifest(targetPaths) {
+  const missing = [];
+  for (const path of targetPaths) {
+    const spec = path.endsWith('/') ? path.slice(0, -1) : path;
+    if (existsSync(join(ROOT, spec))) continue;
+    // Only count it as missing when the target actually ships it — a manifest
+    // entry the target no longer carries is a stale entry, not a failed update.
+    try {
+      gitQuiet('cat-file', '-e', `FETCH_HEAD:${spec}`);
+      missing.push(path);
+    } catch { /* absent upstream too — nothing to materialize */ }
+  }
+  return missing;
+}
+
 function gitStatusEntries() {
   const status = git('status', '--porcelain');
   if (!status) return [];
@@ -808,13 +858,24 @@ async function apply() {
     // target updater's SYSTEM_PATHS is now the source of truth for new files.
     const updatePaths = mergePathLists(SYSTEM_PATHS, remoteSystemPaths, BOOTSTRAP_PATHS);
 
+    const skippedPaths = [];
     for (const path of updatePaths) {
       try {
-        git('checkout', 'FETCH_HEAD', '--', path);
+        // stderr is piped rather than inherited here. A path absent upstream is
+        // an EXPECTED skip (a stale manifest entry such as `.gemini/commands/`),
+        // but execFileSync inherits stderr by default, so git printed
+        // `error: pathspec '...' did not match any file(s) known to git`
+        // immediately before the success banner — which reads as a failed
+        // update and sends people chasing the wrong root cause (#1998).
+        gitQuiet('checkout', 'FETCH_HEAD', '--', path);
         updated.push(path);
       } catch {
         // File may not exist in remote (new additions), skip
+        skippedPaths.push(path);
       }
+    }
+    if (skippedPaths.length > 0) {
+      console.log(`Skipped ${skippedPaths.length} path(s) absent upstream: ${skippedPaths.join(', ')}`);
     }
 
     // tests/ is auto-discovered and EXECUTED (tests/**/*.test.mjs), so stale
@@ -997,6 +1058,24 @@ async function apply() {
         );
       }
       // Otherwise, genuinely nothing to commit (already up to date)
+    }
+
+    // Verify the update actually produced a coherent install before claiming
+    // success. A client whose local manifest predates the target checks out
+    // only the paths ITS OWN manifest lists, so everything added upstream since
+    // is silently absent and the next script dies with ERR_MODULE_NOT_FOUND.
+    // Re-running apply fixes it (the first pass did update update-system.mjs
+    // itself, so the second pass uses the target manifest) — but only if the
+    // user is told, instead of being shown "Update complete" (#1998).
+    const unmaterialized = missingFromTargetManifest(remoteSystemPaths);
+    if (unmaterialized.length > 0) {
+      console.error(`\nUpdate incomplete: v${local} → v${remote}`);
+      console.error(`${unmaterialized.length} path(s) from the target manifest were not checked out:`);
+      for (const path of unmaterialized) console.error(`  ${path}`);
+      console.error('\nThis happens when the installed updater predates the paths the target adds.');
+      console.error('Run `node update-system.mjs apply` again — the updater itself is now current,');
+      console.error('so the second pass uses the target manifest and picks up what this one missed.');
+      process.exit(1);
     }
 
     console.log(`\nUpdate complete: v${local} → v${remote}`);
