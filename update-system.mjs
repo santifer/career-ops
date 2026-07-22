@@ -582,6 +582,36 @@ function revertPaths(paths) {
       try { git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec); } catch { /* ignore */ }
       try { rmSync(join(ROOT, pathspec), { recursive: true, force: true }); } catch { /* already gone */ }
     }
+    // A directory pathspec that exists in HEAD checks out cleanly above, so the
+    // catch never runs — but `git checkout HEAD -- docs/` only restores files
+    // HEAD already knows about. Files the update introduced *under* that
+    // directory are not in HEAD, so they survive the rollback as staged
+    // additions and the tree is left dirtier than before the update (#2015).
+    removeAdditionsNotInHead(p);
+  }
+}
+
+/**
+ * Delete files staged as additions relative to HEAD under a pathspec.
+ *
+ * Complements `git checkout HEAD -- <path>`, which restores tracked content but
+ * never removes paths HEAD does not contain. Only additions are considered, so
+ * a user file that merely changed is untouched.
+ *
+ * @param {string} pathspec - SYSTEM_PATHS entry (file or directory).
+ */
+function removeAdditionsNotInHead(pathspec) {
+  const spec = pathspec.endsWith('/') ? pathspec.slice(0, -1) : pathspec;
+  let added = '';
+  try {
+    added = git('diff', '--cached', '--name-only', '--diff-filter=A', 'HEAD', '--', spec);
+  } catch {
+    // No HEAD yet, or an unreadable pathspec — nothing safe to clean up.
+    return;
+  }
+  for (const file of added.split('\n').map(s => s.trim()).filter(Boolean)) {
+    try { git('rm', '-f', '--ignore-unmatch', '--', file); } catch { /* ignore */ }
+    try { rmSync(join(ROOT, file), { force: true }); } catch { /* already gone */ }
   }
 }
 
