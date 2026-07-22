@@ -12,6 +12,17 @@ export const SENIORITY_TOKENS = new Set([
   'chief', 'associate', 'intern', 'entry'
 ]);
 
+// Seniority tokens that place a requisition BELOW the bare baseline title.
+// "senior"/"principal" modify an ambiguous baseline and are routinely added or
+// dropped when the same opening is re-posted, so seeing one on a single side is
+// not evidence of a different job. These words are different in kind: they mean
+// the req sits at a lower level than the unqualified title, with its own scope,
+// comp band, and req ID. "Associate X" and a bare "X" at one company are two
+// real openings, so a lone sub-baseline qualifier is a disagreement (#2009).
+export const SUB_BASELINE_SENIORITY = new Set([
+  'associate', 'junior', 'entry', 'intern',
+]);
+
 // Tokens that almost every role shares must not count as strong matching
 // signal. This set covers seniority, work mode, contract shape, locations, and
 // other words that frequently appear in titles without identifying the opening.
@@ -111,6 +122,14 @@ export function roleFuzzyMatch(a, b) {
   if (senA.size > 0 && senB.size > 0) {
     const hasOverlap = [...senA].some(s => senB.has(s));
     if (!hasOverlap) return false;
+  } else if (senA.size > 0 || senB.size > 0) {
+    // Exactly one side states a seniority. The tokenizer drops seniority words
+    // as stopwords, so "Associate Product Manager, Team" and "Product Manager,
+    // Team" otherwise tokenize identically and score a perfect Jaccard ratio —
+    // silently collapsing two real requisitions. A sub-baseline qualifier on
+    // the lone side is a level disagreement, not a loose rewrite (#2009).
+    const lone = senA.size > 0 ? senA : senB;
+    if ([...lone].some(s => SUB_BASELINE_SENIORITY.has(s))) return false;
   }
 
   const wordsA = [...new Set(roleTokens(a))];
