@@ -88,3 +88,4 @@ public commit with a stated reason.
 - @shilpaduruvasan-ai | 2026-07-21 | id:235786418 | src:https://github.com/santifer/career-ops/discussions/2076 | n:40
 - @youlia-denisov | Juls | 2026-07-21 | "This is a new cool toy for job searching, it upgraded my job search in a very delightful manner. Thank you!" | id:170363981 | src:https://github.com/santifer/career-ops/discussions/2090 | n:41
 - @rubicon | Dax Davis | 2026-07-22 | "Thirty years building demand-gen engines for other people. First time I've pointed one at my own job search." | id:98216 | src:https://github.com/santifer/career-ops/discussions/2106 | n:42
+- @minammar | 2026-07-22 | id:60332772 | src:https://github.com/santifer/career-ops/discussions/2114 | n:43
