@@ -33,7 +33,13 @@ import { fileURLToPath } from 'url';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
+import { outputLanguageInstruction, parseOutputLanguage } from './profile-language.mjs';
+import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './utils/token-tracker.mjs';
 import { buildBudgetedPrompt } from './lib/context-budget.mjs';
+
+const tracker = new TokenAccumulator();
+tracker.recordZeroToken('scan');
+tracker.recordZeroToken('pdf payload');
 
 try {
   const { config } = await import('dotenv');
@@ -48,8 +54,9 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const PATHS = {
   shared:  join(ROOT, 'modes', '_shared.md'),
   oferta:  join(ROOT, 'modes', 'oferta.md'),
-  cv:      join(ROOT, 'cv.md'),
-  reports: join(ROOT, 'reports'),
+  cv:        join(ROOT, 'cv.md'),
+  profileYml: join(ROOT, 'config', 'profile.yml'),
+  reports:    join(ROOT, 'reports'),
 };
 
 // ---------------------------------------------------------------------------
@@ -207,9 +214,11 @@ function readFile(path, label) {
 // ---------------------------------------------------------------------------
 console.log('\n📂  Loading context files...');
 
-const sharedContext = readFile(PATHS.shared, 'modes/_shared.md');
-const ofertaLogic   = readFile(PATHS.oferta, 'modes/oferta.md');
-const cvContent     = readFile(PATHS.cv,     'cv.md');
+const sharedContext = readFile(PATHS.shared,     'modes/_shared.md');
+const ofertaLogic   = readFile(PATHS.oferta,     'modes/oferta.md');
+const cvContent     = readFile(PATHS.cv,         'cv.md');
+const profileYml    = readFile(PATHS.profileYml, 'config/profile.yml');
+const languageInstruction = outputLanguageInstruction(parseOutputLanguage(profileYml));
 
 // ---------------------------------------------------------------------------
 // Build system prompt with token budget management
@@ -218,6 +227,7 @@ const { contextBody, budgetReport } = buildBudgetedPrompt({
   sharedContent: sharedContext,
   ofertaContent: ofertaLogic,
   cvContent,
+  profileYml,
   jdText,
   noCompress,
   maxTokens: 128_000, // gpt-4o-mini context window
@@ -250,8 +260,9 @@ IMPORTANT OPERATING RULES FOR THIS SESSION
    - Block D (Comp research): use training-data salary estimates; note them as estimates.
    - Block G (Legitimacy): analyze JD text only; skip URL/page freshness checks.
    - Post-evaluation file saving is handled by the script, not by you.
-2. Generate Blocks A through G in full.
-3. At the very end, output this exact machine-readable block:
+2. ${languageInstruction}
+3. Generate Blocks A through G in full.
+4. At the very end, output this exact machine-readable block:
 
 ---SCORE_SUMMARY---
 COMPANY: <company name or "Unknown">
@@ -261,6 +272,24 @@ ARCHETYPE: <detected archetype>
 LEGITIMACY: <High Confidence | Proceed with Caution | Suspicious>
 ---END_SUMMARY---
 `;
+
+// ---------------------------------------------------------------------------
+// Prompt caching (#1709) — engine 2 of the four from #1709, same shape as the
+// OpenRouter runner. The static prefix (shared + oferta + cv, ~12K tokens) is
+// byte-identical across every offer, yet was re-sent and re-billed each call.
+//
+// Host-gated on purpose: OpenAI-compatible gateways (OpenRouter, DeepSeek, …)
+// honor an ephemeral `cache_control` breakpoint on the prefix and reuse it
+// across back-to-back calls within the cache TTL. api.openai.com instead caches
+// long prefixes automatically and may reject the non-standard field, so it gets
+// a plain-string system message. Either way the prompt TEXT is unchanged.
+export function buildSystemMessage(prompt, host) {
+  if (host === 'api.openai.com') return { role: 'system', content: prompt };
+  return {
+    role: 'system',
+    content: [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral' } }],
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Call the OpenAI-compatible endpoint
@@ -285,8 +314,8 @@ try {
     body: JSON.stringify({
       model:    modelName,
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user',   content: `JOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
+        buildSystemMessage(systemPrompt, endpointHost),
+        { role: 'user', content: `JOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
       ],
       stream:      false,
       temperature: 0.4,
@@ -308,6 +337,8 @@ try {
 
   const data = await res.json();
   evaluationText = data.choices?.[0]?.message?.content?.trim();
+  const usage = normalizeOpenAIUsage(data.usage);
+  tracker.record('evaluation', usage);
   if (!evaluationText) {
     console.error('❌  The endpoint returned an empty response.');
     process.exit(1);
@@ -405,3 +436,5 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
 console.log('\n' + '─'.repeat(66));
 console.log(`  Score: ${score}/5  |  Archetype: ${archetype}  |  Legitimacy: ${legitimacy}`);
 console.log('─'.repeat(66) + '\n');
+
+console.log(formatBreakdown(tracker, modelName, 'openai'));
