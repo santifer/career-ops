@@ -8,7 +8,33 @@ This mode is the mirror image of `oferta.md`. `oferta.md` scores how well a JOB 
 
 ## Attribution
 
-The scoring rubric below is adapted from HackerRank's open-source ATS, [`hiring-agent`](https://github.com/interviewstreet/hiring-agent) (MIT licensed), specifically its `resume_evaluation_criteria.jinja` and `resume_evaluation_system_message.jinja` prompts, which HackerRank built to evaluate resumes on the company side. career-ops repurposes the same scoring logic candidate-side: instead of a company scoring the candidate, the candidate scores themselves first, so the gaps a real ATS would penalize get fixed before a real ATS ever sees the resume.
+The scoring rubric below is a direct adaptation of HackerRank's open-source ATS, [`hiring-agent`](https://github.com/interviewstreet/hiring-agent), specifically its `resume_evaluation_criteria.jinja` and `resume_evaluation_system_message.jinja` prompts. The category names, point bands, bonus values, and deduction ranges below are carried over from those two files, reworded into standalone instructions and restructured for candidate-side use instead of the original's company-side hiring flow. career-ops repurposes the same scoring logic candidate-side: instead of a company scoring the candidate, the candidate scores themselves first, so the gaps a real ATS would penalize get fixed before a real ATS ever sees the resume.
+
+`hiring-agent` is MIT licensed:
+
+```
+MIT License
+
+Copyright (c) 2025 HackerRank
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## Inputs
 
