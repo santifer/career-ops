@@ -147,6 +147,59 @@ const TRACKER_REPORT_MISMATCH = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
+// ── 1c. A single match must still be checked against --role (#2009) ─
+// resolveRow only consults --role to break ties between 2+ candidates, so a
+// company matching exactly one row was updated without ever comparing it to
+// the role the caller explicitly asked for. The intended requisition may not
+// be in the tracker at all (fuzzy-deduped away), and the lone survivor for
+// that company silently absorbed the status change.
+{
+  const sb = makeSandbox(TRACKER_9);
+  const before = readTracker(sb);
+  const r = runSetStatus(['globex', 'SKIP', '--role', 'Data Engineer', '--json'], sb);
+  let parsed = null;
+  try { parsed = JSON.parse(r.stdout); } catch {}
+  if (r.code === 3 && parsed?.code === 'role-mismatch'
+      && parsed.rowRole === 'Platform Engineer' && parsed.requestedRole === 'Data Engineer'
+      && readTracker(sb) === before) {
+    pass('role-mismatch: single company match fails closed without writing (#2009)');
+  } else {
+    fail(`role-mismatch: code=${r.code} json=${JSON.stringify(parsed)}\n${r.stdout}${r.stderr}`);
+  }
+
+  const forced = runSetStatus(['globex', 'SKIP', '--role', 'Data Engineer', '--force'], sb);
+  if (forced.code === 0 && /\| 2 \|[^\n]*\| SKIP \|/.test(readTracker(sb))) {
+    pass('role-mismatch: --force records an explicit decision to proceed');
+  } else {
+    fail(`role-mismatch force: code=${forced.code}\n${forced.stdout}${forced.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 1d. An exact --role must NOT be rejected by the new guard (#2009) ─
+// roleFuzzyMatch is a dedup predicate: it returns false when the overlap is
+// entirely baseline vocabulary (["platform","engineer"]) so same-titled
+// sibling reqs never auto-merge. Using it alone as the guard's equality test
+// would reject --role "Platform Engineer" against a row that is exactly that.
+{
+  const sb = makeSandbox(TRACKER_9);
+  const r = runSetStatus(['globex', 'Applied', '--role', 'Platform Engineer'], sb);
+  if (r.code === 0 && /\| 2 \|[^\n]*\| Applied \|/.test(readTracker(sb))) {
+    pass('role-mismatch: an exact all-baseline role title still proceeds (#2009)');
+  } else {
+    fail(`role-mismatch exact: code=${r.code}\n${r.stdout}${r.stderr}`);
+  }
+
+  // Case and punctuation must not matter for the equality path.
+  const r2 = runSetStatus(['globex', 'Evaluated', '--role', 'platform  engineer'], sb);
+  if (r2.code === 0 && /\| 2 \|[^\n]*\| Evaluated \|/.test(readTracker(sb))) {
+    pass('role-mismatch: role equality is case/punctuation insensitive (#2009)');
+  } else {
+    fail(`role-mismatch normalize: code=${r2.code}\n${r2.stdout}${r2.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
 // ── 2. Update by company name (single match) ────────────────────
 {
   const sb = makeSandbox(TRACKER_9);
