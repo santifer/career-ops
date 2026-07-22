@@ -160,6 +160,27 @@ const twoPassManifestChecks = [
     name: 'apply captures uncommitted work via git stash create before branching (#915)',
     pattern: /git\('stash',\s*'create'\)/,
   },
+  {
+    // A client whose manifest predates the target checks out only its own
+    // paths, so everything added upstream since is silently absent and apply
+    // still printed "Update complete" (#1998).
+    name: 'apply verifies the target manifest materialized before claiming success (#1998)',
+    pattern: /missingFromTargetManifest\(remoteSystemPaths\)/,
+  },
+  {
+    name: 'an incomplete apply exits non-zero instead of reporting success (#1998)',
+    pattern: /Update incomplete[\s\S]{0,600}?process\.exit\(1\)/,
+  },
+  {
+    // execFileSync inherits stderr, so an expected per-path skip printed git's
+    // raw pathspec error right before the success banner (#1998).
+    name: 'per-path checkout pipes stderr so expected skips stay quiet (#1998)',
+    pattern: /gitQuiet\('checkout',\s*'FETCH_HEAD',\s*'--',\s*path\)/,
+  },
+  {
+    name: 'skipped upstream-absent paths are summarized explicitly (#1998)',
+    pattern: /Skipped \$\{skippedPaths\.length\} path\(s\) absent upstream/,
+  },
 ];
 
 for (const check of twoPassManifestChecks) {
