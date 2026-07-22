@@ -39,7 +39,7 @@ import greenhouse from './providers/greenhouse.mjs';
 import lever from './providers/lever.mjs';
 import ashby from './providers/ashby.mjs';
 import workday from './providers/workday.mjs';
-import { buildTitleFilter, buildLocationFilter, buildContentFilter, matchedTitleKeywords, loadSeenUrls, appendToPipeline, appendToScanHistory, loadBlacklist } from './scan.mjs';
+import { buildTitleFilter, buildLocationFilter, buildContentFilter, matchedTitleKeywords, loadSeenUrls, normalizeUrlForDedup, appendToPipeline, appendToScanHistory, loadBlacklist } from './scan.mjs';
 import { SEED_SOURCES, toPortalEntry } from './seeds/vc-portfolios.mjs';
 import { normalizeCompany } from './tracker-utils.mjs';
 
@@ -397,8 +397,9 @@ export async function runSeedScan(seedId, opts, ctx, seenUrls, label) {
         contentFilter: opts.contentFilter,
         titleFilterConfig: opts.titleFilterConfig,
       })) continue;
-      if (seenUrls.has(job.url)) continue;
-      seenUrls.add(job.url);
+      const dedupUrl = normalizeUrlForDedup(job.url);
+      if (seenUrls.has(dedupUrl)) continue;
+      seenUrls.add(dedupUrl);
       offers.push({ ...job, source: sourceName, dateStatus: job.postedAt ? 'dated' : 'unknown' });
     }
   });
@@ -539,8 +540,9 @@ async function main() {
           if (!titleFilter(job.title)) continue;
           if (!locationFilter(job.location)) continue;
           if (!contentFilter(job.description, matchedTitleKeywords(job.title, config?.title_filter))) { droppedContent++; continue; }
-          if (seenUrls.has(job.url)) continue;
-          seenUrls.add(job.url); // intra-scan dedup
+          const dedupUrl = normalizeUrlForDedup(job.url);
+          if (seenUrls.has(dedupUrl)) continue;
+          seenUrls.add(dedupUrl); // intra-scan dedup
           newOffers.push({ ...job, source: `${name}-full`, dateStatus: job.postedAt ? 'dated' : 'unknown' });
         }
       } catch (err) {
