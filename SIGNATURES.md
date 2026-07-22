@@ -87,3 +87,4 @@ public commit with a stated reason.
 - @Deep2003 | Deep Patel | 2026-07-21 | "Hiring has become a quantity game on either side of the aisle; it should really be a quality-based match." | id:33074675 | src:https://github.com/santifer/career-ops/discussions/2075 | n:39
 - @shilpaduruvasan-ai | 2026-07-21 | id:235786418 | src:https://github.com/santifer/career-ops/discussions/2076 | n:40
 - @youlia-denisov | Juls | 2026-07-21 | "This is a new cool toy for job searching, it upgraded my job search in a very delightful manner. Thank you!" | id:170363981 | src:https://github.com/santifer/career-ops/discussions/2090 | n:41
+- @rubicon | Dax Davis | 2026-07-22 | "Thirty years building demand-gen engines for other people. First time I've pointed one at my own job search." | id:98216 | src:https://github.com/santifer/career-ops/discussions/2106 | n:42
