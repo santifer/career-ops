@@ -612,6 +612,28 @@ async function main() {
     savedAt: new Date().toISOString(),
   });
 
+  // Per-job filter chain, shared by the parallel sweep, the truncation retry
+  // pass (workday), and date enrichment (icims). Closure over the filters and
+  // counters so both passes update the same run totals.
+  const processJobs = async (jobs, sourceName, provider) => {
+    for (const job of jobs) {
+      if (!job.url || !job.title) continue;
+      // Confirmed-stale postings are always dropped. Undated postings are
+      // dropped by default (a reverse scan targets *fresh* roles) but
+      // COUNTED so callers see the gap; --include-undated keeps them, marked.
+      const dateClass = classifyPostingDate(job, cutoff);
+      if (dateClass === 'stale') continue;
+      if (dateClass === 'undated' && !opts.includeUndated) { droppedNoDate++; continue; }
+      if (!titleFilter(job.title)) continue;
+      if (!locationFilter(job.location)) continue;
+      if (!contentFilter(job.description, matchedTitleKeywords(job.title, config?.title_filter))) { droppedContent++; continue; }
+      const dedupUrl = normalizeUrlForDedup(job.url);
+      if (seenUrls.has(dedupUrl)) continue;
+      seenUrls.add(dedupUrl); // intra-scan dedup
+      newOffers.push({ ...job, source: `${sourceName}-full`, dateStatus: job.postedAt ? 'dated' : 'unknown' });
+    }
+  };
+
   for (const name of opts.ats) {
     const source = SOURCES[name];
     if (completedSources.has(name)) {
@@ -641,22 +663,7 @@ async function main() {
       try {
         const jobs = await withTimeout(source.provider.fetch(entry, ctx), COMPANY_TIMEOUT_MS, `${name}/${entry.name}`);
         if (jobs.workdayNoDateSkip) { noDateSkipCompanies++; noDateSkipJobs += jobs.length; }
-        for (const job of jobs) {
-          if (!job.url || !job.title) continue;
-          // Confirmed-stale postings are always dropped. Undated postings are
-          // dropped by default (a reverse scan targets *fresh* roles) but
-          // COUNTED so callers see the gap; --include-undated keeps them, marked.
-          const dateClass = classifyPostingDate(job, cutoff);
-          if (dateClass === 'stale') continue;
-          if (dateClass === 'undated' && !opts.includeUndated) { droppedNoDate++; continue; }
-          if (!titleFilter(job.title)) continue;
-          if (!locationFilter(job.location)) continue;
-          if (!contentFilter(job.description, matchedTitleKeywords(job.title, config?.title_filter))) { droppedContent++; continue; }
-          const dedupUrl = normalizeUrlForDedup(job.url);
-          if (seenUrls.has(dedupUrl)) continue;
-          seenUrls.add(dedupUrl); // intra-scan dedup
-          newOffers.push({ ...job, source: `${name}-full`, dateStatus: job.postedAt ? 'dated' : 'unknown' });
-        }
+        await processJobs(jobs, name, source.provider);
       } catch (err) {
         // Mostly defunct boards in the public dataset — expected noise, so the
         // default stays quiet; --verbose surfaces per-board failures.
