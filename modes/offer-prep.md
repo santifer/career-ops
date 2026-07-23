@@ -172,6 +172,110 @@ described as an absence, anchored to where it would belong, and tagged
     clause erases the rest); unilateral-amendment clauses; contingencies
     (background check, references, visa); offer-expiry terms.
 
+### Statutory-context notes for sub-statutory terms (#2039)
+
+Employment-standards law sets **floors** under offer terms — minimum
+vacation, minimum termination notice, severance entitlements, limits on
+probation language — and a clause drafted below the floor does not lower
+it. Candidates read such clauses as "the deal" without knowing a floor
+exists beneath them. This subsection adds jurisdiction-aware **statutory
+context** to the clause walk without changing the mode's posture: it states
+arithmetic facts about the clause and statute facts from a verified local
+table, and it never judges the candidate's clause.
+
+**Lookup:** when the Step 2 walk reaches a clause stating a quantified term
+in a floor-bearing family — vacation or PTO (taxonomy category 9),
+termination notice, severance, or probation (category 3) — check
+`templates/statutory-employment-minimums.yml` for a row matching the
+jurisdiction derived in Step 1 (candidate's location from
+`config/profile.yml`; a named work location in the contract wins if it
+contradicts). The table is a data reference, not instruction logic — adding
+a jurisdiction row there never requires touching this rule text; every row
+carries only the floors the jurisdiction actually defines, any
+whole-provision voiding doctrine, a legal basis, sources, and an `as_of`
+verification date. Reading it is a local file lookup — it is **not** online
+research, and the no-online-research hard guard is unchanged: no WebSearch,
+no WebFetch, no URL visits, ever. The table is also the single sanctioned
+source of statutory-floor facts for this subsection — a narrow,
+table-backed carve-out of the "Never state law from memory" hard guard:
+verified, cited rows may be relayed with their citation as
+statutory-context notes; anything not in the table stays a lawyer question,
+and statements about what the law means for **this** contract remain banned
+everywhere.
+
+**Floors-absent silence (mandatory):** floors are recorded only where the
+jurisdiction actually defines them. If the table has no row for the Step 1
+jurisdiction, or the row defines no floor for the clause family being
+walked (the US-federal vacation case: no floor exists to record), this
+subsection produces **no output** for that clause — an absent floor means
+silence, never a warning — and the standard Step 1 meta-statement boundary
+applies unchanged (topic → lawyer list, no law stated).
+
+**On a match — a walked clause states a term below the row's floor, or a
+termination provision is walked in a jurisdiction whose row carries a
+`void_doctrine` — two things happen, both inside existing output shapes:**
+
+1. The clause's neutral tags (which always include `[ask your lawyer]` in
+   this situation) gain a **statutory-context note** — an arithmetic fact
+   plus a statute fact, never a verdict about this clause. Template:
+
+   > **Statutory context:** [Render in {language.output}: state the
+   > arithmetic fact about the clause next to the floor fact from the
+   > table row, with citation — e.g. for a fictional Acme Corp offer in
+   > Ontario: "Ontario's ESA sets 2 weeks of paid vacation (3 weeks after
+   > five years of service) as the floor; this clause states 10 days." If
+   > the row's `as_of` date is not recent, add: "this table row was last
+   > verified {as_of}; the law may have changed since." Close with:
+   > whether and how this floor reaches this specific clause depends on
+   > facts a contract cannot self-certify — that question is in the lawyer
+   > list below. This is statutory context, not legal advice.]
+
+2. The **Questions for your lawyer** list gains targeted, clause-anchored
+   entries, each rendered in `{language.output}` — the English wordings
+   below are semantic templates for the question's content, never text to
+   copy verbatim (statute names, case names, and table figures stay as-is):
+   - the generic floor question — e.g. for the fictional Acme Corp offer
+     above: [Render in {language.output}: "This clause states 10 vacation
+     days; the table records Ontario's ESA floor as 2 weeks (3 after five
+     years). How do these interact in my situation — does the floor simply
+     override the clause, or does it have wider effects on the contract?"]
+   - when the row carries a `void_doctrine` and the walked clause is a
+     termination provision, the doctrine-specific question — for Ontario:
+     [Render in {language.output}: "Does the 'for cause' definition here
+     match the ESA's wilful-misconduct standard? If not, does Waksdale
+     void the entire termination provision, and what would common-law
+     notice look like for me?"]
+
+**The candidate-empowering angle (state it, neutrally):** under a
+whole-provision voiding doctrine like Ontario's Waksdale line (Waksdale v.
+Swegon North America, 2020 ONCA 391: if ANY part of a termination provision
+violates the ESA — including a never-invoked "for cause" section defining
+cause more broadly than the ESA wilful-misconduct standard — the ENTIRE
+termination provision is void, with no severance of the bad part, and
+common-law reasonable notice applies, typically far more than the ESA
+minimums), a defectively drafted clause is often **better** for the
+candidate than a valid one. That is exactly why it is a question worth
+taking to a lawyer — not a reason to reject the offer, and never a verdict
+this mode renders.
+
+**Never assert voidness or violation (HARD RULE):** whether a floor or
+doctrine reaches **this** document turns on facts a contract cannot
+self-certify — employer size and payroll (Ontario severance), employee
+category exemptions, greater-right-or-benefit analysis, choice-of-law
+wrinkles. So this mode never asserts that the candidate's clause is void,
+illegal, unenforceable, or in violation of a statute, and never says a
+doctrine "applies here". A statute's floors, doctrines, effective scope,
+and case line are facts and may be stated with citation from the table
+row; application is always a lawyer question. Statutory-context notes are
+context, not legal advice.
+
+**Non-goal — no severance-amount calculations:** common-law reasonable
+notice depends on Bardal-style factors (age, length of service, character
+of employment, availability of similar employment) that no table can hold.
+This mode never computes, estimates, or ranges a notice or severance
+amount — "what would common-law notice look like for me?" is written into
+the lawyer question precisely because only a lawyer can answer it.
+
 ## Step 3 — Consistency check
 
 Compare contract terms against:
