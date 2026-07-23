@@ -287,7 +287,20 @@ export function computeWeeklyDigest({
   // missing one, and the metadata (and printSummary's "present but
   // unmatched" branch) needs to be able to tell them apart.
   const questionBankFound = existsSync(questionBankPath);
-  const qbContent = questionBankFound ? readFileSync(questionBankPath, 'utf-8') : null;
+  // existsSync() succeeding doesn't guarantee readFileSync() will: the path
+  // could be a directory, permissions could block the read, or the file
+  // could be deleted between the two calls (TOCTOU). Any of those is an
+  // optional-data problem, not a reason to abort the whole digest — degrade
+  // to "no usable content" the same way a missing file does, but keep
+  // questionBankFound as-is (it reflects existence, not readability).
+  let qbContent = null;
+  if (questionBankFound) {
+    try {
+      qbContent = readFileSync(questionBankPath, 'utf-8');
+    } catch {
+      qbContent = null;
+    }
+  }
   const gapsByCompany = qbContent ? extractGapsByCompany(qbContent, companyNames) : new Map();
 
   const digest = buildDigest(sessionsInRange, gapsByCompany);
@@ -489,6 +502,33 @@ async function runSelfTest() {
   check(twoRoleDigest.companies.length === 2, 'buildDigest still groups by company+role (two rollup rows for one company)');
   const uniqueCompanyCount = new Set(twoRoleSessions.map((s) => s.company.toLowerCase())).size;
   check(uniqueCompanyCount === 1, 'unique-company count collapses a two-role company to one');
+
+  // Same check, but through the real production code path — computeWeeklyDigest
+  // reads sessions from disk, so re-derive the fixture as on-disk files and
+  // assert against the actual returned metadata.companiesInRange, not a
+  // locally-reimplemented Set expression that could drift from production
+  // logic without this test ever catching it.
+  const tmpTwoRoleDir = mkdtempSync(join(tmpBase, 'weekly-digest-selftest-tworole-'));
+  try {
+    writeFileSync(
+      join(tmpTwoRoleDir, 'acme-corp-instructional-designer-behavioral-2026-07-21.md'),
+      ['---', 'company: Acme Corp', 'role: Instructional Designer', 'round: behavioral', 'date: 2026-07-21', 'source: debrief', '---', ''].join('\n'),
+    );
+    writeFileSync(
+      join(tmpTwoRoleDir, 'acme-corp-lxd-screen-2026-07-22.md'),
+      ['---', 'company: Acme Corp', 'role: LXD', 'round: screen', 'date: 2026-07-22', 'source: debrief', '---', ''].join('\n'),
+    );
+    const twoRoleResult = computeWeeklyDigest({
+      from: '2026-07-20',
+      to: '2026-07-26',
+      sessionsDir: tmpTwoRoleDir,
+      questionBankPath: '/definitely/does/not/exist/question-bank.md',
+    });
+    check(twoRoleResult.metadata.companiesInRange === 1, 'computeWeeklyDigest end-to-end: metadata.companiesInRange collapses a two-role company to one');
+    check(twoRoleResult.companies.length === 2, 'computeWeeklyDigest end-to-end: rollup still has two rows (company+role grouping preserved)');
+  } finally {
+    rmSync(tmpTwoRoleDir, { recursive: true, force: true });
+  }
 
   // Finding 4: same-date rounds sort deterministically (comparator returns
   // 0 on a genuine tie, with round-name as tie-breaker) instead of both
