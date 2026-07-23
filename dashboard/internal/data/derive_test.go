@@ -185,6 +185,16 @@ func TestDeriveNoteFields(t *testing.T) {
 			paySrc:   "POSTED",
 			last:     "2026-06-08",
 		},
+		{
+			name: "billion-scale valuation alone is not pay",
+			app: model.CareerApplication{
+				Date:  "2026-04-11",
+				Notes: "Series H drone logistics, $7.6B valuation, Remote Canada",
+			},
+			workMode: "Remote",
+			payRange: "",
+			last:     "2026-04-11",
+		},
 	}
 
 	for _, tc := range cases {
