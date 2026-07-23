@@ -8989,27 +8989,37 @@ console.log('\n63. Call-platform detection wired into interview-prep (#2126)');
 
 try {
   const prepModeDoc = readFile('modes/interview-prep.md');
-  const prepFlat = prepModeDoc.replace(/\s+/g, ' ');
 
-  if (prepModeDoc.includes('- **Format:**') && prepModeDoc.includes('- **Platform:**')) {
+  // Scope assertions to the actual sections they're supposed to be in,
+  // rather than whole-document .includes() checks that could pass even if
+  // Platform only exists in the wrong section (#2128 review finding).
+  const processOverview = prepModeDoc.match(
+    /## Step 2 — Process Overview[\s\S]*?## Step 2\.5 — Audience Map/
+  )?.[0] ?? '';
+  const roundBreakdown = prepModeDoc.match(
+    /## Step 3 — Round-by-Round Breakdown[\s\S]*?(?=\n## |$)/
+  )?.[0] ?? '';
+  const processOverviewFlat = processOverview.replace(/\s+/g, ' ');
+
+  if (processOverview.includes('- **Format:**') && processOverview.includes('- **Platform:**')) {
     pass('interview-prep Process Overview has both Format (round type) and Platform (call medium) as distinct fields');
   } else {
     fail('interview-prep Process Overview missing the distinct Platform field alongside Format');
   }
 
-  if (prepFlat.includes("extractPlatform") && prepFlat.includes('invite-match.mjs')) {
+  if (processOverviewFlat.includes("extractPlatform") && processOverviewFlat.includes('invite-match.mjs')) {
     pass('interview-prep Platform field cross-references invite-match.mjs\'s extractPlatform instead of restating the detection logic');
   } else {
     fail('interview-prep Platform field missing the cross-reference to invite-match.mjs\'s extractPlatform');
   }
 
-  if (prepFlat.includes('not stated in the invite, confirm before the call')) {
+  if (processOverviewFlat.includes('not stated in the invite, confirm before the call')) {
     pass('interview-prep Platform field falls back to "not stated in the invite, confirm before the call" instead of guessing');
   } else {
     fail('interview-prep Platform field missing the "not stated in the invite, confirm before the call" fallback');
   }
 
-  if (prepModeDoc.includes('### Round {N}:') && prepModeDoc.includes('- **Platform:**')) {
+  if (/### Round \{N\}:[\s\S]*?- \*\*Platform:\*\*/.test(roundBreakdown)) {
     pass('interview-prep Round-by-Round Breakdown (Step 3) also carries a per-round Platform field');
   } else {
     fail('interview-prep Round-by-Round Breakdown missing a per-round Platform field');

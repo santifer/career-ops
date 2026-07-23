@@ -250,17 +250,24 @@ export function extractReqId(text) {
 //
 // Each pattern requires a proper URL/host boundary, not just a substring
 // match: an optional scheme + single subdomain label ahead of the host, a
-// non-word/@/./- character (or start-of-string) before that, and a path/
-// query/fragment/whitespace delimiter (or end-of-string) after the host.
-// This rejects lookalike hosts (`notzoom.us`, `teams.microsoft.com.evil.
+// real host-boundary character (or start-of-string) before that, and a
+// path/query/fragment/whitespace delimiter (or end-of-string) after the
+// host. This rejects lookalike hosts (`notzoom.us`, `teams.microsoft.com.evil.
 // example`) and email addresses (`support@zoom.us`) that merely contain the
 // host string as a substring — "silence stays silence" per this file's
 // extractDate/extractReqId convention, so a lookalike is never reported as
 // a real meeting platform.
+//
+// The prefix boundary also excludes URL-structure characters (`/ ? = & #`)
+// so a platform host is only recognized at the true start of a URL
+// authority, not when it's actually a path segment or query value on a
+// *different* host: `https://example.com/zoom.us` (path segment) and
+// `https://example.com?next=zoom.us` (query value) must NOT match, since
+// `zoom.us` is not the URL's actual host in either case.
 const PLATFORM_URL_PATTERNS = [
-  { name: 'Zoom', pattern: /(?:^|[^\w@.-])(?:https?:\/\/)?(?:[\w-]+\.)?zoom\.us(?:[/?#\s]|$)/i },
-  { name: 'Microsoft Teams', pattern: /(?:^|[^\w@.-])(?:https?:\/\/)?(?:[\w-]+\.)?teams\.(?:microsoft|live)\.com(?:[/?#\s]|$)/i },
-  { name: 'Google Meet', pattern: /(?:^|[^\w@.-])(?:https?:\/\/)?(?:[\w-]+\.)?meet\.google\.com(?:[/?#\s]|$)/i },
+  { name: 'Zoom', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?zoom\.us(?:[/?#\s]|$)/i },
+  { name: 'Microsoft Teams', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?teams\.(?:microsoft|live)\.com(?:[/?#\s]|$)/i },
+  { name: 'Google Meet', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?meet\.google\.com(?:[/?#\s]|$)/i },
 ];
 
 // A plain phone number, used only when no meeting-platform URL was found —
@@ -465,6 +472,12 @@ function runSelfTest() {
   check(extractPlatform('Please visit https://notzoom.us for details.') === null, 'does not report Zoom for a lookalike host (notzoom.us)');
   check(extractPlatform('Contact support@zoom.us with questions.') === null, 'does not report Zoom for an email address containing zoom.us');
   check(extractPlatform('See https://teams.microsoft.com.evil.example for the link.') === null, 'does not report Microsoft Teams for a lookalike domain (teams.microsoft.com.evil.example)');
+  check(extractPlatform('See https://example.com/zoom.us for details.') === null, 'does not detect Zoom as a URL path segment on an unrelated host');
+  check(extractPlatform('See https://example.com?next=zoom.us for details.') === null, 'does not detect Zoom as a URL query value on an unrelated host');
+  check(extractPlatform('See https://example.com/teams.microsoft.com for details.') === null, 'does not detect Microsoft Teams as a URL path segment on an unrelated host');
+  check(extractPlatform('See https://example.com?next=teams.microsoft.com for details.') === null, 'does not detect Microsoft Teams as a URL query value on an unrelated host');
+  check(extractPlatform('See https://example.com/meet.google.com for details.') === null, 'does not detect Google Meet as a URL path segment on an unrelated host');
+  check(extractPlatform('See https://example.com?next=meet.google.com for details.') === null, 'does not detect Google Meet as a URL query value on an unrelated host');
 
   // --- matchInvite (fixture rows, no real tracker data) ---
   const fixtureRows = [

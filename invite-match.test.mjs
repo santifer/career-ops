@@ -103,6 +103,15 @@ eq('no platform or phone signal returns null', extractPlatform('Please confirm y
 eq('lookalike host (notzoom.us) is not detected as Zoom', extractPlatform('Please visit https://notzoom.us for details.'), null);
 eq('email address containing zoom.us is not detected as Zoom', extractPlatform('Contact support@zoom.us with questions.'), null);
 eq('lookalike domain (teams.microsoft.com.evil.example) is not detected as Microsoft Teams', extractPlatform('See https://teams.microsoft.com.evil.example for the link.'), null);
+// A platform-looking host must only be recognized at a true URL authority
+// boundary — not as a path segment or query value on an unrelated host
+// (issue #2128 review finding).
+eq('does not detect a platform-looking URL path (Zoom)', extractPlatform('See https://example.com/zoom.us for details.'), null);
+eq('does not detect a platform-looking query value (Zoom)', extractPlatform('See https://example.com?next=zoom.us for details.'), null);
+eq('does not detect a platform-looking URL path (Microsoft Teams)', extractPlatform('See https://example.com/teams.microsoft.com for details.'), null);
+eq('does not detect a platform-looking query value (Microsoft Teams)', extractPlatform('See https://example.com?next=teams.microsoft.com for details.'), null);
+eq('does not detect a platform-looking URL path (Google Meet)', extractPlatform('See https://example.com/meet.google.com for details.'), null);
+eq('does not detect a platform-looking query value (Google Meet)', extractPlatform('See https://example.com?next=meet.google.com for details.'), null);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {

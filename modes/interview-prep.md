@@ -108,7 +108,7 @@ If the company is small or obscure and yields few results, broaden: search for t
 ## Process Overview
 - **Rounds:** {N} rounds, ~{X} days end-to-end
 - **Format:** {e.g., recruiter screen → technical phone → take-home → onsite (4 rounds) → hiring manager}
-- **Platform:** {e.g., Zoom / Microsoft Teams / Google Meet / Phone — the call medium, distinct from Format above. Extract from invite/scheduling text using the same platform-detection approach `invite-match.mjs`'s `extractPlatform` uses (meeting-platform URL first, phone-number pattern as fallback). If not detectable, write "not stated in the invite, confirm before the call" rather than guessing}
+- **Platform:** {e.g., Zoom / Microsoft Teams / Google Meet / Phone — the call medium, distinct from Format above. Extract from invite/scheduling text using the same platform-detection approach `invite-match.mjs`'s `extractPlatform` uses (meeting-platform URL first, phone-number pattern as fallback). If not detectable, write "not stated in the invite, confirm before the call" rather than guessing; this field-specific fallback overrides the generic unknown rule below}
 - **Difficulty:** {X}/5 (Glassdoor avg, N reviews)
 - **Positive experience rate:** {X}%
 - **Known quirks:** {e.g., "pair programming instead of whiteboard", "no LeetCode, all practical", "take-home is 4 hours"}
