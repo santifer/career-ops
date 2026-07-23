@@ -8989,7 +8989,7 @@ try {
   const debriefMode = readFile('modes/interview/debrief.md');
 
   const step1Match = debriefMode.match(/## Step 1 — Capture What Was Asked([\s\S]*?)## Step 2/);
-  const step9Match = debriefMode.match(/## Step 9 — Write Session Transcript([\s\S]*?)(?:\n---\n|$)/);
+  const step9Match = debriefMode.match(/## Step 9 — Write Session Transcript([\s\S]*?)(?=\n## |\s*$)/);
   const step1 = step1Match ? step1Match[1] : '';
   const step9 = step9Match ? step9Match[1] : '';
 
@@ -9024,7 +9024,8 @@ try {
     step9.includes("Check the `input_source` marker set in Step 1") &&
     step9.includes('input_source: transcript') &&
     step9.includes('skip reconstruction') &&
-    step9.includes('input_source: recall')
+    step9.includes('input_source: recall') &&
+    step9.includes('save the original transcript directly')
   ) {
     pass('interview/debrief Step 9 branches on the explicit input_source marker');
   } else {
