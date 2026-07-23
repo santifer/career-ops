@@ -1,9 +1,9 @@
-import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { resolveCli } from "@/lib/clis";
 import { careerOpsRoot, readMemory } from "@/lib/career-ops";
 import { getSession } from "@/lib/apply/session";
+import { spawnHeadlessCli } from "@/lib/spawn-cli.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -156,8 +156,9 @@ Output ONLY a compact JSON object mapping each field id → {"value": "...", "ne
       log(`Spawning planner (timeout ${Math.round(killMs / 1000)}s)…`);
 
       const result = await new Promise<{ buf: string; code: number | null; signal: NodeJS.Signals | null }>((resolve) => {
-        // stdin = /dev/null so the CLI doesn't wait 3s for piped input.
-        const child = spawn(binPath, args, { cwd: careerOpsRoot(), env: process.env, stdio: ["ignore", "pipe", "pipe"] });
+        // spawnHeadlessCli closes stdin right after spawning so the CLI doesn't
+        // wait on piped input that will never arrive.
+        const child = spawnHeadlessCli(binPath, args, { cwd: careerOpsRoot(), env: process.env });
         let buf = "";
         let firstByteAt = 0;
         const hb = setInterval(() => {
