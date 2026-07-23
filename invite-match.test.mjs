@@ -98,6 +98,11 @@ eq('Meet URL detected as Google Meet', extractPlatform('https://meet.google.com/
 eq('phone number with no meeting URL detected as Phone', extractPlatform('We will call you at 416-555-0199 for the screen.'), 'Phone');
 eq('meeting URL outranks a phone-number fallback line in the same text', extractPlatform('Zoom: https://zoom.us/j/1234567890\nDial-in: 416-555-0199'), 'Zoom');
 eq('no platform or phone signal returns null', extractPlatform('Please confirm your availability for the interview.'), null);
+// Lookalike hosts / email addresses must never be reported as a real
+// meeting platform — "silence stays silence" (issue #2128 review finding).
+eq('lookalike host (notzoom.us) is not detected as Zoom', extractPlatform('Please visit https://notzoom.us for details.'), null);
+eq('email address containing zoom.us is not detected as Zoom', extractPlatform('Contact support@zoom.us with questions.'), null);
+eq('lookalike domain (teams.microsoft.com.evil.example) is not detected as Microsoft Teams', extractPlatform('See https://teams.microsoft.com.evil.example for the link.'), null);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {

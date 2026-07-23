@@ -247,10 +247,20 @@ export function extractReqId(text) {
 // A meeting-platform URL is unambiguous, so these are checked in a fixed
 // order and the first hit wins — no scoring needed, unlike company-name
 // matching where several candidates can plausibly overlap.
+//
+// Each pattern requires a proper URL/host boundary, not just a substring
+// match: an optional scheme + single subdomain label ahead of the host, a
+// non-word/@/./- character (or start-of-string) before that, and a path/
+// query/fragment/whitespace delimiter (or end-of-string) after the host.
+// This rejects lookalike hosts (`notzoom.us`, `teams.microsoft.com.evil.
+// example`) and email addresses (`support@zoom.us`) that merely contain the
+// host string as a substring — "silence stays silence" per this file's
+// extractDate/extractReqId convention, so a lookalike is never reported as
+// a real meeting platform.
 const PLATFORM_URL_PATTERNS = [
-  { name: 'Zoom', pattern: /zoom\.us/i },
-  { name: 'Microsoft Teams', pattern: /teams\.(?:microsoft|live)\.com/i },
-  { name: 'Google Meet', pattern: /meet\.google\.com/i },
+  { name: 'Zoom', pattern: /(?:^|[^\w@.-])(?:https?:\/\/)?(?:[\w-]+\.)?zoom\.us(?:[/?#\s]|$)/i },
+  { name: 'Microsoft Teams', pattern: /(?:^|[^\w@.-])(?:https?:\/\/)?(?:[\w-]+\.)?teams\.(?:microsoft|live)\.com(?:[/?#\s]|$)/i },
+  { name: 'Google Meet', pattern: /(?:^|[^\w@.-])(?:https?:\/\/)?(?:[\w-]+\.)?meet\.google\.com(?:[/?#\s]|$)/i },
 ];
 
 // A plain phone number, used only when no meeting-platform URL was found —
@@ -452,6 +462,9 @@ function runSelfTest() {
   check(extractPlatform('We will call you at (416) 555-0199 for the screen.') === 'Phone', 'detects a phone call from a phone-number pattern with no meeting URL');
   check(extractPlatform('Please confirm your availability for the interview.') === null, 'returns null when no platform or phone signal is present');
   check(extractPlatform('') === null, 'returns null for empty text');
+  check(extractPlatform('Please visit https://notzoom.us for details.') === null, 'does not report Zoom for a lookalike host (notzoom.us)');
+  check(extractPlatform('Contact support@zoom.us with questions.') === null, 'does not report Zoom for an email address containing zoom.us');
+  check(extractPlatform('See https://teams.microsoft.com.evil.example for the link.') === null, 'does not report Microsoft Teams for a lookalike domain (teams.microsoft.com.evil.example)');
 
   // --- matchInvite (fixture rows, no real tracker data) ---
   const fixtureRows = [
