@@ -1020,7 +1020,7 @@ try {
 
   const injectedPageCss = injectPrintPageCss('<html><head><title>CV</title></head><body></body></html>', 'letter');
   if (
-    injectedPageCss.includes('@page { size: Letter; margin: 0.6in; }') &&
+    injectedPageCss.includes('@page { size: Letter; margin: var(--page-margin, 0.6in); }') &&
     injectedPageCss.indexOf('career-ops-page-setup') < injectedPageCss.indexOf('</head>')
   ) {
     pass('PDF renderer injects CSS page size and margins before rendering');
@@ -1029,7 +1029,7 @@ try {
   }
 
   const mixedCasePageCss = injectPrintPageCss('<html><head></head><body></body></html>', 'Letter');
-  if (mixedCasePageCss.includes('@page { size: Letter; margin: 0.6in; }')) {
+  if (mixedCasePageCss.includes('@page { size: Letter; margin: var(--page-margin, 0.6in); }')) {
     pass('PDF renderer treats page format case-insensitively');
   } else {
     fail('PDF renderer falls back to A4 for mixed-case letter format');

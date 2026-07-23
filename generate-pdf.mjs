@@ -32,6 +32,7 @@ import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
+import { readStyleTokens, injectThemeStyle } from './theme-style.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PDF_PAGE_MARGIN = '0.6in';
@@ -293,7 +294,13 @@ export function repoRelativeManifestPath(pathValue) {
 export function injectPrintPageCss(html, format = 'a4') {
   const normalizedFormat = String(format || 'a4').toLowerCase();
   const pageSize = normalizedFormat === 'letter' ? 'Letter' : 'A4';
-  const pageStyle = `<style id="career-ops-page-setup">\n@page { size: ${pageSize}; margin: ${PDF_PAGE_MARGIN}; }\n</style>`;
+  // Read --page-margin (set by the template's own :root default, and overridden
+  // by injectThemeStyle's block when style.margin is configured) instead of
+  // hardcoding PDF_PAGE_MARGIN outright — this @page rule is injected last, so a
+  // hardcoded value would silently win the cascade and make style.margin
+  // ineffective (#1837 review). PDF_PAGE_MARGIN is only the fallback for a
+  // template that never declares --page-margin at all.
+  const pageStyle = `<style id="career-ops-page-setup">\n@page { size: ${pageSize}; margin: var(--page-margin, ${PDF_PAGE_MARGIN}); }\n</style>`;
 
   if (/<\/head>/i.test(html)) {
     return html.replace(/<\/head>/i, `${pageStyle}\n</head>`);
@@ -526,6 +533,13 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const inputPath = opts.inputPath || '';
 
   mkdirSync(dirname(outputPath), { recursive: true });
+
+  // Inject the user's theme tokens (config/profile.yml `style:`) as CSS custom
+  // properties so the templates' var(--x, <default>) reads pick them up (#1837).
+  // No `style:` block → no tokens → byte-identical output. Both the CV path and
+  // the cover-letter path flow through here, so both are themed from one place.
+  const styleTokens = opts.styleTokens ?? readStyleTokens();
+  html = injectThemeStyle(html, styleTokens);
 
   html = injectPrintPageCss(html, format);
   html = await inlineLocalFonts(html);

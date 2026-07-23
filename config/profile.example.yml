@@ -103,6 +103,16 @@ language:
 # See the tier -> model mapping table in modes/_shared.md.
 spend_tier: standard
 
+# (Optional) Visual theming for the generated CV and cover-letter PDFs (#1837).
+# Each token is injected as a CSS custom property that overrides the template
+# default — omit the block (or any key) to keep the built-in look unchanged.
+# Only these four keys are recognized; anything else is ignored.
+# style:
+#   accent_color: "#2563eb"              # section headings / links
+#   font_family:  "Outfit, Inter, sans-serif"
+#   font_size:    "10pt"                 # base body text size
+#   margin:       "0.5in"                # page margin (@page)
+
 cv:
   output_format: "html" # "html" (default) or "latex"
   # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
