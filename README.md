@@ -277,7 +277,7 @@ node agent-inbox.mjs add "..."   # queue a request for the next session
 npm run gemini:eval -- "JD text here"
 ```
 
-> **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-2.5-flash` (15 RPM, 1M tokens/day free).
+> **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-3.5-flash` (free-tier rate limits are model-dependent, no billing needed).
 
 ## Usage
 

@@ -14,13 +14,14 @@
  * Requires:
  *   GEMINI_API_KEY in .env (or environment variable)
  *
- * Free-tier model: gemini-2.5-flash (generous quota, no billing required)
+ * Free-tier model: gemini-3.5-flash (generous quota, no billing required)
  *
- * Model deprecation reference (per Google AI for Developers, May 2026):
+ * Model deprecation reference (per Google AI for Developers, July 2026):
  *   - gemini-2.0-flash       deprecated 2026-03-31  (do not use)
  *   - gemini-2.0-flash-lite  deprecated 2026-03-31
- *   - gemini-2.5-flash       deprecated 2026-06-17  (current default)
- *   - gemini-2.5-flash-lite  deprecated 2026-07-22
+ *   - gemini-2.5-flash       released 2025-06-17  (shutdown 2026-10-16)
+ *   - gemini-2.5-flash-lite  released 2025-07-22  (shutdown 2026-10-16)
+ *   - gemini-3.5-flash       active stable (current default)
  * Stable Gemini models follow a 12-month lifecycle from their release date.
  * Source: https://ai.google.dev/gemini-api/docs/models
  *
@@ -89,11 +90,11 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   USAGE
     node gemini-eval.mjs "<JD text>"
     node gemini-eval.mjs --file ./jds/my-job.txt
-    node gemini-eval.mjs --model gemini-2.5-flash "<JD text>"
+    node gemini-eval.mjs --model gemini-3.5-flash "<JD text>"
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
-    --model <name>   Gemini model to use (default: gemini-2.5-flash)
+    --model <name>   Gemini model to use (default: gemini-3.5-flash)
     --no-save        Do not save report to reports/ directory
     --help           Show this help
 
@@ -111,7 +112,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
 // Parse flags
 let jdText = '';
-let modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+let modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 let saveReport = true;
 
 for (let i = 0; i < args.length; i++) {
