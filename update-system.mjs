@@ -587,7 +587,20 @@ function revertPaths(paths) {
 
 function addPaths(paths) {
   if (paths.length === 0) return;
-  git('add', '--', ...paths);
+  // `git add` refuses explicitly named paths that match a .gitignore rule —
+  // even when `git checkout FETCH_HEAD --` already staged them. A clone whose
+  // .gitignore predates the negations for a newly shipped file (e.g. the #1242
+  // interview-prep/sessions scaffold arriving in a repo that still ignores all
+  // of interview-prep/*) would abort the whole update commit, so explicitly
+  // named files are force-added: every file entry here is updater-owned and
+  // meant to be tracked. Directory entries (trailing '/', the manifest
+  // convention) must stay un-forced — plain `git add dir/` silently skips
+  // ignored content, while `-f` would drag user files matched by the PII
+  // safety net (*passport*), .env.local or node_modules into the commit.
+  const fileEntries = paths.filter((p) => !p.endsWith('/'));
+  const dirEntries = paths.filter((p) => p.endsWith('/'));
+  if (fileEntries.length > 0) git('add', '-f', '--', ...fileEntries);
+  if (dirEntries.length > 0) git('add', '--', ...dirEntries);
 }
 
 function dashboardGoSourcesChanged() {
