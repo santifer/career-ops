@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.22.1](https://github.com/santifer/career-ops/compare/career-ops-v1.22.0...career-ops-v1.22.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **agents:** compress AGENTS.md ~20% with zero semantic loss ([#2094](https://github.com/santifer/career-ops/issues/2094)) ([bd7b377](https://github.com/santifer/career-ops/commit/bd7b3771dbb72bbc38d4e80fc281b25442d9bbaf))
+* **doctor:** treat missing user prerequisites as non-fatal setup warnings ([#2083](https://github.com/santifer/career-ops/issues/2083)) ([a3cf654](https://github.com/santifer/career-ops/commit/a3cf6541d2104e4cad307ffbe93713ef18d31655))
+* **plugin:** mirror plugin.json at .github/plugin/ for the awesome-copilot validator ([11fd356](https://github.com/santifer/career-ops/commit/11fd3565f7b449f44775a6d0e9efb668ffd945fb))
+* restore the Kimi SKILL.md entrypoint as a real symlink ([82e86a0](https://github.com/santifer/career-ops/commit/82e86a0e8ec7e4985028ac26e87f71a55968d430))
+* **set-status:** fail closed when a lone company row contradicts --role ([#2108](https://github.com/santifer/career-ops/issues/2108)) ([c05ce51](https://github.com/santifer/career-ops/commit/c05ce51566e4a377810119be6eb83d87db967a7a)), closes [#2009](https://github.com/santifer/career-ops/issues/2009)
+* **skill:** routing drift + discoverable metadata across the agent surface ([8ac6261](https://github.com/santifer/career-ops/commit/8ac6261e6ce75700727bf830def1af2bc78b6249))
+* **successfactors:** preserve brand path for multi-brand RMK tenants ([#2099](https://github.com/santifer/career-ops/issues/2099)) ([b623271](https://github.com/santifer/career-ops/commit/b62327145a789c966978f2e0a9ec03c1ca431af6)), closes [#2010](https://github.com/santifer/career-ops/issues/2010)
+* **update-system:** verify the target manifest materialized instead of reporting success ([#2111](https://github.com/santifer/career-ops/issues/2111)) ([e1fd205](https://github.com/santifer/career-ops/commit/e1fd205bd8916ccc0e1060017259405c63af9ad3)), closes [#1998](https://github.com/santifer/career-ops/issues/1998)
+
 ## [1.22.0](https://github.com/santifer/career-ops/compare/career-ops-v1.21.0...career-ops-v1.22.0) (2026-07-21)
 
 
