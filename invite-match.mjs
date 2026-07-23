@@ -7,12 +7,13 @@
  * title or req number. Finding which `data/applications.md` row an invite
  * belongs to otherwise means a manual grep every time.
  *
- * This script extracts a company name (and, if present, a date and a
- * req/job-ID-looking token) from pasted invite text, fuzzy-matches it
- * against the tracker's Company column, and ranks candidates when the same
- * company has multiple applications — which is common. A silent wrong guess
- * is worse than showing a short ranked list, so ambiguous input always
- * returns all plausible candidates rather than picking one.
+ * This script extracts a company name (and, if present, a date, a
+ * req/job-ID-looking token, and a call platform/medium) from pasted invite
+ * text, fuzzy-matches it against the tracker's Company column, and ranks
+ * candidates when the same company has multiple applications — which is
+ * common. A silent wrong guess is worse than showing a short ranked list,
+ * so ambiguous input always returns all plausible candidates rather than
+ * picking one.
  *
  * Run: node invite-match.mjs < invite.txt          (JSON to stdout)
  *      node invite-match.mjs --file invite.txt
@@ -243,6 +244,45 @@ export function extractReqId(text) {
   return m ? m[1] : null;
 }
 
+// A meeting-platform URL is unambiguous, so these are checked in a fixed
+// order and the first hit wins — no scoring needed, unlike company-name
+// matching where several candidates can plausibly overlap.
+const PLATFORM_URL_PATTERNS = [
+  { name: 'Zoom', pattern: /zoom\.us/i },
+  { name: 'Microsoft Teams', pattern: /teams\.(?:microsoft|live)\.com/i },
+  { name: 'Google Meet', pattern: /meet\.google\.com/i },
+];
+
+// A plain phone number, used only when no meeting-platform URL was found —
+// deliberately simple (not a full E.164/i18n validator), since this is a
+// "does this look like a call-in number" heuristic, not a phone-format
+// validator. Requires a separator between digit groups so it doesn't fire
+// on unrelated long digit runs (req IDs, zip+4, order numbers, etc.).
+const PHONE_PATTERN = /(?:\+?\d{1,3}[\s.-])?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b/;
+
+/**
+ * Best-effort extraction of the call platform/medium from raw invite or
+ * scheduling text — distinct from the round *type* (recruiter screen vs.
+ * onsite, etc.), this is specifically about whether the candidate will be
+ * on a video call and which one, or on a plain phone call. A meeting-
+ * platform URL is checked first (Zoom / Microsoft Teams / Google Meet); if
+ * none is present, falls back to a phone-number pattern. Returns null when
+ * nothing plausible is found — never guessed, consistent with this
+ * project's "silence stays silence" convention (see extractDate/extractReqId
+ * above and the title/location filters in scan.mjs).
+ *
+ * @param {string} text - Raw pasted invite/scheduling text.
+ * @returns {'Zoom'|'Microsoft Teams'|'Google Meet'|'Phone'|null}
+ */
+export function extractPlatform(text) {
+  if (!text) return null;
+  for (const { name, pattern } of PLATFORM_URL_PATTERNS) {
+    if (pattern.test(text)) return name;
+  }
+  if (PHONE_PATTERN.test(text)) return 'Phone';
+  return null;
+}
+
 // --- Tracker loading ---
 function loadTracker(appsFile = APPS_FILE) {
   if (!existsSync(appsFile)) return [];
@@ -324,6 +364,7 @@ export function analyzeInvite(text, trackerRows = null) {
     company: extractCompany(text),
     date: extractDate(text),
     reqId: extractReqId(text),
+    platform: extractPlatform(text),
   };
   const rows = trackerRows ?? loadTracker();
   const candidates = matchInvite(signals, rows);
@@ -336,9 +377,10 @@ function printSummary(result) {
   console.log('  Interview Invite Matcher — career-ops');
   console.log(`${'='.repeat(70)}\n`);
 
-  console.log(`  Extracted company: ${result.signals.company || '(not found)'}`);
-  console.log(`  Extracted date:    ${result.signals.date || '(not found)'}`);
-  console.log(`  Extracted req ID:  ${result.signals.reqId || '(not found)'}\n`);
+  console.log(`  Extracted company:  ${result.signals.company || '(not found)'}`);
+  console.log(`  Extracted date:     ${result.signals.date || '(not found)'}`);
+  console.log(`  Extracted req ID:   ${result.signals.reqId || '(not found)'}`);
+  console.log(`  Extracted platform: ${result.signals.platform || '(not found)'}\n`);
 
   if (!result.signals.company) {
     console.log('  Could not find a company name in the invite text — paste more context or check manually.\n');
@@ -402,6 +444,15 @@ function runSelfTest() {
   check(extractReqId('Job ID: 43683') === '43683', 'extracts "Job ID:" token');
   check(extractReqId('no id here') === null, 'returns null when no req-like token is present');
 
+  // --- extractPlatform ---
+  check(extractPlatform('Join via Zoom: https://us02web.zoom.us/j/1234567890') === 'Zoom', 'detects Zoom from a zoom.us URL');
+  check(extractPlatform('Join Microsoft Teams Meeting: https://teams.microsoft.com/l/meetup-join/xyz') === 'Microsoft Teams', 'detects Microsoft Teams from a teams.microsoft.com URL');
+  check(extractPlatform('Meeting link: https://teams.live.com/meet/abc') === 'Microsoft Teams', 'detects Microsoft Teams from a teams.live.com URL');
+  check(extractPlatform('Google Meet: https://meet.google.com/abc-defg-hij') === 'Google Meet', 'detects Google Meet from a meet.google.com URL');
+  check(extractPlatform('We will call you at (416) 555-0199 for the screen.') === 'Phone', 'detects a phone call from a phone-number pattern with no meeting URL');
+  check(extractPlatform('Please confirm your availability for the interview.') === null, 'returns null when no platform or phone signal is present');
+  check(extractPlatform('') === null, 'returns null for empty text');
+
   // --- matchInvite (fixture rows, no real tracker data) ---
   const fixtureRows = [
     { num: 101, company: 'Example Industries', role: 'Training Coordinator', status: 'Applied', date: '2026-06-01', notes: 'Req EX9001' },
@@ -427,10 +478,11 @@ function runSelfTest() {
   check(noMatch.length === 0, 'unrelated company name returns no candidates');
 
   // --- analyzeInvite (end-to-end with injected rows, no file I/O) ---
-  const fullText = 'Schedule Your Phone Screen – Acme Opportunity\nInterview scheduled for 2026-07-09.';
+  const fullText = 'Schedule Your Phone Screen – Acme Opportunity\nInterview scheduled for 2026-07-09.\nJoin via Zoom: https://zoom.us/j/1234567890';
   const result = analyzeInvite(fullText, fixtureRows);
   check(result.signals.company === 'Acme', 'analyzeInvite extracts company end-to-end');
   check(result.signals.date === '2026-07-09', 'analyzeInvite extracts date end-to-end');
+  check(result.signals.platform === 'Zoom', 'analyzeInvite extracts platform end-to-end');
   check(result.candidates.length === 1 && result.candidates[0].appNumber === 103, 'analyzeInvite returns the matched candidate end-to-end');
 
   console.log(`\n  invite-match self-test: ${pass} passed, ${fail} failed\n`);

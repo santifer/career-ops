@@ -8977,6 +8977,47 @@ try {
   fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
+// ── CALL-PLATFORM DETECTION (#2126) ─────────────────────────────
+// Pins the new **Platform:** field in interview-prep.md's Step 2 (Process
+// Overview) and Step 3 (Round-by-Round Breakdown) — distinct from the
+// existing round-type **Format:** field, cross-referencing invite-match.mjs's
+// extractPlatform without duplicating its detection logic in prose, and
+// falling back to "not stated in the invite, confirm before the call"
+// rather than guessing when the invite text doesn't say.
+
+console.log('\n63. Call-platform detection wired into interview-prep (#2126)');
+
+try {
+  const prepModeDoc = readFile('modes/interview-prep.md');
+  const prepFlat = prepModeDoc.replace(/\s+/g, ' ');
+
+  if (prepModeDoc.includes('- **Format:**') && prepModeDoc.includes('- **Platform:**')) {
+    pass('interview-prep Process Overview has both Format (round type) and Platform (call medium) as distinct fields');
+  } else {
+    fail('interview-prep Process Overview missing the distinct Platform field alongside Format');
+  }
+
+  if (prepFlat.includes("extractPlatform") && prepFlat.includes('invite-match.mjs')) {
+    pass('interview-prep Platform field cross-references invite-match.mjs\'s extractPlatform instead of restating the detection logic');
+  } else {
+    fail('interview-prep Platform field missing the cross-reference to invite-match.mjs\'s extractPlatform');
+  }
+
+  if (prepFlat.includes('not stated in the invite, confirm before the call')) {
+    pass('interview-prep Platform field falls back to "not stated in the invite, confirm before the call" instead of guessing');
+  } else {
+    fail('interview-prep Platform field missing the "not stated in the invite, confirm before the call" fallback');
+  }
+
+  if (prepModeDoc.includes('### Round {N}:') && prepModeDoc.includes('- **Platform:**')) {
+    pass('interview-prep Round-by-Round Breakdown (Step 3) also carries a per-round Platform field');
+  } else {
+    fail('interview-prep Round-by-Round Breakdown missing a per-round Platform field');
+  }
+} catch (e) {
+  fail(`call-platform detection wiring check: ${e.message}`);
+}
+
 await runDiscovered();
 
 finish();

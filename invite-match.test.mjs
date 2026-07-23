@@ -6,7 +6,7 @@
  * Run: node invite-match.test.mjs
  */
 
-import { matchInvite, normalizeCompanyName } from './invite-match.mjs';
+import { matchInvite, normalizeCompanyName, extractPlatform } from './invite-match.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -86,6 +86,18 @@ eq(
   normalizeCompanyName('Northwind Solutions Group') === normalizeCompanyName('Northwind Technologies Holdings'),
   false
 );
+
+// extractPlatform — deterministic call-platform detection (issue #2126).
+// A meeting-platform URL always wins over a phone-number pattern that might
+// also be present in the same text (e.g. a dial-in fallback line under a
+// Zoom link) — the video link is the actual call medium in that case.
+eq('Zoom URL detected as Zoom', extractPlatform('Join: https://us05web.zoom.us/j/9998887777'), 'Zoom');
+eq('Teams (microsoft.com) URL detected as Microsoft Teams', extractPlatform('https://teams.microsoft.com/l/meetup-join/abc'), 'Microsoft Teams');
+eq('Teams (live.com) URL detected as Microsoft Teams', extractPlatform('https://teams.live.com/meet/abc'), 'Microsoft Teams');
+eq('Meet URL detected as Google Meet', extractPlatform('https://meet.google.com/xyz-abcd-efg'), 'Google Meet');
+eq('phone number with no meeting URL detected as Phone', extractPlatform('We will call you at 416-555-0199 for the screen.'), 'Phone');
+eq('meeting URL outranks a phone-number fallback line in the same text', extractPlatform('Zoom: https://zoom.us/j/1234567890\nDial-in: 416-555-0199'), 'Zoom');
+eq('no platform or phone signal returns null', extractPlatform('Please confirm your availability for the interview.'), null);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {
