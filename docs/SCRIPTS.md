@@ -290,7 +290,7 @@ node weekly-digest.mjs --dir path/to/sessions             # override sessions di
 node weekly-digest.mjs --self-test
 ```
 
-`interview-prep/sessions/` is gitignored (session content contains real interviewer names and companies, per its own README) — a fresh clone or a week with no interviews reports "no interviews recorded in this range" and exits `0`, never an error.
+`interview-prep/sessions/` is gitignored, and session content contains real interviewer names and companies — see the "Privacy — important" section of `interview-prep/sessions/README.md` for the source of that statement. A fresh clone or a week with no interviews reports "no interviews recorded in this range" and exits `0`, never an error.
 
 **Exit codes:** `0` always (missing sessions dir/question bank, or an empty range, produce an explanatory empty result), `1` invalid `--from`/`--to` or self-test failure.
 

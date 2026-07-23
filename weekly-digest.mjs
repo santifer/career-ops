@@ -215,7 +215,18 @@ export function buildDigest(sessionsInRange, gapsByCompany = new Map()) {
   }
 
   const companies = [...byCompany.values()]
-    .map((c) => ({ ...c, rounds: c.rounds.sort((a, b) => (a.date < b.date ? -1 : 1)) }))
+    .map((c) => ({
+      ...c,
+      // Chronological order for rounds; a stable comparator (returns 0 on a
+      // genuine tie) matters so two rounds logged on the same date always
+      // sort the same way across runs/environments instead of drifting with
+      // whatever order the underlying sort implementation happens to visit
+      // them in. Round-type name is the deterministic tie-breaker.
+      rounds: c.rounds.sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+        return String(a.round || '').localeCompare(String(b.round || ''));
+      }),
+    }))
     .sort((a, b) => a.company.localeCompare(b.company) || a.role.localeCompare(b.role));
 
   const recurringCompetencies = [...tagCounts.entries()]
@@ -249,24 +260,52 @@ export function computeWeeklyDigest({
   sessionsDir = DEFAULT_SESSIONS_DIR,
   questionBankPath = DEFAULT_QUESTION_BANK_PATH,
 } = {}) {
-  const range = (from && to) ? { from, to } : computeDefaultRange();
+  // Range resolution has three cases, not two:
+  //   - neither --from nor --to given -> default current-week range (unchanged)
+  //   - exactly one of --from/--to given -> ambiguous, hard error (was:
+  //     silently fell back to the default range, which quietly discarded
+  //     the one bound the caller did supply)
+  //   - both given but from > to -> hard error (was: silently returned an
+  //     empty digest, indistinguishable from "no interviews this week")
+  let range;
+  if (from === undefined && to === undefined) {
+    range = computeDefaultRange();
+  } else if (from === undefined || to === undefined) {
+    throw new Error('--from and --to must both be supplied together (or neither, to use the default current-week range).');
+  } else if (from > to) {
+    throw new Error(`--from (${from}) must not be after --to (${to}).`);
+  } else {
+    range = { from, to };
+  }
+
   const allSessions = loadSessions(sessionsDir);
   const sessionsInRange = allSessions.filter((s) => inRange(s.date, range.from, range.to));
 
   const companyNames = [...new Set(sessionsInRange.map((s) => s.company))];
-  const qbContent = existsSync(questionBankPath) ? readFileSync(questionBankPath, 'utf-8') : null;
+  // "File exists" and "file has usable content" are independent questions —
+  // an existing-but-empty question-bank.md is a different state than a
+  // missing one, and the metadata (and printSummary's "present but
+  // unmatched" branch) needs to be able to tell them apart.
+  const questionBankFound = existsSync(questionBankPath);
+  const qbContent = questionBankFound ? readFileSync(questionBankPath, 'utf-8') : null;
   const gapsByCompany = qbContent ? extractGapsByCompany(qbContent, companyNames) : new Map();
 
   const digest = buildDigest(sessionsInRange, gapsByCompany);
+
+  // digest.companies is grouped by company+role (a company running two
+  // concurrent roles is two rollup rows) — that's correct for the rollup
+  // content itself, but the metadata count must dedupe to unique companies
+  // or a two-role company double-counts.
+  const uniqueCompanyCount = new Set(sessionsInRange.map((s) => s.company.toLowerCase())).size;
 
   return {
     metadata: {
       range,
       sessionsDirFound: existsSync(sessionsDir),
-      questionBankFound: !!qbContent,
+      questionBankFound,
       totalSessionsFound: allSessions.length,
       sessionsInRange: sessionsInRange.length,
-      companiesInRange: digest.companies.length,
+      companiesInRange: uniqueCompanyCount,
     },
     ...digest,
   };
@@ -440,6 +479,82 @@ async function runSelfTest() {
   check(missingDirResult.metadata.sessionsDirFound === false, 'missing sessions directory is reported, not an error');
   check(missingDirResult.metadata.sessionsInRange === 0, 'missing sessions directory yields zero sessions, exit 0 contract');
 
+  // Finding 1: companiesInRange counts unique companies, not company+role
+  // groups — a company running two concurrent roles must not double-count.
+  const twoRoleSessions = [
+    { company: 'Acme Corp', role: 'Instructional Designer', date: '2026-07-21', round: 'behavioral', source: 'debrief', competencyTags: [] },
+    { company: 'Acme Corp', role: 'LXD', date: '2026-07-22', round: 'screen', source: 'debrief', competencyTags: [] },
+  ];
+  const twoRoleDigest = buildDigest(twoRoleSessions);
+  check(twoRoleDigest.companies.length === 2, 'buildDigest still groups by company+role (two rollup rows for one company)');
+  const uniqueCompanyCount = new Set(twoRoleSessions.map((s) => s.company.toLowerCase())).size;
+  check(uniqueCompanyCount === 1, 'unique-company count collapses a two-role company to one');
+
+  // Finding 4: same-date rounds sort deterministically (comparator returns
+  // 0 on a genuine tie, with round-name as tie-breaker) instead of both
+  // orderings being "valid" under an unstable comparator.
+  const sameDateSessions = [
+    { company: 'Gamma Inc', role: 'EdTech Specialist', date: '2026-07-21', round: 'technical', source: 'debrief', competencyTags: [] },
+    { company: 'Gamma Inc', role: 'EdTech Specialist', date: '2026-07-21', round: 'behavioral', source: 'debrief', competencyTags: [] },
+  ];
+  const sameDateDigest = buildDigest(sameDateSessions);
+  const gamma = sameDateDigest.companies.find((c) => c.company === 'Gamma Inc');
+  check(!!gamma && gamma.rounds.length === 2, 'Gamma Inc rolls up both same-date rounds');
+  check(!!gamma && gamma.rounds[0].round === 'behavioral' && gamma.rounds[1].round === 'technical', 'same-date rounds break ties alphabetically by round name, deterministically');
+
+  // Finding 2: question-bank.md that exists but is empty is a distinct
+  // state from "file doesn't exist at all" — questionBankFound must track
+  // existsSync(), not content truthiness.
+  const tmpQbDir = mkdtempSync(join(tmpBase, 'weekly-digest-selftest-qb-'));
+  try {
+    writeFileSync(join(tmpQbDir, 'acme-corp-instructional-designer-behavioral-2026-07-21.md'), goodSession);
+    const emptyQbPath = join(tmpQbDir, 'question-bank.md');
+    writeFileSync(emptyQbPath, '');
+    const emptyQbResult = computeWeeklyDigest({ from: '2026-07-20', to: '2026-07-26', sessionsDir: tmpQbDir, questionBankPath: emptyQbPath });
+    check(emptyQbResult.metadata.questionBankFound === true, 'existing-but-empty question-bank.md is reported as found');
+    check(emptyQbResult.recurringGaps.length === 0, 'existing-but-empty question-bank.md yields no gaps, no crash');
+
+    const missingQbResult = computeWeeklyDigest({ from: '2026-07-20', to: '2026-07-26', sessionsDir: tmpQbDir, questionBankPath: join(tmpQbDir, 'does-not-exist.md') });
+    check(missingQbResult.metadata.questionBankFound === false, 'a genuinely missing question-bank.md is still reported as not found');
+  } finally {
+    rmSync(tmpQbDir, { recursive: true, force: true });
+  }
+
+  // Finding 3: exactly one of --from/--to supplied, or from > to, must be a
+  // hard error — not a silent fallback to the default range or an empty
+  // digest indistinguishable from "no interviews this week."
+  let threwFromOnly = false;
+  try {
+    computeWeeklyDigest({ from: '2026-07-20', sessionsDir: '/definitely/does/not/exist/sessions' });
+  } catch {
+    threwFromOnly = true;
+  }
+  check(threwFromOnly, '--from without --to throws instead of silently using the default range');
+
+  let threwToOnly = false;
+  try {
+    computeWeeklyDigest({ to: '2026-07-26', sessionsDir: '/definitely/does/not/exist/sessions' });
+  } catch {
+    threwToOnly = true;
+  }
+  check(threwToOnly, '--to without --from throws instead of silently using the default range');
+
+  let threwReversed = false;
+  try {
+    computeWeeklyDigest({ from: '2026-07-26', to: '2026-07-20', sessionsDir: '/definitely/does/not/exist/sessions' });
+  } catch {
+    threwReversed = true;
+  }
+  check(threwReversed, 'from > to throws instead of silently returning an empty digest');
+
+  let validRangeOk = true;
+  try {
+    computeWeeklyDigest({ from: '2026-07-20', to: '2026-07-26', sessionsDir: '/definitely/does/not/exist/sessions' });
+  } catch {
+    validRangeOk = false;
+  }
+  check(validRangeOk, 'both --from and --to supplied with from <= to computes the digest without error');
+
   console.log(`\n  weekly-digest self-test: ${pass} passed, ${fail} failed\n`);
   process.exit(fail > 0 ? 1 : 0);
 }
@@ -465,7 +580,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1);
   }
 
-  const result = computeWeeklyDigest({ from, to, sessionsDir });
+  let result;
+  try {
+    result = computeWeeklyDigest({ from, to, sessionsDir });
+  } catch (err) {
+    console.error(`  ${err.message}`);
+    process.exit(1);
+  }
 
   if (summaryMode) {
     printSummary(result);
