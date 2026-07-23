@@ -112,6 +112,11 @@ eq('does not detect a platform-looking URL path (Microsoft Teams)', extractPlatf
 eq('does not detect a platform-looking query value (Microsoft Teams)', extractPlatform('See https://example.com?next=teams.microsoft.com for details.'), null);
 eq('does not detect a platform-looking URL path (Google Meet)', extractPlatform('See https://example.com/meet.google.com for details.'), null);
 eq('does not detect a platform-looking query value (Google Meet)', extractPlatform('See https://example.com?next=meet.google.com for details.'), null);
+// An explicit port in the URL authority must not block detection (issue
+// #2128 review finding).
+eq('Zoom URL with explicit port detected as Zoom', extractPlatform('Join: https://zoom.us:443/j/123456789'), 'Zoom');
+eq('Microsoft Teams URL with explicit port detected as Microsoft Teams', extractPlatform('https://teams.microsoft.com:8443/l/meetup-join/abc'), 'Microsoft Teams');
+eq('Google Meet URL with explicit port detected as Google Meet', extractPlatform('https://meet.google.com:443/xyz-abcd-efg'), 'Google Meet');
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {

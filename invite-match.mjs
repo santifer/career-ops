@@ -264,10 +264,15 @@ export function extractReqId(text) {
 // *different* host: `https://example.com/zoom.us` (path segment) and
 // `https://example.com?next=zoom.us` (query value) must NOT match, since
 // `zoom.us` is not the URL's actual host in either case.
+//
+// An optional explicit port (`:443`, `:8443`, etc.) is permitted between
+// the host and the following delimiter, since a URL authority may legally
+// include one (`https://zoom.us:443/j/123456789`) and rejecting it would
+// silently drop otherwise-legitimate invite links.
 const PLATFORM_URL_PATTERNS = [
-  { name: 'Zoom', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?zoom\.us(?:[/?#\s]|$)/i },
-  { name: 'Microsoft Teams', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?teams\.(?:microsoft|live)\.com(?:[/?#\s]|$)/i },
-  { name: 'Google Meet', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?meet\.google\.com(?:[/?#\s]|$)/i },
+  { name: 'Zoom', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?zoom\.us(?::\d{1,5})?(?:[/?#\s]|$)/i },
+  { name: 'Microsoft Teams', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?teams\.(?:microsoft|live)\.com(?::\d{1,5})?(?:[/?#\s]|$)/i },
+  { name: 'Google Meet', pattern: /(?:^|[^\w@./?=&#-])(?:https?:\/\/)?(?:[\w-]+\.)?meet\.google\.com(?::\d{1,5})?(?:[/?#\s]|$)/i },
 ];
 
 // A plain phone number, used only when no meeting-platform URL was found —
@@ -478,6 +483,9 @@ function runSelfTest() {
   check(extractPlatform('See https://example.com?next=teams.microsoft.com for details.') === null, 'does not detect Microsoft Teams as a URL query value on an unrelated host');
   check(extractPlatform('See https://example.com/meet.google.com for details.') === null, 'does not detect Google Meet as a URL path segment on an unrelated host');
   check(extractPlatform('See https://example.com?next=meet.google.com for details.') === null, 'does not detect Google Meet as a URL query value on an unrelated host');
+  check(extractPlatform('Join via Zoom: https://zoom.us:443/j/123456789') === 'Zoom', 'detects Zoom from a zoom.us URL with an explicit port');
+  check(extractPlatform('Join Microsoft Teams Meeting: https://teams.microsoft.com:8443/l/meetup-join/xyz') === 'Microsoft Teams', 'detects Microsoft Teams from a teams.microsoft.com URL with an explicit port');
+  check(extractPlatform('Google Meet: https://meet.google.com:443/abc-defg-hij') === 'Google Meet', 'detects Google Meet from a meet.google.com URL with an explicit port');
 
   // --- matchInvite (fixture rows, no real tracker data) ---
   const fixtureRows = [

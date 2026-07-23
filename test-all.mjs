@@ -9024,6 +9024,16 @@ try {
   } else {
     fail('interview-prep Round-by-Round Breakdown missing a per-round Platform field');
   }
+
+  // The fallback instruction must independently exist in the Round {N}
+  // template itself, not just in Step 2 — otherwise a future edit that
+  // drops it from Step 3 only would go unnoticed (#2128 review finding).
+  const roundBreakdownFlat = roundBreakdown.replace(/\s+/g, ' ');
+  if (roundBreakdownFlat.includes('not stated in the invite, confirm before the call')) {
+    pass('interview-prep Round-by-Round Breakdown (Step 3) also carries the "not stated in the invite, confirm before the call" fallback');
+  } else {
+    fail('interview-prep Round-by-Round Breakdown missing the "not stated in the invite, confirm before the call" fallback');
+  }
 } catch (e) {
   fail(`call-platform detection wiring check: ${e.message}`);
 }
