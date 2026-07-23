@@ -7039,6 +7039,60 @@ try {
     fail('resume-subheading manifest has no bullet slot to patch');
   }
 
+  // resumeItemWithoutTitle variant: `\resumeItemWithoutTitle{}{...}` bullets,
+  // `\resumeSubItem{Cat}{items}` skills, and preamble macro defs that must NOT
+  // leak into slots (the defs contain \resumeItem{#1}{#2} / \textbf{#1}{: #2}).
+  const withoutTitleFixture = readFileSync(join(ROOT, 'examples/latex-tex/resume-subheading-withouttitle.tex'), 'utf-8');
+
+  if (detectFamily(withoutTitleFixture) === 'resumeSubheading') {
+    pass('resumeItemWithoutTitle fixture detected as resumeSubheading family');
+  } else {
+    fail('resumeItemWithoutTitle fixture family detection failed');
+  }
+
+  const wtManifest = buildManifest('resume-subheading-withouttitle.tex', withoutTitleFixture);
+  const wtBullets = wtManifest.slots.filter(s => s.kind === 'bullet');
+  const wtSkills = wtManifest.slots.filter(s => s.kind === 'skill');
+  if (wtBullets.length === 2 && wtSkills.length === 3) {
+    pass('resumeItemWithoutTitle manifest extracts 2 bullets + 3 skill values');
+  } else {
+    fail(`resumeItemWithoutTitle slot mismatch (want 2 bullets/3 skills): ${JSON.stringify(wtManifest.slots.map(s => ({ id: s.id, text: s.text.slice(0, 40) })))}`);
+  }
+
+  if (wtManifest.slots.every(s => !s.text.includes('#1') && !s.text.includes('#2'))) {
+    pass('preamble macro definitions are not extracted as slots');
+  } else {
+    fail('extraction leaked preamble macro definitions (#1/#2) into slots');
+  }
+
+  if (wtManifest.slots.every(s => !s.text.includes('Stale commented bullet'))) {
+    pass('commented-out macro calls are not extracted as slots');
+  } else {
+    fail('extraction leaked a commented-out bullet into slots');
+  }
+
+  // Slot spans must point at the prose group: patching every slot with its own
+  // extracted text must reproduce the input byte-for-byte.
+  const wtRoundTrip = applyPatches(
+    withoutTitleFixture,
+    wtManifest.slots.map(s => ({ id: s.id, text: s.text })),
+    wtManifest.slots,
+    { escape: false },
+  );
+  if (wtRoundTrip === withoutTitleFixture) {
+    pass('no-op patch round-trip is byte-identical (spans point at prose groups)');
+  } else {
+    fail('no-op patch round-trip altered the document — slot spans are misaligned');
+  }
+
+  const wtBullet = wtBullets[0];
+  const wtPatched = applyPatches(withoutTitleFixture, [{ id: wtBullet.id, text: 'Tailored withouttitle bullet.' }], wtManifest.slots);
+  if (wtPatched.includes('\\resumeItemWithoutTitle{}{Tailored withouttitle bullet.}')) {
+    pass('applyPatches rewrites a resumeItemWithoutTitle bullet in place');
+  } else {
+    fail('applyPatches did not rewrite the resumeItemWithoutTitle prose group');
+  }
+
   const compileOnlyTex = `\\documentclass{article}\\begin{document}Minimal user CV\\end{document}`;
   const compileOnlyValidation = validateLatexContent(compileOnlyTex, true);
   if (compileOnlyValidation.issues.length === 0) {
