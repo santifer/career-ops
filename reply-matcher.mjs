@@ -251,10 +251,12 @@ export function classifyReply(cand) {
     'job alert', 'invitation to apply', 'recommended jobs', 'newsletter', 'marketing digest', 'job recommendation', 'suggested jobs'
   ];
 
-  // 2. Offer keywords
+  // 2. Offer keywords — specific phrases only. A bare 'offer' substring is deliberately
+  //    excluded: it collides with rejection wording such as 'unable to offer' (see
+  //    rejectionKeywords) and would mis-type rejections as offers.
   const offerKeywords = [
     '录取通知书', '录用信', '录用通知', '录用', '薪资确认', '入职协议', '意向书',
-    'offer letter', 'employment agreement', 'job offer', 'congratulations on the offer', 'compensation details', 'offer'
+    'offer letter', 'employment agreement', 'job offer', 'congratulations on the offer', 'compensation details', 'pleased to offer'
   ];
 
   // 3. Rejected keywords
@@ -297,17 +299,11 @@ export function classifyReply(cand) {
     };
   }
 
-  const hasOfferKeywords = check(offerKeywords);
-  const isOffer = signal === 'offer' || hasOfferKeywords;
-  if (isOffer) {
-    if (signal === 'offer' && !evidence.includes('offer')) evidence.push('offer');
-    return {
-      type: 'Offer',
-      evidence: Array.from(new Set(evidence)),
-      suggestedTrackerUpdate: 'Offer'
-    };
-  }
-
+  // Rejection is decided before Offer: an explicit rejection signal or rejection
+  // wording (e.g. 'unable to offer', or 'we will not be sending an offer letter'
+  // which still contains the 'offer letter' phrase) must win even when offer-ish
+  // phrasing is present. Deciding Offer first would type such replies as Offer and
+  // push a spurious Offer tracker update.
   const hasRejectionKeywords = check(rejectionKeywords);
   const isRejected = signal === 'rejection' || hasRejectionKeywords;
   if (isRejected) {
@@ -316,6 +312,17 @@ export function classifyReply(cand) {
       type: 'Rejected',
       evidence: Array.from(new Set(evidence)),
       suggestedTrackerUpdate: 'Rejected'
+    };
+  }
+
+  const hasOfferKeywords = check(offerKeywords);
+  const isOffer = signal === 'offer' || hasOfferKeywords;
+  if (isOffer) {
+    if (signal === 'offer' && !evidence.includes('offer')) evidence.push('offer');
+    return {
+      type: 'Offer',
+      evidence: Array.from(new Set(evidence)),
+      suggestedTrackerUpdate: 'Offer'
     };
   }
 

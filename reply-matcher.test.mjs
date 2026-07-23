@@ -202,6 +202,44 @@ test('classifyReply - offer fixtures', () => {
   assert.equal(res.suggestedTrackerUpdate, 'Offer');
 });
 
+test('classifyReply - rejection wins over offer substring (regression)', () => {
+  // Regression: a rejection must never be typed as an Offer just because it contains
+  // offer-ish wording. Previously the bare 'offer' keyword plus Offer-before-Rejected
+  // ordering classified these as Offer and pushed a spurious Offer tracker update,
+  // and made the 'unable to offer' rejection keyword dead code.
+
+  // (a) "unable to offer" is a rejection, not an offer
+  const a = classifyReply({ subject: '', body_snippet: 'Unfortunately, we are unable to offer you the position.' });
+  assert.equal(a.type, 'Rejected');
+  assert.equal(a.suggestedTrackerUpdate, 'Rejected');
+  assert.ok(a.evidence.includes('unable to offer')); // previously-dead keyword now fires
+
+  // (b) an explicit upstream rejection signal wins even when the body says "offer"
+  const b = classifyReply({ signal: 'rejection', body_snippet: 'We cannot extend an offer at this time.' });
+  assert.equal(b.type, 'Rejected');
+  assert.equal(b.suggestedTrackerUpdate, 'Rejected');
+
+  // (e) a rejection that still contains the specific 'offer letter' phrase — proves the
+  //     reorder matters, not just removing the bare 'offer' keyword
+  const e = classifyReply({ subject: '', body_snippet: 'Unfortunately, we will not be sending you an offer letter.' });
+  assert.equal(e.type, 'Rejected');
+  assert.equal(e.suggestedTrackerUpdate, 'Rejected');
+
+  // (d) a plain rejection stays Rejected
+  const d = classifyReply({ subject: '', body_snippet: "We've decided not to proceed." });
+  assert.equal(d.type, 'Rejected');
+  assert.equal(d.suggestedTrackerUpdate, 'Rejected');
+
+  // (c) controls: genuine offers must still classify as Offer
+  const c1 = classifyReply({ subject: '', body_snippet: 'We are pleased to send your offer letter.' });
+  assert.equal(c1.type, 'Offer');
+  assert.equal(c1.suggestedTrackerUpdate, 'Offer');
+
+  const c2 = classifyReply({ signal: 'offer', body_snippet: '' });
+  assert.equal(c2.type, 'Offer');
+  assert.equal(c2.suggestedTrackerUpdate, 'Offer');
+});
+
 test('classifyReply - need action vs scheduling', () => {
   const actionRes = classifyReply({ subject: 'Please complete assessment test', body_snippet: '' });
   assert.equal(actionRes.type, 'Need Action');
