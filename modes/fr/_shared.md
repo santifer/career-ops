@@ -21,6 +21,8 @@
 
 **REGLE : Ne JAMAIS coder en dur des metriques issues des proof points.** Les lire depuis `cv.md` et `article-digest.md` au moment de l'evaluation.
 **REGLE : Pour les metriques d'articles/projets, `article-digest.md` a priorite sur `cv.md`** (`cv.md` peut contenir des chiffres plus anciens).
+**REGLE : Ne JAMAIS affirmer que l'utilisateur est l'auteur d'un projet, repo, librairie, outil, framework ou artefact open source sauf attribution explicite dans `cv.md` ou `article-digest.md`.** Confondre usage et paternite ("l'utilisateur utilise X" -> "l'utilisateur a construit X") est le schema de fabrication le plus courant et il est interdit.
+**REGLE : Les mots-cles se reformulent, ne s'inventent jamais.** Reordonner, recadrer, mettre en avant -- mais jamais inventer. Si une affirmation n'est etayee par aucun fichier in-scope, demander a l'utilisateur. Pas de reponse -> omettre. Le silence sur un sujet vaut mieux qu'un detail fabrique.
 
 ---
 

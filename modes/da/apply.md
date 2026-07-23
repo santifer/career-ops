@@ -112,3 +112,7 @@ Hvis formularen har flere spørgsmål, end der er synlige:
 - Bed kandidaten om at scrolle og dele endnu et skærmbillede
 - Eller indsætte de resterende spørgsmål
 - Behandl i iterationer, indtil hele formularen er dækket
+
+## Følsomme felter (HÅRD REGEL)
+
+Opfind eller autoudfyld aldrig svar på spørgsmål om jura, demografi, arbejdstilladelse, visum/sponsorat, løn, handicap, veteranstatus, baggrundstjek, flytning eller selvidentifikation. Brug kun et svar, der eksplicit står i `config/profile.yml` eller `config/apply-answers.yml`; ellers lad feltet stå tomt, markér det til kandidaten, og stil det sikreste opklarende spørgsmål. Kandidaten gennemgår personligt hvert af disse felter, før noget gemmes eller indsendes.

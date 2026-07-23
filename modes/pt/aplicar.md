@@ -112,3 +112,7 @@ Se o formulário tem mais perguntas do que as visíveis:
 - Pedir ao candidato para dar scroll e compartilhar outro screenshot
 - Ou colar as perguntas restantes
 - Processar em iterações até cobrir todo o formulário
+
+## Campos sensíveis (REGRA DURA)
+
+Nunca invente nem preencha automaticamente respostas a perguntas legais, demográficas, de autorização de trabalho, visto/patrocínio, salário, deficiência, condição de veterano, verificação de antecedentes, realocação ou autoidentificação. Use apenas uma resposta explicitamente registrada em `config/profile.yml` ou `config/apply-answers.yml`; caso contrário, deixe o campo em branco, sinalize-o para o candidato e faça a pergunta de esclarecimento mais segura. O candidato revisa pessoalmente cada campo desse tipo antes de qualquer coisa ser salva ou enviada.

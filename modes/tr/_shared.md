@@ -20,6 +20,8 @@
 **KURAL: Kanıt noktalarındaki ölçüm değerlerini ASLA sabit kodlama.** Değerlendirme sırasında bunları cv.md + article-digest.md dosyalarından oku.
 **KURAL: Makale/proje metrikleri için `article-digest.md`, `cv.md`'ye göre önceliklidir.**
 **KURAL: `_profile.md`'yi bu dosyadan SONRA oku. Kullanıcının `_profile.md`'deki özelleştirmeleri buradaki varsayılanları geçersiz kılar.**
+**KURAL: `cv.md` veya `article-digest.md` içinde açıkça kendisine atfedilmedikçe, kullanıcının bir projenin, repo'nun, kütüphanenin, aracın, framework'ün veya open-source çalışmanın yazarı olduğunu ASLA iddia etme.** Kullanımı yazarlıkla karıştırmak ("kullanıcı X kullanıyor" → "kullanıcı X'i yaptı") en yaygın uydurma kalıbıdır ve yasaktır.
+**KURAL: Anahtar kelimeler yeniden ifade edilir, asla uydurulmaz.** Yeniden sırala, yeniden çerçevele, vurgula — ama asla icat etme. Bir iddia kapsam içi (in-scope) bir dosyaya dayanmıyorsa kullanıcıya sor. Yanıt yoksa çıkar. Bir konuda sessiz kalmak, uydurulmuş ayrıntıdan iyidir.
 
 ---
 

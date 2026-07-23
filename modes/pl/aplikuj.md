@@ -112,3 +112,7 @@ Jeśli formularz ma więcej pytań niż widać:
 - Poproś kandydata, aby przewinął i udostępnił kolejny zrzut ekranu
 - Lub wkleił pozostałe pytania
 - Przetwarzaj iteracyjnie, aż pokryjesz cały formularz
+
+## Pola wrażliwe (TWARDA REGUŁA)
+
+Nigdy nie wymyślaj ani nie wypełniaj automatycznie odpowiedzi na pytania prawne, demograficzne, o pozwolenie na pracę, wizę/sponsoring, wynagrodzenie, niepełnosprawność, status weterana, background check, relokację czy samoidentyfikację. Używaj wyłącznie odpowiedzi zapisanej wprost w `config/profile.yml` lub `config/apply-answers.yml`; w przeciwnym razie zostaw pole puste, oznacz je dla kandydata i zadaj najbezpieczniejsze pytanie doprecyzowujące. Kandydat osobiście sprawdza każde takie pole, zanim cokolwiek zostanie zapisane lub wysłane.

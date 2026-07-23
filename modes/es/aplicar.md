@@ -112,3 +112,7 @@ Si el formulario tiene más preguntas de las que son visibles:
 - Pedir al candidato que desplace y comparta otra captura de pantalla
 - O que pegue las preguntas restantes
 - Tratar por iteraciones hasta cubrir todo el formulario
+
+## Campos sensibles (REGLA DURA)
+
+Nunca inventes ni autocompletes respuestas a preguntas legales, demográficas, de autorización de trabajo, visado/patrocinio, salario, discapacidad, condición de veterano, verificación de antecedentes, reubicación o autoidentificación. Usa solo una respuesta registrada explícitamente en `config/profile.yml` o `config/apply-answers.yml`; si no existe, deja el campo vacío, márcalo para el candidato y plantea la pregunta aclaratoria más segura. El candidato revisa personalmente cada campo de este tipo antes de guardar o enviar nada.

@@ -118,3 +118,7 @@ Formda görünenden fazla soru varsa:
 
 **Adayın onayı olmadan hiçbir şeye tıklama, form gönderme.**
 Doldur, taslak oluştur, hazırla — ama "Gönder" veya "Başvur" düğmesine basmak her zaman adayın kararıdır.
+
+## Hassas alanlar (KATI KURAL)
+
+Hukuki, demografik, çalışma izni, vize/sponsorluk, maaş, engellilik, gazilik (veteran) durumu, background check, taşınma veya öz-tanımlama (self-identification) sorularına asla yanıt uydurma ve bunları asla otomatik doldurma. Yalnızca `config/profile.yml` veya `config/apply-answers.yml` içinde açıkça kayıtlı bir yanıtı kullan; yoksa alanı boş bırak, adaya işaretle ve en güvenli netleştirme sorusunu sor. Herhangi bir şey kaydedilmeden veya gönderilmeden önce aday bu tür her alanı bizzat gözden geçirir.

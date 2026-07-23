@@ -115,3 +115,7 @@ Notes:
 - Candidate से scroll करके दूसरा screenshot share करने को कहें
 - या remaining questions paste करने को कहें
 - पूरा form cover होने तक iterations में process करें
+
+## संवेदनशील फ़ील्ड (कठोर नियम)
+
+कानूनी, जनसांख्यिकीय (demographic), work authorization, वीज़ा/स्पॉन्सरशिप, वेतन, विकलांगता, veteran status, background check, स्थानांतरण या self-identification से जुड़े प्रश्नों के उत्तर कभी न गढ़ें और न ही अपने-आप भरें। केवल वही उत्तर इस्तेमाल करें जो `config/profile.yml` या `config/apply-answers.yml` में स्पष्ट रूप से दर्ज हो; अन्यथा फ़ील्ड खाली छोड़ें, उम्मीदवार के लिए चिह्नित करें और सबसे सुरक्षित स्पष्टीकरण-प्रश्न पूछें। कुछ भी सेव या सबमिट होने से पहले उम्मीदवार ऐसे हर फ़ील्ड की स्वयं समीक्षा करते हैं।

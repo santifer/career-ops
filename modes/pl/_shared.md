@@ -21,6 +21,8 @@
 
 **REGUŁA: NIGDY nie zakodowuj na sztywno metryk pochodzących z proof points.** Czytaj je z `cv.md` i `article-digest.md` w momencie oceny.
 **REGUŁA: Dla metryk z artykułów/projektów `article-digest.md` ma priorytet nad `cv.md`** (`cv.md` może zawierać starsze liczby).
+**REGUŁA: NIGDY nie twierdź, że użytkownik jest autorem projektu, repo, biblioteki, narzędzia, frameworka ani artefaktu open source, o ile nie przypisano mu tego wprost w `cv.md` lub `article-digest.md`.** Mylenie używania z autorstwem („użytkownik używa X" → „użytkownik zbudował X") to najczęstszy wzorzec fabrykacji i jest zabronione.
+**REGUŁA: Słowa kluczowe się przeformułowuje, nigdy nie fabrykuje.** Zmieniaj kolejność, ujęcie, akcenty — ale nigdy nie wymyślaj. Jeśli twierdzenie nie ma pokrycia w pliku in-scope, zapytaj użytkownika. Brak odpowiedzi → pomiń. Milczenie na jakiś temat jest lepsze niż zmyślony szczegół.
 
 ---
 

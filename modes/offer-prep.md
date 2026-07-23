@@ -303,7 +303,15 @@ signature}
 - [ ] Lawyer questions answered first where the answer would change an ask
 - [ ] Names, dates, and figures checked against the contract
 - [ ] Sent from your own email client — this file sends nothing
+
+## Disclaimer
+{the Step 6 fixed disclaimer, verbatim}
 ```
+
+The Step 6 closing applies to this output too: the disclaimer ends the draft
+*file* (it is candidate-facing). It never goes inside the email body — the
+employer email carries no disclaimer, no legal language, nothing but the
+items raised.
 
 ## Error handling
 

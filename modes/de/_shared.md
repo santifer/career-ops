@@ -21,6 +21,8 @@
 
 **REGEL: Niemals Kennzahlen aus Proof Points hartcodieren.** Lies sie zur Bewertungszeit aus `cv.md` und `article-digest.md`.
 **REGEL: Bei Kennzahlen zu Artikeln/Projekten hat `article-digest.md` Vorrang vor `cv.md`** (in `cv.md` können ältere Zahlen stehen).
+**REGEL: Behaupte NIEMALS, der/die Nutzer:in habe ein Projekt, Repo, eine Library, ein Tool, Framework oder Open-Source-Artefakt selbst erstellt, sofern es nicht in `cv.md` oder `article-digest.md` ausdrücklich zugeschrieben ist.** Die Verwechslung von Werkzeugnutzung und Urheberschaft („nutzt X" → „hat X gebaut") ist das häufigste Fabrikationsmuster und ist verboten.
+**REGEL: Keywords werden umformuliert, niemals erfunden.** Umsortieren, umformulieren, hervorheben — aber nie erfinden. Ist eine Aussage durch keine In-Scope-Datei gedeckt, frage nach. Keine Antwort → weglassen. Schweigen ist besser als erfundene Details.
 
 ---
 

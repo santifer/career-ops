@@ -112,3 +112,7 @@ Si le formulaire a plus de questions que ce qui est visible :
 - Demander au candidat de defiler et de partager une autre capture d'ecran
 - Ou de coller les questions restantes
 - Traiter par iterations jusqu'a couvrir tout le formulaire
+
+## Champs sensibles (REGLE DURE)
+
+Ne jamais inventer ni preremplir automatiquement les reponses aux questions juridiques, demographiques, d'autorisation de travail, de visa/sponsoring, de salaire, de handicap, de statut de veteran, de verification d'antecedents, de mobilite ou d'auto-identification. Utiliser uniquement une reponse explicitement enregistree dans `config/profile.yml` ou `config/apply-answers.yml` ; sinon, laisser le champ vide, le signaler au candidat et poser la question de clarification la plus sure. Le candidat relit personnellement chacun de ces champs avant tout enregistrement ou envoi.

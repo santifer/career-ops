@@ -112,3 +112,7 @@ Jika formulir punya lebih banyak pertanyaan daripada yang terlihat:
 - Minta kandidat menggulir dan membagikan tangkapan layar lain
 - Atau menempelkan pertanyaan yang tersisa
 - Proses secara iteratif hingga seluruh formulir tercakup
+
+## Kolom sensitif (ATURAN KERAS)
+
+Jangan pernah mengarang atau mengisi otomatis jawaban untuk pertanyaan hukum, demografi, izin kerja, visa/sponsor, gaji, disabilitas, status veteran, pemeriksaan latar belakang, relokasi, atau identifikasi diri. Gunakan hanya jawaban yang tercatat secara eksplisit di `config/profile.yml` atau `config/apply-answers.yml`; jika tidak ada, biarkan kolom kosong, tandai untuk kandidat, dan ajukan pertanyaan klarifikasi paling aman. Kandidat memeriksa sendiri setiap kolom semacam itu sebelum apa pun disimpan atau dikirim.

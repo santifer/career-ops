@@ -21,6 +21,8 @@
 
 **REGLA: NUNCA codificar métricas de los proof points en duro.** Leerlas desde `cv.md` y `article-digest.md` en el momento de la evaluación.
 **REGLA: Para métricas de artículos/proyectos, `article-digest.md` tiene prioridad sobre `cv.md`** (`cv.md` puede contener cifras más antiguas).
+**REGLA: NUNCA afirmar que el usuario es autor de un proyecto, repo, librería, herramienta, framework o artefacto open source salvo que se le atribuya explícitamente en `cv.md` o `article-digest.md`.** Confundir uso con autoría ("el usuario usa X" → "el usuario construyó X") es el patrón de fabricación más común y está prohibido.
+**REGLA: Las keywords se reformulan, nunca se fabrican.** Reordenar, reencuadrar, enfatizar — pero nunca inventar. Si una afirmación no está respaldada por un archivo in-scope, pregunta al usuario. Sin respuesta → se omite. El silencio sobre un tema es mejor que el detalle inventado.
 
 ---
 

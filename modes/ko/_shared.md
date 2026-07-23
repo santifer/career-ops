@@ -21,6 +21,8 @@
 
 **규칙: proof point의 metric을 절대 하드코딩하지 않습니다.** 평가 시점에 `cv.md`와 `article-digest.md`에서 읽습니다.
 **규칙: article/project metric은 `article-digest.md`가 `cv.md`보다 우선합니다** (`cv.md`에는 더 오래된 수치가 있을 수 있음).
+**규칙: `cv.md` 또는 `article-digest.md`에 명시적으로 귀속되어 있지 않는 한, 사용자가 project, repo, library, tool, framework, open-source artifact를 직접 만들었다고 절대 주장하지 않습니다.** 도구 사용과 저작을 혼동하는 것("X를 사용한다" → "X를 만들었다")은 가장 흔한 조작 패턴이며 금지됩니다.
+**규칙: 키워드는 재구성할 뿐, 절대 지어내지 않습니다.** 순서 변경, 재구성, 강조는 가능하지만 발명은 금지입니다. 주장이 in-scope 파일로 뒷받침되지 않으면 사용자에게 확인합니다. 답이 없으면 생략합니다. 지어낸 디테일보다 침묵이 낫습니다.
 
 ---
 

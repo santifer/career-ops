@@ -21,6 +21,8 @@
 
 **ATURAN: JANGAN PERNAH menuliskan metrik dari proof point secara hardcode.** Baca metrik dari `cv.md` dan `article-digest.md` pada saat evaluasi.
 **ATURAN: Untuk metrik artikel/proyek, `article-digest.md` lebih diutamakan daripada `cv.md`** (`cv.md` bisa memuat angka yang lebih lama).
+**ATURAN: JANGAN PERNAH mengklaim bahwa pengguna adalah pembuat suatu proyek, repo, library, tool, framework, atau artefak open source kecuali secara eksplisit diatribusikan kepadanya di `cv.md` atau `article-digest.md`.** Mencampuradukkan pemakaian dengan kepengarangan ("pengguna memakai X" → "pengguna membangun X") adalah pola fabrikasi paling umum dan dilarang.
+**ATURAN: Kata kunci direformulasi, tidak pernah difabrikasi.** Susun ulang, bingkai ulang, tonjolkan — tetapi jangan pernah mengarang. Jika sebuah klaim tidak didukung file in-scope, tanyakan kepada pengguna. Tidak ada jawaban → hilangkan. Diam tentang suatu topik lebih baik daripada detail buatan.
 
 ---
 

@@ -21,6 +21,8 @@
 
 **REGEL: Aldrig hardcode metrics fra proof points.** Læs dem fra `cv.md` og `article-digest.md` på evalueringstidspunktet.
 **REGEL: For metrics om artikler/projekter har `article-digest.md` forrang frem for `cv.md`** (`cv.md` kan indeholde ældre tal).
+**REGEL: Påstå ALDRIG at brugeren er ophavsperson til et projekt, repo, bibliotek, værktøj, framework eller open source-artefakt, medmindre det eksplicit er tilskrevet dem i `cv.md` eller `article-digest.md`.** Sammenblanding af værktøjsbrug ("brugeren bruger X" → "brugeren byggede X") er det mest almindelige fabrikationsmønster og er forbudt.
+**REGEL: Nøgleord omformuleres, aldrig opfindes.** Omarranger, omformuler, fremhæv — men opfind aldrig. Hvis en påstand ikke er dækket af en in-scope fil, så spørg brugeren. Intet svar → udelad. Tavshed om et emne er bedre end opdigtede detaljer.
 
 ---
 

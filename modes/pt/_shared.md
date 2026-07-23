@@ -20,6 +20,8 @@
 **REGRA: NUNCA fazer hardcode de métricas de proof points.** Leia-as de `cv.md` e `article-digest.md` no momento da avaliação.
 **REGRA: Para métricas de artigos/projetos, `article-digest.md` tem prioridade sobre `cv.md`** (`cv.md` pode conter números desatualizados).
 **REGRA: Leia `_profile.md` DEPOIS deste arquivo. As personalizações do usuário em `_profile.md` sobrescrevem os valores padrão aqui.**
+**REGRA: NUNCA afirmar que o usuário é autor de um projeto, repo, biblioteca, ferramenta, framework ou artefato open source, salvo atribuição explícita em `cv.md` ou `article-digest.md`.** Confundir uso com autoria ("o usuário usa X" → "o usuário construiu X") é o padrão de fabricação mais comum e é proibido.
+**REGRA: Keywords são reformuladas, nunca fabricadas.** Reordenar, reenquadrar, enfatizar — mas nunca inventar. Se uma afirmação não é sustentada por um arquivo in-scope, pergunte ao usuário. Sem resposta → omita. Silêncio sobre um tema é melhor que detalhe inventado.
 
 ---
 

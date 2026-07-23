@@ -112,3 +112,7 @@ Wenn das Formular mehr Fragen hat als sichtbar:
 - Den Kandidaten bitten, zu scrollen und einen weiteren Screenshot zu teilen
 - Oder die restlichen Fragen einzufügen
 - In Iterationen verarbeiten, bis das ganze Formular abgedeckt ist
+
+## Sensible Felder (HARTE REGEL)
+
+Erfinde niemals Antworten und fülle niemals automatisch Fragen zu Recht, Demografie, Arbeitserlaubnis, Visum/Sponsoring, Gehalt, Behinderung, Veteranenstatus, Background-Check, Umzug oder Selbstauskunft aus. Verwende ausschließlich eine explizit in `config/profile.yml` oder `config/apply-answers.yml` hinterlegte Antwort; andernfalls lass das Feld leer, markiere es für den/die Kandidat:in und stelle die sicherste Rückfrage. Der/die Kandidat:in prüft jedes solche Feld persönlich, bevor irgendetwas gespeichert oder abgeschickt wird.

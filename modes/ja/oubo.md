@@ -144,3 +144,7 @@ Form questions が visible area を超える場合：
 - 候補者に scroll して別 screenshot を共有してもらう
 - または remaining questions を paste してもらう
 - Form 全体を cover するまで iteration で処理
+
+## センシティブ項目（ハードルール）
+
+法律、demographic、就労許可、ビザ/sponsorship、給与、障害、veteran status、background check、転居、self-identification に関する質問には、決して答えを捏造したり自動入力したりしない。`config/profile.yml` または `config/apply-answers.yml` に明示的に記録された答えのみを使う。なければその項目は空欄のままにし、候補者に flag し、最も安全な確認質問をする。保存や submit の前に、候補者がこうした項目を一つひとつ自分で確認する。

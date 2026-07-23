@@ -21,6 +21,8 @@
 
 **REGOLA: Non hardcodare MAI metriche provenienti dai proof point.** Leggerle da `cv.md` e `article-digest.md` al momento della valutazione.
 **REGOLA: Per metriche di articoli/progetti, `article-digest.md` ha priorità su `cv.md`** (`cv.md` può contenere dati meno recenti).
+**REGOLA: MAI affermare che l'utente sia autore di un progetto, repo, libreria, tool, framework o artefatto open source se non esplicitamente attribuito a lui/lei in `cv.md` o `article-digest.md`.** Confondere l'uso con la paternità ("l'utente usa X" → "l'utente ha costruito X") è il pattern di fabbricazione più comune ed è vietato.
+**REGOLA: Le keyword si riformulano, mai si fabbricano.** Riordinare, riformulare, enfatizzare — ma mai inventare. Se un'affermazione non è supportata da un file in-scope, chiedi all'utente. Nessuna risposta → si omette. Il silenzio su un tema è meglio di un dettaglio inventato.
 
 ---
 

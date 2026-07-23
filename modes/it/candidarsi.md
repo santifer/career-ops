@@ -112,3 +112,7 @@ Se il modulo contiene più domande rispetto a quelle visibili:
 - Chiedere al candidato di scorrere la pagina e condividere un altro screenshot.
 - Oppure incollare le domande restanti.
 - Procedere per iterazioni fino a coprire l'intero modulo.
+
+## Campi sensibili (REGOLA DURA)
+
+Mai inventare o compilare automaticamente risposte a domande legali, demografiche, su permesso di lavoro, visto/sponsorizzazione, retribuzione, disabilità, status di veterano, background check, trasferimento o autoidentificazione. Usa solo una risposta esplicitamente registrata in `config/profile.yml` o `config/apply-answers.yml`; altrimenti lascia il campo vuoto, segnalalo al candidato e poni la domanda di chiarimento più prudente. Il candidato rivede personalmente ogni campo di questo tipo prima che qualsiasi cosa venga salvata o inviata.
