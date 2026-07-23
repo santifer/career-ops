@@ -489,6 +489,25 @@ function missingFromTargetManifest(targetPaths) {
   const missing = [];
   for (const path of targetPaths) {
     const spec = path.endsWith('/') ? path.slice(0, -1) : path;
+
+    // Directory entries need a RECURSIVE check: a pre-existing directory
+    // (`.gemini/commands/`, `docs/`) can still be missing files the target
+    // added under it, and `existsSync` on the directory would wrongly call it
+    // materialized — masking the very partial update this verification exists
+    // to catch. Compare the target tree's files beneath the entry against disk.
+    if (path.endsWith('/')) {
+      let treeFiles = [];
+      try {
+        treeFiles = gitQuiet('ls-tree', '-r', '--name-only', 'FETCH_HEAD', '--', spec)
+          .split('\n').map(s => s.trim()).filter(Boolean);
+      } catch {
+        continue; // FETCH_HEAD unreadable for this spec — treat as stale, not missing
+      }
+      // Empty tree ⇒ the target ships nothing here (stale manifest entry).
+      if (treeFiles.some(f => !existsSync(join(ROOT, f)))) missing.push(path);
+      continue;
+    }
+
     if (existsSync(join(ROOT, spec))) continue;
     // Only count it as missing when the target actually ships it — a manifest
     // entry the target no longer carries is a stale entry, not a failed update.
@@ -869,8 +888,17 @@ async function apply() {
         // update and sends people chasing the wrong root cause (#1998).
         gitQuiet('checkout', 'FETCH_HEAD', '--', path);
         updated.push(path);
-      } catch {
-        // File may not exist in remote (new additions), skip
+      } catch (err) {
+        // A path genuinely absent upstream is the expected skip. But the catch
+        // also caught timeouts, permission errors, and repo corruption and
+        // reported them as skips too — letting a partial update reach the
+        // success banner (#1998). Confirm the path is actually absent from
+        // FETCH_HEAD before treating the failure as benign; otherwise rethrow.
+        const spec = path.endsWith('/') ? path.slice(0, -1) : path;
+        let absentUpstream = false;
+        try { gitQuiet('cat-file', '-e', `FETCH_HEAD:${spec}`); }
+        catch { absentUpstream = true; }
+        if (!absentUpstream) throw err;
         skippedPaths.push(path);
       }
     }

@@ -181,6 +181,20 @@ const twoPassManifestChecks = [
     name: 'skipped upstream-absent paths are summarized explicitly (#1998)',
     pattern: /Skipped \$\{skippedPaths\.length\} path\(s\) absent upstream/,
   },
+  {
+    // existsSync on a pre-existing directory (docs/) would call it materialized
+    // even when the target added files under it — the verification must recurse
+    // into directory entries against FETCH_HEAD (#1998 CodeRabbit review).
+    name: 'manifest verification recurses into directory entries via ls-tree (#1998)',
+    pattern: /ls-tree', '-r', '--name-only', 'FETCH_HEAD'[\s\S]{0,400}?treeFiles\.some\(f => !existsSync/,
+  },
+  {
+    // A checkout failure is only an expected skip when the path is truly absent
+    // from FETCH_HEAD; timeouts/permission errors must rethrow, not report
+    // success (#1998 CodeRabbit review).
+    name: 'a checkout failure only skips when the path is absent upstream, else rethrows (#1998)',
+    pattern: /catch \{ absentUpstream = true; \}\s*if \(!absentUpstream\) throw err;/,
+  },
 ];
 
 for (const check of twoPassManifestChecks) {
