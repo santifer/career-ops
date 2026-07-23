@@ -8977,6 +8977,67 @@ try {
   fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
+// ── CONTRADICTED-FACTS CORRECTION (#2125) ────────────────────────
+// interview/debrief was append-only against the role-specific prep file —
+// no path existed for correcting an existing fact the interview directly
+// contradicts (as opposed to appending a new gap/story/retraction). This
+// section pins that the mode now documents an in-place correction step,
+// the strikethrough-plus-correction example format, and inference-tag
+// resolution, without touching the pre-existing append-only steps.
+
+console.log('\n63. Contradicted-facts correction step (#2125)');
+
+try {
+  const debriefMode = readFile('modes/interview/debrief.md');
+
+  if (debriefMode.includes('Check for Contradicted Facts')) {
+    pass('interview/debrief has a dedicated contradicted-facts step');
+  } else {
+    fail('interview/debrief missing a dedicated contradicted-facts step');
+  }
+
+  // Scoped regex: both bullets must appear, in order, within the same
+  // decision-list paragraph — not just "appends" and "correct in place"
+  // occurring anywhere independently in the file.
+  if (
+    /"This is new information"\s*→\s*appends\.[\s\S]{0,200}"This directly contradicts something the prep file already asserts as fact"\s*→\s*correct in place\./.test(
+      debriefMode
+    )
+  ) {
+    pass('interview/debrief distinguishes new-information-appends from contradiction-corrects-in-place');
+  } else {
+    fail('interview/debrief missing the append-vs-correct distinction');
+  }
+
+  // Scoped regex: the strikethrough, the bolded correction, and the
+  // confirmation-date parenthetical must all appear together on the same
+  // example line — not merely present somewhere in the file independently.
+  if (
+    /~~Metro Hall, on-site~~\s+\*\*Metro Hall — hybrid\*\*\s*\(confirmed on the \{date\} call\)/.test(
+      debriefMode
+    )
+  ) {
+    pass('interview/debrief includes a concrete strikethrough-plus-correction example with the confirmation detail');
+  } else {
+    fail('interview/debrief missing the strikethrough-plus-correction example format with its confirmation detail');
+  }
+
+  // Scoped regex: the resolve-inference-tags instruction, the literal tag,
+  // and the actual resolution behavior must appear tied together in the
+  // same instruction — not as three unrelated substrings anywhere in the file.
+  if (
+    /\*\*Resolve inference tags on contradiction or confirmation\.\*\*[\s\S]{0,200}`\[inferred from JD\]`[\s\S]{0,400}resolve the tag/.test(
+      debriefMode
+    )
+  ) {
+    pass('interview/debrief instructs resolving inference tags once confirmed or corrected');
+  } else {
+    fail('interview/debrief missing the inference-tag resolution instruction tied to its own guidance');
+  }
+} catch (e) {
+  fail(`contradicted-facts correction check: ${e.message}`);
+}
+
 await runDiscovered();
 
 finish();
