@@ -165,11 +165,33 @@ const twoPassManifestChecks = [
     // paths HEAD lacks, so files the update introduced under a directory
     // pathspec survived the rollback as staged additions (#2015).
     name: 'revertPaths clears additions HEAD lacks under a directory pathspec (#2015)',
-    pattern: /removeAdditionsNotInHead\(p\)/,
+    pattern: /removeAdditionsNotInHead\(p, protectedPaths\)/,
   },
   {
     name: 'removeAdditionsNotInHead only targets additions, never modifications (#2015)',
     pattern: /'--diff-filter=A'/,
+  },
+  {
+    // The cleanup must not delete a file the user already had staged before the
+    // update ran, only additions the update itself introduced (#2015 review).
+    name: 'rollback cleanup skips pre-update staged paths (protectedPaths) (#2015)',
+    pattern: /if \(protectedPaths\.has\(file\)\) continue;/,
+  },
+  {
+    name: 'revertPaths receives the pre-update snapshot at its call sites (#2015)',
+    pattern: /revertPaths\(updated, initialStatusPaths\)/,
+  },
+  {
+    // -z output is NUL-delimited/unquoted, so a path with spaces or newlines is
+    // not mangled by split('\n').trim() (#2015 review).
+    name: 'rollback cleanup parses NUL-delimited git output (#2015)',
+    pattern: /'--cached', '-z', '--name-only', '--diff-filter=A'[\s\S]*?added\.split\('\\0'\)\.filter/,
+  },
+  {
+    // The worktree file is deleted only after git rm succeeds, so a failed
+    // index removal never strands a staged addition with no file (#2015).
+    name: 'rollback deletes the worktree copy only after a successful git rm (#2015)',
+    pattern: /removed = true;[\s\S]{0,400}?if \(removed\) \{[\s\S]{0,80}?rmSync/,
   },
 ];
 
