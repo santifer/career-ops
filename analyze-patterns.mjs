@@ -49,6 +49,9 @@ const MACHINE_SUMMARY_FIELDS = new Set([
   'via',
   'company_confidential',
   'risk_summary',
+  // Work-authorization / visa-sponsorship tier from Block A (report + Machine
+  // Summary only). Allowlisted so it round-trips; no consumer logic yet.
+  'work_auth',
 ]);
 
 // --- CLI args ---
@@ -204,6 +207,7 @@ top_strengths:
 risk_level: "Medium"
 confidence: "High"
 next_action: "Follow up on ticket #42 with tailored CV"
+work_auth: "unstated"
 via: "Hays"
 company_confidential: true
 \`\`\`
@@ -217,6 +221,7 @@ company_confidential: true
   if (summary?.next_action !== 'Follow up on ticket #42 with tailored CV') failures.push('hash-containing scalar field was not parsed');
   if (summary?.via !== 'Hays') failures.push('via was not preserved from Machine Summary');
   if (summary?.company_confidential !== true) failures.push('company_confidential boolean was not preserved from Machine Summary');
+  if (summary?.work_auth !== 'unstated') failures.push('work_auth field was not preserved from Machine Summary');
 
   // Backward compat (#1737): summaries without risk_summary parse as before, key simply absent.
   if ('risk_summary' in (summary ?? {})) failures.push('summary without risk_summary must not gain the key');
