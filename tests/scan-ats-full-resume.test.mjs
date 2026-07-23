@@ -1,0 +1,132 @@
+// tests/scan-ats-full-resume.test.mjs — parallelEach resume-index tracking,
+// withTimeout watchdog, and (Task 3) checkpoint compatibility rules.
+import { join } from 'path';
+import { pathToFileURL } from 'url';
+import { pass, fail, ROOT } from './helpers.mjs';
+
+console.log('\nscan-ats-full — resume machinery');
+
+const mod = await import(pathToFileURL(join(ROOT, 'scan-ats-full.mjs')).href);
+const { parallelEach, withTimeout, datasetFingerprint } = mod;
+
+// withTimeout: passes a fast promise through untouched.
+{
+  const v = await withTimeout(Promise.resolve(42), 1_000, 'fast');
+  if (v === 42) pass('withTimeout passes fast resolution through');
+  else fail(`withTimeout returned ${v}`);
+}
+
+// withTimeout: rejects a hung promise with a labeled error.
+{
+  try {
+    await withTimeout(new Promise(() => {}), 100, 'acme/board');
+    fail('withTimeout resolved a never-settling promise');
+  } catch (err) {
+    if (/acme\/board: timed out after/.test(err.message)) pass('withTimeout rejects with labeled timeout');
+    else fail(`withTimeout error message: ${err.message}`);
+  }
+}
+
+// parallelEach: resumeAt is the lowest UNFINISHED index — a slow early item
+// holds resumeAt down even while later items complete (resuming at plain
+// `done` count would skip the slow item's work).
+{
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const events = [];
+  const p = parallelEach(
+    [...Array(10).keys()], 2,
+    async (item) => { if (item === 2) await gate; },
+    (e) => events.push({ ...e }),
+  );
+  await new Promise((r) => setTimeout(r, 100)); // let everything except item 2 finish
+  const held = events[events.length - 1];
+  if (held && held.done === 9 && held.resumeAt === 2) {
+    pass('resumeAt pinned to slow in-flight index 2 while 9 others finished');
+  } else {
+    fail(`expected {done:9, resumeAt:2}, got ${JSON.stringify(held)}`);
+  }
+  release();
+  await p;
+  const last = events[events.length - 1];
+  if (last.done === 10 && last.resumeAt === 10) pass('resumeAt reaches items.length on completion');
+  else fail(`final event ${JSON.stringify(last)}`);
+}
+
+// ── Checkpoint compatibility rules (Task 3) ─────────────────────────
+const { loadCheckpoint, checkpointCompatible } = mod;
+
+{
+  const cp = { version: 1, cutoffMs: 1, ats: ['workday'], limit: null, includeUndated: false };
+  const opts = { ats: ['workday'], limit: Infinity, includeUndated: false, shuffle: false };
+  if (checkpointCompatible(cp, opts)) pass('checkpoint compatible with identical settings');
+  else fail('identical settings judged incompatible');
+
+  if (!checkpointCompatible(cp, { ...opts, ats: ['greenhouse'] })) pass('ats mismatch rejected');
+  else fail('ats mismatch accepted');
+
+  if (!checkpointCompatible(cp, { ...opts, shuffle: true })) pass('--shuffle rejected for resume (order not reproducible)');
+  else fail('shuffle accepted');
+
+  if (!checkpointCompatible(cp, { ...opts, limit: 200 })) pass('limit mismatch rejected');
+  else fail('limit mismatch accepted');
+
+  if (!checkpointCompatible(null, opts)) pass('null checkpoint rejected');
+  else fail('null checkpoint accepted');
+}
+
+// loadCheckpoint: garbage and wrong-version files → null, never a throw.
+{
+  const { writeFileSync, mkdirSync, rmSync } = await import('node:fs');
+  const dir = 'data/cache/.test-checkpoint';
+  mkdirSync(dir, { recursive: true });
+  const p = `${dir}/cp.json`;
+  writeFileSync(p, 'not json', 'utf-8');
+  if (loadCheckpoint(p) === null) pass('loadCheckpoint returns null on garbage JSON');
+  else fail('garbage JSON not rejected');
+  writeFileSync(p, JSON.stringify({ version: 99 }), 'utf-8');
+  if (loadCheckpoint(p) === null) pass('loadCheckpoint returns null on unknown version');
+  else fail('unknown version not rejected');
+  writeFileSync(p, JSON.stringify({ version: 1, cutoffMs: 5 }), 'utf-8');
+  if (loadCheckpoint(p)?.cutoffMs === 5) pass('loadCheckpoint reads a valid checkpoint');
+  else fail('valid checkpoint not read');
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// datasetFingerprint: same content → same hash; any drift → different hash.
+// Guards --resume against a same-length dataset regenerated with different
+// members (which a bare length check would miss and silently mis-resume).
+{
+  const a = ['acme', 'globex', 'initech'];
+  if (datasetFingerprint(a) === datasetFingerprint(['acme', 'globex', 'initech'])) pass('datasetFingerprint stable for identical lists');
+  else fail('datasetFingerprint not stable for identical content');
+
+  // Same length, swapped member — the case a length-only check misses.
+  if (datasetFingerprint(a) !== datasetFingerprint(['acme', 'globex', 'umbrella'])) pass('datasetFingerprint detects same-length content drift');
+  else fail('datasetFingerprint missed same-length content drift');
+
+  // Reordering is drift too — resume offsets are order-dependent.
+  if (datasetFingerprint(a) !== datasetFingerprint(['globex', 'acme', 'initech'])) pass('datasetFingerprint detects reordering');
+  else fail('datasetFingerprint missed reordering');
+}
+
+// ── icims SOURCES wiring (Task 8) ───────────────────────────────────
+{
+  const { SOURCES } = mod;
+  if (!SOURCES) {
+    fail('SOURCES not exported from scan-ats-full.mjs');
+  } else if (!SOURCES.icims) {
+    fail('SOURCES.icims missing');
+  } else {
+    const good = SOURCES.icims.toEntry('acmefreight');
+    if (good && good.careers_url === 'https://careers-acmefreight.icims.com/jobs/search?ss=1&in_iframe=1' && good.name === 'acmefreight') {
+      pass('icims toEntry builds canonical portal URL');
+    } else {
+      fail(`icims toEntry: ${JSON.stringify(good)}`);
+    }
+    if (SOURCES.icims.toEntry('evil/..%2f') === null) pass('icims toEntry rejects non-slug input');
+    else fail('icims toEntry accepted a hostile slug');
+    if (SOURCES.icims.provider?.id === 'icims') pass('icims source wired to icims provider');
+    else fail('icims source provider mismatch');
+  }
+}
