@@ -8977,6 +8977,64 @@ try {
   fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
+// ── 63. PLAN-SOURCED-QUESTION RESEARCH CHECK (#2096) ────────────
+// interview-prep.md's Step 1 sourced-question research and interview/practice.md's
+// reactive mid-session reuse of it were already wired together; interview/plan.md
+// was the one mode of the three with no equivalent step before Block 4's
+// behavioral-story mapping. Pins the research-check section, the reuse-existing-file
+// rule, the tagging discipline cross-reference, and the sparse-intel honesty rule.
+
+console.log('\n63. interview/plan research check before Block 4 (#2096)');
+
+try {
+  const planMode = readFile('modes/interview/plan.md');
+  const planFlat = planMode.replace(/\s+/g, ' ');
+
+  if (planFlat.includes('Research check — before drafting Block 4')) {
+    pass('interview/plan has the "Research check — before drafting Block 4" section (#2096)');
+  } else {
+    fail('interview/plan missing the "Research check — before drafting Block 4" section');
+  }
+
+  if (
+    planFlat.includes('interview-prep/{company-slug}-{role-slug}.md') &&
+    planFlat.includes('never re-search work that\'s already been done and cited')
+  ) {
+    pass('interview/plan reuses an existing interview-prep file instead of re-searching');
+  } else {
+    fail('interview/plan missing the reuse-existing-research-file rule');
+  }
+
+  if (
+    planFlat.includes('`interview-prep.md`\'s "Step 1 — Research" WebSearch queries') &&
+    planFlat.includes('[inferred from JD]')
+  ) {
+    pass('interview/plan cross-references interview-prep.md Step 1 queries and the [inferred from JD] tag convention (no duplicated query table)');
+  } else {
+    fail('interview/plan missing the interview-prep.md Step 1 cross-reference or the [inferred from JD] tag convention');
+  }
+
+  if (planFlat.includes('If the search genuinely yields nothing') && planFlat.includes('partial-but-honest')) {
+    pass('interview/plan states the honest-if-nothing-found fallback (partial-but-honest, not perfect-or-nothing)');
+  } else {
+    fail('interview/plan missing the honest sparse-intel fallback');
+  }
+
+  if (planFlat.includes('When company-intel is thin mid-session')) {
+    pass('interview/plan cross-references practice.md\'s reactive research path instead of duplicating it');
+  } else {
+    fail('interview/plan missing the cross-reference to practice.md\'s reactive research path');
+  }
+
+  if (planFlat.includes('Check for real reported questions before Block 4') && planFlat.includes('Never generate fake company intel')) {
+    pass('interview/plan Rules section reinforces the research check alongside the existing "never fake intel" rule');
+  } else {
+    fail('interview/plan Rules section missing the research-check rule or its tie-in to "never fake intel"');
+  }
+} catch (e) {
+  fail(`interview/plan research-check wiring check (#2096): ${e.message}`);
+}
+
 await runDiscovered();
 
 finish();
