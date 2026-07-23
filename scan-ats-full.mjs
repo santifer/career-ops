@@ -300,7 +300,9 @@ export function filterBlacklistedOffers(offers, blacklist, { includeBlacklisted 
 // order in two places for the caller that doesn't need per-stage counts.
 export function passesFilters(job, { titleFilter, locationFilter, contentFilter, titleFilterConfig }) {
   if (!titleFilter(job.title)) return false;
-  if (!locationFilter(job.location)) return false;
+  // job.url is passed so the location filter can fall back to the URL's own
+  // location segment when the provider reports a rolled-up "N Locations" string.
+  if (!locationFilter(job.location, job.url)) return false;
   if (contentFilter && !contentFilter(job.description, matchedTitleKeywords(job.title, titleFilterConfig))) return false;
   return true;
 }
@@ -538,7 +540,7 @@ async function main() {
           if (dateClass === 'stale') continue;
           if (dateClass === 'undated' && !opts.includeUndated) { droppedNoDate++; continue; }
           if (!titleFilter(job.title)) continue;
-          if (!locationFilter(job.location)) continue;
+          if (!locationFilter(job.location, job.url)) continue;
           if (!contentFilter(job.description, matchedTitleKeywords(job.title, config?.title_filter))) { droppedContent++; continue; }
           const dedupUrl = normalizeUrlForDedup(job.url);
           if (seenUrls.has(dedupUrl)) continue;

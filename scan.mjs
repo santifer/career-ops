@@ -161,19 +161,89 @@ function normalizeKeywordList(value) {
     .filter(Boolean);
 }
 
+// Compile a location keyword into a word-boundary matcher.
+//
+// Plain String.includes() is wrong for location keywords because country and
+// city names are prefixes of unrelated US place names. The motivating bug:
+// blocking "india" also rejected "Indian Head, MD", "Indiana", and
+// "Indianapolis" — real US locations, silently dropped from every scan.
+// Likewise "china" would swallow "Chinatown" and "uk -" would swallow "Truck -".
+//
+// Lookarounds rather than \b so keywords that begin or end with punctuation
+// (", IND", "UK -") still anchor correctly — \b is defined relative to word
+// characters and behaves surprisingly at a punctuation edge.
+// Note: distinct from compileKeyword() above, which serves the *title* filter and
+// only boundary-anchors 2-3 letter acronyms. Location keywords need boundaries on
+// every keyword, so they get their own compiler rather than changing title-matching
+// behaviour. Returns a predicate, mirroring compileKeyword()'s shape.
+function compileLocationKeyword(keyword) {
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const startsWord = /[a-z0-9]/.test(keyword[0]);
+  const endsWord = /[a-z0-9]/.test(keyword[keyword.length - 1]);
+  const prefix = startsWord ? '(?<![a-z0-9])' : '';
+  const suffix = endsWord ? '(?![a-z0-9])' : '';
+  const re = new RegExp(`${prefix}${escaped}${suffix}`);
+  return (lower) => re.test(lower);
+}
+
+function compileLocationKeywordList(value) {
+  return normalizeKeywordList(value).map(compileLocationKeyword);
+}
+
+// Some providers report a rolled-up display string ("5 Locations", "2 Locations")
+// while the canonical URL still names the real primary location. Workday is the
+// common case: .../job/Hyderabad-Telangana-India/Network-Engineer_R-65193-1 shows
+// up as "5 Locations", so no `block` keyword can ever match the location field.
+// Recover that signal by reading the path segment right after `/job/`.
+//
+// Deliberately narrow: only the post-`/job/` segment is inspected, never the whole
+// URL. Scanning the full URL would match company slugs and ATS subdomains by
+// accident (a "china" or "india" substring inside an unrelated path). Providers
+// without the `/job/{location}/` convention (Greenhouse, Lever, Ashby) yield no
+// hint and keep their previous behaviour exactly.
+export function locationHintFromUrl(url) {
+  if (typeof url !== 'string' || url.trim() === '') return '';
+  let pathname;
+  try {
+    pathname = new URL(url).pathname;
+  } catch {
+    return '';
+  }
+  const segments = pathname.split('/').filter(Boolean);
+  const jobIdx = segments.lastIndexOf('job');
+  if (jobIdx === -1 || jobIdx === segments.length - 1) return '';
+  let segment = segments[jobIdx + 1];
+  try {
+    segment = decodeURIComponent(segment);
+  } catch {
+    // Malformed percent-encoding — fall back to the raw segment.
+  }
+  // "Hyderabad-Telangana-India" → "hyderabad telangana india" so multi-word
+  // block keywords like "united arab emirates" can still match.
+  return segment.replace(/[-_+]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+// `url` is optional. Callers that omit it get the original location-only
+// semantics, which is what the existing unit tests exercise.
 export function buildLocationFilter(locationFilter) {
   if (!locationFilter) return () => true;
-  const alwaysAllow = normalizeKeywordList(locationFilter.always_allow);
-  const allow = normalizeKeywordList(locationFilter.allow);
-  const block = normalizeKeywordList(locationFilter.block);
+  const alwaysAllow = compileLocationKeywordList(locationFilter.always_allow);
+  const allow = compileLocationKeywordList(locationFilter.allow);
+  const block = compileLocationKeywordList(locationFilter.block);
 
-  return (location) => {
-    if (typeof location !== 'string' || location.trim() === '') return true;
-    const lower = location.toLowerCase();
-    if (alwaysAllow.length > 0 && alwaysAllow.some(k => lower.includes(k))) return true;
-    if (block.length > 0 && block.some(k => lower.includes(k))) return false;
+  return (location, url) => {
+    const lower = typeof location === 'string' ? location.trim().toLowerCase() : '';
+    const hint = locationHintFromUrl(url);
+    // Nothing to judge on either field → pass (don't penalize missing data).
+    if (lower === '' && hint === '') return true;
+    const matches = (m) => (lower !== '' && m(lower)) || (hint !== '' && m(hint));
+    // always_allow still wins over block, and may be satisfied by either field:
+    // a genuinely US role whose display string says "United States" is never
+    // rejected because of what its URL happens to contain.
+    if (alwaysAllow.length > 0 && alwaysAllow.some(matches)) return true;
+    if (block.length > 0 && block.some(matches)) return false;
     if (allow.length === 0) return true;
-    return allow.some(k => lower.includes(k));
+    return allow.some(matches);
   };
 }
 
@@ -1830,7 +1900,7 @@ async function main() {
           totalFilteredTier++;
           continue;
         }
-        if (!locationFilter(job.location)) {
+        if (!locationFilter(job.location, job.url)) {
           totalFilteredLocation++;
           continue;
         }

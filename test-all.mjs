@@ -3687,6 +3687,7 @@ console.log('\n13. Location filter — always_allow tier');
 try {
   const {
     buildLocationFilter,
+    locationHintFromUrl,
     buildContentFilter,
     buildPostingAgeFilter,
     buildPostedDateFilter,
@@ -3866,6 +3867,95 @@ try {
   // step rather than being silently dropped here.
   if (filter(42) === true) pass('non-string locations are passed through to downstream evaluation, not silently dropped');
   else fail('non-string locations should pass through');
+
+  // Case 16: URL location hint — rolled-up display strings ("5 Locations") hide the
+  // real location, which the Workday URL still names. Motivating real case: Kyndryl
+  // postings that render as "5 Locations" with a .../job/Hyderabad-Telangana-India/... URL.
+  const urlFilter = buildLocationFilter({
+    always_allow: ['united states'],
+    block: ['india', 'hyderabad', 'germany'],
+  });
+  if (urlFilter('5 Locations', 'https://kyndryl.wd5.myworkdayjobs.com/careers/job/Hyderabad-Telangana-India/Network-Engineer_R-65193-1') === false) {
+    pass('URL hint rejects a rolled-up "5 Locations" row whose canonical URL is India');
+  } else {
+    fail('"5 Locations" + Hyderabad URL should be rejected via the URL location hint');
+  }
+
+  // Case 17: always_allow still wins over a blocked URL hint — a genuinely US role is
+  // never dropped because of what its URL happens to contain.
+  if (urlFilter('New York, United States', 'https://x.wd5.myworkdayjobs.com/c/job/Hyderabad-Telangana-India/Eng_R1') === true) {
+    pass('always_allow on the display string beats a blocked URL hint');
+  } else {
+    fail('an explicit "United States" location must survive a blocked URL hint');
+  }
+
+  // Case 18: providers without the /job/{location}/ convention are unaffected
+  if (
+    locationHintFromUrl('https://jobs.ashbyhq.com/snowflake/4fe8d816') === '' &&
+    locationHintFromUrl('https://boards.greenhouse.io/acme/jobs/12345') === '' &&
+    locationHintFromUrl('not a url') === '' &&
+    locationHintFromUrl('') === '' &&
+    locationHintFromUrl(null) === ''
+  ) {
+    pass('locationHintFromUrl yields no hint for non-Workday, malformed, and empty URLs');
+  } else {
+    fail('locationHintFromUrl should return "" for URLs without a /job/{location}/ segment');
+  }
+
+  // Case 19: hint normalization — separators become spaces so multi-word keywords match
+  if (
+    locationHintFromUrl('https://x.wd1.myworkdayjobs.com/c/job/Hyderabad-Telangana-India/Eng_R1') === 'hyderabad telangana india' &&
+    locationHintFromUrl('https://x.wd1.myworkdayjobs.com/c/job/USA---El-Segundo-CA/Eng_R1') === 'usa el segundo ca'
+  ) {
+    pass('URL hint normalizes separators to spaces and lowercases');
+  } else {
+    fail(`URL hint normalization wrong: got "${locationHintFromUrl('https://x.wd1.myworkdayjobs.com/c/job/Hyderabad-Telangana-India/Eng_R1')}"`);
+  }
+
+  // Case 20: omitting the url argument preserves the original location-only behaviour
+  if (urlFilter('Bengaluru, India') === false && urlFilter('Austin, TX') === true) {
+    pass('calling the filter without a url keeps original location-only semantics');
+  } else {
+    fail('single-argument calls must behave exactly as before the url-hint change');
+  }
+
+  // Case 21: keywords match on word boundaries, not raw substrings. Blocking "india"
+  // must NOT reject the US locations Indian Head MD, Indiana, or Indianapolis — the
+  // substring bug that silently dropped real US roles from every scan.
+  const boundaryFilter = buildLocationFilter({ block: ['india', 'china', 'uk -'] });
+  if (
+    boundaryFilter('Indian Head, MD') === true &&
+    boundaryFilter('Indianapolis, IN') === true &&
+    boundaryFilter('West Lafayette, Indiana') === true &&
+    boundaryFilter('Chinatown, San Francisco') === true &&
+    boundaryFilter('Truck - Depot') === true
+  ) {
+    pass('block keywords honour word boundaries (Indiana/Indian Head/Indianapolis/Chinatown not rejected)');
+  } else {
+    fail('word-boundary matching failed — a substring match is silently dropping US locations');
+  }
+
+  // Case 22: ...while the genuine country matches still get blocked
+  if (
+    boundaryFilter('Hyderabad, India') === false &&
+    boundaryFilter('India') === false &&
+    boundaryFilter('Beijing, China') === false &&
+    boundaryFilter('UK - London') === false
+  ) {
+    pass('word-boundary matching still blocks the real country/region hits');
+  } else {
+    fail('word-boundary matching must not weaken genuine block hits');
+  }
+
+  // Case 23: boundary matching applies to the URL hint too
+  if (
+    boundaryFilter('5 Locations', 'https://x.wd1.myworkdayjobs.com/c/job/Hyderabad-Telangana-India/Eng_R1') === false &&
+    boundaryFilter('5 Locations', 'https://x.wd1.myworkdayjobs.com/c/job/Indianapolis-Indiana/Eng_R1') === true
+  ) {
+    pass('URL hint is boundary-matched as well (Indianapolis URL survives, India URL does not)');
+  } else {
+    fail('URL hint must use the same word-boundary matching as the location string');
+  }
 
   if (
     shouldDedupScanHistoryRow({ firstSeen: '2026-06-01', status: 'added' }, { recheckAfterDays: 30, today: '2026-06-10' }) === true &&
