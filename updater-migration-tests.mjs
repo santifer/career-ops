@@ -160,6 +160,10 @@ const twoPassManifestChecks = [
     name: 'apply captures uncommitted work via git stash create before branching (#915)',
     pattern: /git\('stash',\s*'create'\)/,
   },
+  {
+    name: 'apply stages the .update-dismissed deletion only when git ls-files says it is tracked',
+    pattern: /git\('ls-files',\s*'--',\s*'\.update-dismissed'\)/,
+  },
 ];
 
 for (const check of twoPassManifestChecks) {
@@ -178,6 +182,19 @@ if (staticRelativeImport.test(source)) {
   fail('update-system.mjs is self-loading — no static relative imports (#1706)');
 } else {
   pass('update-system.mjs is self-loading — no static relative imports (#1706)');
+}
+
+// .update-dismissed is gitignored, so it is normally untracked. Deleting it and
+// then passing it to `git add -- <paths...>` / `git commit -- <paths...>` makes
+// the pathspec match nothing → git exits 128 ("pathspec did not match any
+// files"), which blocks staging of EVERY path in that command and aborts the
+// convenience commit. apply() must never push it into pathsToStage
+// unconditionally after unlinking it.
+const unconditionalDismissStage = /unlinkSync\(dismissFile\);\s*pathsToStage\.push\('\.update-dismissed'\)/;
+if (unconditionalDismissStage.test(source)) {
+  fail('apply must not unconditionally stage .update-dismissed after unlinking it (gitignored → unmatched pathspec aborts the commit)');
+} else {
+  pass('apply must not unconditionally stage .update-dismissed after unlinking it (gitignored → unmatched pathspec aborts the commit)');
 }
 
 for (const userPath of ['cv.md', 'config/profile.yml', 'modes/_profile.md', 'portals.yml', 'data/', 'reports/']) {

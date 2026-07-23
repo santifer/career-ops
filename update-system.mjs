@@ -963,8 +963,22 @@ async function apply() {
     const pathsToStage = [...updated];
     const dismissFile = join(ROOT, '.update-dismissed');
     if (existsSync(dismissFile)) {
+      // .update-dismissed is gitignored, so it is normally untracked and its
+      // deletion needs no git action. Staging it anyway would put a pathspec
+      // that matches nothing into `git add`/`git commit` — git exits 128
+      // ("pathspec did not match any files"), which blocks staging of every
+      // other path in the same command and aborts the update commit. Only
+      // stage the deletion when the file is genuinely tracked (legacy repos
+      // that committed it before it was gitignored).
+      let dismissTracked = false;
+      try {
+        dismissTracked = git('ls-files', '--', '.update-dismissed') !== '';
+      } catch {
+        // If git can't tell us, treat as untracked — worst case the tracked
+        // deletion lands in a later commit instead of aborting this one.
+      }
       unlinkSync(dismissFile);
-      pathsToStage.push('.update-dismissed');
+      if (dismissTracked) pathsToStage.push('.update-dismissed');
     }
 
     try {
