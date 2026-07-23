@@ -165,6 +165,36 @@ func TestDeriveNoteFields(t *testing.T) {
 			paySrc:   "est",
 			last:     "2026-06-06",
 		},
+		{
+			name: "valuation and funding figures are not pay",
+			app: model.CareerApplication{
+				Date:  "2026-07-16",
+				Notes: "Series C, $600M valuation (not pay) — real hiring signal; $70M Series C closed 8mo ago; $124M total raised; advertised comp range is broken data, confirm real number",
+			},
+			payRange: "",
+			last:     "2026-07-16",
+		},
+		{
+			name: "pay range still wins over an adjacent valuation figure",
+			app: model.CareerApplication{
+				Date:  "2026-06-08",
+				Notes: "$7.6B valuation, Remote. $122-149K (POSTED)",
+			},
+			workMode: "Remote",
+			payRange: "$122-149K",
+			paySrc:   "POSTED",
+			last:     "2026-06-08",
+		},
+		{
+			name: "billion-scale valuation alone is not pay",
+			app: model.CareerApplication{
+				Date:  "2026-04-11",
+				Notes: "Series H drone logistics, $7.6B valuation, Remote Canada",
+			},
+			workMode: "Remote",
+			payRange: "",
+			last:     "2026-04-11",
+		},
 	}
 
 	for _, tc := range cases {
@@ -202,6 +232,7 @@ func TestPayCeiling(t *testing.T) {
 		"€130-170K":        170_000,
 		"£175-225K":        225_000,
 		"CHF 165-185K":     185_000,
+		"$7.6B":            7_600_000_000,
 		"":                 0,
 	}
 	for span, want := range cases {
