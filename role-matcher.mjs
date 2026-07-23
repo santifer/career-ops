@@ -38,6 +38,15 @@ export const ROLE_STOPWORDS = new Set([
   'with', 'from', 'into', 'over', 'this', 'that',
 ]);
 
+// "Member of Technical Staff" (MTS) is a boilerplate level-prefix used by
+// several companies for senior IC titles, not a content signal — e.g.
+// "Member of Technical Staff, Connector Platform" vs "...Backend Platform"
+// are different openings whose suffix should decide the match, not the
+// prefix. Stripped as a literal phrase (not a blanket stopword on "member"/
+// "technical") so those words keep their normal discriminating role in
+// unrelated titles such as "Technical Program Manager" or "Team Member".
+const MTS_PREFIX = /\bmember\s+of\s+technical\s+staff\b/g;
+
 // Short specialty acronyms that are discriminating despite their length.
 // Broad two-letter buckets such as AI/ML are intentionally excluded because
 // they appear across many unrelated roles.
@@ -71,6 +80,14 @@ export function roleTokens(role) {
   const text = typeof role === 'string' ? role : String(role ?? '');
   return text
     .toLowerCase()
+    // Replace with a generic baseline token, not empty space: a bare "Member
+    // of Technical Staff" (no suffix) or a one-word-suffix MTS title (e.g.
+    // "...Staff, Backend") would otherwise tokenize to 0 or 1 words, and
+    // roleFuzzyMatch requires 2+ overlapping tokens — so even an exact
+    // (punctuation-varying) repost of a short MTS title would fail to match
+    // itself. "engineer" is already a BASELINE_TOKENS entry, so it pads the
+    // token count without ever being the sole reason two titles match.
+    .replace(MTS_PREFIX, ' engineer ')
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter(w => (w.length > 3 || SHORT_SPECIALTY.has(w)) && !ROLE_STOPWORDS.has(w));
@@ -101,6 +118,14 @@ function extractSeniorities(title) {
  * @returns {boolean} True when the titles are similar enough to deduplicate.
  */
 export function roleFuzzyMatch(a, b) {
+  // Identical titles (case/whitespace-insensitive) always match, even a bare
+  // title that tokenizes to 0 words (e.g. a company posting just "Member of
+  // Technical Staff" with no suffix) — tokenization can never be the reason
+  // an exact repost fails to dedupe.
+  const textA = String(a ?? '').trim().toLowerCase();
+  const textB = String(b ?? '').trim().toLowerCase();
+  if (textA && textA === textB) return true;
+
   const senA = extractSeniorities(a);
   const senB = extractSeniorities(b);
 
