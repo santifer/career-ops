@@ -8977,6 +8977,52 @@ try {
   fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
+// ── CONTRADICTED-FACTS CORRECTION (#2125) ────────────────────────
+// interview/debrief was append-only against the role-specific prep file —
+// no path existed for correcting an existing fact the interview directly
+// contradicts (as opposed to appending a new gap/story/retraction). This
+// section pins that the mode now documents an in-place correction step,
+// the strikethrough-plus-correction example format, and inference-tag
+// resolution, without touching the pre-existing append-only steps.
+
+console.log('\n63. Contradicted-facts correction step (#2125)');
+
+try {
+  const debriefMode = readFile('modes/interview/debrief.md');
+
+  if (debriefMode.includes('Check for Contradicted Facts')) {
+    pass('interview/debrief has a dedicated contradicted-facts step');
+  } else {
+    fail('interview/debrief missing a dedicated contradicted-facts step');
+  }
+
+  if (
+    debriefMode.includes('corrects in place') ||
+    (debriefMode.includes('correct in place') && debriefMode.includes('appends'))
+  ) {
+    pass('interview/debrief distinguishes new-information-appends from contradiction-corrects-in-place');
+  } else {
+    fail('interview/debrief missing the append-vs-correct distinction');
+  }
+
+  if (
+    debriefMode.includes('~~Metro Hall, on-site~~') &&
+    debriefMode.includes('**Metro Hall — hybrid**')
+  ) {
+    pass('interview/debrief includes a concrete strikethrough-plus-correction example');
+  } else {
+    fail('interview/debrief missing the strikethrough-plus-correction example format');
+  }
+
+  if (debriefMode.includes('[inferred from JD]') && debriefMode.includes('resolve')) {
+    pass('interview/debrief instructs resolving inference tags once confirmed or corrected');
+  } else {
+    fail('interview/debrief missing the inference-tag resolution instruction');
+  }
+} catch (e) {
+  fail(`contradicted-facts correction check: ${e.message}`);
+}
+
 await runDiscovered();
 
 finish();
