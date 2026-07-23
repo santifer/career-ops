@@ -560,6 +560,22 @@ async function runSelfTest() {
     rmSync(tmpQbDir, { recursive: true, force: true });
   }
 
+  // CodeRabbit follow-up: a question-bank path that exists() but fails to
+  // read() (unreadable file, TOCTOU delete race, or — as reproduced here —
+  // a directory instead of a file, which makes readFileSync() throw EISDIR)
+  // must degrade the same way a missing file does: no thrown exception, no
+  // gaps, but questionBankFound stays true because existsSync() is true.
+  const tmpQbDirAsPath = mkdtempSync(join(tmpBase, 'weekly-digest-selftest-qbdir-'));
+  try {
+    const unreadableQbDir = mkdtempSync(join(tmpQbDirAsPath, 'question-bank-'));
+    writeFileSync(join(tmpQbDirAsPath, 'acme-corp-instructional-designer-behavioral-2026-07-21.md'), goodSession);
+    const dirAsQbResult = computeWeeklyDigest({ from: '2026-07-20', to: '2026-07-26', sessionsDir: tmpQbDirAsPath, questionBankPath: unreadableQbDir });
+    check(dirAsQbResult.metadata.questionBankFound === true, 'a question-bank path that is a directory is still reported as found (existsSync is true)');
+    check(dirAsQbResult.recurringGaps.length === 0, 'a question-bank path that fails to read (EISDIR) yields no gaps, no thrown exception');
+  } finally {
+    rmSync(tmpQbDirAsPath, { recursive: true, force: true });
+  }
+
   // Finding 3: exactly one of --from/--to supplied, or from > to, must be a
   // hard error — not a silent fallback to the default range or an empty
   // digest indistinguishable from "no interviews this week."
