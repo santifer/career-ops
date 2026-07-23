@@ -1344,6 +1344,114 @@ if (
   fail('batch Machine Summary and downstream parser fields are misaligned');
 }
 
+// ── 7e. CV SECTION ORDER CHECK IS LANGUAGE-AWARE ────────────────
+
+// SECTION_ALIASES held English titles only, so a CV rendered in one of the
+// shipped non-English modes produced zero sections comparable against the
+// English cv.md: validateCvSectionOrder() saw fewer than two comparable
+// sections and early-returned, and the guard silently did nothing. Polish
+// (modes/pl) is covered here — a Polish CV that hoisted Education above
+// Doświadczenie zawodowe used to render without complaint while the identical
+// English CV was correctly rejected.
+
+console.log('\n7e. CV section order check is language-aware');
+
+for (const header of ['podsumowanie zawodowe', 'doświadczenie zawodowe', 'wykształcenie', 'certyfikaty', 'umiejętności']) {
+  if (generatePdfScript.includes(`['${header}',`)) {
+    pass(`SECTION_ALIASES maps Polish header: ${header}`);
+  } else {
+    fail(`SECTION_ALIASES missing Polish header: ${header}`);
+  }
+}
+
+// generate-pdf.mjs imports playwright at module scope; degrade to a warning
+// rather than crashing the suite where it is not installed.
+let pdfModule = null;
+try {
+  pdfModule = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+} catch (e) {
+  warn(`Cannot import generate-pdf.mjs (${e.code || e.message}) — skipping behavioral section-order tests`);
+}
+
+if (pdfModule) {
+  const { sectionKey, validateCvSectionOrder } = pdfModule;
+
+  // Canonical keys are language-independent; only the spelling differs.
+  const keyCases = [
+    ['Podsumowanie zawodowe', 'summary'],
+    ['Kompetencje kluczowe', 'competencies'],
+    ['Kluczowe kompetencje', 'competencies'], // word-order variant
+    ['Doświadczenie zawodowe', 'experience'],
+    ['Przebieg kariery', 'experience'],
+    ['Wykształcenie', 'education'],
+    ['Certyfikaty', 'certifications'],
+    ['Umiejętności', 'skills'],
+    ['Wyksztalcenie', 'education'],  // diacritics stripped
+    ['Umiejetnosci', 'skills'],      // diacritics stripped
+    ['Work Experience', 'experience'], // English must be unchanged
+    ['Core Competencies', 'competencies'],
+  ];
+  let keysOk = true;
+  for (const [title, expected] of keyCases) {
+    const actual = sectionKey(title);
+    if (actual !== expected) {
+      fail(`sectionKey("${title}") = "${actual}", expected "${expected}"`);
+      keysOk = false;
+    }
+  }
+  if (keysOk) pass(`sectionKey resolves all ${keyCases.length} PL/EN heading spellings`);
+
+  // Hermetic cv.md stand-in: passed in directly, so the test does not depend on
+  // a cv.md existing in the checkout (it is gitignored).
+  const cvMd = [
+    '# CV', '## Professional Summary', '## Work Experience',
+    '## Education', '## Certifications', '## Skills',
+  ].join('\n');
+  const titlesToHtml = titles => titles.map(t => `<div class="section-title">${t}</div>`).join('\n');
+
+  const plCorrect = titlesToHtml([
+    'Podsumowanie zawodowe', 'Kompetencje kluczowe', 'Doświadczenie zawodowe',
+    'Wykształcenie', 'Certyfikaty', 'Umiejętności',
+  ]);
+  // Education hoisted above Work Experience — the divergence the guard exists to catch.
+  const plMisordered = titlesToHtml([
+    'Podsumowanie zawodowe', 'Wykształcenie', 'Doświadczenie zawodowe',
+  ]);
+  const enMisordered = titlesToHtml([
+    'Professional Summary', 'Education', 'Work Experience',
+  ]);
+
+  const throws = (html, opts) => {
+    try { validateCvSectionOrder(html, cvMd, opts); return false; } catch { return true; }
+  };
+
+  if (throws(plMisordered)) {
+    pass('Polish CV with Education before Work Experience is rejected');
+  } else {
+    fail('Polish CV with Education before Work Experience was NOT rejected (guard is a no-op)');
+  }
+
+  if (!throws(plCorrect)) {
+    pass('Polish CV in cv.md order is accepted');
+  } else {
+    fail('Polish CV in cv.md order was wrongly rejected');
+  }
+
+  if (throws(enMisordered)) {
+    pass('English CV order check still rejects divergence (no regression)');
+  } else {
+    fail('English CV order check regressed');
+  }
+
+  // --allow-reorder must keep downgrading the divergence to a warning now that
+  // Polish CVs actually reach this code path.
+  if (!throws(plMisordered, { allowReorder: true })) {
+    pass('allowReorder downgrades Polish divergence to a warning');
+  } else {
+    fail('allowReorder did not suppress Polish divergence');
+  }
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');
