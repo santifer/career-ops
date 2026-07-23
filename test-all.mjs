@@ -8977,6 +8977,44 @@ try {
   fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
+// ── TRANSCRIPT-INPUT DEBRIEF PATH (#2121) ────────────────────────────────
+// interview/debrief's Step 1 previously only supported verbal recall; this
+// pins the transcript-input branch (skip recall when a real transcript is
+// already available) and the Step 9 skip-condition (don't reconstruct a
+// transcript when one was already ingested in Step 1).
+
+console.log('\n63. interview/debrief supports transcript-sourced input (#2121)');
+
+try {
+  const debriefMode = readFile('modes/interview/debrief.md');
+
+  if (debriefMode.includes('already has a full transcript') && debriefMode.includes('transcript-sourced')) {
+    pass('interview/debrief Step 1 has a transcript-input branch');
+  } else {
+    fail('interview/debrief Step 1 missing the transcript-input branch');
+  }
+
+  if (debriefMode.includes('Skip the verbal-recall prompt')) {
+    pass('interview/debrief transcript-input path skips the verbal-recall prompt');
+  } else {
+    fail('interview/debrief transcript-input path does not skip recall');
+  }
+
+  if (debriefMode.includes('fall back to recall')) {
+    pass('interview/debrief keeps the recall-first flow as a fallback path');
+  } else {
+    fail('interview/debrief no longer documents recall as the fallback path');
+  }
+
+  if (debriefMode.includes('skip reconstruction') && debriefMode.includes('transcript-sourced')) {
+    pass('interview/debrief Step 9 skips reconstruction for transcript-sourced debriefs');
+  } else {
+    fail('interview/debrief Step 9 missing the skip-reconstruction condition');
+  }
+} catch (e) {
+  fail(`transcript-input debrief check: ${e.message}`);
+}
+
 await runDiscovered();
 
 finish();

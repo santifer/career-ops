@@ -28,6 +28,16 @@ After a real interview, capture what was asked, assess what landed and what didn
 
 ## Step 1 — Capture What Was Asked
 
+**If the candidate already has a full transcript** of the round (pasted text, or a file — e.g. Zoom, Teams, or Google Meet auto-transcription), use it as the source instead of asking for recall:
+
+- Extract every question/answer pair directly from the transcript text, in the order they occurred.
+- Extract interviewer signals from the transcript — follow-up questions, pushback, tone shifts, what got a visible reaction — rather than asking the candidate to characterize them from memory.
+- Extract round structure (segments, topics, roughly how long was spent on each) if it's discernible from the transcript.
+- **Skip the verbal-recall prompt below entirely for this path.** A real transcript is a strictly more accurate source than recall — asking the candidate to also recall verbally when the transcript already has it just re-derives something that's already written down, with more loss.
+- Note for Step 9: this debrief is **transcript-sourced**.
+
+**If no transcript is available** (in-person round, phone screen with no recording, or the candidate simply doesn't have one), fall back to recall — this path is unchanged:
+
 Ask the candidate to list every question they remember, in order if possible. Don't prompt with options — let them recall freely first.
 
 For each question captured:
@@ -39,6 +49,8 @@ If memory is incomplete, ask targeted prompts:
 - "Were there any questions that caught you off guard?"
 - "Was there anything you wished you'd answered differently?"
 - "Did the interviewer follow up on anything — that usually means they wanted more?"
+
+Whichever path produced the question/answer data, Steps 2 onward operate on it identically — honest assessment, gap-closing, and question-bank/story-bank updates don't distinguish between a transcript-sourced and a recall-sourced debrief.
 
 ---
 
@@ -158,6 +170,8 @@ Append to `interview-prep/{company-slug}-{role-slug}.md`:
 ## Step 9 — Write Session Transcript
 
 After the debrief, also write a machine-readable session transcript to `interview-prep/sessions/{company-slug}-{role-slug}-{round}-{YYYY-MM-DD}.md`. This is a structured record of the round for downstream analysis modes; the speaker-labelled turns let a consumer read either side without re-inferring who spoke. The full contract lives in `interview-prep/sessions/README.md`.
+
+**If this debrief was transcript-sourced (Step 1 used the transcript-input path), skip reconstruction.** Don't regenerate the transcript from Step 1/Step 2 output — that would be a lossier copy of the real source it came from. Instead, save the original transcript directly, lightly normalized to match the schema below (speaker labels, front-matter, competency tags from the Step 2 assessment). Reconstruction from recall is only for the recall-sourced path.
 
 Format:
 
