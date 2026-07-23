@@ -378,7 +378,7 @@ func TestRespondedTabFiltersCorrectly(t *testing.T) {
 		theme.NewTheme("catppuccin-mocha"),
 		apps,
 		model.PipelineMetrics{Total: len(apps)},
-		"..",
+		t.TempDir(),
 		120,
 		40,
 	)
