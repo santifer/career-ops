@@ -25,6 +25,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run extract` | `browser-extract.mjs` | Headless read-only page extractor (opt-in `scan.extractor: cli`) — compact JSON for scan/JD |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
 | `npm run scan:full` | `scan-ats-full.mjs` | Reverse ATS discovery scanner |
+| `npm run company:funded` | `company-funded.mjs` | Review-first discovery of recently funded companies |
 | `npm run validate:portals` | `validate-portals.mjs` | Validate portals.yml shape before scanning |
 | `npm run tracker` | `tracker.mjs` | SQLite derived index over applications.md — sync/query/history/export |
 | `npm run find` | `find.mjs` | Resolve a report#/tracker#/company query to its full pipeline identity |
@@ -407,6 +408,25 @@ node scan-ats-full.mjs --md-out notes/scans    # also write a dated markdown dig
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error (no portals.yml, unknown `--ats` source) or fatal scan error.
+
+---
+
+## company:funded
+
+Review-first discovery for companies that recently raised funding. It reads public RSS/API sources, enriches likely careers pages when possible, and prints candidates plus suggested `portals.yml` entries for manual review. It never edits `portals.yml`.
+
+```bash
+npm run company:funded -- --dry-run --limit 20
+npm run company:funded -- --dry-run --limit 20 --months 3 --json
+npm run company:funded -- --sources techcrunch,prnewswire,guardian,hn
+npm run company:funded -- --sources duckduckgo --query "agentic AI Series A funding"
+```
+
+Defaults: last 3 months, sorted by newest funding date, sources `techcrunch,prnewswire,guardian,hn`. DuckDuckGo search is opt-in via `--sources duckduckgo` or `--query`.
+
+Source diagnostics are included in JSON output and surfaced in human output when a source has errors, is blocked, returns no items, or when no candidates are found. Candidate enrichment is enabled by default; pass `--no-enrich` for a faster funding-only run.
+
+**Exit codes:** `0` discovery completed, `1` invalid arguments or fatal runtime error.
 
 ---
 
