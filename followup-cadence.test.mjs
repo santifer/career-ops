@@ -12,6 +12,7 @@ import {
   addDays,
   parseDate,
   DEFAULT_CADENCE,
+  analyzeFromContent,
 } from './followup-cadence.mjs';
 
 let passed = 0;
@@ -65,6 +66,45 @@ eq(
   'applied, no follow-ups uses applied_first',
   computeNextFollowupDate('applied', APP, null, 0),
   addDays(parseDate(APP), DEFAULT_CADENCE.applied_first),
+);
+
+// analyzeFromContent (#2123): the content-based core exported so stats.mjs
+// can reuse the exact same cadence math for its own cold-classification
+// wiring, instead of re-deriving applied_max_followups/cadence rules there.
+const trackerMd = [
+  '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+  '|---|------|---------|------|-------|--------|-----|--------|-------|',
+  '| 1 | 2026-05-01 | Acme | Eng | 4.5/5 | Applied | ✅ | ❌ | note |',
+  '| 2 | 2026-05-01 | Beta | Eng | 4.0/5 | Applied | ✅ | ❌ | note |',
+].join('\n');
+const followupsMd = [
+  '| # | App | Date | Company | Role | Channel | Contact | Notes |',
+  '|---|-----|------|---------|------|---------|---------|-------|',
+  '| 1 | 1 | 2026-05-10 | Acme | Eng | email | jane | f1 |',
+  '| 2 | 1 | 2026-05-20 | Acme | Eng | email | jane | f2 |',
+].join('\n');
+
+const withFollowups = analyzeFromContent(trackerMd, followupsMd);
+eq(
+  'analyzeFromContent classifies app #1 cold after applied_max_followups follow-ups, app #2 stays actionable',
+  withFollowups.entries.filter((e) => e.urgency === 'cold').map((e) => e.num),
+  [1],
+);
+
+// Missing/empty follow-ups content must degrade gracefully — no follow-up
+// log means followupCount stays 0 for every row, so nothing can reach the
+// 'cold' threshold. No error, no guessing.
+const noFollowups = analyzeFromContent(trackerMd, '');
+eq(
+  'analyzeFromContent with no follow-ups content classifies nothing as cold',
+  noFollowups.entries.some((e) => e.urgency === 'cold'),
+  false,
+);
+const missingFollowupsArg = analyzeFromContent(trackerMd);
+eq(
+  'analyzeFromContent defaults followupsContent to empty string when omitted',
+  missingFollowupsArg.entries.some((e) => e.urgency === 'cold'),
+  false,
 );
 
 console.log(`\n${passed} passed, ${failed} failed`);
