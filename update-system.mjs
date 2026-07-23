@@ -630,7 +630,7 @@ export function prepareMaterializedSkillEntrypointsForStage(paths, root = ROOT) 
   return prepared;
 }
 
-function revertPaths(paths) {
+function revertPaths(paths, protectedPaths = new Set()) {
   if (paths.length === 0) return;
   // Must restore from HEAD, not from the index (#915 bug 1). After
   // `git checkout FETCH_HEAD -- <path>` the index already holds the new
@@ -651,6 +651,55 @@ function revertPaths(paths) {
       // working tree is consistent with HEAD.
       try { git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec); } catch { /* ignore */ }
       try { rmSync(join(ROOT, pathspec), { recursive: true, force: true }); } catch { /* already gone */ }
+    }
+    // A directory pathspec that exists in HEAD checks out cleanly above, so the
+    // catch never runs — but `git checkout HEAD -- docs/` only restores files
+    // HEAD already knows about. Files the update introduced *under* that
+    // directory are not in HEAD, so they survive the rollback as staged
+    // additions and the tree is left dirtier than before the update (#2015).
+    removeAdditionsNotInHead(p, protectedPaths);
+  }
+}
+
+/**
+ * Delete files staged as additions relative to HEAD under a pathspec.
+ *
+ * Complements `git checkout HEAD -- <path>`, which restores tracked content but
+ * never removes paths HEAD does not contain. Only additions are considered, so
+ * a user file that merely changed is untouched.
+ *
+ * @param {string} pathspec - SYSTEM_PATHS entry (file or directory).
+ * @param {Set<string>} protectedPaths - Paths already dirty/staged BEFORE the
+ *   update ran; never deleted, so a rollback cannot destroy the user's own
+ *   pre-existing staged work under a system pathspec (#2015).
+ */
+function removeAdditionsNotInHead(pathspec, protectedPaths = new Set()) {
+  const spec = pathspec.endsWith('/') ? pathspec.slice(0, -1) : pathspec;
+  let added = '';
+  try {
+    // -z: NUL-delimited, unquoted output, so paths containing spaces or even
+    // newlines survive intact — `split('\n').trim()` would mangle them.
+    added = git('diff', '--cached', '-z', '--name-only', '--diff-filter=A', 'HEAD', '--', spec);
+  } catch {
+    // No HEAD yet, or an unreadable pathspec — nothing safe to clean up.
+    return;
+  }
+  for (const file of added.split('\0').filter(Boolean)) {
+    // Never touch something the user already had staged before the update —
+    // only additions THIS update introduced (#2015 review: no data loss).
+    if (protectedPaths.has(file)) continue;
+    let removed = false;
+    try {
+      git('rm', '-f', '--ignore-unmatch', '--', file);
+      removed = true;
+    } catch {
+      // Index removal failed (lock/permission). Leave both the index entry AND
+      // the worktree file in place and keep rolling back the rest — deleting
+      // the worktree copy now would strand a staged addition with no file.
+      console.error(`Rollback: could not unstage ${file}; leaving it untouched.`);
+    }
+    if (removed) {
+      try { rmSync(join(ROOT, file), { force: true }); } catch { /* already gone */ }
     }
   }
 }
@@ -989,7 +1038,7 @@ async function apply() {
       // through. Revert what we already applied and abort.
       console.error(`Aborting: could not validate user-layer safety (${err.message}).`);
       try {
-        revertPaths(updated);
+        revertPaths(updated, initialStatusPaths);
       } catch (revertErr) {
         // If the revert itself fails (likely whatever broke `git
         // status` also broke `git checkout --`), don't lose the
@@ -1013,7 +1062,7 @@ async function apply() {
       // what to do with them.
       const violation = new Error('Update aborted: user files were touched.');
       try {
-        revertPaths([...updated]);
+        revertPaths([...updated], initialStatusPaths);
       } catch (revertErr) {
         // If the revert itself fails, don't lose the safety-violation
         // diagnostic — chain it via `cause` so the user sees both.
