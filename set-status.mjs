@@ -300,7 +300,15 @@ if (/^\d+$/.test(selector) && !flags.force) {
 // entirely baseline vocabulary (["platform","engineer"]) so that same-titled
 // sibling reqs never auto-merge. That makes it unusable on its own here — it
 // would reject --role "Platform Engineer" against a row that IS exactly that.
-const normalizeRoleText = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const normalizeRoleText = s => String(s ?? '')
+  .toLowerCase()
+  // Preserve symbols that distinguish real titles before collapsing generic
+  // punctuation — otherwise "C# Engineer" and "C++ Engineer" both fold to
+  // "c engineer" and the exact-equality path treats them as the same row.
+  .replace(/\+\+/g, ' plusplus ')
+  .replace(/#/g, ' sharp ')
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim();
 const roleMatchesTarget = normalizeRoleText(target.role) === normalizeRoleText(flags.role)
   || roleFuzzyMatch(target.role, flags.role);
 

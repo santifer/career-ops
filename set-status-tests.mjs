@@ -200,6 +200,39 @@ const TRACKER_REPORT_MISMATCH = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
+// ── 1e. Symbol-bearing titles must not collapse to the same role (#2009) ─
+// The equality normalizer strips generic punctuation, so it must preserve the
+// symbols that actually distinguish a title first — otherwise "C# Engineer" and
+// "C++ Engineer" both fold to "c engineer" and the guard silently updates the
+// wrong row for exactly the kind of title it exists to protect.
+{
+  const TRACKER_SYMBOL = `# Applications Tracker
+
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+|---|------|---------|------|-------|--------|-----|--------|-------|
+| 1 | 2026-06-01 | Contoso | C++ Engineer | 4.0/5 | Evaluated | ✅ | [1](../reports/001-contoso-2026-06-01.md) | — |
+`;
+  const sb = makeSandbox(TRACKER_SYMBOL);
+  const before = readTracker(sb);
+  const r = runSetStatus(['contoso', 'SKIP', '--role', 'C# Engineer', '--json'], sb);
+  let parsed = null;
+  try { parsed = JSON.parse(r.stdout); } catch {}
+  if (r.code === 3 && parsed?.code === 'role-mismatch' && readTracker(sb) === before) {
+    pass('role-mismatch: "C# Engineer" does not match a "C++ Engineer" row (#2009)');
+  } else {
+    fail(`role-mismatch symbol: code=${r.code} json=${JSON.stringify(parsed)}\n${r.stdout}${r.stderr}`);
+  }
+
+  // The genuine same-symbol title still matches (guard does not over-fire).
+  const r2 = runSetStatus(['contoso', 'Applied', '--role', 'c++ engineer'], sb);
+  if (r2.code === 0 && /\| 1 \|[^\n]*\| Applied \|/.test(readTracker(sb))) {
+    pass('role-mismatch: "c++ engineer" still matches a "C++ Engineer" row (#2009)');
+  } else {
+    fail(`role-mismatch symbol-equal: code=${r2.code}\n${r2.stdout}${r2.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
 // ── 2. Update by company name (single match) ────────────────────
 {
   const sb = makeSandbox(TRACKER_9);
