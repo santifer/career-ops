@@ -5716,6 +5716,94 @@ try {
   fail(`merge-tracker column-order tests crashed: ${e.message}`);
 }
 
+// ── MERGE-TRACKER PDF FLAG SYNC (#1429) ─────────────────────────
+// generate-pdf.mjs can run after the tracker row already exists. The
+// gitignored data/pdf-index.tsv manifest is the source of truth that the row's
+// PDF was generated, so merge-tracker should flip only matching ❌ cells to ✅.
+console.log('\n🧪 Testing merge-tracker PDF flag sync from data/pdf-index.tsv (#1429)...');
+try {
+  const runPdfSyncFixture = (name, trackerRow, pdfIndex = null, additions = []) => {
+    const tmp = mkdtempSync(join(tmpdir(), `career-ops-merge-pdf-${name}-`));
+    mkdirSync(join(tmp, 'data'), { recursive: true });
+    const additionsDir = join(tmp, 'additions');
+    const tracker = join(tmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      trackerRow + '\n');
+    if (pdfIndex !== null) writeFileSync(join(tmp, 'data', 'pdf-index.tsv'), pdfIndex);
+    if (additions.length > 0) {
+      mkdirSync(additionsDir, { recursive: true });
+      for (const addition of additions) {
+        writeFileSync(join(additionsDir, addition.name), addition.content);
+      }
+    }
+
+    try {
+    const result = run(NODE, ['merge-tracker.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir },
+    });
+    const merged = readFileSync(tracker, 'utf-8');
+    return { result, merged };
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  };
+
+  const matching = runPdfSyncFixture(
+    'match',
+    '| 7 | 2026-01-04 | Acme | Engineer | 4.2/5 | Evaluated | ❌ | [12](../reports/012-acme-2026-01-04.md) | ok |',
+    '# report\tpdf\thtml\tformat\tdate\n' +
+      '012\toutput/cv-acme.pdf\toutput/cv-acme.html\tletter\t2026-01-04\n',
+  );
+  if (matching.result !== null && matching.merged.includes('| ✅ | [12](../reports/012-acme-2026-01-04.md) |')) {
+    pass('merge-tracker flips a stale ❌ PDF cell when pdf-index.tsv has the row report number');
+  } else {
+    fail('merge-tracker did not flip the matching PDF cell from ❌ to ✅');
+  }
+
+  const nonMatching = runPdfSyncFixture(
+    'miss',
+    '| 8 | 2026-01-05 | Globex | Analyst | 3.8/5 | Evaluated | ❌ | [22](../reports/022-globex-2026-01-05.md) | ok |',
+    '# report\tpdf\thtml\tformat\tdate\n' +
+      '023\toutput/cv-other.pdf\toutput/cv-other.html\tletter\t2026-01-05\n',
+  );
+  if (nonMatching.result !== null && nonMatching.merged.includes('| ❌ | [22](../reports/022-globex-2026-01-05.md) |')) {
+    pass('merge-tracker leaves PDF ❌ when the report number is absent from pdf-index.tsv');
+  } else {
+    fail('merge-tracker produced a false-positive PDF sync for a missing report number');
+  }
+
+  const missingManifest = runPdfSyncFixture(
+    'missing',
+    '| 9 | 2026-01-06 | Initech | Manager | 3.9/5 | Evaluated | ❌ | [31](../reports/031-initech-2026-01-06.md) | ok |',
+  );
+  if (missingManifest.result !== null && missingManifest.merged.includes('| ❌ | [31](../reports/031-initech-2026-01-06.md) |')) {
+    pass('merge-tracker runs successfully when data/pdf-index.tsv does not exist');
+  } else {
+    fail('merge-tracker crashed or changed the PDF cell when pdf-index.tsv was missing');
+  }
+
+  const newAddition = runPdfSyncFixture(
+    'new-addition',
+    '',
+    '# report\tpdf\thtml\tformat\tdate\n' +
+      '041\toutput/cv-umbrella.pdf\toutput/cv-umbrella.html\tletter\t2026-01-07\n',
+    [{
+      name: '001-umbrella.tsv',
+      content: '1\t2026-01-07\tUmbrella\tEngineer\t4.1/5\tEvaluated\t❌\t[41](../reports/041-umbrella-2026-01-07.md)\tok\n',
+    }],
+  );
+  if (newAddition.result !== null && newAddition.merged.includes('| 1 | 2026-01-07 | Umbrella | Engineer | 4.1/5 | Evaluated | ✅ | [41](../reports/041-umbrella-2026-01-07.md) | ok |')) {
+    pass('merge-tracker applies pdf-index.tsv to a newly merged tracker row in the same run');
+  } else {
+    fail('merge-tracker left a newly merged row at ❌ despite a matching pdf-index.tsv entry');
+  }
+} catch (e) {
+  fail(`merge-tracker PDF flag sync test crashed: ${e.message}`);
+}
+
 // ── MERGE-TRACKER REPORT-NUMBER COLLISION (#912) ─────────────────
 // The report-number dedup check was not company-guarded: a TSV for NewCo
 // with report [1] would find the existing tracker row [1] for OtherCo and
