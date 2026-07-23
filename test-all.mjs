@@ -8977,6 +8977,119 @@ try {
   fail(`stated-comp tracking wiring check: ${e.message}`);
 }
 
+console.log('\n63. Protected-grounds question detection (#2030)');
+
+// --- interview-redflag protected-grounds signal (#2030) ---
+{
+  // 1. Jurisdiction table exists, parses as YAML (UTF-8 — the JP row carries
+  //    Japanese terms that must survive the parse), and both seeds are complete
+  const pgPath = join(ROOT, 'templates', 'protected-grounds.yml');
+  if (!existsSync(pgPath)) {
+    fail('templates/protected-grounds.yml missing (#2030)');
+  } else {
+    try {
+      const { load } = await import('js-yaml');
+      const pgRaw = readFileSync(pgPath, 'utf-8');
+      const pg = load(pgRaw);
+      const rows = Array.isArray(pg?.protected_grounds) ? pg.protected_grounds : [];
+      const completeRow = (r) =>
+        r &&
+        typeof r.jurisdiction === 'string' &&
+        typeof r.jurisdiction_name === 'string' &&
+        Array.isArray(r.grounds) && r.grounds.length > 0 &&
+        r.grounds.every((g) => g && typeof g.topic === 'string' && g.topic.length > 0) &&
+        typeof r.legal_basis === 'string' && r.legal_basis.length > 0 &&
+        Array.isArray(r.sources) && r.sources.length > 0 &&
+        typeof r.as_of === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.as_of);
+      const caOn = rows.find((r) => r?.jurisdiction === 'CA-ON');
+      const jp = rows.find((r) => r?.jurisdiction === 'JP');
+      const caOnTopics = (caOn?.grounds || []).map((g) => g?.topic || '');
+      const jpTopics = (jp?.grounds || []).map((g) => g?.topic || '');
+      if (
+        completeRow(caOn) && caOn.grounds.length === 16 &&
+        caOnTopics.some((t) => /gender identity/i.test(t)) &&
+        caOnTopics.some((t) => /gender expression/i.test(t)) &&
+        caOn.legal_basis.includes('5(1)') && caOn.legal_basis.includes('24(1)') &&
+        caOn.grounds.some((g) => Array.isArray(g.legitimate_contexts) && g.legitimate_contexts.length > 0) &&
+        completeRow(jp) && jp.grounds.length === 14 &&
+        // literal Japanese terms must survive YAML parsing as UTF-8
+        jpTopics.some((t) => t.includes('本籍')) &&
+        jpTopics.some((t) => t.includes('尊敬する人物')) &&
+        jp.legal_basis.includes('5-5') && jp.legal_basis.includes('141')
+      ) {
+        pass('protected-grounds.yml parses; CA-ON seed complete (16 OHRC s.5(1) grounds incl. gender identity/expression, s.24(1) contexts) and JP seed complete (14-item MHLW list, Japanese terms 本籍/尊敬する人物 survive UTF-8 parse, art. 5-5 + 告示141 basis) — grounds, legal_basis, sources, quoted as_of (#2030)');
+      } else {
+        fail('protected-grounds.yml seed rows incomplete — need CA-ON with exactly 16 grounds (incl. gender identity + gender expression, s.5(1)/s.24(1) basis, per-ground legitimate_contexts) and JP with exactly 14 grounds carrying Japanese terms (本籍, 尊敬する人物) + English glosses, art. 5-5 + guideline 141 basis; both with sources and quoted as_of dates (#2030)');
+      }
+      if (
+        pgRaw.includes('CONTRIBUTION RULE') &&
+        pgRaw.includes('NOT LEGAL ADVICE') &&
+        pgRaw.includes('EEOC') &&
+        pgRaw.includes('Equality Act') &&
+        pgRaw.includes('AGG')
+      ) {
+        pass('protected-grounds.yml header documents the contribution rule + not-legal-advice register and lists candidate rows (EEOC, UK Equality Act, DE AGG) as comments only (#2030)');
+      } else {
+        fail('protected-grounds.yml header missing the contribution rule, not-legal-advice note, and/or the commented candidate rows (EEOC / Equality Act / AGG) (#2030)');
+      }
+    } catch (e) {
+      fail(`templates/protected-grounds.yml does not parse as YAML: ${e.message} (#2030)`);
+    }
+  }
+
+  // 2. interview-redflag Step 2c: jurisdiction derivation, reuse of the
+  //    existing evidence-tier/scoring/verdict machinery (no new verdict
+  //    system), legitimate_contexts honesty, no-intent-inference rule
+  const redflagMode = readFile('modes/interview-redflag.md');
+  const pgStart = redflagMode.indexOf('## Step 2c');
+  const pgEnd = redflagMode.indexOf('## Step 3', Math.max(pgStart, 0));
+  const pgSection = pgStart >= 0 && pgEnd > pgStart ? redflagMode.slice(pgStart, pgEnd) : '';
+  if (
+    pgSection.includes('templates/protected-grounds.yml') &&
+    pgSection.includes('config/profile.yml') &&
+    pgSection.includes('skip this step entirely') &&
+    pgSection.includes('does not create a new verdict system') &&
+    pgSection.includes('exactly like the four existing signals') &&
+    pgSection.includes('+1 for one session, +2 for 2+ sessions') &&
+    pgSection.includes('blacklist-suggestion') &&
+    pgSection.includes('legitimate_contexts') &&
+    pgSection.includes('names that context instead of flagging cleanly') &&
+    pgSection.includes('no sentiment or intent inference') &&
+    pgSection.includes('not legal advice') &&
+    pgSection.includes('Render in {language.output}') &&
+    redflagMode.includes('| Protected-grounds questions (Step 2c) |') &&
+    redflagMode.includes('5 signal types × 2')
+  ) {
+    pass('interview-redflag Step 2c pins jurisdiction derivation from config/profile.yml, skip-when-no-row, reuse of existing evidence tiers + scoring (+1/+2) + verdict tiers + #1856 blacklist bridge, legitimate_contexts honesty, no-intent-inference, not-legal-advice, i18n rendering, and the aggregated signal-table row (#2030)');
+  } else {
+    fail('interview-redflag Step 2c missing/incomplete — needs table + profile.yml jurisdiction derivation, skip-when-no-row rule, existing-machinery reuse (no new verdict system; +1/+2 aggregation; blacklist-suggestion bridge), legitimate_contexts honesty, no sentiment/intent inference, not-legal-advice note, {language.output} rendering, signals-table row, updated 5-signal max (#2030)');
+  }
+
+  // 3. Phrasing discipline holds in the report-facing text: the rendered
+  //    templates may DESCRIBE statutes and list banned formulations as
+  //    banned, but must never direct a legality verdict at the interviewer
+  //    or the question itself. Scan only rendered-output surfaces — the
+  //    Step 2c blockquote template plus the Step 5 protected-grounds output
+  //    block — with a clause-directed regex that skips statute descriptions.
+  const pgQuoteLines = pgSection.split('\n').filter((l) => l.trimStart().startsWith('>'));
+  const out5Start = redflagMode.indexOf('### Protected-grounds questions');
+  const out5End = out5Start >= 0 ? redflagMode.indexOf('```', out5Start) : -1;
+  const out5Lines = out5Start >= 0 && out5End > out5Start ? redflagMode.slice(out5Start, out5End).split('\n') : [];
+  const pgFacing = [...pgQuoteLines, ...out5Lines];
+  // Clause-directed only: requires an asserting subject+copula frame, so the
+  // template's own banned-examples list ('never "...discrimination occurred"')
+  // and statute descriptions ("prohibits...", "protected under...") never
+  // false-positive — the #2029 approach.
+  const pgAssertive = pgFacing.filter((l) =>
+    /(the interviewer|this question) (was|is|has been) (illegal|unlawful|discriminatory|discriminating|breaking the law)/i.test(l)
+  );
+  if (pgSection && pgQuoteLines.length >= 1 && out5Lines.length >= 1 && pgAssertive.length === 0) {
+    pass('protected-grounds report-facing templates state topic + legal context only — no clause-directed "was illegal"/"discrimination occurred" verdicts in blockquote or output block (#2030)');
+  } else {
+    fail(`protected-grounds phrasing discipline broken: ${pgAssertive.length ? `verdict-directed phrasing in rendered template: ${pgAssertive[0].trim().slice(0, 80)}` : 'expected a blockquote template in Step 2c and a "### Protected-grounds questions" output block in Step 5'} (#2030)`);
+  }
+}
+
 await runDiscovered();
 
 finish();

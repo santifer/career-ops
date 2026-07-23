@@ -11,6 +11,7 @@ System-layer template files used by career-ops scripts and modes. These files ar
 | `cv-template.tex` | `generate-latex.mjs` | LaTeX/Overleaf template for ATS-optimized CV PDFs |
 | `portals.example.yml` | Onboarding | Example portal scanner configuration (copy to `portals.yml` to activate) |
 | `states.yml` | `verify-pipeline.mjs`, `normalize-statuses.mjs`, `merge-tracker.mjs` | Canonical application states and their aliases |
+| `protected-grounds.yml` | `modes/interview-redflag.md` (Step 2c — protected-grounds question detection) | Jurisdiction-keyed table of protected grounds / do-not-ask topics in hiring (seeds: CA-ON — Ontario Human Rights Code s.5(1), 16 grounds; JP — MHLW 公正な採用選考 fair-hiring 14-item do-not-ask list, bilingual Japanese terms + English glosses). Prompt-level data reference — no script reads it; local lookup over local transcripts, nothing leaves the machine. Feeds topic-match observations weighed by the mode's existing evidence tiers; per-ground `legitimate_contexts` (BFOR, accommodation, post-offer) prevent false flags. Never a legal verdict — "touches {ground}, protected under {legal basis}", never "this was illegal". Contribution rule: no entry without a citable legal source (regulator/ministry guidance preferred) and an `as_of` verification date. |
 
 ### cv-template.html
 
