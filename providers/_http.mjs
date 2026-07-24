@@ -1,6 +1,8 @@
 // HTTP transport helpers shared across providers.
 // Files prefixed with _ are never loaded as providers by scan.mjs.
 
+import './_dns-cache.mjs'; // memoize dns.lookup process-wide (see that file)
+
 const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; career-ops/1.3)';
 
