@@ -8203,6 +8203,25 @@ try {
     fail(`match-star scorer: tag-exact match score too low (got ${tagExactScores[1]})`);
   }
 
+  // Regression: tag scoring must use tokenized exact membership, not a substring
+  // test — otherwise short query tokens (ai, ml, go, qa…) spuriously collide
+  // inside longer tag WORDS (token "ai" inside "maintainability") for a false +3,
+  // inflating irrelevant stories above genuinely relevant ones.
+  // With empty title/theme/action/result and no JD, total score == the tag bonus.
+  const mkTagStory = (tags) => ({ tags, title: '', theme: '', action: '', result: '' });
+  const aiVsMaintainability = score(mkTagStory(['maintainability']), tokenize('ai'), []);
+  if (aiVsMaintainability === 0) {
+    pass('match-star scorer: short token "ai" does not substring-match tag "maintainability" (bonus 0)');
+  } else {
+    fail(`match-star scorer: token "ai" spuriously matched tag "maintainability" (expected 0, got ${aiVsMaintainability})`);
+  }
+  const leadershipExactTag = score(mkTagStory(['leadership']), tokenize('leadership'), []);
+  if (leadershipExactTag === 3) {
+    pass('match-star scorer: exact tag token "leadership" still scores +3 after tokenized fix');
+  } else {
+    fail(`match-star scorer: exact tag match regressed (expected 3, got ${leadershipExactTag})`);
+  }
+
   // match-star.mjs file must exist (existsSync-guarded in the script itself)
   if (existsSync(join(ROOT, 'match-star.mjs'))) {
     pass('match-star.mjs: file present in repo root');
