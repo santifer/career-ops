@@ -67,6 +67,7 @@ const SYSTEM_PATHS = [
   'modes/cover.md',
   'modes/email.md',
   'modes/add.md',
+  'modes/expand.md',
   'modes/scan.md',
   'modes/batch.md',
   'modes/apply.md',
@@ -115,6 +116,7 @@ const SYSTEM_PATHS = [
   'modes/heuristics/',
   'modes/regional/',
   'modes/zh/',
+  'modes/zh/interview/',
   'modes/zh-TW/',
   'CLAUDE.md',
   'CODEX.md',
@@ -184,6 +186,7 @@ const SYSTEM_PATHS = [
   'agent-inbox.mjs',
   'followup-seed.mjs',
   'followup-seed-tests.mjs',
+  'profile-language.mjs',
   'gemini-eval.mjs',
   'ollama-eval.mjs',
   'openai-eval.mjs',
@@ -196,6 +199,7 @@ const SYSTEM_PATHS = [
   'test-salary-filter.mjs',
   'test-trust-validator.mjs',
   'tracker-columns-tests.mjs',
+  'tracker-writer-lock-tests.mjs',
   'agent-inbox-tests.mjs',
   'validate-portals.mjs',
   'verify-portals.mjs',
@@ -208,7 +212,9 @@ const SYSTEM_PATHS = [
   'paste-reply-tests.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
+  'batch/aggregate-tokens.mjs',
   'batch/README.md',
+  'utils/token-tracker.mjs',
   'dashboard/',
   'templates/',
   'config/cv-facts.example.json',
@@ -251,6 +257,7 @@ const SYSTEM_PATHS = [
   'README.ru.md',
   'README.ua.md',
   'README.zh-TW.md',
+  'README.tr.md',
   'CHANGELOG.md',
   'CODE_OF_CONDUCT.md',
   'CONTRIBUTORS.md',
@@ -266,9 +273,13 @@ const SYSTEM_PATHS = [
   'package.json',
   'build-cv-latex.mjs',
   'build-cv-html.mjs',
+  'cv-sections-core.mjs',
   'cv-templates.mjs',
   'test/cv-templates.test.mjs',
   'test/cover-resolver.test.mjs',
+  'test/profile-photo.test.mjs',
+  'templates/cv-template.zh-minimal.html',
+  'test/zh-minimal-template.test.mjs',
   'scaffolder/',
   'Dockerfile',
   'docker-compose.yml',
@@ -278,7 +289,6 @@ const SYSTEM_PATHS = [
   'plugins/',
   'plugins.mjs',
   'plugins-registry/',
-  'plugins-registry.json',
   'plugin-install.mjs',
   'plugin-audit.mjs',
   'validate-plugin-registry.mjs',
@@ -306,7 +316,6 @@ const BOOTSTRAP_PATHS = [
   'plugins/',
   'plugins.mjs',
   'plugins-registry/',
-  'plugins-registry.json',
   'plugin-install.mjs',
   'plugin-audit.mjs',
   'validate-plugin-registry.mjs',
@@ -440,6 +449,75 @@ function gitIn(root, ...args) {
 
 function git(...args) {
   return gitIn(ROOT, ...args);
+}
+
+/**
+ * git(), but with the child's stderr piped instead of inherited.
+ *
+ * execFileSync inherits stderr by default, so a command whose failure is
+ * expected and handled still prints git's raw error to the console. Use this
+ * where a non-zero exit is a normal outcome the caller reports itself.
+ *
+ * @param {...string} args - git arguments.
+ * @returns {string} Trimmed stdout.
+ */
+function gitQuiet(...args) {
+  const timeout = gitTimeoutMs(args);
+  try {
+    return execFileSync('git', args, {
+      cwd: ROOT, encoding: 'utf-8', timeout, stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch (err) {
+    if (isTimeoutLikeError(err)) {
+      throw new Error(`${describeGitCommand(args)} timed out after ${timeoutSeconds(timeout)}s. If your network is slow, retry or set ${gitTimeoutEnvVar(args)} to a larger value.`);
+    }
+    throw err;
+  }
+}
+
+/**
+ * Paths the target manifest ships that did not materialize on disk.
+ *
+ * apply() reports success without checking that the checkout loop actually
+ * produced a coherent install, so a client whose local manifest predates the
+ * target's silently ends up missing every path added since — and only finds
+ * out when the next script crashes with ERR_MODULE_NOT_FOUND (#1998).
+ *
+ * @param {string[]} targetPaths - SYSTEM_PATHS read from the target updater.
+ * @returns {string[]} Entries present in FETCH_HEAD but absent locally.
+ */
+function missingFromTargetManifest(targetPaths) {
+  const missing = [];
+  for (const path of targetPaths) {
+    const spec = path.endsWith('/') ? path.slice(0, -1) : path;
+
+    // Directory entries need a RECURSIVE check: a pre-existing directory
+    // (`.gemini/commands/`, `docs/`) can still be missing files the target
+    // added under it, and `existsSync` on the directory would wrongly call it
+    // materialized — masking the very partial update this verification exists
+    // to catch. Compare the target tree's files beneath the entry against disk.
+    if (path.endsWith('/')) {
+      let treeFiles = [];
+      try {
+        treeFiles = gitQuiet('ls-tree', '-r', '--name-only', 'FETCH_HEAD', '--', spec)
+          .split('\n').map(s => s.trim()).filter(Boolean);
+      } catch {
+        continue; // FETCH_HEAD unreadable for this spec — treat as stale, not missing
+      }
+      // Empty tree ⇒ the target ships nothing here (stale manifest entry).
+      if (treeFiles.some(f => !existsSync(join(ROOT, f)))) missing.push(path);
+      continue;
+    }
+
+    if (existsSync(join(ROOT, spec))) continue;
+    // Only count it as missing when the target actually ships it — a manifest
+    // entry the target no longer carries is a stale entry, not a failed update.
+    try {
+      gitQuiet('cat-file', '-e', `FETCH_HEAD:${spec}`);
+      missing.push(path);
+    } catch { /* absent upstream too — nothing to materialize */ }
+  }
+  return missing;
 }
 
 function gitStatusEntries() {
@@ -800,13 +878,33 @@ async function apply() {
     // target updater's SYSTEM_PATHS is now the source of truth for new files.
     const updatePaths = mergePathLists(SYSTEM_PATHS, remoteSystemPaths, BOOTSTRAP_PATHS);
 
+    const skippedPaths = [];
     for (const path of updatePaths) {
       try {
-        git('checkout', 'FETCH_HEAD', '--', path);
+        // stderr is piped rather than inherited here. A path absent upstream is
+        // an EXPECTED skip (a stale manifest entry such as `.gemini/commands/`),
+        // but execFileSync inherits stderr by default, so git printed
+        // `error: pathspec '...' did not match any file(s) known to git`
+        // immediately before the success banner — which reads as a failed
+        // update and sends people chasing the wrong root cause (#1998).
+        gitQuiet('checkout', 'FETCH_HEAD', '--', path);
         updated.push(path);
-      } catch {
-        // File may not exist in remote (new additions), skip
+      } catch (err) {
+        // A path genuinely absent upstream is the expected skip. But the catch
+        // also caught timeouts, permission errors, and repo corruption and
+        // reported them as skips too — letting a partial update reach the
+        // success banner (#1998). Confirm the path is actually absent from
+        // FETCH_HEAD before treating the failure as benign; otherwise rethrow.
+        const spec = path.endsWith('/') ? path.slice(0, -1) : path;
+        let absentUpstream = false;
+        try { gitQuiet('cat-file', '-e', `FETCH_HEAD:${spec}`); }
+        catch { absentUpstream = true; }
+        if (!absentUpstream) throw err;
+        skippedPaths.push(path);
       }
+    }
+    if (skippedPaths.length > 0) {
+      console.log(`Skipped ${skippedPaths.length} path(s) absent upstream: ${skippedPaths.join(', ')}`);
     }
 
     // tests/ is auto-discovered and EXECUTED (tests/**/*.test.mjs), so stale
@@ -991,6 +1089,24 @@ async function apply() {
       // Otherwise, genuinely nothing to commit (already up to date)
     }
 
+    // Verify the update actually produced a coherent install before claiming
+    // success. A client whose local manifest predates the target checks out
+    // only the paths ITS OWN manifest lists, so everything added upstream since
+    // is silently absent and the next script dies with ERR_MODULE_NOT_FOUND.
+    // Re-running apply fixes it (the first pass did update update-system.mjs
+    // itself, so the second pass uses the target manifest) — but only if the
+    // user is told, instead of being shown "Update complete" (#1998).
+    const unmaterialized = missingFromTargetManifest(remoteSystemPaths);
+    if (unmaterialized.length > 0) {
+      console.error(`\nUpdate incomplete: v${local} → v${remote}`);
+      console.error(`${unmaterialized.length} path(s) from the target manifest were not checked out:`);
+      for (const path of unmaterialized) console.error(`  ${path}`);
+      console.error('\nThis happens when the installed updater predates the paths the target adds.');
+      console.error('Run `node update-system.mjs apply` again — the updater itself is now current,');
+      console.error('so the second pass uses the target manifest and picks up what this one missed.');
+      process.exit(1);
+    }
+
     console.log(`\nUpdate complete: v${local} → v${remote}`);
     console.log(`Updated ${updated.length} system paths.`);
     console.log(`Rollback available: node update-system.mjs rollback`);
@@ -998,7 +1114,7 @@ async function apply() {
     console.log('\n-- The CareerOps Manifesto ------------------------------');
     console.log('A new way of job searching is taking shape. You are');
     console.log('already practicing it. Read it, sign it if you want to help:');
-    console.log('    npm run manifesto  ·  https://career-ops.org/manifesto');
+    console.log('    npm run manifesto  ·  https://career-ops.org/manifesto?utm_source=updater');
 
   } finally {
     // Remove lock
