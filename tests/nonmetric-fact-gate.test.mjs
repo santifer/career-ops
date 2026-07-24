@@ -10,7 +10,7 @@ const tmp = mkdtempSync(join(tmpdir(), 'career-ops-nonmetric-facts-'));
 try {
   const source = join(tmp, 'cv.md');
   const config = join(tmp, 'cv-facts.json');
-  writeFileSync(source, 'Senior Platform Engineer at Acme Labs. Built using React and Docker.');
+  writeFileSync(source, 'Senior Platform Engineer at Acme Labs. Built using React and Docker. Cut spend to $120k and closed a €90,000 deal.');
   writeFileSync(config, JSON.stringify({ allow_metrics: [], allow_facts: [], forbidden_phrases: [] }));
 
   const claims = factClaims('I worked at Acme Labs as a Senior Platform Engineer, using React and Docker.');
@@ -29,6 +29,26 @@ try {
     pass('source-backed non-metric facts pass');
   } else {
     fail(`source-backed non-metric facts blocked: ${JSON.stringify(supported)}`);
+  }
+
+  const supportedCurrency = verifyFacts('Cut spend to $120k and closed a €90,000 deal.', {
+    sourcePaths: [source], configPath: config,
+  });
+  if (supportedCurrency.verdict === 'pass' && supportedCurrency.invented.length === 0) {
+    pass('source-backed currency metrics pass');
+  } else {
+    fail(`source-backed currency metrics were blocked: ${JSON.stringify(supportedCurrency)}`);
+  }
+
+  const unsupportedCurrency = verifyFacts('Generated $5M and saved £2.5M.', {
+    sourcePaths: [source], configPath: config,
+  });
+  if (unsupportedCurrency.verdict === 'block'
+      && unsupportedCurrency.invented.includes('$5m')
+      && unsupportedCurrency.invented.includes('£2.5m')) {
+    pass('unsupported currency metrics block');
+  } else {
+    fail(`unsupported currency metrics bypassed the fact gate: ${JSON.stringify(unsupportedCurrency)}`);
   }
 
   const unsupported = verifyFacts('I worked at Invented Labs as a Principal Platform Engineer, using React and Terraform.', {

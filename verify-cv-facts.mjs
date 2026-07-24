@@ -89,7 +89,7 @@ export function metricClaims(text) {
   const clean = stripMarkup(text);
   const patterns = [
     /\b\d+(?:\.\d+)?\s?%/g,
-    /\b[$€£]\s?\d[\d,.]*(?:\s?[kKmMbB])?/g,
+    /(?<![\d$€£])[$€£]\s?\d[\d,.]*(?:\s?[kKmMbB])?/g,
     /\b\d+(?:\.\d+)?\s?x\b/gi,
     /\b\d[\d,.]*\+?\s?(?:users|customers|clients|employees|engineers|teams|companies|hours|days|weeks|months|years|minutes|seconds|requests|tokens|documents|workflows|pipelines|agents|interviews|applications|offers|reports|cvs|resumes)\b/gi,
   ];
