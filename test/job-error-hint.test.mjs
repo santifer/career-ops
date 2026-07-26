@@ -35,8 +35,23 @@ if (!HAS_WEB) {
     return { status: 'error', steps: [{ label }] };
   }
 
+  function jobWithSteps(labels) {
+    return { status: 'error', steps: labels.map((label) => ({ label })) };
+  }
+
   test('jobErrorHint: "author" in an unrelated terminal label does NOT trigger the sign-in hint (the bug this fixup addresses)', () => {
     assert.equal(jobErrorHint(jobWithLabel('Failed to parse author metadata')), null);
+  });
+
+  test('jobErrorHint: only the TERMINAL step is classified — an earlier auth-related label is ignored if the job actually ended on something else', () => {
+    const job = jobWithSteps(['is it installed and authenticated?', 'No report was written']);
+    assert.equal(jobErrorHint(job), null);
+  });
+
+  test('jobErrorHint: "authenticate", "authentication", and "authority" — the refined pattern matches the first two and not the third', () => {
+    assert.equal(jobErrorHint(jobWithLabel('Please authenticate before continuing')).kind, 'auth');
+    assert.equal(jobErrorHint(jobWithLabel('Authentication required')).kind, 'auth');
+    assert.equal(jobErrorHint(jobWithLabel('Missing authority metadata in the JD')), null);
   });
 
   test('jobErrorHint: a genuine authentication label still triggers the sign-in hint', () => {
