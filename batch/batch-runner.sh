@@ -1,14 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — standalone orchestrator for headless CLI workers
+# Reads batch-input.tsv, delegates each offer to the selected worker CLI,
 # tracks state in batch-state.tsv for resumability.
-#
-# NOTE: This script is Claude Code-specific. It uses claude -p with
-# --dangerously-skip-permissions and --append-system-prompt-file flags
-# that are not available in other CLIs. Multi-CLI support is out of scope
-# for now — contributions welcome.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -38,7 +33,9 @@ START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
 SKIP_PDF=false
+WORKER_CLI="claude"
 MODEL=""  # explicit override; otherwise resolved from config/profile.yml spend_tier
+REASONING_EFFORT=""
 RESOLVED_MODEL=""
 RESOLVED_SPEND_TIER=""
 RATE_LIMIT_SLEEP=300
@@ -54,8 +51,9 @@ is_decimal_number() {
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses spend_tier from config/profile.yml unless --model overrides it.
+career-ops batch runner — process job offers with headless CLI workers
+Claude is the default and uses spend_tier unless --model overrides it.
+Codex requires an explicit --model and --reasoning-effort.
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -69,11 +67,11 @@ Options:
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
   --skip-pdf           Skip PDF generation entirely (write ❌ in tracker PDF column)
+  --cli NAME           Worker CLI: claude (default) or codex
   --rate-limit-sleep N Seconds to wait before retrying a rate-limited worker
                        (default: 300)
-  --model NAME         Override the tier-resolved Claude model passed to
-                       `claude -p --model` (otherwise uses config/profile.yml
-                       spend_tier: economy/standard/premium; default standard)
+  --model NAME         Worker model. Optional Claude override; required for Codex
+  --reasoning-effort N Codex reasoning effort: minimal, low, medium, high, xhigh
   --status             Show batch progress and a per-job table, then exit
   --watch              Live-refresh progress until the run completes
   -h, --help           Show this help
@@ -91,6 +89,9 @@ Examples:
 
   # Process all pending
   ./batch-runner.sh
+
+  # Process with Codex using explicit model and reasoning settings
+  ./batch-runner.sh --cli codex --model gpt-5.5 --reasoning-effort high
 
   # Retry only failed offers
   ./batch-runner.sh --retry-failed
@@ -112,12 +113,26 @@ while [[ $# -gt 0 ]]; do
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
     --skip-pdf) SKIP_PDF=true; shift ;;
+    --cli)
+      [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "ERROR: --cli requires an argument"; exit 1; }
+      WORKER_CLI="$2"
+      shift 2
+      ;;
     --rate-limit-sleep)
-      [[ $# -ge 2 ]] || { echo "ERROR: --rate-limit-sleep requires an argument"; exit 1; }
+      [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "ERROR: --rate-limit-sleep requires an argument"; exit 1; }
       RATE_LIMIT_SLEEP="$2"
       shift 2
       ;;
-    --model) MODEL="$2"; shift 2 ;;
+    --model)
+      [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "ERROR: --model requires an argument"; exit 1; }
+      MODEL="$2"
+      shift 2
+      ;;
+    --reasoning-effort)
+      [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "ERROR: --reasoning-effort requires an argument"; exit 1; }
+      REASONING_EFFORT="$2"
+      shift 2
+      ;;
     --status) STATUS_ONLY=true; shift ;;
     --watch) WATCH_MODE=true; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -139,6 +154,38 @@ if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
   echo "ERROR: --limit must be a non-negative integer."
   exit 1
 fi
+
+validate_worker_settings() {
+  case "$WORKER_CLI" in
+    claude)
+      if [[ -n "$REASONING_EFFORT" ]]; then
+        echo "ERROR: --reasoning-effort is only supported with --cli codex."
+        exit 1
+      fi
+      ;;
+    codex)
+      if [[ -z "$MODEL" ]]; then
+        echo "ERROR: --cli codex requires an explicit --model."
+        exit 1
+      fi
+      if [[ -z "$REASONING_EFFORT" ]]; then
+        echo "ERROR: --cli codex requires --reasoning-effort (minimal, low, medium, high, or xhigh)."
+        exit 1
+      fi
+      case "$REASONING_EFFORT" in
+        minimal|low|medium|high|xhigh) ;;
+        *)
+          echo "ERROR: --reasoning-effort must be one of: minimal, low, medium, high, xhigh."
+          exit 1
+          ;;
+      esac
+      ;;
+    *)
+      echo "ERROR: Unsupported --cli '$WORKER_CLI'. Supported workers: claude, codex."
+      exit 1
+      ;;
+  esac
+}
 
 # Lock file to prevent double execution
 acquire_lock() {
@@ -178,8 +225,8 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
+  if ! command -v "$WORKER_CLI" &>/dev/null; then
+    echo "ERROR: '$WORKER_CLI' CLI not found in PATH."
     exit 1
   fi
 
@@ -351,8 +398,15 @@ spend_tier_to_model() {
   esac
 }
 
-# Resolve the model to pass to `claude -p --model`. --model always wins.
+# Resolve the model passed to the selected worker. Claude retains spend_tier
+# compatibility; Codex deliberately requires a current explicit model.
 resolve_worker_model() {
+  if [[ "$WORKER_CLI" == "codex" ]]; then
+    RESOLVED_MODEL="$MODEL"
+    RESOLVED_SPEND_TIER="override"
+    return 0
+  fi
+
   if [[ -n "$MODEL" ]]; then
     RESOLVED_MODEL="$MODEL"
     RESOLVED_SPEND_TIER="override"
@@ -361,6 +415,66 @@ resolve_worker_model() {
 
   RESOLVED_SPEND_TIER="$(read_spend_tier)"
   RESOLVED_MODEL="$(spend_tier_to_model "$RESOLVED_SPEND_TIER")"
+}
+
+# Run one worker using the selected CLI's native headless interface. Both
+# adapters receive the same resolved batch prompt and per-offer instruction.
+run_worker() {
+  local resolved_prompt="$1" prompt="$2" log_file="$3" worker_url="$4"
+
+  case "$WORKER_CLI" in
+    claude)
+      # --strict-mcp-config (with no --mcp-config) starts workers with no MCP
+      # servers. Without it parallel workers can deadlock on a shared browser.
+      local -a claude_args=(-p --dangerously-skip-permissions --strict-mcp-config)
+      if [[ -n "$RESOLVED_MODEL" ]]; then
+        claude_args+=(--model "$RESOLVED_MODEL")
+      fi
+      claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
+      claude "${claude_args[@]}" > "$log_file" 2>&1
+      ;;
+    codex)
+      # Codex has no append-system-prompt-file equivalent. Feed the complete
+      # self-contained mode/profile context plus the offer task through stdin.
+      # Spawned-command egress is limited to the exact posting host; broader
+      # company/compensation research uses Codex's cached web-search index.
+      local worker_host
+      if ! worker_host=$(node --input-type=module -e '
+        import { pathToFileURL } from "node:url";
+        try {
+          const [rawUrl, guardPath] = process.argv.slice(1);
+          const { rejectPrivateOrInvalid } = await import(pathToFileURL(guardPath).href);
+          if (rejectPrivateOrInvalid(rawUrl)) process.exit(1);
+          const host = new URL(rawUrl).hostname.toLowerCase().replace(/\.$/, "");
+          if (!/^[a-z0-9.-]+$/i.test(host)) process.exit(1);
+          process.stdout.write(host);
+        } catch { process.exit(1); }
+      ' "$worker_url" "$PROJECT_DIR/liveness-browser.mjs"); then
+        printf 'ERROR: Codex worker URL must be an HTTP(S) URL with a valid hostname: %s\n' "$worker_url" > "$log_file"
+        return 1
+      fi
+      local -a codex_args=(
+        exec
+        --ephemeral
+        --ignore-user-config
+        --cd "$PROJECT_DIR"
+        --sandbox workspace-write
+        --model "$RESOLVED_MODEL"
+        -c 'approval_policy="never"'
+        -c 'sandbox_workspace_write.network_access=true'
+        -c 'features.network_proxy.enabled=true'
+        -c "features.network_proxy.domains={ \"$worker_host\" = \"allow\" }"
+        -c 'features.network_proxy.allow_local_binding=false'
+        -c 'web_search="cached"'
+        -c "model_reasoning_effort=\"$REASONING_EFFORT\""
+        -
+      )
+      {
+        cat "$resolved_prompt"
+        printf '\n\n---\n\n## Offer task\n\n%s\n' "$prompt"
+      } | codex "${codex_args[@]}" > "$log_file" 2>&1
+      ;;
+  esac
 }
 
 # Append a one-line, auditable record of a pre-screen-gate discard to
@@ -372,35 +486,6 @@ log_discard() {
   local ts
   ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf '%s\t%s\t%s\t%s\n' "$ts" "$id" "$url" "$reason" >> "$DISCARD_LOG"
-}
-
-# Calculate next report number.
-# Caller must hold STATE_LOCK_DIR while this runs.
-next_report_num_unlocked() {
-  local max_num=0
-  if [[ -d "$REPORTS_DIR" ]]; then
-    for f in "$REPORTS_DIR"/*.md; do
-      [[ -f "$f" ]] || continue
-      local basename
-      basename=$(basename "$f")
-      local num="${basename%%-*}"
-      num=$((10#$num)) # Remove leading zeros for arithmetic
-      if (( num > max_num )); then
-        max_num=$num
-      fi
-    done
-  fi
-  # Also check state file for assigned report numbers
-  if [[ -f "$STATE_FILE" ]]; then
-    while IFS=$'\t' read -r _ _ _ _ _ rnum _ _ _; do
-      [[ "$rnum" == "report_num" || "$rnum" == "-" || -z "$rnum" ]] && continue
-      local n=$((10#$rnum))
-      if (( n > max_num )); then
-        max_num=$n
-      fi
-    done < "$STATE_FILE"
-  fi
-  printf '%03d' $((max_num + 1))
 }
 
 # Update or insert state for an offer.
@@ -464,31 +549,86 @@ mark_paused_rate_limit() {
   BATCH_PAUSED=true
 }
 
-reserve_report_num_unlocked() {
-  local id="$1" url="$2" started="$3" retries="$4"
+# Reserve every report number for a run before any worker starts. The canonical
+# allocator caps one request at 50 slots, so larger batches reserve in chunks.
+reserve_report_nums() {
+  local needed="$1"
+  local -a claimed_nums=()
 
-  local report_num=""
-  if report_num=$(next_report_num_unlocked); then
-    update_state_unlocked "$id" "$url" "processing" "$started" "-" "$report_num" "-" "-" "$retries"
-  fi
+  while (( needed > 0 )); do
+    local chunk="$needed"
+    (( chunk > 50 )) && chunk=50
+    local claimed
+    if ! claimed=$(node "$PROJECT_DIR/reserve-report-num.mjs" --count "$chunk"); then
+      local claimed_num
+      for claimed_num in "${claimed_nums[@]}"; do
+        release_report_num "$claimed_num" || true
+      done
+      return 1
+    fi
 
-  printf '%s\n' "$report_num"
+    local start="$claimed" end="$claimed"
+    if [[ "$claimed" == *-* ]]; then
+      start="${claimed%-*}"
+      end="${claimed#*-}"
+    fi
+
+    local n
+    for (( n = 10#$start; n <= 10#$end; n++ )); do
+      local report_num
+      report_num=$(printf '%03d' "$n")
+      # Legacy failed state may predate atomic sentinels. Keep the newly
+      # claimed sentinel for that occupied slot and reserve a replacement.
+      if [[ -f "$STATE_FILE" ]] && awk -F'\t' -v num="$report_num" '$1 != "id" && $6 == num { found = 1 } END { exit !found }' "$STATE_FILE"; then
+        continue
+      fi
+      printf '%s\n' "$report_num"
+      claimed_nums+=("$report_num")
+      needed=$((needed - 1))
+    done
+  done
 }
 
-reserve_report_num() {
-  run_with_state_lock reserve_report_num_unlocked "$@"
+release_report_num() {
+  node "$PROJECT_DIR/reserve-report-num.mjs" --release "$1"
+}
+
+verify_worker_artifacts() {
+  local report_num="$1"
+  local report_found=false
+  local candidate
+
+  for candidate in "$REPORTS_DIR"/"${report_num}"-*.md; do
+    if [[ -s "$candidate" && "$(basename "$candidate")" != "${report_num}-RESERVED.md" ]]; then
+      report_found=true
+      break
+    fi
+  done
+  if [[ "$report_found" != "true" ]]; then
+    echo "missing non-empty reports/${report_num}-*.md"
+    return 1
+  fi
+
+  for candidate in "$TRACKER_DIR"/"${report_num}"-*.tsv; do
+    [[ -s "$candidate" ]] || continue
+    if awk -F'\t' -v n="$((10#$report_num))" 'NF >= 9 && ($1 + 0) == n { found = 1; exit } END { exit !found }' "$candidate"; then
+      return 0
+    fi
+  done
+
+  echo "missing valid 9-column tracker addition for report $report_num"
+  return 1
 }
 
 # Process a single offer
 process_offer() {
-  local id="$1" url="$2" source="$3" notes="$4"
+  local id="$1" url="$2" source="$3" notes="$4" report_num="$5"
 
   local started_at
   started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   local retries
   retries=$(get_retries "$id")
-  local report_num
-  report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
+  update_state "$id" "$url" "processing" "$started_at" "-" "$report_num" "-" "-" "$retries"
   local date
   date=$(date +%Y-%m-%d)
   # Use mktemp instead of a predictable /tmp path: a fixed name like
@@ -548,33 +688,20 @@ process_offer() {
     fi
   done
 
-  # Launch claude -p worker.
-  # The model is resolved once per run from spend_tier unless --model was
-  # passed. Building the command in an array keeps quoting safe regardless.
-  # --strict-mcp-config (with no --mcp-config) starts workers with no MCP
-  # servers: they only evaluate offers and need none. Without it each parallel
-  # worker inherits the parent session's MCP (e.g. Playwright) and they deadlock
-  # fighting over the single shared browser when --parallel > 1 (issue #506).
-  local -a claude_args=(-p --dangerously-skip-permissions --strict-mcp-config)
-  if [[ -n "$RESOLVED_MODEL" ]]; then
-    claude_args+=(--model "$RESOLVED_MODEL")
-  fi
-  claude_args+=(--append-system-prompt-file "$resolved_prompt" "$prompt")
-
   local exit_code=0
   local terminal_failure_recorded=false
   local shim_retries=0
   local max_shim_retries=4
   while true; do
     exit_code=0
-    claude "${claude_args[@]}" > "$log_file" 2>&1 || exit_code=$?
+    run_worker "$resolved_prompt" "$prompt" "$log_file" "$url" || exit_code=$?
 
     if [[ $exit_code -eq 0 ]]; then
       break
     fi
 
-    # Check for Claude Code npm shim swap (exit code 127 + command not found)
-    if [[ $exit_code -eq 127 ]] && grep -qE "(claude: command not found|claude:.*not found|cannot find.*claude)" "$log_file" && (( shim_retries < max_shim_retries )); then
+    # Check for Claude Code npm shim swap (exit code 127 + command not found).
+    if [[ "$WORKER_CLI" == "claude" && $exit_code -eq 127 ]] && grep -qE "(claude: command not found|claude:.*not found|cannot find.*claude)" "$log_file" && (( shim_retries < max_shim_retries )); then
       shim_retries=$((shim_retries + 1))
       echo "    ⏳ Claude command not found (shim swap detected). Retrying in 30s (attempt $shim_retries/$max_shim_retries)..."
       sleep 30
@@ -614,6 +741,18 @@ process_offer() {
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
   if [[ $exit_code -eq 0 ]]; then
+    local artifact_error=""
+    if ! artifact_error=$(verify_worker_artifacts "$report_num"); then
+      printf '\nERROR: Worker exited successfully but produced %s.\n' "$artifact_error" >> "$log_file"
+      echo "    ❌ Worker exited successfully but produced $artifact_error"
+      exit_code=1
+    fi
+  fi
+
+  if [[ $exit_code -eq 0 ]]; then
+    if ! release_report_num "$report_num"; then
+      echo "    ⚠️  Could not release report reservation $report_num; verify-pipeline will garbage-collect it."
+    fi
     # Try to extract score from worker output
     local score="-"
     local score_match
@@ -822,6 +961,8 @@ main() {
     exit 0
   fi
 
+  validate_worker_settings
+
   check_prerequisites
 
   resolve_worker_model
@@ -844,6 +985,7 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
+  echo "Worker CLI: $WORKER_CLI"
   if (( LIMIT > 0 )); then
     echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES | Limit: $LIMIT"
   else
@@ -853,6 +995,9 @@ main() {
     echo "Model: $RESOLVED_MODEL (explicit --model override)"
   else
     echo "Model: $RESOLVED_MODEL (spend_tier=${RESOLVED_SPEND_TIER})"
+  fi
+  if [[ "$WORKER_CLI" == "codex" ]]; then
+    echo "Reasoning effort: $REASONING_EFFORT"
   fi
   echo "Input: $total_input offers"
   echo ""
@@ -948,13 +1093,36 @@ main() {
     exit 0
   fi
 
+  # Reserve the complete fan-out before starting even the first worker. This
+  # keeps report numbers collision-safe across worktrees and agent windows.
+  local reserved_output
+  if ! reserved_output=$(reserve_report_nums "$pending_count"); then
+    echo "ERROR: Failed to reserve report numbers for this batch."
+    exit 1
+  fi
+  local -a reserved_report_nums=()
+  local reserved_num
+  while IFS= read -r reserved_num; do
+    [[ -n "$reserved_num" ]] && reserved_report_nums+=("$reserved_num")
+  done <<< "$reserved_output"
+  if (( ${#reserved_report_nums[@]} != pending_count )); then
+    echo "ERROR: Reserved ${#reserved_report_nums[@]} report numbers for $pending_count pending offers."
+    for reserved_num in "${reserved_report_nums[@]}"; do
+      release_report_num "$reserved_num" || true
+    done
+    exit 1
+  fi
+
   # Process offers
   if (( PARALLEL <= 1 )); then
     # Sequential processing
     for i in "${!pending_ids[@]}"; do
-      process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}"
+      process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}" "${reserved_report_nums[$i]}"
       if [[ "$BATCH_PAUSED" == "true" || -f "$PAUSE_FILE" ]]; then
         echo "=== Batch paused: session/rate limit reached. Resume later with --resume-paused. ==="
+        for (( j = i + 1; j < pending_count; j++ )); do
+          release_report_num "${reserved_report_nums[$j]}" || true
+        done
         break
       fi
     done
@@ -967,6 +1135,9 @@ main() {
     for i in "${!pending_ids[@]}"; do
       if [[ "$BATCH_PAUSED" == "true" || -f "$PAUSE_FILE" ]]; then
         echo "=== Batch paused: session/rate limit reached. Waiting for running workers, not scheduling new offers. ==="
+        for (( j = i; j < pending_count; j++ )); do
+          release_report_num "${reserved_report_nums[$j]}" || true
+        done
         break
       fi
 
@@ -992,11 +1163,14 @@ main() {
       done
 
       if [[ "$BATCH_PAUSED" == "true" || -f "$PAUSE_FILE" ]]; then
+        for (( j = i; j < pending_count; j++ )); do
+          release_report_num "${reserved_report_nums[$j]}" || true
+        done
         break
       fi
 
       # Launch worker in background
-      process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}" &
+      process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}" "${reserved_report_nums[$i]}" &
       pids+=($!)
       pid_ids+=("${pending_ids[$i]}")
       running=$((running + 1))

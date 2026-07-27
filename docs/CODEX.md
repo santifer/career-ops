@@ -41,6 +41,27 @@ codex exec "Run career-ops email mode for the latest evaluated role. Draft only;
 codex exec "Run career-ops tracker mode and summarize the current statuses."
 ```
 
+## Batch runner
+
+Select Codex explicitly for resumable batch evaluation. The model and reasoning
+effort are required so a restarted run keeps the same worker configuration:
+
+```bash
+batch/batch-runner.sh \
+  --cli codex \
+  --model gpt-5.5 \
+  --reasoning-effort high \
+  --parallel 2
+```
+
+The runner sends Codex the same self-contained batch instructions and runtime
+profile context as the default Claude worker. Reports, tracker additions, state,
+retry handling, and the final tracker merge use the same canonical paths.
+
+The authoritative Codex worker security and network requirements live in
+[`batch/batch-prompt.md`](../batch/batch-prompt.md) and are enforced by
+`batch/batch-runner.sh`.
+
 ## Notes
 
 - If your Codex environment exposes slash commands, the shared `/career-ops` router semantics still apply.
