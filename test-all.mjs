@@ -161,6 +161,7 @@ const scripts = [
   { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'upskill.mjs --self-test', expectExit: 0 },
   { name: 'detect-reposts.mjs --self-test', expectExit: 0 },
+  { name: 'discover-ats.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
   { name: 'salary-gap.mjs --self-test', expectExit: 0 },
   { name: 'funnel-velocity.mjs --self-test', expectExit: 0 },
@@ -183,12 +184,17 @@ const scripts = [
   { name: 'test-trust-validator.mjs', expectExit: 0 },
   { name: 'test-salary-filter.mjs', expectExit: 0 },
   { name: 'detect-reposts.test.mjs', expectExit: 0 },
+  { name: 'discover-ats.test.mjs', expectExit: 0 },
   { name: 'followup-cadence.test.mjs', expectExit: 0 },
   { name: 'process-quality.test.mjs', expectExit: 0 },
   { name: 'reply-matcher.test.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
-  { name: 'validate-system-paths-coverage.mjs', expectExit: 0 },
+  // The bare coverage run is NOT here on purpose: this section executes each
+  // script from a throwaway copy of the repo, and the coverage check needs
+  // `git ls-files` on the REAL tree. Running it here validated nothing and
+  // exited 0 no matter what, which is how five unregistered files shipped.
+  // It now runs from ROOT in section 5.
   // Missing-file run: must exit 0 gracefully and hit no network. Do not use the
   // default portals.yml because end-user workspaces often have a real user-layer
   // portals file that would trigger a live remote sweep during tests.
@@ -400,6 +406,47 @@ try {
     pass('Closed postings with "Applications have closed" banner are detected');
   } else {
     fail(`Closed mycareersfuture posting misclassified as ${closedMycareersfuture.result}`);
+  }
+
+  // Welcome to the Jungle renders its closure banner with a typographic
+  // apostrophe (U+2019), not the ASCII one the pattern was spelled with, so the
+  // banner never matched and a closed posting came back "uncertain".
+  const closedWttjTypographicApostrophe = classifyLiveness({
+    status: 200,
+    finalUrl: 'https://www.welcometothejungle.com/fr/companies/acme/jobs/graphiste_paris',
+    bodyText: [
+      'Cette offre n’est plus disponible.',
+      'ACME',
+      'Graphiste & Motion Designer',
+      'CDI    Paris    Télétravail fréquent',
+      'Descriptif du poste : conception d’identités visuelles et d’animations pour les campagnes de la marque.',
+      'Profil recherché : 3 ans d’expérience minimum, maîtrise de la suite Adobe et d’After Effects.',
+    ].join('\n'),
+    applyControls: [],
+  });
+  if (closedWttjTypographicApostrophe.result === 'expired') {
+    pass('Closure banners written with a typographic apostrophe are detected');
+  } else {
+    fail(`WTTJ closed posting misclassified as ${closedWttjTypographicApostrophe.result}`);
+  }
+
+  // Same normalization, accent side: the pattern is spelled "pourvu" but the
+  // page says "pourvue"/"déjà" with diacritics.
+  const closedAccentedBanner = classifyLiveness({
+    status: 200,
+    finalUrl: 'https://example.fr/offres/directeur-artistique',
+    bodyText: [
+      'Offre déjà pourvue',
+      'Directeur artistique',
+      'Cette annonce est conservée à titre d’archive.',
+      'Missions : direction de création, suivi de production, relation client sur les campagnes annuelles.',
+    ].join('\n'),
+    applyControls: [],
+  });
+  if (closedAccentedBanner.result === 'expired') {
+    pass('Accented French closure banners are detected');
+  } else {
+    fail(`Accented French banner misclassified as ${closedAccentedBanner.result}`);
   }
 
   const cloudflareChallenge = classifyLiveness({
@@ -907,6 +954,7 @@ const systemFiles = [
   'modes/heuristics/recruiter-side.md',
   'templates/states.yml', 'templates/cv-template.html',
   '.claude/skills/career-ops/SKILL.md',
+  '.cursor/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
   '.qwen/skills/career-ops/SKILL.md',
   '.antigravitycli/skills/career-ops/SKILL.md',
@@ -940,6 +988,56 @@ for (const f of skillEntrypoints) {
   }
 }
 
+// The SYSTEM_PATHS coverage guard must FAIL when it cannot inspect the tree,
+// not report success.
+//
+// For as long as that guard existed it was a no-op in CI. The script-execution
+// section above runs each script from a throwaway copy created inside the repo,
+// and `git ls-files` from an untracked directory returns zero paths — so the
+// guard printed "OK: 0 tracked files covered" and exited 0 while the real tree
+// had an unregistered top-level file. `update-system` never ships an
+// unregistered file, so every user who updates silently loses it. That class has
+// landed five times with this check green throughout.
+//
+// This asserts the opposite behaviour directly: invoked where git sees nothing,
+// the guard must exit non-zero.
+{
+  const probeDir = join(ROOT, '.tmp-coverage-guard-probe');
+  try {
+    mkdirSync(probeDir, { recursive: true });
+    copyFileSync(join(ROOT, 'validate-system-paths-coverage.mjs'), join(probeDir, 'validate-system-paths-coverage.mjs'));
+    copyFileSync(join(ROOT, 'update-system.mjs'), join(probeDir, 'update-system.mjs'));
+    const probe = spawnSync(process.execPath, [join(probeDir, 'validate-system-paths-coverage.mjs')], {
+      cwd: probeDir,
+      encoding: 'utf-8',
+    });
+    if (probe.status !== 0) {
+      pass('SYSTEM_PATHS coverage guard fails when it cannot inspect the tree (not a silent pass)');
+    } else {
+      fail('SYSTEM_PATHS coverage guard exited 0 from an untracked dir — it is a no-op in CI again');
+    }
+  } catch (err) {
+    fail(`could not probe the SYSTEM_PATHS coverage guard: ${err.message} (a failed probe is not a pass)`);
+  } finally {
+    rmSync(probeDir, { recursive: true, force: true });
+  }
+}
+
+// And the check itself, run where it can actually see the tree. This is the
+// assertion that was missing: every tracked file must be claimed by SYSTEM_PATHS
+// or USER_PATHS, or `update-system` silently stops shipping it.
+{
+  const cov = spawnSync(process.execPath, [join(ROOT, 'validate-system-paths-coverage.mjs')], {
+    cwd: ROOT,
+    encoding: 'utf-8',
+  });
+  if (cov.status === 0) {
+    pass('every tracked file is covered by SYSTEM_PATHS or USER_PATHS');
+  } else {
+    fail(`SYSTEM_PATHS coverage gap — a new file is unregistered and update-system will not ship it:\n${(cov.stderr || cov.stdout || '').trim()}`);
+  }
+}
+
 // The plugin manifest ships in two locations: .claude-plugin/plugin.json is
 // canonical (Claude Code + Copilot CLI both read it), and .github/plugin/
 // plugin.json exists only because the awesome-copilot marketplace validator
@@ -955,6 +1053,43 @@ for (const f of skillEntrypoints) {
     pass('plugin.json mirror (.github/plugin/) is byte-identical to the canonical manifest');
   } else {
     fail('plugin.json mirror (.github/plugin/) DIVERGED from .claude-plugin/plugin.json — edit the canonical one and copy it verbatim');
+  }
+}
+
+// The Dockerfile pins playwright twice — the FROM base image tag (bundled
+// Chromium) and the --save-exact npm install — so the npm package matches
+// the browser the container ships. Nothing enforced either pin against
+// package.json's own playwright version, so this keeps all three in sync
+// going forward instead of relying on whoever next reads the Dockerfile.
+{
+  const pkgPlaywright = JSON.parse(readFile('package.json')).dependencies?.playwright;
+  const dockerfile = readFile('Dockerfile');
+  const dockerfileLine2 = dockerfile.split(/\r?\n/, 3)[1] ?? '';
+  const fromPinMatch = dockerfile.match(/^FROM mcr\.microsoft\.com\/playwright:v([\d.]+)-/m);
+  const runPinMatch = dockerfile.match(/--save-exact playwright@([\d.]+)/);
+  const commentPinMatch = dockerfileLine2.match(/matches playwright@([\d.]+) in package\.json/);
+  if (!pkgPlaywright) {
+    fail('package.json missing dependencies.playwright — cannot check Dockerfile pins against it');
+  } else {
+    if (!fromPinMatch) {
+      fail('Dockerfile missing the expected "FROM mcr.microsoft.com/playwright:vX-<distro>" base image line');
+    } else if (fromPinMatch[1] !== pkgPlaywright) {
+      fail(`Dockerfile's FROM base image is playwright@${fromPinMatch[1]} but package.json depends on playwright@${pkgPlaywright} — bump the base image tag`);
+    } else {
+      pass(`Dockerfile's FROM base image (${fromPinMatch[1]}) matches package.json`);
+    }
+    if (!runPinMatch) {
+      fail('Dockerfile missing the expected "--save-exact playwright@X" RUN line');
+    } else if (runPinMatch[1] !== pkgPlaywright) {
+      fail(`Dockerfile pins playwright@${runPinMatch[1]} but package.json depends on playwright@${pkgPlaywright} — bump the Dockerfile's --save-exact pin`);
+    } else {
+      pass(`Dockerfile's playwright pin (${runPinMatch[1]}) matches package.json`);
+    }
+    if (commentPinMatch && commentPinMatch[1] !== pkgPlaywright) {
+      fail(`Dockerfile's line-2 comment claims playwright@${commentPinMatch[1]} but package.json depends on playwright@${pkgPlaywright} — update the comment`);
+    } else if (commentPinMatch) {
+      pass('Dockerfile\'s line-2 comment version matches package.json');
+    }
   }
 }
 
@@ -1033,7 +1168,7 @@ const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
 const allowedFiles = [
   // English README + localized translations (all legitimately credit Santiago)
   'README.md', 'README.ar.md', 'README.da.md', 'README.de.md', 'README.es.md', 'README.fr.md', 'README.hi.md',
-  'README.ja.md', 'README.ko-KR.md', 'README.pl.md', 'README.pt-BR.md', 'README.ru.md', 'README.cn.md',
+  'README.ja.md', 'README.ko-KR.md', 'README.pl.md', 'README.pt-BR.md', 'README.ru.md', 'README.ta.md', 'README.cn.md',
   'README.ua.md', 'README.zh-TW.md', 'README.tr.md',
   // Standard project files
   'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md', 'CHANGELOG.md', 'TRADEMARK.md',
@@ -1229,7 +1364,7 @@ try {
 
   const injectedPageCss = injectPrintPageCss('<html><head><title>CV</title></head><body></body></html>', 'letter');
   if (
-    injectedPageCss.includes('@page { size: Letter; margin: 0.6in; }') &&
+    injectedPageCss.includes('@page { size: Letter; margin: var(--page-margin, 0.6in); }') &&
     injectedPageCss.indexOf('career-ops-page-setup') < injectedPageCss.indexOf('</head>')
   ) {
     pass('PDF renderer injects CSS page size and margins before rendering');
@@ -1238,7 +1373,7 @@ try {
   }
 
   const mixedCasePageCss = injectPrintPageCss('<html><head></head><body></body></html>', 'Letter');
-  if (mixedCasePageCss.includes('@page { size: Letter; margin: 0.6in; }')) {
+  if (mixedCasePageCss.includes('@page { size: Letter; margin: var(--page-margin, 0.6in); }')) {
     pass('PDF renderer treats page format case-insensitively');
   } else {
     fail('PDF renderer falls back to A4 for mixed-case letter format');
@@ -1553,6 +1688,114 @@ if (
   fail('batch Machine Summary and downstream parser fields are misaligned');
 }
 
+// ── 7e. CV SECTION ORDER CHECK IS LANGUAGE-AWARE ────────────────
+
+// SECTION_ALIASES held English titles only, so a CV rendered in one of the
+// shipped non-English modes produced zero sections comparable against the
+// English cv.md: validateCvSectionOrder() saw fewer than two comparable
+// sections and early-returned, and the guard silently did nothing. Polish
+// (modes/pl) is covered here — a Polish CV that hoisted Education above
+// Doświadczenie zawodowe used to render without complaint while the identical
+// English CV was correctly rejected.
+
+console.log('\n7e. CV section order check is language-aware');
+
+for (const header of ['podsumowanie zawodowe', 'doświadczenie zawodowe', 'wykształcenie', 'certyfikaty', 'umiejętności']) {
+  if (generatePdfScript.includes(`['${header}',`)) {
+    pass(`SECTION_ALIASES maps Polish header: ${header}`);
+  } else {
+    fail(`SECTION_ALIASES missing Polish header: ${header}`);
+  }
+}
+
+// generate-pdf.mjs imports playwright at module scope; degrade to a warning
+// rather than crashing the suite where it is not installed.
+let pdfModule = null;
+try {
+  pdfModule = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+} catch (e) {
+  warn(`Cannot import generate-pdf.mjs (${e.code || e.message}) — skipping behavioral section-order tests`);
+}
+
+if (pdfModule) {
+  const { sectionKey, validateCvSectionOrder } = pdfModule;
+
+  // Canonical keys are language-independent; only the spelling differs.
+  const keyCases = [
+    ['Podsumowanie zawodowe', 'summary'],
+    ['Kompetencje kluczowe', 'competencies'],
+    ['Kluczowe kompetencje', 'competencies'], // word-order variant
+    ['Doświadczenie zawodowe', 'experience'],
+    ['Przebieg kariery', 'experience'],
+    ['Wykształcenie', 'education'],
+    ['Certyfikaty', 'certifications'],
+    ['Umiejętności', 'skills'],
+    ['Wyksztalcenie', 'education'],  // diacritics stripped
+    ['Umiejetnosci', 'skills'],      // diacritics stripped
+    ['Work Experience', 'experience'], // English must be unchanged
+    ['Core Competencies', 'competencies'],
+  ];
+  let keysOk = true;
+  for (const [title, expected] of keyCases) {
+    const actual = sectionKey(title);
+    if (actual !== expected) {
+      fail(`sectionKey("${title}") = "${actual}", expected "${expected}"`);
+      keysOk = false;
+    }
+  }
+  if (keysOk) pass(`sectionKey resolves all ${keyCases.length} PL/EN heading spellings`);
+
+  // Hermetic cv.md stand-in: passed in directly, so the test does not depend on
+  // a cv.md existing in the checkout (it is gitignored).
+  const cvMd = [
+    '# CV', '## Professional Summary', '## Work Experience',
+    '## Education', '## Certifications', '## Skills',
+  ].join('\n');
+  const titlesToHtml = titles => titles.map(t => `<div class="section-title">${t}</div>`).join('\n');
+
+  const plCorrect = titlesToHtml([
+    'Podsumowanie zawodowe', 'Kompetencje kluczowe', 'Doświadczenie zawodowe',
+    'Wykształcenie', 'Certyfikaty', 'Umiejętności',
+  ]);
+  // Education hoisted above Work Experience — the divergence the guard exists to catch.
+  const plMisordered = titlesToHtml([
+    'Podsumowanie zawodowe', 'Wykształcenie', 'Doświadczenie zawodowe',
+  ]);
+  const enMisordered = titlesToHtml([
+    'Professional Summary', 'Education', 'Work Experience',
+  ]);
+
+  const throws = (html, opts) => {
+    try { validateCvSectionOrder(html, cvMd, opts); return false; } catch { return true; }
+  };
+
+  if (throws(plMisordered)) {
+    pass('Polish CV with Education before Work Experience is rejected');
+  } else {
+    fail('Polish CV with Education before Work Experience was NOT rejected (guard is a no-op)');
+  }
+
+  if (!throws(plCorrect)) {
+    pass('Polish CV in cv.md order is accepted');
+  } else {
+    fail('Polish CV in cv.md order was wrongly rejected');
+  }
+
+  if (throws(enMisordered)) {
+    pass('English CV order check still rejects divergence (no regression)');
+  } else {
+    fail('English CV order check regressed');
+  }
+
+  // --allow-reorder must keep downgrading the divergence to a warning now that
+  // Polish CVs actually reach this code path.
+  if (!throws(plMisordered, { allowReorder: true })) {
+    pass('allowReorder downgrades Polish divergence to a warning');
+  } else {
+    fail('allowReorder did not suppress Polish divergence');
+  }
+}
+
 // ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
 console.log('\n8. Mode file integrity');
@@ -1562,7 +1805,7 @@ const expectedModes = [
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
   'interview.md', 'latex.md', 'latex-tex.md', 'email.md', 'add.md', 'titles.md',
-  'expand.md',
+  'expand.md', 'discover.md',
   'regional/eu-swe.md',
 ];
 
@@ -1881,6 +2124,17 @@ if (
   fail('oferta missing geo-mismatch cross-check of location field vs JD body (#1433)');
 }
 
+if (
+  ofertaMode.includes('### Work-authorization check') &&
+  ofertaMode.includes('⛔ **No sponsorship:** JD states "{verbatim JD line}" and role is outside your authorized_in') &&
+  ofertaMode.includes('**Work Auth:**') &&
+  ofertaMode.includes('this tier is **NEUTRAL**')
+) {
+  pass('oferta cross-checks visa sponsorship against candidate work authorization');
+} else {
+  fail('oferta missing work-authorization / visa-sponsorship signal in Block A');
+}
+
 // --- offer-prep mode: contract reading companion (describes, never judges) ---
 const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
 if (
@@ -2140,6 +2394,109 @@ if ((batchPromptDoc.match(/advertised_comp/g) || []).length >= 2) {
   fail('batch prompt missing advertised_comp in one or both Machine Summary fences');
 }
 
+// ── upskill Learning Plan trust model (#1740, phase 2b) ──
+// The learning plan (Step 3) layers web-searched resources onto the phase-1 gap
+// heatmap. Its eight trust-model promises are load-bearing: each is frozen here
+// so a future edit to modes/upskill.md can't silently drop a guarantee. Match a
+// stable keyword phrase per rule, not whole paragraphs.
+const upskillModeDoc = readFile('modes/upskill.md');
+
+// The phase-2 "coming later" placeholder must be gone — the plan ships now.
+// Reject ANY pending-wording variant about the learning plan (coming later,
+// pending, coming soon, TODO, ships in phase 2), not just one narrow phrasing,
+// so a regressing edit can't reintroduce a "not yet" placeholder.
+const upskillLearningPlanPending =
+  /learning plan[^\n]*(?:coming|later|pending|soon|todo|phase 2)/i.test(upskillModeDoc) ||
+  /ships in phase 2/i.test(upskillModeDoc);
+if (
+  !upskillLearningPlanPending &&
+  upskillModeDoc.includes('## Learning Plan')
+) {
+  pass('upskill: learning plan ships (no "phase 2 pending"/"coming later"/TODO placeholder; report template has a Learning Plan section)');
+} else {
+  fail('upskill: learning plan still marked pending (phase-2/coming-later/TODO variant) or missing the Learning Plan template section');
+}
+
+// Rule 1 — search-result-or-nothing grounding + explicit skip on weak/absent search.
+if (
+  upskillModeDoc.includes('Search-result-or-nothing') &&
+  upskillModeDoc.includes('skip the Learning Plan section')
+) {
+  pass('upskill trust rule 1: resources must come from a web-search result, else skip the section explicitly');
+} else {
+  fail('upskill trust rule 1 (search-result-or-nothing grounding) missing');
+}
+
+// Rule 2 — deterministic degradation: heatmap + Suggested Order still ship without resources.
+if (
+  upskillModeDoc.includes('Deterministic degradation') &&
+  upskillModeDoc.includes('heatmap + Suggested Order still ship')
+) {
+  pass('upskill trust rule 2: deterministic degradation — heatmap + Suggested Order ship without the plan');
+} else {
+  fail('upskill trust rule 2 (deterministic degradation) missing');
+}
+
+// Rule 3 — ephemeral, non-versioned resources; only gap tiers stable across runs.
+if (upskillModeDoc.includes('regenerated fresh every run, never diffed')) {
+  pass('upskill trust rule 3: resources are ephemeral (regenerated fresh, never diffed across runs)');
+} else {
+  fail('upskill trust rule 3 (ephemeral / non-versioned resources) missing');
+}
+
+// Rule 4 — write-time URL liveness via the check-liveness pattern; dead links excluded.
+if (
+  upskillModeDoc.includes('Write-time URL liveness') &&
+  upskillModeDoc.includes('liveness-core.mjs') &&
+  upskillModeDoc.includes('dead links never enter the report')
+) {
+  pass('upskill trust rule 4: write-time URL liveness via check-liveness pattern; dead links excluded');
+} else {
+  fail('upskill trust rule 4 (write-time URL liveness) missing');
+}
+
+// Rule 5 — hard search budget: 2/gap, ~12/run, include the current year.
+if (
+  upskillModeDoc.includes('Max 2 searches per gap') &&
+  upskillModeDoc.includes('~12 searches per aggregate run') &&
+  upskillModeDoc.includes('current year in queries')
+) {
+  pass('upskill trust rule 5: hard search budget (max 2/gap, ~12/run, current year in queries)');
+} else {
+  fail('upskill trust rule 5 (hard search budget) missing');
+}
+
+// Rule 6 — free-first with explicit failure; never silently substitute a paid resource.
+if (
+  upskillModeDoc.includes('Free-first with explicit failure') &&
+  upskillModeDoc.includes('never silently substitutes a paid resource')
+) {
+  pass('upskill trust rule 6: free-first with explicit failure (no silent paid substitution)');
+} else {
+  fail('upskill trust rule 6 (free-first with explicit failure) missing');
+}
+
+// Rule 7 — effort estimates only from the resource's own stated length.
+if (
+  upskillModeDoc.includes("resource's own stated length") &&
+  upskillModeDoc.includes('never invented')
+) {
+  pass('upskill trust rule 7: effort estimates only from the resource\'s own stated length, never invented');
+} else {
+  fail('upskill trust rule 7 (effort from stated length only) missing');
+}
+
+// Rule 8 — scope boundary: link to /career-ops training; never run training's scoring.
+if (
+  upskillModeDoc.includes('/career-ops training {name}') &&
+  upskillModeDoc.includes('6-dimension scoring') &&
+  upskillModeDoc.includes('`upskill` finds; `training` judges')
+) {
+  pass('upskill trust rule 8: scope boundary — links to /career-ops training, never runs training scoring');
+} else {
+  fail('upskill trust rule 8 (scope boundary: upskill finds, training judges) missing');
+}
+
 // ── 9. LOCAL PARSER CONTRACT ────────────────────────────────────
 
 console.log('\n9. Local parser contract');
@@ -2245,7 +2602,7 @@ try {
   try {
     mkdirSync(join(fixtureRoot, 'data'), { recursive: true });
     process.chdir(fixtureRoot);
-    appendToPipeline([{ url: 'https://jobs.example.com/1', company: 'Acme', title: 'Engineer' }]);
+    await appendToPipeline([{ url: 'https://jobs.example.com/1', company: 'Acme', title: 'Engineer' }]);
     const pipeline = readFileSync(join(fixtureRoot, 'data', 'pipeline.md'), 'utf-8');
     if (
       pipeline.includes('# Pipeline') &&
@@ -2262,6 +2619,47 @@ try {
   }
 } catch (err) {
   fail(`scan.mjs fresh-install pipeline test crashed: ${err.message}`);
+}
+
+try {
+  const { appendToPipeline } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { acquirePipelineLock, LockTimeoutError } = await import(pathToFileURL(join(ROOT, 'pipeline-lock.mjs')).href);
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-pipeline-lock-'));
+  const originalCwd = process.cwd();
+  let prevTimeout;
+  let prevRetry;
+  try {
+    mkdirSync(join(fixtureRoot, 'data'), { recursive: true });
+    process.chdir(fixtureRoot);
+    const pipelinePath = join(fixtureRoot, 'data', 'pipeline.md');
+    // Hold the exact lock appendToPipeline() takes, then confirm it genuinely
+    // blocks on it (times out) rather than racing straight through to its
+    // read-modify-write. The env overrides keep this assertion in the
+    // milliseconds range instead of waiting out the module's real default.
+    prevTimeout = process.env.CAREER_OPS_PIPELINE_LOCK_TIMEOUT_MS;
+    prevRetry = process.env.CAREER_OPS_PIPELINE_LOCK_RETRY_MS;
+    process.env.CAREER_OPS_PIPELINE_LOCK_TIMEOUT_MS = '200';
+    process.env.CAREER_OPS_PIPELINE_LOCK_RETRY_MS = '20';
+    const held = await acquirePipelineLock(pipelinePath);
+    try {
+      await appendToPipeline([{ url: 'https://jobs.example.com/1', company: 'Acme', title: 'Engineer' }]);
+      fail('appendToPipeline() proceeded while another holder had the pipeline lock — no shared exclusion');
+    } catch (e) {
+      if (e instanceof LockTimeoutError) pass('appendToPipeline() shares pipeline-lock.mjs — correctly blocked on a lock held elsewhere (LockTimeoutError)');
+      else fail(`appendToPipeline() lock sharing: expected LockTimeoutError, got: ${e?.constructor?.name}: ${e?.message}`);
+    } finally {
+      held.release();
+    }
+  } finally {
+    if (prevTimeout === undefined) delete process.env.CAREER_OPS_PIPELINE_LOCK_TIMEOUT_MS;
+    else process.env.CAREER_OPS_PIPELINE_LOCK_TIMEOUT_MS = prevTimeout;
+    if (prevRetry === undefined) delete process.env.CAREER_OPS_PIPELINE_LOCK_RETRY_MS;
+    else process.env.CAREER_OPS_PIPELINE_LOCK_RETRY_MS = prevRetry;
+    process.chdir(originalCwd);
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+} catch (err) {
+  fail(`pipeline-lock.mjs sharing test crashed: ${err.message}`);
 }
 
 // URL dedup normalization (#2065): a cosmetic query-suffix variant of an
@@ -2288,6 +2686,25 @@ try {
     pass('scan.mjs normalizeUrlForDedup strips cosmetic params/trailing slash but preserves identity params and malformed input (#2065)');
   } else {
     fail(`scan.mjs normalizeUrlForDedup wrong: withLang=${normalizeUrlForDedup(withLang)} withTrailingSlash=${normalizeUrlForDedup(withTrailingSlash)} withUtm=${normalizeUrlForDedup(withUtm)} ghJid=${normalizeUrlForDedup(ghJid)} malformed=${normalizeUrlForDedup(malformed)}`);
+  }
+
+  // Path casing: scan.mjs and scan-ats-full.mjs can reach the identical Workday
+  // posting via different path casing (curated portals.yml entry vs. reverse-ATS
+  // dataset). A case-sensitive key files them as two roles and pipeline.md gets
+  // a duplicate, so the path is lowercased.
+  const wdMixed = 'https://Kyndryl.wd5.myworkdayjobs.com/KyndrylProfessionalCareers/job/Network-Engineer_R-64949';
+  const wdLower = 'https://kyndryl.wd5.myworkdayjobs.com/kyndrylprofessionalcareers/job/network-engineer_r-64949';
+  if (normalizeUrlForDedup(wdMixed) === normalizeUrlForDedup(wdLower)) {
+    pass('normalizeUrlForDedup collapses a case-only path difference (same posting via two scanners)');
+  } else {
+    fail(`normalizeUrlForDedup left a case-only duplicate: ${normalizeUrlForDedup(wdMixed)} vs ${normalizeUrlForDedup(wdLower)}`);
+  }
+
+  // ...but query values stay case-sensitive: they can be identity-bearing.
+  if (normalizeUrlForDedup('https://boards.greenhouse.io/acme/jobs/9?gh_jid=AbC').includes('gh_jid=AbC')) {
+    pass('normalizeUrlForDedup preserves query-value casing (identity-bearing params)');
+  } else {
+    fail('normalizeUrlForDedup must not lowercase query values — gh_jid is identity-bearing');
   }
 
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-seen-urls-'));
@@ -3392,6 +3809,7 @@ console.log('\n12. Skill symlink integrity');
 const canonicalSkill = '.agents/skills/career-ops/SKILL.md';
 const symlinks = [
   '.claude/skills/career-ops/SKILL.md',
+  '.cursor/skills/career-ops/SKILL.md',
   '.opencode/skills/career-ops/SKILL.md',
   '.qwen/skills/career-ops/SKILL.md',
   '.antigravitycli/skills/career-ops/SKILL.md',
@@ -3548,6 +3966,7 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
     const expectedTouched = [
       '.antigravitycli/skills/career-ops/SKILL.md',
       '.claude/skills/career-ops/SKILL.md',
+      '.cursor/skills/career-ops/SKILL.md',
       '.grok/skills/career-ops/SKILL.md',
       '.opencode/skills/career-ops/SKILL.md',
       '.qwen/skills/career-ops/SKILL.md',
@@ -3896,6 +4315,7 @@ console.log('\n13. Location filter — always_allow tier');
 try {
   const {
     buildLocationFilter,
+    locationHintFromUrl,
     buildContentFilter,
     buildPostingAgeFilter,
     buildPostedDateFilter,
@@ -4075,6 +4495,95 @@ try {
   // step rather than being silently dropped here.
   if (filter(42) === true) pass('non-string locations are passed through to downstream evaluation, not silently dropped');
   else fail('non-string locations should pass through');
+
+  // Case 16: URL location hint — rolled-up display strings ("5 Locations") hide the
+  // real location, which the Workday URL still names. Motivating real case: Kyndryl
+  // postings that render as "5 Locations" with a .../job/Hyderabad-Telangana-India/... URL.
+  const urlFilter = buildLocationFilter({
+    always_allow: ['united states'],
+    block: ['india', 'hyderabad', 'germany'],
+  });
+  if (urlFilter('5 Locations', 'https://kyndryl.wd5.myworkdayjobs.com/careers/job/Hyderabad-Telangana-India/Network-Engineer_R-65193-1') === false) {
+    pass('URL hint rejects a rolled-up "5 Locations" row whose canonical URL is India');
+  } else {
+    fail('"5 Locations" + Hyderabad URL should be rejected via the URL location hint');
+  }
+
+  // Case 17: always_allow still wins over a blocked URL hint — a genuinely US role is
+  // never dropped because of what its URL happens to contain.
+  if (urlFilter('New York, United States', 'https://x.wd5.myworkdayjobs.com/c/job/Hyderabad-Telangana-India/Eng_R1') === true) {
+    pass('always_allow on the display string beats a blocked URL hint');
+  } else {
+    fail('an explicit "United States" location must survive a blocked URL hint');
+  }
+
+  // Case 18: providers without the /job/{location}/ convention are unaffected
+  if (
+    locationHintFromUrl('https://jobs.ashbyhq.com/snowflake/4fe8d816') === '' &&
+    locationHintFromUrl('https://boards.greenhouse.io/acme/jobs/12345') === '' &&
+    locationHintFromUrl('not a url') === '' &&
+    locationHintFromUrl('') === '' &&
+    locationHintFromUrl(null) === ''
+  ) {
+    pass('locationHintFromUrl yields no hint for non-Workday, malformed, and empty URLs');
+  } else {
+    fail('locationHintFromUrl should return "" for URLs without a /job/{location}/ segment');
+  }
+
+  // Case 19: hint normalization — separators become spaces so multi-word keywords match
+  if (
+    locationHintFromUrl('https://x.wd1.myworkdayjobs.com/c/job/Hyderabad-Telangana-India/Eng_R1') === 'hyderabad telangana india' &&
+    locationHintFromUrl('https://x.wd1.myworkdayjobs.com/c/job/USA---El-Segundo-CA/Eng_R1') === 'usa el segundo ca'
+  ) {
+    pass('URL hint normalizes separators to spaces and lowercases');
+  } else {
+    fail(`URL hint normalization wrong: got "${locationHintFromUrl('https://x.wd1.myworkdayjobs.com/c/job/Hyderabad-Telangana-India/Eng_R1')}"`);
+  }
+
+  // Case 20: omitting the url argument preserves the original location-only behaviour
+  if (urlFilter('Bengaluru, India') === false && urlFilter('Austin, TX') === true) {
+    pass('calling the filter without a url keeps original location-only semantics');
+  } else {
+    fail('single-argument calls must behave exactly as before the url-hint change');
+  }
+
+  // Case 21: keywords match on word boundaries, not raw substrings. Blocking "india"
+  // must NOT reject the US locations Indian Head MD, Indiana, or Indianapolis — the
+  // substring bug that silently dropped real US roles from every scan.
+  const boundaryFilter = buildLocationFilter({ block: ['india', 'china', 'uk -'] });
+  if (
+    boundaryFilter('Indian Head, MD') === true &&
+    boundaryFilter('Indianapolis, IN') === true &&
+    boundaryFilter('West Lafayette, Indiana') === true &&
+    boundaryFilter('Chinatown, San Francisco') === true &&
+    boundaryFilter('Truck - Depot') === true
+  ) {
+    pass('block keywords honour word boundaries (Indiana/Indian Head/Indianapolis/Chinatown not rejected)');
+  } else {
+    fail('word-boundary matching failed — a substring match is silently dropping US locations');
+  }
+
+  // Case 22: ...while the genuine country matches still get blocked
+  if (
+    boundaryFilter('Hyderabad, India') === false &&
+    boundaryFilter('India') === false &&
+    boundaryFilter('Beijing, China') === false &&
+    boundaryFilter('UK - London') === false
+  ) {
+    pass('word-boundary matching still blocks the real country/region hits');
+  } else {
+    fail('word-boundary matching must not weaken genuine block hits');
+  }
+
+  // Case 23: boundary matching applies to the URL hint too
+  if (
+    boundaryFilter('5 Locations', 'https://x.wd1.myworkdayjobs.com/c/job/Hyderabad-Telangana-India/Eng_R1') === false &&
+    boundaryFilter('5 Locations', 'https://x.wd1.myworkdayjobs.com/c/job/Indianapolis-Indiana/Eng_R1') === true
+  ) {
+    pass('URL hint is boundary-matched as well (Indianapolis URL survives, India URL does not)');
+  } else {
+    fail('URL hint must use the same word-boundary matching as the location string');
+  }
 
   if (
     shouldDedupScanHistoryRow({ firstSeen: '2026-06-01', status: 'added' }, { recheckAfterDays: 30, today: '2026-06-10' }) === true &&
@@ -5350,6 +5859,21 @@ try {
     fail('role matcher ignored a real short-acronym overlap');
   }
 
+  // 'product' is a baseline token: "ai" is dropped by the tokenizer (2-letter,
+  // not in SHORT_SPECIALTY), so without this these titles collapse to
+  // [product, manager] and merge-tracker skips one as a false duplicate.
+  if (!roleFuzzyMatch('Product Manager - Marketplace', 'Product Manager - AI')) {
+    pass('role matcher keeps Product Manager sibling specialties distinct');
+  } else {
+    fail('role matcher collapsed Product Manager - Marketplace into Product Manager - AI');
+  }
+
+  if (roleFuzzyMatch('Product Manager - Marketplace', 'Product Manager - Marketplace')) {
+    pass('role matcher still matches identical Product Manager titles');
+  } else {
+    fail('role matcher rejected an identical Product Manager title');
+  }
+
   // A generic base title (no suffix of its own) shares every one of its tokens
   // with a specialized sibling, so the shared tokens alone used to cross the
   // Jaccard threshold — even though the sibling's extra word is exactly the
@@ -5409,6 +5933,73 @@ try {
     pass('role matcher does not treat a "(Repost)" annotation as a specialization marker');
   } else {
     fail('role matcher wrongly treated a "(Repost)" annotation as a distinct sibling role');
+  }
+
+  // "Member of Technical Staff" is a boilerplate level-prefix used by several
+  // companies for senior IC titles. Without stripping it, "member" and
+  // "technical" leaked through as apparently-discriminating tokens and made two
+  // genuinely different roles register as a fuzzy-match false positive.
+  if (!roleFuzzyMatch('Member of Technical Staff, Connector Platform', 'Member of Technical Staff, Backend Platform')) {
+    pass('role matcher keeps distinct "Member of Technical Staff" sibling roles apart');
+  } else {
+    fail('role matcher collapsed distinct "Member of Technical Staff" sibling roles');
+  }
+
+  if (roleFuzzyMatch('Member of Technical Staff, Connector Platform', 'Member of Technical Staff, Connector Platform')) {
+    pass('role matcher still matches an exact "Member of Technical Staff" repost');
+  } else {
+    fail('role matcher rejected an exact "Member of Technical Staff" repost');
+  }
+
+  // The MTS fix strips the literal "member of technical staff" phrase, not a
+  // blanket stopword on "member"/"technical" — those words must keep their
+  // normal discriminating role in titles where the phrase isn't present.
+  if (!roleFuzzyMatch('Technical Writer, API Docs', 'Technical Writer, Onboarding Guides')) {
+    pass('role matcher still treats "technical" as discriminating outside the MTS phrase');
+  } else {
+    fail('role matcher over-stripped "technical" outside the MTS phrase');
+  }
+
+  // A blanket "technical" stopword would also break real reposts: stripped from
+  // both sides here, only "recruiter" is left, which alone can't clear the
+  // 2-token overlap minimum. Phrase-aware stripping keeps "technical" as a
+  // normal contributing token outside the MTS phrase, so the repost still matches.
+  if (roleFuzzyMatch('Senior Technical Recruiter, EMEA', 'Technical Recruiter, EMEA')) {
+    pass('role matcher still matches a real repost that happens to contain "technical"');
+  } else {
+    fail('role matcher rejected a real repost because "technical" was over-stripped');
+  }
+
+  // Stripping the MTS phrase can leave 0-1 tokens for a bare or short-suffix
+  // title, which would otherwise fall short of the 2-token overlap minimum —
+  // even for an exact repost of itself. The exact-match fast path in
+  // roleFuzzyMatch guards this regardless of tokenization.
+  if (roleFuzzyMatch('Member of Technical Staff', 'Member of Technical Staff')) {
+    pass('role matcher matches a bare "Member of Technical Staff" exact repost');
+  } else {
+    fail('role matcher rejected a bare "Member of Technical Staff" exact repost');
+  }
+
+  if (roleFuzzyMatch('Member of Technical Staff, Backend', 'Member of Technical Staff, Backend')) {
+    pass('role matcher matches an exact repost of a short-suffix MTS title');
+  } else {
+    fail('role matcher rejected an exact repost of a short-suffix MTS title');
+  }
+
+  // A non-identical repost (different punctuation) with a genuinely
+  // discriminating one-word suffix still needs 2+ tokens to clear the
+  // overlap minimum — the "engineer" filler (a BASELINE_TOKENS entry) pads
+  // that count without ever being the sole reason two titles match.
+  if (roleFuzzyMatch('Member of Technical Staff, Connector', 'Member of Technical Staff - Connector')) {
+    pass('role matcher matches a punctuation-variant repost of a short-suffix MTS title');
+  } else {
+    fail('role matcher rejected a punctuation-variant repost of a short-suffix MTS title');
+  }
+
+  if (roleFuzzyMatch('Member of Technical Staff, Connector', 'Member of Technical Staff, Backend')) {
+    fail('role matcher collapsed distinct one-word-suffix MTS roles via the "engineer" filler');
+  } else {
+    pass('role matcher keeps distinct one-word-suffix MTS roles apart despite the "engineer" filler');
   }
 
   const dedupTmp = mkdtempSync(join(tmpdir(), 'career-ops-dedup-'));
@@ -5968,6 +6559,94 @@ try {
   }
 } catch (e) {
   fail(`merge-tracker column-order tests crashed: ${e.message}`);
+}
+
+// ── MERGE-TRACKER PDF FLAG SYNC (#1429) ─────────────────────────
+// generate-pdf.mjs can run after the tracker row already exists. The
+// gitignored data/pdf-index.tsv manifest is the source of truth that the row's
+// PDF was generated, so merge-tracker should flip only matching ❌ cells to ✅.
+console.log('\n🧪 Testing merge-tracker PDF flag sync from data/pdf-index.tsv (#1429)...');
+try {
+  const runPdfSyncFixture = (name, trackerRow, pdfIndex = null, additions = []) => {
+    const tmp = mkdtempSync(join(tmpdir(), `career-ops-merge-pdf-${name}-`));
+    mkdirSync(join(tmp, 'data'), { recursive: true });
+    const additionsDir = join(tmp, 'additions');
+    const tracker = join(tmp, 'data', 'applications.md');
+    writeFileSync(tracker,
+      '# Applications Tracker\n\n' +
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      trackerRow + '\n');
+    if (pdfIndex !== null) writeFileSync(join(tmp, 'data', 'pdf-index.tsv'), pdfIndex);
+    if (additions.length > 0) {
+      mkdirSync(additionsDir, { recursive: true });
+      for (const addition of additions) {
+        writeFileSync(join(additionsDir, addition.name), addition.content);
+      }
+    }
+
+    try {
+    const result = run(NODE, ['merge-tracker.mjs'], {
+      env: { ...process.env, CAREER_OPS_TRACKER: tracker, CAREER_OPS_ADDITIONS: additionsDir },
+    });
+    const merged = readFileSync(tracker, 'utf-8');
+    return { result, merged };
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  };
+
+  const matching = runPdfSyncFixture(
+    'match',
+    '| 7 | 2026-01-04 | Acme | Engineer | 4.2/5 | Evaluated | ❌ | [12](../reports/012-acme-2026-01-04.md) | ok |',
+    '# report\tpdf\thtml\tformat\tdate\n' +
+      '012\toutput/cv-acme.pdf\toutput/cv-acme.html\tletter\t2026-01-04\n',
+  );
+  if (matching.result !== null && matching.merged.includes('| ✅ | [12](../reports/012-acme-2026-01-04.md) |')) {
+    pass('merge-tracker flips a stale ❌ PDF cell when pdf-index.tsv has the row report number');
+  } else {
+    fail('merge-tracker did not flip the matching PDF cell from ❌ to ✅');
+  }
+
+  const nonMatching = runPdfSyncFixture(
+    'miss',
+    '| 8 | 2026-01-05 | Globex | Analyst | 3.8/5 | Evaluated | ❌ | [22](../reports/022-globex-2026-01-05.md) | ok |',
+    '# report\tpdf\thtml\tformat\tdate\n' +
+      '023\toutput/cv-other.pdf\toutput/cv-other.html\tletter\t2026-01-05\n',
+  );
+  if (nonMatching.result !== null && nonMatching.merged.includes('| ❌ | [22](../reports/022-globex-2026-01-05.md) |')) {
+    pass('merge-tracker leaves PDF ❌ when the report number is absent from pdf-index.tsv');
+  } else {
+    fail('merge-tracker produced a false-positive PDF sync for a missing report number');
+  }
+
+  const missingManifest = runPdfSyncFixture(
+    'missing',
+    '| 9 | 2026-01-06 | Initech | Manager | 3.9/5 | Evaluated | ❌ | [31](../reports/031-initech-2026-01-06.md) | ok |',
+  );
+  if (missingManifest.result !== null && missingManifest.merged.includes('| ❌ | [31](../reports/031-initech-2026-01-06.md) |')) {
+    pass('merge-tracker runs successfully when data/pdf-index.tsv does not exist');
+  } else {
+    fail('merge-tracker crashed or changed the PDF cell when pdf-index.tsv was missing');
+  }
+
+  const newAddition = runPdfSyncFixture(
+    'new-addition',
+    '',
+    '# report\tpdf\thtml\tformat\tdate\n' +
+      '041\toutput/cv-umbrella.pdf\toutput/cv-umbrella.html\tletter\t2026-01-07\n',
+    [{
+      name: '001-umbrella.tsv',
+      content: '1\t2026-01-07\tUmbrella\tEngineer\t4.1/5\tEvaluated\t❌\t[41](../reports/041-umbrella-2026-01-07.md)\tok\n',
+    }],
+  );
+  if (newAddition.result !== null && newAddition.merged.includes('| 1 | 2026-01-07 | Umbrella | Engineer | 4.1/5 | Evaluated | ✅ | [41](../reports/041-umbrella-2026-01-07.md) | ok |')) {
+    pass('merge-tracker applies pdf-index.tsv to a newly merged tracker row in the same run');
+  } else {
+    fail('merge-tracker left a newly merged row at ❌ despite a matching pdf-index.tsv entry');
+  }
+} catch (e) {
+  fail(`merge-tracker PDF flag sync test crashed: ${e.message}`);
 }
 
 // ── MERGE-TRACKER REPORT-NUMBER COLLISION (#912) ─────────────────
@@ -7303,6 +7982,60 @@ try {
     }
   } else {
     fail('resume-subheading manifest has no bullet slot to patch');
+  }
+
+  // resumeItemWithoutTitle variant: `\resumeItemWithoutTitle{}{...}` bullets,
+  // `\resumeSubItem{Cat}{items}` skills, and preamble macro defs that must NOT
+  // leak into slots (the defs contain \resumeItem{#1}{#2} / \textbf{#1}{: #2}).
+  const withoutTitleFixture = readFileSync(join(ROOT, 'examples/latex-tex/resume-subheading-withouttitle.tex'), 'utf-8');
+
+  if (detectFamily(withoutTitleFixture) === 'resumeSubheading') {
+    pass('resumeItemWithoutTitle fixture detected as resumeSubheading family');
+  } else {
+    fail('resumeItemWithoutTitle fixture family detection failed');
+  }
+
+  const wtManifest = buildManifest('resume-subheading-withouttitle.tex', withoutTitleFixture);
+  const wtBullets = wtManifest.slots.filter(s => s.kind === 'bullet');
+  const wtSkills = wtManifest.slots.filter(s => s.kind === 'skill');
+  if (wtBullets.length === 2 && wtSkills.length === 3) {
+    pass('resumeItemWithoutTitle manifest extracts 2 bullets + 3 skill values');
+  } else {
+    fail(`resumeItemWithoutTitle slot mismatch (want 2 bullets/3 skills): ${JSON.stringify(wtManifest.slots.map(s => ({ id: s.id, text: s.text.slice(0, 40) })))}`);
+  }
+
+  if (wtManifest.slots.every(s => !s.text.includes('#1') && !s.text.includes('#2'))) {
+    pass('preamble macro definitions are not extracted as slots');
+  } else {
+    fail('extraction leaked preamble macro definitions (#1/#2) into slots');
+  }
+
+  if (wtManifest.slots.every(s => !s.text.includes('Stale commented bullet'))) {
+    pass('commented-out macro calls are not extracted as slots');
+  } else {
+    fail('extraction leaked a commented-out bullet into slots');
+  }
+
+  // Slot spans must point at the prose group: patching every slot with its own
+  // extracted text must reproduce the input byte-for-byte.
+  const wtRoundTrip = applyPatches(
+    withoutTitleFixture,
+    wtManifest.slots.map(s => ({ id: s.id, text: s.text })),
+    wtManifest.slots,
+    { escape: false },
+  );
+  if (wtRoundTrip === withoutTitleFixture) {
+    pass('no-op patch round-trip is byte-identical (spans point at prose groups)');
+  } else {
+    fail('no-op patch round-trip altered the document — slot spans are misaligned');
+  }
+
+  const wtBullet = wtBullets[0];
+  const wtPatched = applyPatches(withoutTitleFixture, [{ id: wtBullet.id, text: 'Tailored withouttitle bullet.' }], wtManifest.slots);
+  if (wtPatched.includes('\\resumeItemWithoutTitle{}{Tailored withouttitle bullet.}')) {
+    pass('applyPatches rewrites a resumeItemWithoutTitle bullet in place');
+  } else {
+    fail('applyPatches did not rewrite the resumeItemWithoutTitle prose group');
   }
 
   const compileOnlyTex = `\\documentclass{article}\\begin{document}Minimal user CV\\end{document}`;
@@ -9068,6 +9801,13 @@ console.log('\n59. CV template resolver (cv-templates.mjs)');
   const resolved = run(NODE, ['cv-templates.mjs', 'resolve', 'cv'], noProfile);
   if (resolved && resolved.endsWith('cv-template.html')) pass('CLI: resolve cv (unset) -> base template');
   else fail(`CLI: resolve cv (unset) unexpected: ${resolved}`);
+}
+
+console.log('\n59b. Pipeline lock (pipeline-lock.mjs)');
+{
+  const unit = run(NODE, ['--test', 'test/pipeline-lock.test.mjs']);
+  if (unit !== null) pass('pipeline-lock unit tests pass');
+  else fail('pipeline-lock unit tests failed (run: node --test test/pipeline-lock.test.mjs)');
 }
 
 console.log('\n60. Cover-letter template resolver (generate-cover-letter.mjs)');
