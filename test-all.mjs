@@ -12666,6 +12666,21 @@ console.log('\n59b. Pipeline lock (pipeline-lock.mjs)');
   else fail('pipeline-lock unit tests failed (run: node --test test/pipeline-lock.test.mjs)');
 }
 
+console.log('\n59c. Home-dashboard awaiting-decision ranking (web/src/lib/core/awaiting-view.mjs)');
+{
+  // web/ lives deliberately OUTSIDE the auto-updater's world (its own
+  // release-please component; see validate-system-paths-coverage.mjs
+  // EXCLUDE_PREFIXES) — a core-only install has no web/ tree, so warn (not
+  // fail) instead of crashing the suite.
+  if (existsSync(join(ROOT, 'web', 'src', 'lib', 'core', 'awaiting-view.mjs'))) {
+    const unit = run(NODE, ['--test', 'test/awaiting-view.test.mjs']);
+    if (unit !== null) pass('awaiting-view unit tests pass');
+    else fail('awaiting-view unit tests failed (run: node --test test/awaiting-view.test.mjs)');
+  } else {
+    warn('awaiting-view tests skipped — web/ not present (core-only install)');
+  }
+}
+
 console.log('\n60. Cover-letter template resolver (generate-cover-letter.mjs)');
 {
   const unit = run(NODE, ['--test', 'test/cover-resolver.test.mjs']);
