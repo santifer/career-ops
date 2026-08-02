@@ -170,6 +170,7 @@ const scripts = [
   { name: 'funnel-velocity.mjs --self-test', expectExit: 0 },
   { name: 'img-to-pdf.mjs --self-test', expectExit: 0 },
   { name: 'assessment-log.mjs --self-test', expectExit: 0 },
+  { name: 'weekly-digest.mjs --self-test', expectExit: 0 },
   { name: 'build-cv-html.mjs --test', expectExit: 0 },
   { name: 'jd-skill-gap.mjs --self-test', expectExit: 0 },
   { name: 'verify-cv-facts.mjs --self-test', expectExit: 0 },
@@ -6362,13 +6363,20 @@ try {
 
   rmSync(cadenceTmp, { recursive: true, force: true });
 
-  // Urgency decision tree (CADENCE defaults: applied_first=7, max_followups=2, responded_initial=1, interview_thankyou=1)
+  // Urgency decision tree (CADENCE defaults: applied_first=7, max_followups=2,
+  // responded_initial=1, responded_subsequent=3, interview_thankyou=1).
+  // For responded/interview a logged follow-up CLEARS overdue and the clock
+  // restarts from the last touch (modes/followup.md cadence table).
   const urgencyCases = [
     [['applied', 7, null, 0], 'overdue', 'applied past applied_first → overdue'],
     [['applied', 3, null, 0], 'waiting', 'applied within window → waiting'],
     [['applied', 30, null, 2], 'cold', 'applied at max follow-ups → cold'],
     [['responded', 0, null, 0], 'urgent', 'responded before responded_initial → urgent'],
     [['interview', 1, null, 0], 'overdue', 'interview past thank-you window → overdue'],
+    [['responded', 5, 1, 1], 'waiting', 'responded: logged follow-up clears overdue'],
+    [['responded', 5, 3, 1], 'overdue', 'responded: re-overdue responded_subsequent days after last touch'],
+    [['interview', 5, 0, 1], 'waiting', 'interview: logged thank-you clears overdue'],
+    [['interview', 9, 4, 1], 'overdue', 'interview: re-overdue after the subsequent cadence lapses'],
   ];
   for (const [args, expected, label] of urgencyCases) {
     const got = cadence.computeUrgency(...args);
@@ -6381,11 +6389,114 @@ try {
     [['applied', '2026-05-01', null, 0], '2026-05-08', 'first applied follow-up = appDate + applied_first'],
     [['applied', '2026-05-01', null, 2], null, 'cold (max follow-ups) → null'],
     [['interview', '2026-05-01', null, 0], '2026-05-02', 'interview = appDate + interview_thankyou'],
+    [['interview', '2026-05-01', '2026-05-02', 1], '2026-05-05', 'interview after thank-you = lastFollowup + responded_subsequent'],
   ];
   for (const [args, expected, label] of nextCases) {
     const got = cadence.computeNextFollowupDate(...args);
     if (got === expected) pass(`computeNextFollowupDate: ${label}`);
     else fail(`computeNextFollowupDate ${label}: expected ${expected}, got ${got}`);
+  }
+
+  // Impossible calendar dates: regex-valid strings that yield an Invalid Date
+  // (TRUTHY!) used to crash addDays().toISOString() and kill the whole analysis
+  // over one bad row — parseDate must reject them and the scheduler must degrade.
+  if (cadence.parseDate('2026-13-45') === null && cadence.parseDate('2026-02-31') === null) {
+    pass('parseDate rejects impossible calendar dates (2026-13-45, 2026-02-31)');
+  } else {
+    fail('parseDate should reject impossible calendar dates');
+  }
+  let impossibleCrashed = false;
+  let impossibleResult;
+  try {
+    impossibleResult = cadence.computeNextFollowupDate('applied', '2026-05-01', '2026-13-45', 1);
+  } catch {
+    impossibleCrashed = true;
+  }
+  if (!impossibleCrashed && impossibleResult === null) {
+    pass('computeNextFollowupDate degrades to null on an impossible logged date (no crash)');
+  } else {
+    fail(`computeNextFollowupDate on impossible date: crashed=${impossibleCrashed}, result=${JSON.stringify(impossibleResult)}`);
+  }
+
+  // parseFollowupsContent — both log formats coexist in data/follow-ups.md:
+  // table rows (canonical) and legacy web bullets `- YYYY-MM-DD · #NUM Co — note`.
+  const mixedLog = [
+    '# Follow-ups',
+    '',
+    '| num | appNum | date | company | role | channel | contact | notes |',
+    '|---|---|---|---|---|---|---|---|',
+    '| 1 | 42 | 2026-06-20 | Acme | Platform Lead | Email | jane@acme.com | Pinged recruiter |',
+    '- 2026-07-02 · #68 Intelix.AI (client TBD -- Global FS) — Followed up',
+    '- 2026-07-01 · #42 Acme',
+    '- 2026-06-30 · Orphan Co — no app number, must be skipped',
+    'random prose line, also skipped',
+  ].join('\n');
+  const parsedLog = cadence.parseFollowupsContent(mixedLog);
+  if (parsedLog.length === 3) {
+    pass('parseFollowupsContent reads table rows + attributable bullets, skips the rest');
+  } else {
+    fail(`parseFollowupsContent expected 3 entries, got ${parsedLog.length}: ${JSON.stringify(parsedLog)}`);
+  }
+  const tableRow = parsedLog.find(f => f.num === 1);
+  if (tableRow && tableRow.appNum === 42 && tableRow.channel === 'Email' && tableRow.contact === 'jane@acme.com') {
+    pass('parseFollowupsContent keeps full fidelity for table rows');
+  } else {
+    fail(`table row parsed wrong: ${JSON.stringify(tableRow)}`);
+  }
+  const bullet = parsedLog.find(f => f.appNum === 68);
+  if (bullet && bullet.num === null && bullet.date === '2026-07-02' &&
+      bullet.company === 'Intelix.AI (client TBD -- Global FS)' &&
+      bullet.channel === 'Other' && bullet.notes === 'Followed up') {
+    pass('parseFollowupsContent maps bullets to channel Other with company + note split on em-dash');
+  } else {
+    fail(`bullet parsed wrong: ${JSON.stringify(bullet)}`);
+  }
+  const noteless = parsedLog.find(f => f.appNum === 42 && f.num === null);
+  if (noteless && noteless.date === '2026-07-01' && noteless.company === 'Acme' && noteless.notes === '') {
+    pass('parseFollowupsContent accepts a bullet without the trailing — note');
+  } else {
+    fail(`noteless bullet parsed wrong: ${JSON.stringify(noteless)}`);
+  }
+
+  // Next-date overrides (pins): `- next #N YYYY-MM-DD (set YYYY-MM-DD)` lines
+  // pin an app's next follow-up date until a follow-up logged after the pin
+  // resumes the cadence. Last pin per app wins; impossible dates are ignored.
+  const pinContent = [
+    '| 1 | 42 | 2026-06-20 | Acme | Lead | Email |  | ping |',
+    '- next #42 2026-07-10 (set 2026-07-01)',
+    '- next #7 2026-07-04',
+    '- next #42 2026-07-12 (set 2026-07-02)',
+    '- next #9 2026-13-45 (set 2026-07-01)',
+  ].join('\n');
+  const pins = cadence.parseNextOverrides(pinContent);
+  const pin42 = pins.get(42);
+  if (pin42 && pin42.date === '2026-07-12' && pin42.setDate === '2026-07-02') {
+    pass('parseNextOverrides: last pin per application wins');
+  } else {
+    fail(`pin #42 parsed wrong: ${JSON.stringify(pin42)}`);
+  }
+  const pin7 = pins.get(7);
+  if (pin7 && pin7.date === '2026-07-04' && pin7.setDate === '2026-07-04' && !pins.has(9)) {
+    pass('parseNextOverrides: missing set-date defaults to pin date; impossible dates ignored');
+  } else {
+    fail(`pin defaults/impossible handling wrong: ${JSON.stringify([pin7, pins.has(9)])}`);
+  }
+  if (cadence.parseFollowupsContent(pinContent).length === 1) {
+    pass('pin lines are NOT counted as follow-ups');
+  } else {
+    fail('pin lines leaked into parseFollowupsContent');
+  }
+  const pinCases = [
+    [[pin42, null], '2026-07-12', 'active with no follow-ups logged'],
+    [[pin42, '2026-07-01'], '2026-07-12', 'active when the last touch predates the pin'],
+    [[pin42, '2026-07-02'], '2026-07-12', 'same-day tie favors the pin (log-then-pin flow)'],
+    [[pin42, '2026-07-03'], null, 'a follow-up logged after the pin resumes the cadence'],
+    [[undefined, '2026-07-03'], null, 'no pin → null'],
+  ];
+  for (const [args, expected, label] of pinCases) {
+    const got = cadence.resolveNextOverride(...args);
+    if (got === expected) pass(`resolveNextOverride: ${label}`);
+    else fail(`resolveNextOverride ${label}: expected ${expected}, got ${got}`);
   }
 } catch (e) {
   fail(`follow-up cadence module crashed: ${e.message}`);
@@ -11189,6 +11300,64 @@ try {
         pass('assistant preamble prose enumerates every canonical state (#2249)');
       } else {
         fail(`assistant preamble missing canonical state(s) in prose (#2249): ${proseDrift.join(' | ')}`);
+      }
+    }
+  }
+
+  // 55.3c the web's hand-copied cadence baseline must match the core's defaults.
+  // web/src/lib/followups.ts keeps CADENCE_DEFAULTS "kept IDENTICAL to
+  // DEFAULT_CADENCE" by comment alone — the same wish that let states.ts's
+  // FALLBACK drift (#2282). Web keys carry a `_days` suffix (except
+  // applied_max_followups); compare values under that mapping. Until #2369
+  // replaces the copy with the --json cadenceConfig, CI is the invariant.
+  {
+    const coreCad = readFileSync(join(ROOT, 'followup-cadence.mjs'), 'utf-8')
+      .match(/export const DEFAULT_CADENCE = \{([\s\S]*?)\};/)?.[1] ?? '';
+    const webCadPath = join(ROOT, 'web', 'src', 'lib', 'followups.ts');
+    if (coreCad && existsSync(webCadPath)) {
+      const webCad = readFileSync(webCadPath, 'utf-8')
+        .match(/CADENCE_DEFAULTS[^=]*=\s*\{([\s\S]*?)\};/)?.[1] ?? '';
+      const pairs = (block) => Object.fromEntries(
+        [...block.matchAll(/([a-z_]+):\s*(\d+)/g)].map((m) => [m[1], Number(m[2])]));
+      const core = pairs(coreCad);
+      const web = pairs(webCad);
+      const cadDrift = [];
+      for (const [k, v] of Object.entries(core)) {
+        const webKey = k === 'applied_max_followups' ? k : `${k}_days`;
+        if (!(webKey in web)) cadDrift.push(`${webKey} missing in web`);
+        else if (web[webKey] !== v) cadDrift.push(`${webKey}=${web[webKey]} vs core ${k}=${v}`);
+      }
+      if (Object.keys(web).length !== Object.keys(core).length) {
+        cadDrift.push(`key count ${Object.keys(web).length} vs core ${Object.keys(core).length}`);
+      }
+      if (cadDrift.length === 0) {
+        pass('web CADENCE_DEFAULTS matches core DEFAULT_CADENCE under the _days mapping (#2369)');
+      } else {
+        fail(`web cadence baseline drifted from followup-cadence.mjs (#2369): ${cadDrift.join(' | ')}`);
+      }
+    }
+  }
+
+  // 55.3d the web onboarding banner's prereq list must match doctor.mjs.
+  // doctorState() in web/src/lib/career-ops.ts hand-copies USER_LAYER_PREREQS
+  // as a deliberate fast-path (server components can't execFile doctor per
+  // render) — if the core gains a fifth prereq, the banner silently stops
+  // asking for it and the user believes they're configured. Same mechanism as
+  // #2282, different symptom (career-ops-ui's census, 31-jul).
+  {
+    const corePrereqBlock = readFileSync(join(ROOT, 'doctor.mjs'), 'utf-8')
+      .match(/const USER_LAYER_PREREQS = \[([\s\S]*?)\n\];/)?.[1] ?? '';
+    const corePrereqs = [...corePrereqBlock.matchAll(/path:\s*'([^']+)'/g)].map((m) => m[1]);
+    const webDoctorPath = join(ROOT, 'web', 'src', 'lib', 'career-ops.ts');
+    if (corePrereqs.length > 0 && existsSync(webDoctorPath)) {
+      const webPrereqBlock = readFileSync(webDoctorPath, 'utf-8')
+        .match(/const prereqs[^=]*=\s*\[([\s\S]*?)\n\s*\];/)?.[1] ?? '';
+      const webPrereqs = new Set([...webPrereqBlock.matchAll(/\[\s*"([^"]+)"/g)].map((m) => m[1]));
+      const missingPrereqs = corePrereqs.filter((p) => !webPrereqs.has(p));
+      if (missingPrereqs.length === 0 && webPrereqs.size === corePrereqs.length) {
+        pass('web doctorState prereqs match doctor.mjs USER_LAYER_PREREQS (#2369)');
+      } else {
+        fail(`web onboarding prereqs drifted from doctor.mjs (#2369): missing=[${missingPrereqs.join(', ')}] webCount=${webPrereqs.size} coreCount=${corePrereqs.length}`);
       }
     }
   }
