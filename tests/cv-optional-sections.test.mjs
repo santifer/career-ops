@@ -129,6 +129,18 @@ for (const { file, format, after, hasCertifications } of TEMPLATES) {
   if (hasCertifications) {
     check(`${name}: empty skills alone keeps certifications`, onlySkills.includes(certificationsMarker), true);
   }
+
+  // An omitted `skills` key must behave identically to an explicit empty
+  // array — isEmptySection() treats both as empty, but #2515 covered both a
+  // retitled-and-unpopulated section and a genuinely-omitted one, so the
+  // omitted case gets its own assertion against the real templates rather
+  // than relying only on the synthetic-fixture coverage below.
+  const withoutSkills = { ...FULL };
+  delete withoutSkills.skills;
+  const omittedSkills = stripEmptySections(template, withoutSkills, format);
+  check(`${name}: omitted skills key removes the skills block`, omittedSkills.includes(skillsMarker), false);
+  check(`${name}: omitted skills key keeps the closing document skeleton`,
+    omittedSkills.trimEnd().endsWith(closingSkeleton), true);
 }
 
 // --- Boundary edge cases ---------------------------------------------------
