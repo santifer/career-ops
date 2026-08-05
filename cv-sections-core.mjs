@@ -17,6 +17,23 @@
 // pattern for it, rather than trying to match against `undefined`. Awards, by
 // contrast, is defined for both formats.
 //
+// Skills is included for a different reason: it is not meant to be routinely
+// empty, but a caller can repurpose the section's title (e.g. retitling it to
+// "Civic Leadership" or another custom heading) without remembering to
+// populate the matching `skills` array, which otherwise ships a bare,
+// retitled header with nothing under it — a real incident, not a
+// hypothetical. Stripping it when empty is a safety net regardless of *why*
+// it ended up empty, matching the hard "never a bare section" bar the other
+// sections are held to.
+//
+// Skills is the last section in every shipped template, so its own strip
+// pattern has no following ALL-CAPS marker to stop at — a naive boundary
+// would fall through to true end-of-file and swallow the closing
+// `</div></body></html>` (`\end{document}` in LaTeX) along with it. Each
+// template therefore carries an explicit `<!-- END -->` / `%%%% END %%%%`
+// sentinel immediately after the Skills section for the boundary to stop at;
+// do not remove that sentinel when editing a template's tail.
+//
 // The section body is delimited by markers rather than parsed, so the boundary
 // pattern carries the whole correctness burden and is easy to get subtly wrong:
 //
@@ -44,15 +61,17 @@ const PATTERNS = {
     education: new RegExp(String.raw`<!--\s+EDUCATION\s+-->[\s\S]*?` + HTML_BOUNDARY),
     certifications: new RegExp(String.raw`<!--\s+CERTIFICATIONS\s+-->[\s\S]*?` + HTML_BOUNDARY),
     awards: new RegExp(String.raw`<!--\s+AWARDS\s+-->[\s\S]*?` + HTML_BOUNDARY),
+    skills: new RegExp(String.raw`<!--\s+SKILLS\s+-->[\s\S]*?` + HTML_BOUNDARY),
   },
   tex: {
     projects: new RegExp(String.raw`%{4,}\s+PROJECTS\s+%{4,}[\s\S]*?` + TEX_BOUNDARY),
     education: new RegExp(String.raw`%{4,}\s+Education\s+%{4,}[\s\S]*?` + TEX_BOUNDARY),
     awards: new RegExp(String.raw`%{4,}\s+AWARDS\s+%{4,}[\s\S]*?` + TEX_BOUNDARY),
+    skills: new RegExp(String.raw`%{4,}\s+Technical Skills\s+%{4,}[\s\S]*?` + TEX_BOUNDARY),
   },
 };
 
-export const OPTIONAL_SECTIONS = ['projects', 'education', 'certifications', 'awards'];
+export const OPTIONAL_SECTIONS = ['projects', 'education', 'certifications', 'awards', 'skills'];
 
 export function isEmptySection(payload, section) {
   const entries = payload?.[section];
