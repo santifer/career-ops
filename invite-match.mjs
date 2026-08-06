@@ -419,21 +419,34 @@ const INVITE_PHRASES = [
  * classified `rejection`: that language is the more decisive signal of the
  * two, and it is also the only classification the --apply path acts on.
  *
+ * `phraseStrength` reports whether a `rejection` classification was driven by
+ * a strong (unambiguous-on-its-own) phrase or only by weak corroborating
+ * phrases — the `--apply` confidence gate on a sole fuzzy-matched candidate
+ * requires `'strong'` before auto-writing Rejected (#2100 CodeRabbit review,
+ * see selectApplyTarget()). `null` for non-`rejection` classifications.
+ *
  * @param {string} text - Raw pasted email text.
- * @returns {{classification: 'invite'|'rejection'|'unknown', matchedPhrases: string[]}}
+ * @returns {{classification: 'invite'|'rejection'|'unknown', matchedPhrases: string[], phraseStrength: 'strong'|'weak'|null}}
  */
 export function classifyEmail(text) {
-  if (!text) return { classification: 'unknown', matchedPhrases: [] };
+  if (!text) return { classification: 'unknown', matchedPhrases: [], phraseStrength: null };
   const lower = text.toLowerCase();
   const strongMatches = REJECTION_PHRASES_STRONG.filter(p => lower.includes(p));
   const weakMatches = REJECTION_PHRASES_WEAK.filter(p => lower.includes(p));
-  const isRejection = strongMatches.length > 0 || weakMatches.length >= 2;
-  if (isRejection) return { classification: 'rejection', matchedPhrases: [...strongMatches, ...weakMatches] };
+  const isStrongRejection = strongMatches.length > 0;
+  const isRejection = isStrongRejection || weakMatches.length >= 2;
+  if (isRejection) {
+    return {
+      classification: 'rejection',
+      matchedPhrases: [...strongMatches, ...weakMatches],
+      phraseStrength: isStrongRejection ? 'strong' : 'weak',
+    };
+  }
 
   const inviteMatches = INVITE_PHRASES.filter(p => lower.includes(p));
-  if (inviteMatches.length > 0) return { classification: 'invite', matchedPhrases: inviteMatches };
+  if (inviteMatches.length > 0) return { classification: 'invite', matchedPhrases: inviteMatches, phraseStrength: null };
 
-  return { classification: 'unknown', matchedPhrases: [] };
+  return { classification: 'unknown', matchedPhrases: [], phraseStrength: null };
 }
 
 // --- Tracker loading ---
@@ -496,6 +509,13 @@ export function matchInvite(signals, trackerRows) {
       status: row.status,
       date: row.date,
       matchConfidence: Math.round(confidence * 1000) / 1000,
+      // Raw company-name similarity (1 == exact/confirmed match), separate
+      // from matchConfidence — the reqId boost or status tiebreaker can push
+      // matchConfidence above 1 for a fuzzy (non-exact) name match, so
+      // matchConfidence alone can't answer "was this an exact company-name
+      // match". The --apply sole-candidate confidence gate needs that exact
+      // answer (#2100 CodeRabbit review, see selectApplyTarget()).
+      nameScore,
     });
   }
 
@@ -510,7 +530,7 @@ export function matchInvite(signals, trackerRows) {
  *
  * @param {string} text - Raw invite/rejection email text.
  * @param {Array<object>} [trackerRows] - Injectable for tests; defaults to loadTracker().
- * @returns {{signals: object, classification: 'invite'|'rejection'|'unknown', matchedPhrases: string[], candidates: Array<object>}}
+ * @returns {{signals: object, classification: 'invite'|'rejection'|'unknown', matchedPhrases: string[], phraseStrength: 'strong'|'weak'|null, candidates: Array<object>}}
  */
 export function analyzeInvite(text, trackerRows = null) {
   const signals = {
@@ -521,8 +541,8 @@ export function analyzeInvite(text, trackerRows = null) {
   };
   const rows = trackerRows ?? loadTracker();
   const candidates = matchInvite(signals, rows);
-  const { classification, matchedPhrases } = classifyEmail(text);
-  return { signals, classification, matchedPhrases, candidates };
+  const { classification, matchedPhrases, phraseStrength } = classifyEmail(text);
+  return { signals, classification, matchedPhrases, phraseStrength, candidates };
 }
 
 /**
@@ -556,6 +576,69 @@ export function applyRejectionStatus(appNumber, options = {}) {
     }
     return { error: err.message, code: 'apply-failed' };
   }
+}
+
+/**
+ * Decide which (if any) candidate `--apply` should act on, given an
+ * `analyzeInvite()` result and an optional `--id` override. Pure decision
+ * logic, no I/O — pulled out of the CLI block so tests can drive every
+ * branch directly (#2100 CodeRabbit review nitpick: this branch logic had no
+ * direct test coverage).
+ *
+ * The single-candidate auto-select branch additionally requires a confidence
+ * gate: the sole candidate is only auto-applied when it is an exact/confirmed
+ * company-name match (`nameScore === 1`) AND the classification is backed by
+ * a strong rejection phrase (`phraseStrength === 'strong'`), not just a weak
+ * corroborating one. `matchInvite`'s fuzzy token-overlap scoring can return a
+ * single low-confidence candidate for a loosely-worded company name — a
+ * false auto-apply off a match that weak is the unsafe direction, since
+ * `--apply` performs an irreversible tracker write (#2100 CodeRabbit review,
+ * major finding on the old line 768-769 unconditional sole-candidate
+ * selection). A sole candidate that clears "one row matched" but not this
+ * confidence bar falls back to requiring an explicit `--id`.
+ *
+ * @param {{candidates: Array<object>, phraseStrength: 'strong'|'weak'|null}} result - analyzeInvite() output.
+ * @param {number|null} idArg - Parsed --id value, or null if not passed.
+ * @returns {{target: object}|{error: string, code: number, candidate?: object, candidates?: Array<object>}}
+ */
+export function selectApplyTarget(result, idArg) {
+  if (idArg !== null) {
+    const target = result.candidates.find(c => c.appNumber === idArg);
+    if (!target) {
+      return {
+        error: `invite-match: --id ${idArg} is not among the matched candidates — not applying.`,
+        code: 2,
+      };
+    }
+    return { target };
+  }
+
+  if (result.candidates.length === 0) {
+    return { error: 'invite-match: no matching tracker entries found — not applying.', code: 2 };
+  }
+
+  if (result.candidates.length === 1) {
+    const sole = result.candidates[0];
+    const isExactCompanyMatch = sole.nameScore === 1;
+    const isStrongRejection = result.phraseStrength === 'strong';
+    if (isExactCompanyMatch && isStrongRejection) {
+      return { target: sole };
+    }
+    return {
+      error: `invite-match: sole candidate #${sole.appNumber} did not meet the confidence bar for auto-apply `
+        + `(exact company match: ${isExactCompanyMatch}, strong rejection phrase: ${isStrongRejection}) — `
+        + `re-run with --id ${sole.appNumber} to confirm explicitly.`,
+      code: 2,
+      candidate: sole,
+    };
+  }
+
+  return {
+    error: `invite-match: ${result.candidates.length} candidates matched — ambiguous, refusing to auto-apply. `
+      + `Re-run with --id <#> to disambiguate.`,
+    code: 3,
+    candidates: result.candidates,
+  };
 }
 
 // --- Summary mode ---
@@ -725,6 +808,55 @@ function runSelfTest() {
   const rescheduleResult = analyzeInvite(rescheduleText, fixtureRows);
   check(rescheduleResult.classification !== 'rejection', 'analyzeInvite does not classify a benign reschedule email (containing only "unfortunately") as rejection — --apply would refuse this');
 
+  // --- classifyEmail phraseStrength (#2100 CodeRabbit major finding follow-up) ---
+  check(classifyEmail('We regret to inform you that you have not been selected.').phraseStrength === 'strong', 'a strong rejection phrase reports phraseStrength "strong"');
+  check(classifyEmail('We would like to invite you to schedule your phone screen.').phraseStrength === null, 'an invite classification reports phraseStrength null');
+  check(classifyEmail('Thanks for your recent purchase.').phraseStrength === null, 'an unknown classification reports phraseStrength null');
+
+  // --- matchInvite nameScore exposure (#2100 CodeRabbit major finding follow-up) ---
+  const exactNameRows = [{ num: 501, company: 'Example Industries', role: 'Analyst', status: 'Applied', date: null, notes: '' }];
+  const exactNameMatch = matchInvite({ company: 'Example Industries', date: null, reqId: null }, exactNameRows);
+  check(exactNameMatch[0].nameScore === 1, 'matchInvite exposes nameScore 1 for an exact company-name match');
+  const fuzzyNameRows = [{ num: 502, company: 'Example Industries Global Holdings', role: 'Analyst', status: 'Applied', date: null, notes: '' }];
+  const fuzzyNameMatch = matchInvite({ company: 'Example Industries', date: null, reqId: null }, fuzzyNameRows);
+  check(fuzzyNameMatch[0].nameScore < 1, 'matchInvite exposes nameScore < 1 for a partial/fuzzy company-name match');
+
+  // --- selectApplyTarget confidence gate (#2100 CodeRabbit major finding: line 768-769) ---
+  // A sole candidate that is both an exact company-name match AND backed by a
+  // strong rejection phrase auto-applies.
+  const strongExactSelection = selectApplyTarget(
+    { candidates: [{ appNumber: 501, nameScore: 1 }], phraseStrength: 'strong' },
+    null
+  );
+  check(!strongExactSelection.error && strongExactSelection.target.appNumber === 501, 'selectApplyTarget auto-applies a sole candidate that is both an exact company match and a strong rejection classification');
+
+  // A sole candidate that is an exact company match but only weakly
+  // classified (e.g. "unfortunately" alone) must NOT auto-apply — this is
+  // the regression CodeRabbit's major finding described.
+  const weakOnlySelection = selectApplyTarget(
+    { candidates: [{ appNumber: 502, nameScore: 1 }], phraseStrength: 'weak' },
+    null
+  );
+  check(!!weakOnlySelection.error && weakOnlySelection.code === 2, 'selectApplyTarget refuses to auto-apply a sole candidate when the rejection classification is only weak, even with an exact company match');
+
+  // A sole candidate that is only a fuzzy/partial company-name match must NOT
+  // auto-apply even with a strong rejection phrase — this is the exact
+  // low-confidence-fuzzy-match scenario CodeRabbit flagged on line 768-769.
+  const fuzzySoleSelection = selectApplyTarget(
+    { candidates: [{ appNumber: 503, nameScore: 0.4 }], phraseStrength: 'strong' },
+    null
+  );
+  check(!!fuzzySoleSelection.error && fuzzySoleSelection.code === 2, 'selectApplyTarget refuses to auto-apply a sole candidate that is only a fuzzy/partial company-name match, even with a strong rejection classification');
+  check(fuzzySoleSelection.candidate && fuzzySoleSelection.candidate.appNumber === 503, 'selectApplyTarget exposes the near-miss candidate on a confidence-gate refusal');
+
+  // --id always overrides the confidence gate — an explicit human/agent
+  // choice is trusted regardless of nameScore/phraseStrength.
+  const idOverrideSelection = selectApplyTarget(
+    { candidates: [{ appNumber: 503, nameScore: 0.4 }], phraseStrength: 'weak' },
+    503
+  );
+  check(!idOverrideSelection.error && idOverrideSelection.target.appNumber === 503, 'selectApplyTarget honors an explicit --id even when the sole-candidate confidence gate would otherwise refuse');
+
   console.log(`\n  invite-match self-test: ${pass} passed, ${fail} failed\n`);
   process.exit(fail > 0 ? 1 : 0);
 }
@@ -757,27 +889,25 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
         process.exit(1);
       }
 
-      let target = null;
-      if (idArg !== null) {
-        target = result.candidates.find(c => c.appNumber === idArg);
-        if (!target) {
-          console.error(`invite-match: --id ${idArg} is not among the matched candidates — not applying.`);
-          if (summaryMode) printSummary(result); else console.log(JSON.stringify(result, null, 2));
-          process.exit(2);
+      const selection = selectApplyTarget(result, idArg);
+      if (selection.error) {
+        console.error(selection.error);
+        if (selection.candidates) {
+          // Ambiguous multi-candidate case: the ranked list IS the
+          // actionable output (each row's # is what --id expects), so print
+          // that instead of the full JSON/summary dump the other refusal
+          // branches use.
+          for (const c of selection.candidates) {
+            console.error(`  #${c.appNumber}\t${c.company}\t${c.role}\t${c.status}\t${c.matchConfidence}`);
+          }
+        } else if (summaryMode) {
+          printSummary(result);
+        } else {
+          console.log(JSON.stringify(result, null, 2));
         }
-      } else if (result.candidates.length === 1) {
-        target = result.candidates[0];
-      } else if (result.candidates.length === 0) {
-        console.error('invite-match: no matching tracker entries found — not applying.');
-        if (summaryMode) printSummary(result); else console.log(JSON.stringify(result, null, 2));
-        process.exit(2);
-      } else {
-        console.error(`invite-match: ${result.candidates.length} candidates matched — ambiguous, refusing to auto-apply. Re-run with --id <#> to disambiguate:`);
-        for (const c of result.candidates) {
-          console.error(`  #${c.appNumber}\t${c.company}\t${c.role}\t${c.status}\t${c.matchConfidence}`);
-        }
-        process.exit(3);
+        process.exit(selection.code);
       }
+      const target = selection.target;
 
       const applyResult = applyRejectionStatus(target.appNumber);
       const output = { ...result, applied: applyResult };

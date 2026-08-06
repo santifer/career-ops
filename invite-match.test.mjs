@@ -10,7 +10,7 @@
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { matchInvite, normalizeCompanyName, extractPlatform, classifyEmail, analyzeInvite, applyRejectionStatus } from './invite-match.mjs';
+import { matchInvite, normalizeCompanyName, extractPlatform, classifyEmail, analyzeInvite, applyRejectionStatus, selectApplyTarget } from './invite-match.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -214,6 +214,52 @@ function makeSandboxTracker(rows) {
   eq('applyRejectionStatus on a nonexistent tracker # reports a structured error, not a thrown exception', typeof applied.error, 'string');
   rmSync(sb.dir, { recursive: true, force: true });
 }
+
+// --- #2100 CodeRabbit major finding: --apply's sole-candidate branch must
+// require a confidence gate, not auto-select any single fuzzy match ---
+
+// End-to-end: a company name that only partially overlaps the tracker row
+// (a fuzzy, non-exact match) paired with a genuine strong rejection phrase
+// still resolves to exactly one candidate — but that candidate must NOT be
+// auto-applied, since the company match itself is low-confidence. This is
+// the unsafe scenario CodeRabbit named on the old unconditional
+// `result.candidates.length === 1` branch (line 768-769).
+const fuzzySoleMatchRows = [
+  { num: 601, company: 'Example Industries Global Holdings', role: 'Analyst', status: 'Applied', date: '2026-05-01', notes: '' },
+];
+const fuzzySoleMatchText = 'Company: Example Industries\nWe regret to inform you that you have not been selected for this role.';
+const fuzzySoleMatchResult = analyzeInvite(fuzzySoleMatchText, fuzzySoleMatchRows);
+eq('weak sole-match fixture: exactly one candidate matched (fuzzy, not exact, company name)', fuzzySoleMatchResult.candidates.length, 1);
+eq('weak sole-match fixture: the sole candidate is not an exact company-name match', fuzzySoleMatchResult.candidates[0].nameScore === 1, false);
+eq('weak sole-match fixture: classification is still "rejection" (strong phrase present)', fuzzySoleMatchResult.classification, 'rejection');
+eq('weak sole-match fixture: phraseStrength is "strong"', fuzzySoleMatchResult.phraseStrength, 'strong');
+
+const fuzzySoleMatchSelection = selectApplyTarget(fuzzySoleMatchResult, null);
+eq('selectApplyTarget refuses to auto-apply a sole candidate that is only a fuzzy/partial company-name match, even with a strong rejection phrase', !!fuzzySoleMatchSelection.error, true);
+eq('selectApplyTarget refusal on the fuzzy sole-match case uses exit code 2 (same as other non-ambiguous refusals)', fuzzySoleMatchSelection.code, 2);
+eq('selectApplyTarget exposes the near-miss candidate so the caller can report it', fuzzySoleMatchSelection.candidate && fuzzySoleMatchSelection.candidate.appNumber, 601);
+
+// The same weak sole match is auto-applied only once an exact company name
+// is available to raise it above the confidence bar — confirms the gate is
+// actually keyed on nameScore, not some other side effect of the fixture.
+const exactSoleMatchRows = [
+  { num: 602, company: 'Example Industries', role: 'Analyst', status: 'Applied', date: '2026-05-01', notes: '' },
+];
+const exactSoleMatchResult = analyzeInvite(fuzzySoleMatchText, exactSoleMatchRows);
+const exactSoleMatchSelection = selectApplyTarget(exactSoleMatchResult, null);
+eq('selectApplyTarget auto-applies a sole candidate once it is an exact company-name match with a strong rejection phrase', !exactSoleMatchSelection.error && exactSoleMatchSelection.target.appNumber, 602);
+
+// An exact company-name match with only a weak ("unfortunately"-only)
+// classification must also refuse — the gate requires BOTH conditions, not
+// either one alone.
+const exactButWeakText = 'Company: Example Industries\nUnfortunately we need to push your interview to next Tuesday due to a scheduling conflict.';
+const exactButWeakResult = analyzeInvite(exactButWeakText, exactSoleMatchRows);
+eq('exact-company/weak-phrase fixture does not classify as rejection at all (benign reschedule)', exactButWeakResult.classification === 'rejection', false);
+// classifyEmail's own "unfortunately"-alone phrasing already refuses via the
+// classification gate above --apply's candidate-selection step; this
+// confirms selectApplyTarget is never even reached in that case since the
+// CLI's classification check runs first (see the --apply block in
+// invite-match.mjs).
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {
