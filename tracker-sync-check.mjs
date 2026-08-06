@@ -57,6 +57,7 @@ import { readFileSync, existsSync } from 'fs';
 import { execFileSync } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import yaml from 'js-yaml';
 
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
@@ -85,17 +86,46 @@ const INTERVIEWS_FILE = interviewsFileIdx !== -1 && args[interviewsFileIdx + 1] 
 // --- Canonical lifecycle (templates/states.yml) ---
 // Non-terminal states are strictly ordered; terminal states have no order
 // among each other but supersede any non-terminal (earlier) state.
-const LIFECYCLE_ORDER = ['evaluated', 'applied', 'responded', 'interview'];
-const TERMINAL_STATUSES = new Set(['offer', 'rejected', 'discarded', 'skip']);
+//
+// Loaded from templates/states.yml at evaluation time (rather than hardcoded
+// here) so a template change — a new state, a reordered/renamed one — can't
+// silently desync from what this checker classifies. CodeRabbit flagged this
+// on PR #1505: the old hardcoded copy predated states.yml's "hired" state and
+// would have classified it as unrecognized (falling into Tier 2 "ambiguous"
+// against every other status) instead of correctly ranking it as terminal.
+//
+// states.yml has no explicit ordering field, so LIFECYCLE_ORDER is taken from
+// the file's own array order among states NOT marked `terminal: true`; the
+// terminal set and the id -> display-label map are read directly off each
+// state's `terminal` and `label` fields. See the comment above `states:` in
+// templates/states.yml for the contract.
+const STATES_FILE = join(CAREER_OPS, 'templates/states.yml');
 
-// Canonical id -> display label (templates/states.yml), used when suggesting
-// a Tier 1 fix so the output shows a writable applications.md status value
-// rather than a raw active-interviews.md round-status string like "Scheduled".
-const CANONICAL_LABELS = {
-  evaluated: 'Evaluated', applied: 'Applied', responded: 'Responded',
-  interview: 'Interview', offer: 'Offer', rejected: 'Rejected',
-  discarded: 'Discarded', skip: 'SKIP',
-};
+/**
+ * Load the canonical lifecycle order, terminal-status set, and id -> label
+ * map from templates/states.yml.
+ * @param {string} statesPath - Path to templates/states.yml.
+ * @returns {{ order: string[], terminal: Set<string>, labels: Record<string,string> }}
+ */
+export function loadLifecycle(statesPath) {
+  const doc = yaml.load(readFileSync(statesPath, 'utf-8'));
+  if (!doc || !Array.isArray(doc.states)) {
+    throw new Error(`Malformed states file at ${statesPath}: expected a top-level "states" list`);
+  }
+  const order = [];
+  const terminal = new Set();
+  const labels = {};
+  for (const s of doc.states) {
+    const id = String(s?.id ?? '').trim();
+    if (!id) continue;
+    labels[id] = String(s.label ?? id);
+    if (s.terminal) terminal.add(id);
+    else order.push(id);
+  }
+  return { order, terminal, labels };
+}
+
+const { order: LIFECYCLE_ORDER, terminal: TERMINAL_STATUSES, labels: CANONICAL_LABELS } = loadLifecycle(STATES_FILE);
 
 // Mirrors the ALIASES map in analyze-patterns.mjs / verify-pipeline.mjs —
 // applications.md status cell normalization (bold markers, trailing dates,
@@ -393,7 +423,11 @@ export function gitBlameTimestamp(filePath, lineNum, cwd = CAREER_OPS) {
  * to fuzzy Company+Role matching when absent: a candidate is a confident
  * fuzzy match only when company-name overlap clears FUZZY_COMPANY_THRESHOLD
  * AND role-matcher.mjs's roleFuzzyMatch agrees, and exactly one such
- * candidate exists (an ambiguous tie is treated as no match, not a guess).
+ * candidate exists. Any ambiguity — a duplicate tracker number, or more than
+ * one fuzzy candidate regardless of whether their scores tie — is treated as
+ * no match, not a guess (CodeRabbit review on PR #1505: silently taking
+ * `.find()`'s first result, or only bailing on a score tie, can pair an
+ * interview row with the wrong application).
  *
  * @param {object} interviewRow - Plain row object (Company/Role/Notes cells).
  * @param {Array<object>} trackerEntries - From loadTrackerWithLines().
@@ -404,9 +438,16 @@ export function matchInterviewRow(interviewRow, trackerEntries) {
   const trackerRef = extractTrackerRef(notes);
 
   if (trackerRef != null) {
-    const entry = trackerEntries.find(e => e.num === trackerRef);
-    if (entry) return { entry, method: 'tracker-ref', confidence: 1 };
-    return { entry: null, method: 'unmatched', confidence: 0, note: `Notes references #${trackerRef} in tracker, but no such row exists in applications.md` };
+    const entries = trackerEntries.filter(e => e.num === trackerRef);
+    if (entries.length === 1) return { entry: entries[0], method: 'tracker-ref', confidence: 1 };
+    return {
+      entry: null,
+      method: 'unmatched',
+      confidence: 0,
+      note: entries.length === 0
+        ? `Notes references #${trackerRef} in tracker, but no such row exists in applications.md`
+        : `Notes references #${trackerRef} in tracker, but ${entries.length} rows use that number`,
+    };
   }
 
   const company = findColumn(interviewRow, 'company');
@@ -422,8 +463,8 @@ export function matchInterviewRow(interviewRow, trackerEntries) {
   if (candidates.length === 0) {
     return { entry: null, method: 'unmatched', confidence: 0, note: 'No tracker reference in Notes and no confident Company+Role fuzzy match' };
   }
-  if (candidates.length > 1 && candidates[0].sim === candidates[1].sim) {
-    return { entry: null, method: 'unmatched', confidence: candidates[0].sim, note: `Ambiguous fuzzy match — ${candidates.length} tracker rows scored equally for "${company}"` };
+  if (candidates.length > 1) {
+    return { entry: null, method: 'unmatched', confidence: candidates[0].sim, note: `Ambiguous fuzzy match — ${candidates.length} tracker rows scored for "${company}"` };
   }
 
   return { entry: candidates[0].entry, method: 'fuzzy', confidence: Math.round(candidates[0].sim * 1000) / 1000 };
@@ -623,6 +664,15 @@ function runSelfTest() {
   check(!compareLifecycle('rejected', 'discarded').comparable, 'two different terminal statuses are not comparable (tier 2)');
   check(!compareLifecycle('applied', 'bogus-status').comparable, 'unrecognized status is not comparable (tier 2)');
 
+  // --- loadLifecycle (states.yml-derived, CodeRabbit review on PR #1505) ---
+  check(LIFECYCLE_ORDER.includes('evaluated') && LIFECYCLE_ORDER.includes('interview'), 'LIFECYCLE_ORDER loaded from states.yml includes the non-terminal stages');
+  check(TERMINAL_STATUSES.has('offer') && TERMINAL_STATUSES.has('rejected') && TERMINAL_STATUSES.has('discarded') && TERMINAL_STATUSES.has('skip'), 'TERMINAL_STATUSES loaded from states.yml includes the original 4 terminal states');
+  check(TERMINAL_STATUSES.has('hired'), 'TERMINAL_STATUSES loaded from states.yml also picks up "hired" (would have been unrecognized under the old hardcoded copy)');
+  check(!TERMINAL_STATUSES.has('applied'), 'TERMINAL_STATUSES loaded from states.yml does not misclassify a non-terminal state');
+  check(CANONICAL_LABELS.evaluated === 'Evaluated' && CANONICAL_LABELS.skip === 'SKIP' && CANONICAL_LABELS.hired === 'Hired', 'CANONICAL_LABELS loaded from states.yml matches expected display labels');
+  check(compareLifecycle('interview', 'hired').comparable && compareLifecycle('interview', 'hired').cmp === -1, 'hired (states.yml-derived terminal) supersedes a non-terminal stage');
+  check(!compareLifecycle('hired', 'rejected').comparable, 'hired vs. a different terminal status is ambiguous (tier 2), same as the pre-existing terminal states');
+
   // --- normalizeCompanyName / companySimilarity (ported from invite-match.mjs) ---
   check(normalizeCompanyName('Acme Corp.') === 'acme', 'strips "Corp." suffix');
   check(normalizeCompanyName('Acme Technologies Inc.') === 'acme', 'strips chained suffixes');
@@ -632,6 +682,43 @@ function runSelfTest() {
   // --- extractTrackerRef ---
   check(extractTrackerRef('Confirmed for Tuesday. #42 in tracker.') === 42, 'extracts "#N in tracker" reference');
   check(extractTrackerRef('No reference here') === null, 'returns null when no reference present');
+
+  // --- matchInterviewRow ambiguity handling (CodeRabbit review on PR #1505) ---
+  // Duplicate tracker numbers: a `#N in tracker` Notes reference must not
+  // silently resolve to trackerEntries.find()'s first hit when two rows
+  // share the same number (a real applications.md corruption case) — the
+  // match should bail to unmatched instead of guessing which row is right.
+  const dupNumEntries = [
+    { num: 201, company: 'Acme Corp', role: 'Backend Engineer', status: 'Applied', lineNum: 1 },
+    { num: 201, company: 'Acme Holdings', role: 'Backend Engineer II', status: 'Applied', lineNum: 2 },
+  ];
+  const dupNumResult = matchInterviewRow(
+    { Company: 'Acme Corp', Role: 'Backend Engineer', Notes: '#201 in tracker' },
+    dupNumEntries
+  );
+  check(dupNumResult.entry === null, 'duplicate tracker numbers: matchInterviewRow does not guess (entry is null)');
+  check(dupNumResult.method === 'unmatched', 'duplicate tracker numbers: matchInterviewRow reports unmatched, not the first find() hit');
+  check(/2 rows use that number/.test(dupNumResult.note || ''), 'duplicate tracker numbers: note explains the ambiguity');
+
+  // Multiple non-tied fuzzy candidates: two tracker rows both clear
+  // FUZZY_COMPANY_THRESHOLD and roleFuzzyMatch for the same interview row,
+  // but with different (non-tied) similarity scores. Bailing only on an
+  // exact score tie would let the higher-scoring one win by default; the
+  // fix requires exactly one candidate, full stop.
+  const nonTiedEntries = [
+    { num: 301, company: 'Acme Partners', role: 'Program Manager', status: 'Applied', lineNum: 1 },
+    { num: 302, company: 'Acme Partners Group Studio', role: 'Program Manager', status: 'Applied', lineNum: 2 },
+  ];
+  const simA = companySimilarity(normalizeCompanyName('Acme Partners'), normalizeCompanyName('Acme Partners'));
+  const simB = companySimilarity(normalizeCompanyName('Acme Partners'), normalizeCompanyName('Acme Partners Group Studio'));
+  check(simA !== simB, 'fuzzy fixture sanity check: the two candidate scores are not tied');
+  const nonTiedResult = matchInterviewRow(
+    { Company: 'Acme Partners', Role: 'Program Manager', Notes: '' },
+    nonTiedEntries
+  );
+  check(nonTiedResult.entry === null, 'multiple non-tied fuzzy candidates: matchInterviewRow does not pick the higher-scoring one');
+  check(nonTiedResult.method === 'unmatched', 'multiple non-tied fuzzy candidates: matchInterviewRow reports unmatched, not fuzzy');
+  check(/Ambiguous fuzzy match/.test(nonTiedResult.note || ''), 'multiple non-tied fuzzy candidates: note flags the ambiguity');
 
   // --- parseActiveInterviewsWithLines (line-number tracking) ---
   const md = [
