@@ -392,6 +392,13 @@ Deployed services onto Kubernetes clusters and wrote FastAPI endpoints for inter
   // matched a bullet that still carried a trailing carriage return.
   const crlfSkills = extractJdSkills(fakeJd.replace(/\n/g, '\r\n'));
   eq('CRLF JD extracts the same skill list as LF', JSON.stringify(crlfSkills), JSON.stringify(jdSkills));
+  const lfClassification = classifySkillGaps(jdSkills, fakeCv);
+  const crlfClassification = classifySkillGaps(crlfSkills, fakeCv);
+  eq(
+    'CRLF JD produces the same classification as LF',
+    JSON.stringify(crlfClassification),
+    JSON.stringify(lfClassification)
+  );
 
   const result = classifySkillGaps(['Python', 'PostgreSQL', 'Kubernetes', 'FastAPI', 'Rust'], fakeCv);
   eq('Python classified as existing (named skill)', result.existing.includes('Python'), true);
