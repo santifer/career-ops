@@ -35,6 +35,12 @@ export const SLUG_RE = /^[A-Za-z0-9._-]+$/;
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; career-ops-seeds/1.0)';
 
+// Safety cap on the YC pagination walk. The real stop condition is the API's
+// own `totalPages`/`nextPage` (see fetchYCCompanies); this is only a runaway
+// guard in case the API stops reporting pagination metadata. The YC list is
+// ~246 pages today, so this leaves generous headroom.
+const YC_MAX_PAGES = 500;
+
 /**
  * YC public company API.
  * Returns paginated JSON with company objects including name, slug, website.
@@ -307,14 +313,16 @@ export function toPortalEntry(company) {
  * Fetch the Y Combinator public company list and return parsed SeedCompany entries.
  *
  * Uses the public YC API (no auth, no API key). The response is a JSON object
- * with a `companies` array. We fetch page 1 with a large per_page to get the
- * most recent batch; subsequent pages can be fetched if needed (most users want
- * the latest batch anyway).
+ * with a `companies` array plus pagination metadata (`page`, `totalPages`,
+ * `nextPage`). The API caps the page size (~30 today) and ignores large
+ * `per_page` values, so we walk every page, following the API's own pagination
+ * signal rather than guessing from batch size, and dedupe by slug across pages.
  *
- * @param {{ timeoutMs?: number, maxPages?: number }} [opts]
+ * @param {{ timeoutMs?: number, maxPages?: number }} [opts] - `maxPages` is a
+ *   safety cap; pagination normally stops at the API-reported last page.
  * @returns {Promise<SeedCompany[]>}
  */
-export async function fetchYCCompanies({ timeoutMs = DEFAULT_TIMEOUT_MS, maxPages = 3 } = {}) {
+export async function fetchYCCompanies({ timeoutMs = DEFAULT_TIMEOUT_MS, maxPages = YC_MAX_PAGES } = {}) {
   /** @type {SeedCompany[]} */
   const all = [];
   const seen = new Set();
@@ -340,10 +348,19 @@ export async function fetchYCCompanies({ timeoutMs = DEFAULT_TIMEOUT_MS, maxPage
       }
     }
 
-    // The YC API pagination: stop when we receive fewer than 1000 companies.
+    // Follow the API's own pagination. The API caps per_page (~30 today) and
+    // ignores per_page=1000, so the previous "stop when a page returns fewer
+    // than 1000 companies" heuristic bailed after page 1 and only ever saw the
+    // newest batch — none of which have ATS boards yet (issue #2525). Stop when
+    // the API reports this is the last page, or offers no next page.
     const raw = /** @type {any} */ (payload);
-    const batchSize = Array.isArray(raw?.companies) ? raw.companies.length : 0;
-    if (batchSize < 1000) break;
+    const totalPages = Number(raw?.totalPages);
+    const hasNextPage = raw?.nextPage != null && raw?.nextPage !== false;
+    if (Number.isFinite(totalPages) && totalPages > 0) {
+      if (page >= totalPages) break;
+    } else if (!hasNextPage) {
+      break;
+    }
   }
 
   return all;
