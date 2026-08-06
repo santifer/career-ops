@@ -857,6 +857,21 @@ function runSelfTest() {
   );
   check(!idOverrideSelection.error && idOverrideSelection.target.appNumber === 503, 'selectApplyTarget honors an explicit --id even when the sole-candidate confidence gate would otherwise refuse');
 
+  // Zero candidates must refuse with code 2 (distinct concern from the
+  // confidence gate above, but same exit code family — "nothing to apply to").
+  const noCandidateSelection = selectApplyTarget({ candidates: [], phraseStrength: 'strong' }, null);
+  check(!!noCandidateSelection.error && noCandidateSelection.code === 2, 'selectApplyTarget refuses with code 2 when no candidates matched');
+
+  // Multiple viable candidates must refuse with code 3 (distinct from the
+  // code-2 refusals above) and expose the ranked candidates collection the
+  // CLI output logic uses to print the disambiguation list.
+  const ambiguousSelection = selectApplyTarget(
+    { candidates: [{ appNumber: 601, nameScore: 1 }, { appNumber: 602, nameScore: 1 }], phraseStrength: 'strong' },
+    null
+  );
+  check(!!ambiguousSelection.error && ambiguousSelection.code === 3, 'selectApplyTarget refuses with code 3 when multiple candidates matched');
+  check(Array.isArray(ambiguousSelection.candidates) && ambiguousSelection.candidates.length === 2, 'selectApplyTarget exposes the ranked candidate list on an ambiguous refusal');
+
   console.log(`\n  invite-match self-test: ${pass} passed, ${fail} failed\n`);
   process.exit(fail > 0 ? 1 : 0);
 }
