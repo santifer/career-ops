@@ -134,7 +134,16 @@ try {
 
   // YC_MAX_PAGES is a hard ceiling: even with maxPages: Infinity against an API
   // that never stops handing back a nextPage, the walk must stop at the cap.
+  // The expected value is pinned independently of the exported constant, so
+  // raising the cap can't quietly satisfy this test — the PR contract is 500.
   {
+    const EXPECTED_YC_MAX_PAGES = 500;
+    if (YC_MAX_PAGES === EXPECTED_YC_MAX_PAGES) {
+      pass(`YC_MAX_PAGES is the contracted ${EXPECTED_YC_MAX_PAGES}-page ceiling`);
+    } else {
+      fail(`YC_MAX_PAGES is ${YC_MAX_PAGES}, expected ${EXPECTED_YC_MAX_PAGES}`);
+    }
+
     const requested = [];
     global.fetch = async (url) => {
       const page = Number(new URL(url).searchParams.get('page'));
@@ -147,10 +156,10 @@ try {
       };
     };
     const out = await fetchYCCompanies({ maxPages: Infinity });
-    if (requested.length === YC_MAX_PAGES && out.length === YC_MAX_PAGES) {
-      pass(`clamps the walk to YC_MAX_PAGES (${YC_MAX_PAGES}) even when maxPages is Infinity`);
+    if (requested.length === EXPECTED_YC_MAX_PAGES && out.length === EXPECTED_YC_MAX_PAGES) {
+      pass(`clamps the walk to ${EXPECTED_YC_MAX_PAGES} pages even when maxPages is Infinity`);
     } else {
-      fail(`expected ${YC_MAX_PAGES} requests, got ${requested.length} (companies ${out.length})`);
+      fail(`expected ${EXPECTED_YC_MAX_PAGES} requests, got ${requested.length} (companies ${out.length})`);
     }
   }
 } finally {
