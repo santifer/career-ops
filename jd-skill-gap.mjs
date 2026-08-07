@@ -58,6 +58,22 @@ const REQUIREMENT_HEADER_RE = new RegExp(
     'you\\s+may\\s+be\\s+a\\s+good\\s+fit',
     'ideal\\s+candidate',
     'skills\\s+(?:and|&)\\s+experience',
+    // French. The repo ships a fr/ market mode set and a JD is written in its
+    // market's language, so an English-only list makes this check inert on
+    // every francophone posting — the same "missed phrasing yields zero
+    // skills" failure the list above was already widened once to fix.
+    // Matched after accent folding (see foldAccents), so "Profil recherche"
+    // and "Profil recherché" are the same heading.
+    'profil\\s+recherche',
+    'votre\\s+profil',
+    'competences\\s+(?:requises|attendues|techniques)',
+    'competences',
+    'exigences',
+    'pre-?requis',
+    'qualifications\\s+requises',
+    'ce\\s+que\\s+nous\\s+recherchons',
+    'experience\\s+requise',
+    'vous\\s+etes',
   ].join('|') + ')s?\\b.*$',
   'im'
 );
@@ -75,9 +91,37 @@ const NON_REQUIREMENT_HEADER_RE = new RegExp(
     'equal\\s+opportunity', 'eeo', 'diversity',
     'interview\\s+process', 'how\\s+to\\s+apply', 'to\\s+apply',
     'our\\s+(?:stack|process|values|mission)',
+    // French closers. Without these a francophone requirements block stays
+    // open to end-of-file and sweeps the perks list into "required skills" —
+    // exactly what the English closers above exist to prevent.
+    'avantages?',
+    'ce\\s+que\\s+nous\\s+offrons',
+    'nous\\s+offrons',
+    'remuneration',
+    'salaire',
+    'a\\s+propos\\s+(?:de\\s+nous|de\\s+l|du\\s+poste|de\\s+la\\s+societe)',
+    'processus\\s+de\\s+recrutement',
+    'comment\\s+postuler',
+    'pour\\s+postuler',
+    'notre\\s+(?:stack|processus|mission|equipe)',
   ].join('|') + ')\\b.*$',
   'im'
 );
+
+/**
+ * Strip diacritics for heading matching only.
+ *
+ * A posting writes "Profil recherché" or "Rémunération"; a config or another
+ * posting writes the same heading unaccented. Folding at the test site keeps
+ * ONE spelling in each pattern list above instead of two per entry, and never
+ * touches the text the skills themselves are read from.
+ *
+ * @param {string} line
+ * @returns {string}
+ */
+function foldAccents(line) {
+  return line.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
 
 const BULLET_LINE_RE = /^\s*[-*•]\s*(.+)$/;
 
@@ -93,7 +137,21 @@ const BULLET_LINE_RE = /^\s*[-*•]\s*(.+)$/;
 // a word char / # / + so a sentence-ending period is never swallowed into
 // the token ("Docker." still extracts as "Docker"). The leading \b stays:
 // tokens start with [A-Z], a word char, where \b and (?<!\w) are equivalent.
-const SKILL_TOKEN_RE = /\b([A-Z][A-Za-z0-9+.#]{0,29}[A-Za-z0-9+#](?:\.[a-z]{2,4})?)(?!\w)/g;
+// The trailing guard is Unicode-aware. `\w` is ASCII, so an accented letter did
+// not count as "still inside a word" and the token was emitted TRUNCATED:
+// "Maîtrise" yielded "Ma" and "Expérience" yielded "Exp", both reported as
+// required skills. That is over-extraction — the failure this file calls
+// unrecoverable, since it invents gaps the user then tries to close.
+//
+// \p{M} covers COMBINING marks: in decomposed (NFD) text the accent is its own
+// code point, so "Expérience" is "Expe" + U+0301 and a guard of letters alone
+// still emitted "Expe" (CodeRabbit review).
+//
+// Only the boundary changed: an accented word is still not extracted as a
+// skill (the opening [A-Z][A-Za-z0-9+.#] stays ASCII on purpose, so ordinary
+// capitalised French prose does not become "required skills"); it is simply no
+// longer emitted as a fragment of itself.
+const SKILL_TOKEN_RE = /\b([A-Z][A-Za-z0-9+.#]{0,29}[A-Za-z0-9+#](?:\.[a-z]{2,4})?)(?![\p{L}\p{N}_\p{M}])/gu;
 
 // Deliberately broad: this list exists specifically to stop generic
 // capitalized nouns/adjectives from JD bullets (e.g. "Bachelor's degree
@@ -143,17 +201,18 @@ function scanJd(jdText) {
   for (const line of lines) {
     // Checked before the requirement test so a heading that satisfies both
     // (e.g. "Why this role") closes the block rather than reopening it.
-    if (NON_REQUIREMENT_HEADER_RE.test(line)) {
+    const headingProbe = foldAccents(line);
+    if (NON_REQUIREMENT_HEADER_RE.test(headingProbe)) {
       inRequirementsBlock = false;
       continue;
     }
-    if (REQUIREMENT_HEADER_RE.test(line)) {
+    if (REQUIREMENT_HEADER_RE.test(headingProbe)) {
       inRequirementsBlock = true;
       sawRequirementSection = true;
       continue;
     }
     if (inRequirementsBlock && line.trim() === '') continue;
-    if (inRequirementsBlock && /^#{1,4}\s/.test(line) && !REQUIREMENT_HEADER_RE.test(line)) {
+    if (inRequirementsBlock && /^#{1,4}\s/.test(line) && !REQUIREMENT_HEADER_RE.test(headingProbe)) {
       inRequirementsBlock = false;
     }
 
@@ -628,6 +687,77 @@ Maintained the internal Fabrikam-SDK build.
     diagnoseExtraction(unreadableJd, []).message.length > 0,
     true
   );
+
+  // ── French headings ──────────────────────────────────────────────
+  // The heading lists were English-only, so this check was inert on every
+  // francophone posting: same body, same skills, zero extracted — and the
+  // repo ships a fr/ market mode set precisely because those postings exist.
+  const frJd = [
+    'Poste: Developpeur Backend',
+    '',
+    'Profil recherché',
+    '- Python et Django',
+    '- PostgreSQL',
+    '',
+    'Avantages',
+    '- Mutuelle et Tickets Restaurant',
+    '',
+    'Rémunération',
+    '- Selon profil',
+  ].join('\n');
+  eq('a French requirements heading opens the block', scanJd(frJd).skills, ['Python', 'Django', 'PostgreSQL']);
+  eq('a French JD is not reported as section-less', scanJd(frJd).sawRequirementSection, true);
+
+  // The closers matter as much as the openers: without them the block runs to
+  // end-of-file and turns perks into reported skill gaps — the exact failure
+  // the English closers exist to prevent.
+  eq('the French perks section closes the block',
+    scanJd(frJd).skills.some((s) => /mutuelle|restaurant|profil/i.test(s)), false);
+
+  // Accents are folded for the heading test only, so both spellings open it.
+  eq('an unaccented French heading works too',
+    scanJd('Profil recherche\n- Python\n').skills, ['Python']);
+  eq('other French openers are recognised',
+    scanJd('Compétences requises\n- Django\n').skills, ['Django']);
+  eq('and so is the bare "Exigences"',
+    scanJd('Exigences\n- Docker\n').skills, ['Docker']);
+
+  // Each French closer is exercised ALONE. In a fixture where "Avantages"
+  // comes first, the block is already closed and removing any later pattern
+  // would not fail the test (CodeRabbit review).
+  eq('the compensation closer works on its own',
+    scanJd('Exigences\n- Python et Django\n\nRémunération\n- Selon Profil Negociable\n').skills,
+    ['Python', 'Django']);
+  eq('the how-to-apply closer works on its own',
+    scanJd('Exigences\n- Python\n\nComment postuler\n- Envoyez votre CV Aujourd\'hui\n').skills,
+    ['Python']);
+
+  // An accented word must not be emitted as a TRUNCATED fragment of itself.
+  // `\w` is ASCII, so the trailing guard did not see "î" as still-inside-a-word
+  // and "Maîtrise" was extracted as the skill "Ma" — a gap the user cannot
+  // close because it does not exist.
+  eq('an accented word yields no fragment',
+    scanJd('Exigences\n- Maîtrise de Python\n- Expérience en Sécurité\n').skills,
+    ['Python']);
+  // And it is not extracted whole either: the opening class stays ASCII on
+  // purpose, so ordinary capitalised French prose never becomes a requirement.
+  eq('an accented word is not extracted as a skill',
+    scanJd('Exigences\n- Développement web\n').skills, []);
+  // Decomposed (NFD) text: the accent is a separate combining code point, so a
+  // guard of letters alone still let "Expe" through.
+  eq('a decomposed accent yields no fragment either',
+    scanJd(('Exigences\n- Expérience en Python\n').normalize('NFD')).skills, ['Python']);
+
+  // The company-information closer, exercised alone — nothing else in the
+  // fixtures reaches it, so a regression in that pattern would pass silently.
+  eq('the company-information closer works on its own',
+    scanJd('Exigences\n- Python\n\nÀ propos de nous\n- Startup Fondee A Dakar\n').skills,
+    ['Python']);
+
+  // Legitimate tokens with punctuation are untouched by the new boundary.
+  eq('punctuated tokens still extract',
+    scanJd('Requirements\n- Node.js, C++, C# and Python3\n').skills,
+    ['Node.js', 'C++', 'C#', 'Python3']);
 
   console.log(`\njd-skill-gap self-test: ${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
