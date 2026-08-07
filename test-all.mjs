@@ -12673,6 +12673,21 @@ console.log('\n60. Cover-letter template resolver (generate-cover-letter.mjs)');
   else fail('cover-resolver unit tests failed (run: node --test test/cover-resolver.test.mjs)');
 }
 
+console.log('\n60a. Worker job error classification (web/src/lib/job-error-hint.mjs, PR #2158)');
+{
+  // web/ lives deliberately OUTSIDE the auto-updater's world (its own
+  // release-please component; see validate-system-paths-coverage.mjs
+  // EXCLUDE_PREFIXES) — a core-only install has no web/ tree, so warn (not
+  // fail) instead of crashing the suite.
+  if (existsSync(join(ROOT, 'web', 'src', 'lib', 'job-error-hint.mjs'))) {
+    const unit = run(NODE, ['--test', 'test/job-error-hint.test.mjs']);
+    if (unit !== null) pass('job-error-hint unit tests pass');
+    else fail('job-error-hint unit tests failed (run: node --test test/job-error-hint.test.mjs)');
+  } else {
+    warn('job-error-hint tests skipped — web/ not present (core-only install)');
+  }
+}
+
 // ── 61. INTERVIEW-PREP URL ENTRY (#1816) ────────────────────────
 // Prompt-level slice: prep for a role that was never evaluated. Pins the
 // disambiguation rule (bare URL still routes to auto-pipeline), the
