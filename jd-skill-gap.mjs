@@ -79,7 +79,7 @@ const NON_REQUIREMENT_HEADER_RE = new RegExp(
   'im'
 );
 
-const BULLET_LINE_RE = /^\s*[-*•]\s*(.+)$/;
+const BULLET_LINE_RE = /^\s*[-*•]\s*(.+)\r?$/;
 
 // A conservative skill-token extractor: pulls comma/slash/and-separated
 // technical-looking tokens out of a requirement bullet, rather than treating
@@ -386,6 +386,19 @@ Deployed services onto Kubernetes clusters and wrote FastAPI endpoints for inter
   eq('extracts Python from requirements bullet', jdSkills.includes('Python'), true);
   eq('extracts Kubernetes from a separate bullet', jdSkills.includes('Kubernetes'), true);
   eq('does not extract stopword "Strong"', jdSkills.includes('Strong'), false);
+
+  // Regression (#2540): CRLF-terminated JDs must extract the same skills as
+  // LF-terminated JDs. `\r` is a line terminator, so the old pattern never
+  // matched a bullet that still carried a trailing carriage return.
+  const crlfSkills = extractJdSkills(fakeJd.replace(/\n/g, '\r\n'));
+  eq('CRLF JD extracts the same skill list as LF', JSON.stringify(crlfSkills), JSON.stringify(jdSkills));
+  const lfClassification = classifySkillGaps(jdSkills, fakeCv);
+  const crlfClassification = classifySkillGaps(crlfSkills, fakeCv);
+  eq(
+    'CRLF JD produces the same classification as LF',
+    JSON.stringify(crlfClassification),
+    JSON.stringify(lfClassification)
+  );
 
   const result = classifySkillGaps(['Python', 'PostgreSQL', 'Kubernetes', 'FastAPI', 'Rust'], fakeCv);
   eq('Python classified as existing (named skill)', result.existing.includes('Python'), true);
