@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Application } from "@/lib/career-ops";
 import { Badge } from "@/components/ui/badge";
+import { pickLeadSection } from "@/lib/core/report-lead.mjs";
 import { scoreTone, scoreNum, legitimacyTone, parseReport } from "@/lib/format";
 import { StatusSelect } from "@/components/status-select";
 import { CompanyLogo } from "@/components/company-logo";
@@ -12,8 +13,9 @@ import { GeneratePdfButton } from "@/components/generate-pdf-button";
 import { ApplyButton } from "@/components/apply-button";
 import { DeleteFromTracker } from "@/components/delete-from-tracker";
 
-// Progressive disclosure of the report. The core writes prose blocks
-// "## F) Verdict (lead)", "## A) Role Summary", "## B) Match with CV", then
+// Progressive disclosure of the report. The core writes lettered prose blocks
+// "## A) Role Summary" through "## G) Posting Legitimacy", plus unlettered
+// "## Risk Summary" and "## Recommendation" (see modes/oferta.md), then
 // C–G + machine artifacts (Machine Summary YAML, Application Answers, submit
 // log). A mainstream user deciding "should I apply?" needs the verdict + fit;
 // the rest is depth-on-demand. We lead with the verdict as a callout, keep A/B
@@ -163,11 +165,14 @@ export function ReportView({
                 </article>
               );
             }
-            // Verdict (F) leads as a highlighted callout with no competing heading —
-            // it's THE answer. A/B stay expanded (fit detail); C–G collapse as
-            // content (with a 1-line preview); machine artifacts drop to a dimmer
+            // The decision-bearing block leads as a highlighted callout with no
+            // competing heading — it's THE answer. That block is `Recommendation`
+            // (see pickLeadSection): Block F is the INTERVIEW PLAN, which only
+            // matters after a callback, so leading with it answered the wrong
+            // question. A/B stay expanded (fit detail); C–G collapse as content
+            // (with a 1-line preview); machine artifacts drop to a dimmer
             // "Technical" tier so the CLI-DNA is present-but-clearly-secondary.
-            const verdict = sections.find((s) => s.letter === "F");
+            const verdict = pickLeadSection(sections);
             const rest = sections.filter((s) => s !== verdict);
             const machine = rest.filter((s) => isMachine(s.heading));
             const mainSections = rest.filter((s) => !isMachine(s.heading));
