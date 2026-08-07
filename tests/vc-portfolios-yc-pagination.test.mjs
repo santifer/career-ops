@@ -14,7 +14,7 @@ import { pathToFileURL } from 'url';
 console.log('\nvc-portfolios — YC pagination (issue #2525)');
 
 const mod = await import(pathToFileURL(join(ROOT, 'seeds/vc-portfolios.mjs')).href);
-const { fetchYCCompanies } = mod;
+const { fetchYCCompanies, parseYCNextPage } = mod;
 
 const realFetch = global.fetch;
 
@@ -55,14 +55,29 @@ try {
     }
   }
 
-  // Falls back to nextPage when the API omits totalPages.
+  // When totalPages is absent, follow the nextPage *target* the API hands back,
+  // not page+1 — a non-sequential nextPage must be honoured. Page 1 points at
+  // page 3, so page 2 must never be requested. This fails if nextPage is treated
+  // as a boolean and the page is merely incremented.
   {
-    const requested = installYCFetch(THREE_PAGES, { totalPages: false, nextPage: true });
+    const pageData = { 1: [co('Alpha')], 3: [co('Gamma')] };
+    const nextFor = { 1: 'page=3', 3: null };
+    const requested = [];
+    global.fetch = async (url) => {
+      const page = Number(new URL(url).searchParams.get('page'));
+      requested.push(page);
+      return {
+        ok: true,
+        async json() { return { companies: pageData[page] || [], page, nextPage: nextFor[page] }; },
+        async text() { return ''; },
+      };
+    };
     const out = await fetchYCCompanies();
-    if (out.length === 5 && requested.join(',') === '1,2,3') {
-      pass('follows nextPage when totalPages is absent');
+    const slugs = out.map((c) => c.slug).sort();
+    if (slugs.join(',') === 'alpha,gamma' && requested.join(',') === '1,3') {
+      pass('follows a non-sequential nextPage target (requests 1,3 — never 2)');
     } else {
-      fail(`nextPage walk got ${out.length} companies over pages ${requested.join(',')}`);
+      fail(`nextPage-target walk got ${slugs.join(',')} over pages ${requested.join(',')}`);
     }
   }
 
@@ -88,6 +103,33 @@ try {
     } else {
       fail(`maxPages:2 got ${out.length} companies over pages ${requested.join(',')}`);
     }
+  }
+
+  // parseYCNextPage reads a forward page number from the shapes the API might
+  // use, and rejects anything without one.
+  {
+    const cases = [
+      [3, 3],
+      ['page=3', 3],
+      ['?page=3&x=1', 3],
+      ['https://api.ycombinator.com/v0.1/companies?page=7&per_page=1000', 7],
+      ['/companies/page/4', 4],
+      ['  5  ', 5],
+      [null, null],
+      [false, null],
+      ['', null],
+      ['next', null],
+      [0, null],
+      [-2, null],
+    ];
+    let ok = true;
+    let detail = '';
+    for (const [input, expected] of cases) {
+      const got = parseYCNextPage(input);
+      if (got !== expected) { ok = false; detail = `parseYCNextPage(${JSON.stringify(input)}) = ${got}, expected ${expected}`; break; }
+    }
+    if (ok) pass('parseYCNextPage reads page numbers from number, fragment, and URL forms');
+    else fail(detail);
   }
 } finally {
   global.fetch = realFetch;

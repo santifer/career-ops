@@ -327,7 +327,8 @@ export async function fetchYCCompanies({ timeoutMs = DEFAULT_TIMEOUT_MS, maxPage
   const all = [];
   const seen = new Set();
 
-  for (let page = 1; page <= maxPages; page++) {
+  let page = 1;
+  for (let fetched = 0; fetched < maxPages; fetched++) {
     const url = `https://api.ycombinator.com/v0.1/companies?page=${page}&per_page=1000`;
     let payload;
     try {
@@ -339,7 +340,7 @@ export async function fetchYCCompanies({ timeoutMs = DEFAULT_TIMEOUT_MS, maxPage
     }
 
     const entries = parseYCPayload(payload);
-    if (entries.length === 0) break; // No more pages.
+    if (entries.length === 0) break; // No more companies.
 
     for (const e of entries) {
       if (!seen.has(e.slug)) {
@@ -351,19 +352,47 @@ export async function fetchYCCompanies({ timeoutMs = DEFAULT_TIMEOUT_MS, maxPage
     // Follow the API's own pagination. The API caps per_page (~30 today) and
     // ignores per_page=1000, so the previous "stop when a page returns fewer
     // than 1000 companies" heuristic bailed after page 1 and only ever saw the
-    // newest batch — none of which have ATS boards yet (issue #2525). Stop when
-    // the API reports this is the last page, or offers no next page.
+    // newest batch — none of which have ATS boards yet (issue #2525).
+    //
+    // Prefer totalPages (present today, ~246) and walk sequentially. When it's
+    // absent, follow the nextPage target the API hands back rather than assuming
+    // the next page is page+1, so a non-sequential nextPage is honoured.
     const raw = /** @type {any} */ (payload);
     const totalPages = Number(raw?.totalPages);
-    const hasNextPage = raw?.nextPage != null && raw?.nextPage !== false;
     if (Number.isFinite(totalPages) && totalPages > 0) {
       if (page >= totalPages) break;
-    } else if (!hasNextPage) {
-      break;
+      page += 1;
+      continue;
     }
+    const next = parseYCNextPage(raw?.nextPage);
+    if (next == null || next <= page) break; // no next page, or no forward progress
+    page = next;
   }
 
   return all;
+}
+
+/**
+ * Extract the next page number from the YC API's `nextPage` field, which may be
+ * a bare page number, a `page=N` query fragment, or a full URL carrying a
+ * `page=N` query param. Returns null when no forward page number can be read.
+ *
+ * @param {unknown} nextPage
+ * @returns {number | null}
+ */
+export function parseYCNextPage(nextPage) {
+  if (nextPage == null || nextPage === false) return null;
+  if (typeof nextPage === 'number') {
+    return Number.isInteger(nextPage) && nextPage > 0 ? nextPage : null;
+  }
+  if (typeof nextPage === 'string') {
+    const m = nextPage.match(/(?:^|[?&/])page[=/](\d+)/) || nextPage.match(/^\s*(\d+)\s*$/);
+    if (m) {
+      const n = Number(m[1]);
+      return Number.isInteger(n) && n > 0 ? n : null;
+    }
+  }
+  return null;
 }
 
 /**
