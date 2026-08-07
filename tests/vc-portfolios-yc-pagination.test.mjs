@@ -14,7 +14,7 @@ import { pathToFileURL } from 'url';
 console.log('\nvc-portfolios — YC pagination (issue #2525)');
 
 const mod = await import(pathToFileURL(join(ROOT, 'seeds/vc-portfolios.mjs')).href);
-const { fetchYCCompanies, parseYCNextPage } = mod;
+const { fetchYCCompanies, parseYCNextPage, YC_MAX_PAGES } = mod;
 
 const realFetch = global.fetch;
 
@@ -130,6 +130,28 @@ try {
     }
     if (ok) pass('parseYCNextPage reads page numbers from number, fragment, and URL forms');
     else fail(detail);
+  }
+
+  // YC_MAX_PAGES is a hard ceiling: even with maxPages: Infinity against an API
+  // that never stops handing back a nextPage, the walk must stop at the cap.
+  {
+    const requested = [];
+    global.fetch = async (url) => {
+      const page = Number(new URL(url).searchParams.get('page'));
+      requested.push(page);
+      // Always one more company and always a next page → unbounded without the cap.
+      return {
+        ok: true,
+        async json() { return { companies: [co('C' + page)], page, nextPage: `page=${page + 1}` }; },
+        async text() { return ''; },
+      };
+    };
+    const out = await fetchYCCompanies({ maxPages: Infinity });
+    if (requested.length === YC_MAX_PAGES && out.length === YC_MAX_PAGES) {
+      pass(`clamps the walk to YC_MAX_PAGES (${YC_MAX_PAGES}) even when maxPages is Infinity`);
+    } else {
+      fail(`expected ${YC_MAX_PAGES} requests, got ${requested.length} (companies ${out.length})`);
+    }
   }
 } finally {
   global.fetch = realFetch;

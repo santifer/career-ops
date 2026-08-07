@@ -35,11 +35,12 @@ export const SLUG_RE = /^[A-Za-z0-9._-]+$/;
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; career-ops-seeds/1.0)';
 
-// Safety cap on the YC pagination walk. The real stop condition is the API's
-// own `totalPages`/`nextPage` (see fetchYCCompanies); this is only a runaway
-// guard in case the API stops reporting pagination metadata. The YC list is
-// ~246 pages today, so this leaves generous headroom.
-const YC_MAX_PAGES = 500;
+// Hard ceiling on the YC pagination walk. The real stop condition is the API's
+// own `totalPages`/`nextPage` (see fetchYCCompanies); this is a runaway guard in
+// case the API stops reporting pagination metadata. It is enforced even against
+// an explicit caller `maxPages`, so no caller can spin the walk past it. The YC
+// list is ~246 pages today, so this leaves generous headroom.
+export const YC_MAX_PAGES = 500;
 
 /**
  * YC public company API.
@@ -327,8 +328,12 @@ export async function fetchYCCompanies({ timeoutMs = DEFAULT_TIMEOUT_MS, maxPage
   const all = [];
   const seen = new Set();
 
+  // YC_MAX_PAGES is a hard ceiling: clamp here so an explicit maxPages (or a
+  // stray Infinity) can never spin the walk past the runaway guard.
+  const limit = Math.min(maxPages, YC_MAX_PAGES);
+
   let page = 1;
-  for (let fetched = 0; fetched < maxPages; fetched++) {
+  for (let fetched = 0; fetched < limit; fetched++) {
     const url = `https://api.ycombinator.com/v0.1/companies?page=${page}&per_page=1000`;
     let payload;
     try {
