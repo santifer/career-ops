@@ -6936,6 +6936,89 @@ try {
     if (got === expected) pass(`resolveNextOverride: ${label}`);
     else fail(`resolveNextOverride ${label}: expected ${expected}, got ${got}`);
   }
+
+  // A pin may carry a trailing `— note` explaining why the date moved. Hand
+  // written pins nearly always do. Anchoring the pattern right after `(set …)`
+  // made those pins silently unparseable, which is the dangerous direction:
+  // the deferral disappears and the row reports overdue again.
+  // All three dash characters the pattern accepts are covered: em dash (what
+  // this project's own docs and logs use), ASCII hyphen (what a plain-text
+  // editor produces), and en dash (what macOS substitution silently turns a
+  // hyphen into). The en-dash case is the one most likely to appear without
+  // the author intending it, so an untested branch there is the easiest
+  // regression to ship.
+  const annotatedPins = cadence.parseNextOverrides([
+    '- next #50 2026-08-11 (set 2026-08-04) — messaged 2026-08-04, give it a week',
+    '- next #51 2026-08-11 (set 2026-08-04) - ascii hyphen note',
+    '- next #52 2026-08-11 — note with no set-date',
+    '- next #53 2026-08-11 (set 2026-08-04) – en-dash note',
+  ].join('\n'));
+  if (annotatedPins.get(50)?.date === '2026-08-11' && annotatedPins.get(50)?.setDate === '2026-08-04') {
+    pass('parseNextOverrides: em-dash annotated pin still parses');
+  } else {
+    fail(`annotated pin dropped: ${JSON.stringify(annotatedPins.get(50))}`);
+  }
+  if (annotatedPins.get(51)?.date === '2026-08-11' && annotatedPins.get(52)?.setDate === '2026-08-11') {
+    pass('parseNextOverrides: hyphen notes and annotated set-less pins parse');
+  } else {
+    fail(`annotated pin variants wrong: ${JSON.stringify([annotatedPins.get(51), annotatedPins.get(52)])}`);
+  }
+  if (annotatedPins.get(53)?.date === '2026-08-11' && annotatedPins.get(53)?.setDate === '2026-08-04') {
+    pass('parseNextOverrides: en-dash annotated pin parses');
+  } else {
+    fail(`en-dash annotated pin dropped: ${JSON.stringify(annotatedPins.get(53))}`);
+  }
+
+  // Retire directives: `- cleared #N YYYY-MM-DD — reason` drops one
+  // application out of the cadence without closing the application.
+  const clearedContent = [
+    '| 1 | 60 | 2026-07-20 | Acme | Lead | Email |  | ping |',
+    '- cleared #60 2026-08-04 — no contact on file',
+    '- cleared #61 2026-08-01',
+    '- cleared #61 2026-08-04 — last directive wins',
+    '- cleared #62 2026-13-45 — impossible date',
+  ].join('\n');
+  const clearedMap = cadence.parseClearedDirectives(clearedContent);
+  if (clearedMap.get(60)?.setDate === '2026-08-04' && clearedMap.get(61)?.setDate === '2026-08-04' && !clearedMap.has(62)) {
+    pass('parseClearedDirectives: last directive wins; impossible dates ignored');
+  } else {
+    fail(`cleared parsed wrong: ${JSON.stringify([...clearedMap])}`);
+  }
+  if (cadence.parseFollowupsContent(clearedContent).length === 1) {
+    pass('cleared lines are NOT counted as follow-ups');
+  } else {
+    fail('cleared lines leaked into parseFollowupsContent');
+  }
+  const cleared60 = clearedMap.get(60);
+  const retireCases = [
+    [[cleared60, null], true, 'retired with no follow-ups logged'],
+    [[cleared60, '2026-08-01'], true, 'stays retired when the last touch predates it'],
+    [[cleared60, '2026-08-04'], true, 'same-day tie favors the retirement'],
+    [[cleared60, '2026-08-05'], false, 'a follow-up logged after it revives the cadence'],
+    [[undefined, '2026-08-05'], false, 'no directive → not retired'],
+  ];
+  for (const [args, expected, label] of retireCases) {
+    const got = cadence.isRetired(...args);
+    if (got === expected) pass(`isRetired: ${label}`);
+    else fail(`isRetired ${label}: expected ${expected}, got ${got}`);
+  }
+
+  // End to end: a retired row leaves `entries` and stops counting as
+  // actionable, but is still counted so the retirement stays visible.
+  const retireTracker = [
+    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
+    '|---|---|---|---|---|---|---|---|---|',
+    '| 70 | 2026-06-01 | Acme | Lead | 4.0/5 | Applied | ✅ | [70](reports/70.md) | Applied 2026-06-01 |',
+    '| 71 | 2026-06-01 | Beta | Lead | 4.0/5 | Applied | ✅ | [71](reports/71.md) | Applied 2026-06-01 |',
+  ].join('\n');
+  const before = cadence.analyzeFromContent(retireTracker, '');
+  const after = cadence.analyzeFromContent(retireTracker, '- cleared #70 2026-08-04 — no channel');
+  if (before.metadata.actionable === 2 && after.metadata.actionable === 1 &&
+      after.metadata.retired === 1 && !after.entries.some(e => e.num === 70)) {
+    pass('analyzeFromContent: retired application leaves entries and actionable count');
+  } else {
+    fail(`retire integration wrong: ${JSON.stringify([before.metadata, after.metadata])}`);
+  }
 } catch (e) {
   fail(`follow-up cadence module crashed: ${e.message}`);
 }
