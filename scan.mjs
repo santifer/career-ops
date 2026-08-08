@@ -1026,6 +1026,92 @@ export function normalizeUrlForDedup(url) {
   return parsed.toString();
 }
 
+/**
+ * The leading checkbox marker of a `data/pipeline.md` entry.
+ *
+ * Only ` ` and `x` are recognized, matching the pre-existing gates: `- [!]`
+ * marks a URL that could not be fetched, which is not evidence a posting was
+ * surfaced.
+ *
+ * Anchored, because the URL it guards is then matched anywhere in the line: a
+ * hand-written note that happens to contain checkbox syntax mid-sentence and a
+ * link would otherwise seed that link and silently bury a live posting. Leading
+ * whitespace is tolerated so an indented entry still dedupes, as it did when the
+ * URL had to sit immediately after the checkbox.
+ */
+const PIPELINE_CHECKBOX_RE = /^\s*- \[[ x]\]\s+/;
+
+/**
+ * As `PIPELINE_CHECKBOX_RE`, but rejecting indentation.
+ *
+ * The company/role gate stays exactly as strict as the `^- \[` anchor it
+ * replaces: widening it would seed *more* role keys, and one role key suppresses
+ * every other posting that shares it.
+ */
+const PIPELINE_CHECKBOX_STRICT_RE = /^- \[[ x]\]\s+/;
+
+/**
+ * A URL sitting anywhere inside a pipeline line.
+ *
+ * Terminates on `|`, `)` and `~` as well as whitespace so a table cell, a
+ * markdown link, or a `~~strikethrough~~` wrapper is never absorbed into the
+ * URL. `local:` entries are deliberately not matched — the gates this feeds
+ * have always been http(s)-only.
+ */
+const PIPELINE_URL_RE = /https?:\/\/[^\s|)~]+/;
+
+/**
+ * Extract the job URL from a `data/pipeline.md` checkbox line, wherever it sits.
+ *
+ * Six line shapes are documented across the modes, and only the one
+ * `appendToPipeline` writes leads with the URL. The others lead with a report
+ * number (`#NNN`, `modes/pipeline.md`), a report link
+ * (`[NNN](reports/…)`, `reconcile-pipeline.mjs`), a pre-screen marker (`#--`,
+ * `modes/pipeline.md`), or a strikethrough (`~~…~~`, `modes/pipeline.md` and
+ * `modes/oferta.md`). Anchoring the URL to the checkbox missed all five.
+ *
+ * @param {string} line - One raw line of `data/pipeline.md`.
+ * @returns {string|null} The URL, or null when the line carries none.
+ */
+function extractPipelineUrl(line) {
+  if (!PIPELINE_CHECKBOX_RE.test(line)) return null;
+  const match = line.match(PIPELINE_URL_RE);
+  return match ? match[0] : null;
+}
+
+/**
+ * Extract the company/role pair from a `data/pipeline.md` checkbox line.
+ *
+ * Company and role are the two cells *after* the URL cell, not cells 1 and 2 —
+ * see `extractPipelineUrl` for why the URL is not always first.
+ *
+ * Two shapes deliberately yield nothing, mirroring the `status !== 'added'`
+ * rule the scan-history branch of `collectSeenCompanyRoles` already applies:
+ *
+ * - **Expired entries** (`~~…~~`). Strikethrough is how the pipeline records the
+ *   same state scan-history records as `skipped_expired`; seeding a dead
+ *   posting's role key would let a dead SF URL bury a live NY req.
+ * - **Pre-screen discards** (`#-- | {url} | skipped (…)`). The cell after the
+ *   URL is a discard reason, not a company.
+ *
+ * @param {string} line - One raw line of `data/pipeline.md`.
+ * @returns {{company: string, role: string}|null} The pair, or null when the
+ *   line has none to contribute.
+ */
+function extractPipelineCompanyRole(line) {
+  if (!PIPELINE_CHECKBOX_STRICT_RE.test(line)) return null;
+  if (line.includes('~~')) return null;
+
+  const cells = line.replace(PIPELINE_CHECKBOX_STRICT_RE, '').split('|').map(cell => cell.trim());
+  if (cells[0].startsWith('#--')) return null;
+
+  const urlIndex = cells.findIndex(cell => PIPELINE_URL_RE.test(cell));
+  if (urlIndex === -1) return null;
+
+  const [company = '', role = ''] = cells.slice(urlIndex + 1);
+  return { company, role };
+}
+
 export function loadSeenUrls(policy = {}) {
   const seen = new Set();
   let recheckEligible = 0;
@@ -1041,11 +1127,13 @@ export function loadSeenUrls(policy = {}) {
     }
   }
 
-  // pipeline.md — extract URLs from checkbox lines
+  // pipeline.md — extract URLs from checkbox lines, wherever the URL sits in the
+  // line (see extractPipelineUrl: five of the six documented shapes lead with a
+  // report number, a report link, or a strikethrough rather than the URL).
   if (existsSync(PIPELINE_PATH)) {
-    const text = readFileSync(PIPELINE_PATH, 'utf-8');
-    for (const match of text.matchAll(/- \[[ x]\] (https?:\/\/\S+)/g)) {
-      seen.add(normalizeUrlForDedup(match[1]));
+    for (const line of readFileSync(PIPELINE_PATH, 'utf-8').split('\n')) {
+      const url = extractPipelineUrl(line);
+      if (url) seen.add(normalizeUrlForDedup(url));
     }
   }
 
@@ -1383,10 +1471,15 @@ export function collectSeenCompanyRoles(sources = {}, policy = {}, canonicalize 
     add(company, title);
   }
 
-  // pipeline.md — "- [ ] {url} | {company} | {title}" plus optional trailing
-  // columns (location, compensation, posted:/trust:/note: segments).
-  for (const match of pipelineText.matchAll(/^- \[[ x]\]\s+\S+\s*\|\s*([^|\n]+?)\s*\|\s*([^|\n]+?)\s*(?:\|[^\n]*)?$/gm)) {
-    add(match[1], match[2]);
+  // pipeline.md — company/title are the two cells after the URL cell, plus
+  // optional trailing columns (location, compensation, posted:/trust:/note:
+  // segments). The URL is not always first, and expired/pre-screen shapes
+  // contribute no pair at all — see extractPipelineCompanyRole. Same failure the
+  // applications.md branch above fixed in #954: a positional regex read the
+  // wrong cells, so the seen-set keyed on garbage.
+  for (const line of pipelineText.split('\n')) {
+    const pair = extractPipelineCompanyRole(line);
+    if (pair) add(pair.company, pair.role);
   }
 
   return seen;

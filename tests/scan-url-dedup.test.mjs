@@ -1,5 +1,17 @@
-// tests/scan-url-dedup.test.mjs — normalizeUrlForDedup() must ignore volatile
-// tracking parameters without ever collapsing two distinct postings onto one key.
+// tests/scan-url-dedup.test.mjs — the URL dedupe gate must recognize a posting
+// it has already seen, whatever query string it arrives with and wherever the URL
+// sits in the pipeline.md line that recorded it.
+//
+// Two halves, one gate:
+//
+// 1. `normalizeUrlForDedup` — the *value*: two spellings of one posting must
+//    produce one key, and two postings must never collapse onto one.
+// 2. `loadSeenUrls` over pipeline.md — the *shape*: six line shapes are
+//    documented across the modes, and only the one `appendToPipeline` writes
+//    leads with the URL. Anchoring the match to the checkbox found that one and
+//    missed the rest, so a posting already sitting in the inbox under any other
+//    shape was re-added on the next scan. These tests previously covered only
+//    part 1, which is how five documented shapes drifted out of support unnoticed.
 //
 // StepStone regenerates its `rltr` parameter on every request, so a dedup key that
 // keeps it treats the same posting as new on each scan (one Vonovia posting was
@@ -10,8 +22,11 @@
 // is asymmetric: an unstripped param leaves a visible duplicate, while stripping an
 // identity-bearing one (Greenhouse's `gh_jid`) silently hides a real job. These
 // tests pin both sides of that line.
-import { pass, fail, ROOT } from './helpers.mjs';
+import { pass, fail, ROOT, NODE } from './helpers.mjs';
+import { mkdtempSync, writeFileSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
+import { execFileSync } from 'child_process';
 import { pathToFileURL } from 'url';
 
 console.log('\nscan.mjs — normalizeUrlForDedup() ignores tracking params, preserves identity');
@@ -68,4 +83,92 @@ try {
   }
 } catch (err) {
   fail(`scan.mjs normalizeUrlForDedup tests crashed: ${err && err.message}`);
+}
+
+console.log('\nscan.mjs — loadSeenUrls() finds the URL in every documented pipeline.md shape');
+const SANDBOX = mkdtempSync(join(tmpdir(), 'co-urlshape-'));
+try {
+  const { normalizeUrlForDedup } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  // Transcribed from the docs that specify each shape, so these fail if the
+  // documented format changes. Only the first leads with the URL.
+  const SHAPES = [
+    // modes/pipeline.md → "Format of pipeline.md" (what appendToPipeline writes).
+    ['- [ ] https://boards.greenhouse.io/acme/jobs/1 | Acme Corp | Staff Engineer',
+      'https://boards.greenhouse.io/acme/jobs/1', 'pending entry (URL first)'],
+    // modes/pipeline.md → workflow step 2f and the "Processed" example.
+    ['- [x] #143 | https://jobs.example.com/posting/2 | Acme Corp | AI PM | 4.2/5 | PDF ✅',
+      'https://jobs.example.com/posting/2', 'processed entry led by a report number'],
+    // reconcile-pipeline.mjs → the line it writes when moving an entry to Processed.
+    // The report link is not a URL, so the gate must not stop at the first `(`…`)`.
+    ['- [x] [144](reports/144-acme-2026-01-01.md) | https://jobs.example.com/posting/3 | Acme Corp | Solutions Architect | 3.1/5 | PDF ❌',
+      'https://jobs.example.com/posting/3', 'processed entry led by a report link'],
+    // modes/pipeline.md → pre-screen gate.
+    ['- [x] #-- | https://jobs.example.com/posting/4 | skipped (pre-screen mismatch: not a North Star archetype)',
+      'https://jobs.example.com/posting/4', 'pre-screen discard'],
+    // modes/pipeline.md → liveness sweep step 3. The `~~` wrapper must not be
+    // absorbed into the URL, or the key would never match the live posting.
+    ['- [x] ~~https://jobs.example.com/posting/5 | Acme Corp | Backend Engineer~~ — posting expired (liveness sweep)',
+      'https://jobs.example.com/posting/5', 'expired entry with a URL'],
+    // modes/oferta.md → liveness gate; modes/auto-pipeline.md → Step 0.5 / 0.6.
+    // No URL at all — nothing to seed, and nothing to crash on.
+    ['- [x] ~~Acme Corp | Data Engineer~~ — oferta nieaktywna', null, 'expired entry without a URL'],
+  ];
+
+  // scan.mjs resolves its dedupe sources once, at import time, and test-all.mjs
+  // imports every suite into one process — so the env override has to be set for
+  // a fresh child rather than for this one. cwd is pinned to the sandbox too:
+  // applications.md is the one source with no env override, and it resolves
+  // against cwd, so this never reads the developer's real tracker.
+  const seenUrlsFor = (pipelineText) => {
+    const pipelinePath = join(SANDBOX, 'pipeline.md');
+    writeFileSync(pipelinePath, pipelineText);
+    const driver = `import(${JSON.stringify(pathToFileURL(join(ROOT, 'scan.mjs')).href)})`
+      + `.then(m => console.log(JSON.stringify([...m.loadSeenUrls().seen])))`;
+    return new Set(JSON.parse(execFileSync(NODE, ['--input-type=module', '-e', driver], {
+      cwd: SANDBOX,
+      env: {
+        ...process.env,
+        CAREER_OPS_PIPELINE: pipelinePath,
+        CAREER_OPS_SCAN_HISTORY: join(SANDBOX, 'scan-history.tsv'),
+      },
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })));
+  };
+
+  const seen = seenUrlsFor(SHAPES.map(([line]) => line).join('\n') + '\n');
+
+  for (const [, url, label] of SHAPES) {
+    if (!url) continue;
+    if (seen.has(normalizeUrlForDedup(url))) pass(`pipeline.md: ${label} reaches the URL gate`);
+    else fail(`pipeline.md: ${label} did not reach the URL gate — ${url} is missing`);
+  }
+
+  // Exact size, not just membership: a truncated or over-greedy match would add a
+  // near-miss key alongside the right one and still pass every check above.
+  const expected = SHAPES.filter(([, url]) => url).length;
+  if (seen.size === expected) pass(`pipeline.md: ${expected} URL-bearing shapes seed exactly ${expected} keys`);
+  else fail(`expected ${expected} keys, got ${seen.size}: [${[...seen].join(', ')}]`);
+
+  // Where the checkbox may sit. Matching the URL anywhere in the line only works
+  // if the checkbox itself is anchored: pipeline.md is hand-edited, and a note
+  // that merely contains checkbox syntax must not seed the link it mentions —
+  // a false dedupe hides a live posting, which is the costlier direction of
+  // error. Indented entries still count, as they did when the URL had to sit
+  // immediately after the checkbox.
+  const prose = 'Reminder: - [ ] chase the recruiter, posting is https://jobs.example.com/posting/9 (still open)';
+  if (seenUrlsFor(prose + '\n').size === 0) pass('pipeline.md: mid-line checkbox syntax in prose seeds nothing');
+  else fail(`prose line seeded a URL: [${[...seenUrlsFor(prose + '\n')].join(', ')}]`);
+
+  const indented = '  - [ ] https://jobs.example.com/posting/10 | Acme Corp | Staff Engineer';
+  if (seenUrlsFor(indented + '\n').has(normalizeUrlForDedup('https://jobs.example.com/posting/10'))) {
+    pass('pipeline.md: an indented entry still reaches the URL gate');
+  } else {
+    fail('indented entry did not reach the URL gate');
+  }
+} catch (err) {
+  fail(`scan.mjs loadSeenUrls tests crashed: ${err && err.message}`);
+} finally {
+  rmSync(SANDBOX, { recursive: true, force: true });
 }
