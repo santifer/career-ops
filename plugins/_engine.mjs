@@ -637,6 +637,10 @@ export async function runHook(kind, payload, { root, dryRun = false, timeoutMs =
   return results;
 }
 
+export function filterResultsForId(results, id) {
+  return results.filter(r => r.id === id);
+}
+
 /**
  * Merge enabled provider-plugins into the core providers Map. THE one hot-path
  * hook (scan.mjs calls this right after loadProviders). Critical guarantees:
