@@ -137,3 +137,22 @@ export function parseApplications(md, rootDir) {
   }
   return rows;
 }
+
+/**
+ * Extract the report FILE NAME a tracker row's Report cell links to.
+ *
+ * The row's Report cell (e.g. `[006](../reports/006-acme-2026-01.md)`) is the
+ * authoritative pointer to that row's report: a report's leading number and the
+ * tracker row number (`#`) are two independent counters that can drift, so
+ * resolving a report purely by row number can surface a different role's report
+ * (#1623). The returned value is always a bare basename (any leading `../` path
+ * is stripped), so callers join it under a known `reports/` dir — a link can
+ * never escape that directory.
+ * @param {string} reportCell - the row's Report column text.
+ * @returns {string | null} the linked file's basename ("006-acme-2026-01.md"),
+ *   or null when the cell has no `.md` link (empty, "—", or a bare "❌").
+ */
+export function reportLinkTarget(reportCell) {
+  const match = String(reportCell ?? "").match(/\(([^()\s]+\.md)\)/);
+  return match ? match[1].split("/").pop() : null;
+}
