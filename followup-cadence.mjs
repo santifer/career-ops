@@ -624,6 +624,13 @@ export function analyzeFromContent(trackerContent, followupsContent = '') {
     },
     entries: filtered,
     cadenceConfig: CADENCE,
+    // The EFFECTIVE cadence above is defaults+profile overrides. Consumers that
+    // need to show what a value would be WITHOUT the user's override (the web
+    // settings form's placeholder) need the pure defaults too — sourcing that
+    // placeholder from cadenceConfig would render a user's own override as the
+    // default they'd be reverting to. Emitting both is what lets the web stop
+    // hand-copying DEFAULT_CADENCE (#2369).
+    cadenceDefaults: DEFAULT_CADENCE,
   };
 }
 

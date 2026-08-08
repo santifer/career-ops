@@ -12219,36 +12219,52 @@ try {
     }
   }
 
-  // 55.3c the web's hand-copied cadence baseline must match the core's defaults.
-  // web/src/lib/followups.ts keeps CADENCE_DEFAULTS "kept IDENTICAL to
-  // DEFAULT_CADENCE" by comment alone — the same wish that let states.ts's
-  // FALLBACK drift (#2282). Web keys carry a `_days` suffix (except
-  // applied_max_followups); compare values under that mapping. Until #2369
-  // replaces the copy with the --json cadenceConfig, CI is the invariant.
+  // 55.3c the cadence copy is GONE — the web now derives its baseline from the
+  // core (#2369). Two halves: the core must still EMIT the pure defaults that
+  // the web's /api/followups/cadence reads, and the web must not quietly
+  // reintroduce a local table (a fallback copy drifts exactly like the original
+  // did — states.ts FALLBACK, #2282).
   {
-    const coreCad = readFileSync(join(ROOT, 'followup-cadence.mjs'), 'utf-8')
-      .match(/export const DEFAULT_CADENCE = \{([\s\S]*?)\};/)?.[1] ?? '';
-    const webCadPath = join(ROOT, 'web', 'src', 'lib', 'followups.ts');
-    if (coreCad && existsSync(webCadPath)) {
-      const webCad = readFileSync(webCadPath, 'utf-8')
-        .match(/CADENCE_DEFAULTS[^=]*=\s*\{([\s\S]*?)\};/)?.[1] ?? '';
-      const pairs = (block) => Object.fromEntries(
-        [...block.matchAll(/([a-z_]+):\s*(\d+)/g)].map((m) => [m[1], Number(m[2])]));
-      const core = pairs(coreCad);
-      const web = pairs(webCad);
-      const cadDrift = [];
-      for (const [k, v] of Object.entries(core)) {
-        const webKey = k === 'applied_max_followups' ? k : `${k}_days`;
-        if (!(webKey in web)) cadDrift.push(`${webKey} missing in web`);
-        else if (web[webKey] !== v) cadDrift.push(`${webKey}=${web[webKey]} vs core ${k}=${v}`);
-      }
-      if (Object.keys(web).length !== Object.keys(core).length) {
-        cadDrift.push(`key count ${Object.keys(web).length} vs core ${Object.keys(core).length}`);
-      }
-      if (cadDrift.length === 0) {
-        pass('web CADENCE_DEFAULTS matches core DEFAULT_CADENCE under the _days mapping (#2369)');
+    // Assert the EMITTED payload, not just the source text: a regex over the
+    // source proves the literal is present, not that the contract the web
+    // parses is intact. analyzeFromContent() is the same code path --json
+    // prints, driven from strings so it needs no tracker on disk.
+    const { analyzeFromContent, DEFAULT_CADENCE } = await import(pathToFileURL(join(ROOT, 'followup-cadence.mjs')).href);
+    const emitted = analyzeFromContent(
+      '# Applications Tracker\n\n| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
+      '| 1 | 2026-06-01 | Acme | Engineer | 4.2/5 | Applied | ❌ | [1](../reports/001-acme.md) | t |\n',
+      '',
+    );
+    const defaults = emitted?.cadenceDefaults;
+    const cadKeys = Object.keys(DEFAULT_CADENCE);
+    const schemaOk = defaults && typeof defaults === 'object'
+      && cadKeys.length > 0
+      && cadKeys.every((k) => Number.isInteger(defaults[k]) && defaults[k] >= 0)
+      && Object.keys(defaults).length === cadKeys.length;
+    if (schemaOk) {
+      pass('followup-cadence --json emits a complete integer cadenceDefaults for the web to derive from (#2369)');
+    } else {
+      fail(`cadenceDefaults payload broken — the web cadence form loses its baseline (#2369): ${JSON.stringify(defaults)}`);
+    }
+    // Every key the web maps must exist under the core's un-suffixed spelling.
+    const webKeys = ['applied_first_days', 'applied_subsequent_days', 'applied_max_followups', 'responded_initial_days', 'responded_subsequent_days', 'interview_thankyou_days'];
+    const mapped = webKeys.every((k) => {
+      const coreKey = k === 'applied_max_followups' ? k : k.replace(/_days$/, '');
+      return Number.isInteger(defaults?.[coreKey]);
+    });
+    if (mapped) {
+      pass('every web PROFILE_CADENCE_KEY maps onto a core cadenceDefaults key (#2369)');
+    } else {
+      fail('the web _days key mapping no longer lines up with the core cadenceDefaults keys (#2369)');
+    }
+    const webFollowups = join(ROOT, 'web', 'src', 'lib', 'followups.ts');
+    if (existsSync(webFollowups)) {
+      const webSrc = readFileSync(webFollowups, 'utf-8');
+      if (!/export const CADENCE_DEFAULTS/.test(webSrc)) {
+        pass('web/src/lib/followups.ts keeps no hand-copied cadence table (#2369)');
       } else {
-        fail(`web cadence baseline drifted from followup-cadence.mjs (#2369): ${cadDrift.join(' | ')}`);
+        fail('CADENCE_DEFAULTS was reintroduced in web/src/lib/followups.ts — derive from the core instead (#2369)');
       }
     }
   }
