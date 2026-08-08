@@ -34,7 +34,7 @@ export function ApplyButton({ n, url, company, pdfReady }: { n: string; url?: st
     <button
       type="button"
       onClick={() => {
-        apply.open(url!, { prefill: true, company });
+        apply.open(url!, { prefill: true, company, application: n });
         router.push("/apply");
       }}
       className="inline-flex items-center justify-center gap-1.5 rounded-full bg-brand px-3.5 py-1 text-xs font-medium text-brand-foreground shadow-sm transition-colors hover:bg-brand-200 max-sm:min-h-[44px]"

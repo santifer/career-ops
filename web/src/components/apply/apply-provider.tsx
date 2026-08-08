@@ -22,7 +22,7 @@ type ApplyCtx = {
   issues: ApplyIssue[];
   driveSteps: DriveStep[];
   error: string;
-  open: (url: string, opts?: { prefill?: boolean; company?: string }) => Promise<void>;
+  open: (url: string, opts?: { prefill?: boolean; company?: string; application?: string }) => Promise<void>;
   prefill: () => Promise<void>;
   setAnswer: (idOrLabel: string, value: string) => void;
   fill: () => Promise<void>;
@@ -62,6 +62,7 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const sessionId = useRef<string | null>(null);
   const companyRef = useRef<string>("");
+  const applicationRef = useRef<string>("");
   const fieldsRef = useRef<ApplyField[]>([]);
   fieldsRef.current = fields;
   const answersRef = useRef<Record<string, string>>({});
@@ -125,7 +126,7 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const open = useCallback(async (u: string, opts?: { prefill?: boolean; company?: string }) => {
+  const open = useCallback(async (u: string, opts?: { prefill?: boolean; company?: string; application?: string }) => {
     setStatus("opening");
     setError("");
     setFields([]);
@@ -138,6 +139,7 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
     setUrl(u);
     setCompany(opts?.company ?? "");
     companyRef.current = opts?.company ?? "";
+    applicationRef.current = opts?.application ?? "";
     pendingPrefill.current = false;
     try {
       const r = await fetch("/api/apply/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: u, cliId: cliId() }) });
@@ -257,7 +259,7 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
     setStatus("filling");
     setSteps([]);
     try {
-      const r = await fetch("/api/apply/fill", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: sessionId.current, answers, fields, handoff: true, company: companyRef.current }) });
+      const r = await fetch("/api/apply/fill", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: sessionId.current, answers, fields, handoff: true, company: companyRef.current, application: applicationRef.current }) });
       const d = await r.json();
       if (d.error) {
         setError(d.error);
@@ -349,6 +351,7 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
     }
     sessionId.current = null;
     companyRef.current = "";
+    applicationRef.current = "";
     pendingPrefill.current = false;
     setStatus("idle");
     setUrl("");
