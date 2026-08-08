@@ -2429,6 +2429,51 @@ if (
   }
 }
 
+// --- Block G pay-transparency range-width signal (#2019, re-scoped #2280) ---
+{
+  // Maintainer direction (#2280): the jurisdiction table is gone — no
+  // external YAML, no legal threshold. Only the self-computed range-width
+  // heuristic (former 13a) survives; the corroborating missing-range
+  // sub-signal (former 13b) had no trigger without the table and was removed
+  // with it.
+  const ptPath = join(ROOT, 'templates', 'pay-transparency.yml');
+  if (existsSync(ptPath)) {
+    fail('templates/pay-transparency.yml should have been removed per maintainer direction (#2280)');
+  } else {
+    pass('templates/pay-transparency.yml removed — no jurisdiction table remains (#2280)');
+  }
+
+  // oferta.md carries the standalone, table-free range-width signal
+  const ptStart = ofertaMode.indexOf('Pay-Transparency Range-Width Check');
+  const ptEnd = ofertaMode.indexOf('### Output format:', Math.max(ptStart, 0));
+  const ptSection = ptStart >= 0 && ptEnd > ptStart ? ofertaMode.slice(ptStart, ptEnd) : '';
+  if (
+    ptSection &&
+    !ptSection.includes('templates/pay-transparency.yml') &&
+    !/13b/.test(ptSection) &&
+    ptSection.includes('general heuristic') &&
+    ptSection.includes('top - bottom > 0.5 × bottom') &&
+    ptSection.includes('Phrasing discipline (mandatory)') &&
+    ptSection.includes('not legal advice')
+  ) {
+    pass('oferta Block G has the table-free, self-computed pay-transparency range-width signal (#2280)');
+  } else {
+    fail('oferta Block G missing/incomplete pay-transparency range-width section — needs table-free arithmetic heuristic, "general heuristic" framing, the documented threshold formula (top - bottom > 0.5 × bottom), phrasing discipline, not-legal-advice note, and no leftover table/13b references (#2280)');
+  }
+
+  // Phrasing discipline holds in the report-facing text: the blockquote
+  // template the agent renders must state facts, never legal accusations.
+  // (The rule text itself may quote the banned phrases to forbid them,
+  // so only '>' lines — the rendered output templates — are scanned.)
+  const ptQuoteLines = ptSection.split('\n').filter((l) => l.trimStart().startsWith('>'));
+  const accusatory = ptQuoteLines.filter((l) => /illegal|violation|breaking the law/i.test(l));
+  if (ptSection && ptQuoteLines.length >= 1 && accusatory.length === 0) {
+    pass('pay-transparency report template states facts only — no "illegal"/"violation"/"breaking the law" assertions (#2280)');
+  } else {
+    fail(`pay-transparency phrasing discipline broken: ${accusatory.length ? `accusatory blockquote line(s): ${accusatory[0].trim().slice(0, 80)}` : 'expected 1+ blockquote output template in the section'} (#2280)`);
+  }
+}
+
 // --- offer-prep mode: contract reading companion (describes, never judges) ---
 const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
 if (
@@ -13452,7 +13497,7 @@ console.log('\n69. Jurisdiction-prohibited content signal (#2018)');
   // sentence, the new sections must not contain employer-lawbreaking language.
   const signal9 = ofertaMode.slice(
     ofertaMode.indexOf('**12. Jurisdiction-Prohibited Content**'),
-    ofertaMode.indexOf('### Output format:')
+    ofertaMode.indexOf('**13. Pay-Transparency Range-Width Check**')
   );
   const step5c = applyMode.slice(
     applyMode.indexOf('## Step 5c — Jurisdiction-prohibited content check'),
