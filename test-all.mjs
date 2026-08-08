@@ -2429,6 +2429,145 @@ if (
   }
 }
 
+// --- Block G minimum-wage lawyer question (#2025, reshaped #2280) ---
+// Per maintainer direction on #2027: no jurisdiction wage table, no
+// comparison/assertion against any statutory rate. This signal only does
+// the arithmetic that needs no legal table (offer -> comparable hourly
+// figure) and routes the actual compliance question to a lawyer.
+{
+  // 1. templates/minimum-wage.yml must be GONE — the reshape's whole point
+  //    is that no rate table should exist to go stale.
+  const mwPath = join(ROOT, 'templates', 'minimum-wage.yml');
+  if (!existsSync(mwPath)) {
+    pass('templates/minimum-wage.yml removed — no jurisdiction wage table ships (#2280)');
+  } else {
+    fail('templates/minimum-wage.yml still exists — maintainer direction on #2027/#2280 was to drop the rate table entirely');
+  }
+
+  // 2. oferta.md carries the reshaped section: no reference to the deleted
+  //    table, jurisdiction still resolved strictly from the JD (no
+  //    config/profile.yml fallback), the fixed-cash comparable-amount gate
+  //    and JD-hours-first normalization are preserved, and no staleness/
+  //    carve-out-eligibility machinery (which existed only to support the
+  //    now-deleted table comparison) remains.
+  const mwStart = ofertaMode.indexOf('**13. Minimum-Wage Lawyer Question**');
+  const mwEnd = ofertaMode.indexOf('### Output format:', Math.max(mwStart, 0));
+  const mwSection = mwStart >= 0 && mwEnd > mwStart ? ofertaMode.slice(mwStart, mwEnd) : '';
+  if (
+    mwSection &&
+    !mwSection.includes('templates/minimum-wage.yml') &&
+    mwSection.includes('NEVER from `config/profile.yml`') &&
+    mwSection.includes('Comparable-amount gate (mandatory)') &&
+    mwSection.includes('guaranteed, fixed cash amount') &&
+    mwSection.includes('bonuses, commissions, allowances, overtime pay, 13th-month') &&
+    mwSection.includes("JD's own stated working hours") &&
+    mwSection.includes('2080 hours/year') &&
+    mwSection.includes('always disclose in the output which hours figure was used') &&
+    mwSection.includes('Jurisdiction resolution (mandatory)') &&
+    mwSection.includes('[ask your lawyer]') &&
+    mwSection.includes('never conditioned on whether') &&
+    !mwSection.includes('staleness gate') &&
+    !mwSection.includes('Carve-out honesty') &&
+    !mwSection.includes('as_of') &&
+    !mwSection.includes('reference rate')
+  ) {
+    pass('oferta Block G signal 13 dropped the wage-table reference and staleness/carve-out-eligibility machinery while keeping jurisdiction-strict resolution (no profile fallback), the fixed-cash comparable-amount gate, and JD-hours-first normalization (#2280)');
+  } else {
+    fail('oferta Block G signal 13 missing/incomplete post-#2280 reshape — needs: no templates/minimum-wage.yml reference, jurisdiction still resolved strictly from the JD only, fixed-cash comparable-amount gate excluding ranges/variable comp, JD-hours-first normalization with 2080 fallback disclosure, [ask your lawyer] routing, unconditional firing rule, AND removal of the old staleness gate / carve-out-honesty / as_of / reference-rate language that only made sense with a table (#2280)');
+  }
+
+  // 3. Phrasing discipline: the rendered blockquote must never assert or
+  //    imply a current statutory minimum wage, never claim compliance either
+  //    way, and must route to [ask your lawyer]. (The rule text itself may
+  //    quote banned phrases to forbid them, so only '>' lines — the
+  //    rendered output template — are scanned.)
+  const mwQuoteLines = mwSection.split('\n').filter((l) => l.trimStart().startsWith('>'));
+  const mwAccusatory = mwQuoteLines.filter((l) => /illegal|violation|breaking the law/i.test(l));
+  const mwHasLawyerRouting = mwQuoteLines.some((l) => l.includes('[ask your lawyer]'));
+  if (mwSection && mwQuoteLines.length >= 1 && mwAccusatory.length === 0 && mwHasLawyerRouting) {
+    pass('minimum-wage report template routes to [ask your lawyer] with no "illegal"/"violation"/"breaking the law" assertions (#2280)');
+  } else {
+    fail(`minimum-wage phrasing discipline broken: ${mwAccusatory.length ? `accusatory blockquote line(s): ${mwAccusatory[0].trim().slice(0, 80)}` : (!mwHasLawyerRouting ? 'missing [ask your lawyer] routing in rendered blockquote' : 'expected a blockquote output template in the section')} (#2280)`);
+  }
+
+  // 4. The rendered lawyer question must follow santifer's exact shape from
+  //    his #2027 comment: computed hourly figure, hours basis disclosed,
+  //    jurisdiction name, statutory-minimum question, AND a mention of
+  //    special rates (student/homeworker) as a prompt — never an assertion
+  //    of eligibility, since there is no table to judge that from anymore.
+  const mwHandoffQuote = mwQuoteLines.find((l) => l.includes('[ask your lawyer]')) || '';
+  if (
+    /\/hour/i.test(mwHandoffQuote) &&
+    /statutory minimum/i.test(mwHandoffQuote) &&
+    /jurisdiction_name|\{jurisdiction/i.test(mwHandoffQuote) &&
+    /student/i.test(mwHandoffQuote) &&
+    /homeworker/i.test(mwHandoffQuote)
+  ) {
+    pass('minimum-wage lawyer question follows the maintainer-specified shape: computed hourly figure, jurisdiction placeholder, statutory-minimum question, special-rates (student/homeworker) prompt (#2280)');
+  } else {
+    fail('minimum-wage lawyer question does not match the maintainer-specified shape — must include the hourly figure, the jurisdiction placeholder, the statutory-minimum question, and a student/homeworker special-rates prompt (#2280)');
+  }
+
+  // 5. Behavioral test for the hourly-conversion arithmetic itself (the part
+  //    of the old algorithm that survives the reshape unchanged): fixed
+  //    cash amount -> comparable hourly figure, JD-stated hours preferred,
+  //    2080-hour fallback only when the JD is silent, ranges/variable comp
+  //    excluded by the comparable-amount gate.
+  {
+    function computeHourlyFigure({ advertisedComp, isRange, isVariable, period, jdStatedHoursPerYear }) {
+      if (advertisedComp == null || isRange || isVariable) return { skip: true };
+      if (period === 'hourly') {
+        return { skip: false, hourly: advertisedComp, hoursBasis: 'n/a (already hourly)' };
+      }
+      let annual = period === 'monthly' ? advertisedComp * 12 : advertisedComp;
+      const hoursPerYear = jdStatedHoursPerYear ?? 2080;
+      const hoursBasis = jdStatedHoursPerYear ? 'JD-stated' : '2080-hour fallback';
+      if (!hoursPerYear) return { skip: true };
+      return { skip: false, hourly: annual / hoursPerYear, hoursBasis };
+    }
+
+    // (a) already hourly -> passthrough
+    const hourly = computeHourlyFigure({ advertisedComp: 22.50, isRange: false, isVariable: false, period: 'hourly' });
+    // (b) annual, JD states 37.5 hrs/week * 52 = 1950 hrs/year -> preferred over 2080
+    const annualJdHours = computeHourlyFigure({ advertisedComp: 62400, isRange: false, isVariable: false, period: 'annual', jdStatedHoursPerYear: 1950 });
+    // (c) annual, JD silent on hours -> 2080 fallback
+    const annualFallback = computeHourlyFigure({ advertisedComp: 62400, isRange: false, isVariable: false, period: 'annual' });
+    // (d) monthly -> annualized first, then converted
+    const monthly = computeHourlyFigure({ advertisedComp: 5000, isRange: false, isVariable: false, period: 'monthly' });
+    // (e) comparable-amount gate: range excluded
+    const rangeSkipped = computeHourlyFigure({ advertisedComp: 17, isRange: true, isVariable: false, period: 'hourly' });
+    // (f) comparable-amount gate: variable comp (bonus/commission) excluded
+    const variableSkipped = computeHourlyFigure({ advertisedComp: 5000, isRange: false, isVariable: true, period: 'annual' });
+    // (g) null advertised_comp -> skip (pay-transparency signal's territory)
+    const nullSkipped = computeHourlyFigure({ advertisedComp: null, isRange: false, isVariable: false, period: 'hourly' });
+
+    const arithmeticOk =
+      !hourly.skip && hourly.hourly === 22.50 &&
+      !annualJdHours.skip && Math.abs(annualJdHours.hourly - 32) < 0.001 && annualJdHours.hoursBasis === 'JD-stated' &&
+      !annualFallback.skip && Math.abs(annualFallback.hourly - 30) < 0.001 && annualFallback.hoursBasis === '2080-hour fallback' &&
+      !monthly.skip && Math.abs(monthly.hourly - (60000 / 2080)) < 0.001 &&
+      rangeSkipped.skip === true &&
+      variableSkipped.skip === true &&
+      nullSkipped.skip === true;
+
+    if (arithmeticOk) {
+      pass('hourly-conversion arithmetic correctly passes through hourly figures, prefers JD-stated hours over the 2080 fallback, annualizes monthly pay before converting, and the comparable-amount gate excludes ranges/variable comp/null advertised_comp (#2280)');
+    } else {
+      fail(`hourly-conversion arithmetic produced wrong results: hourly=${JSON.stringify(hourly)} annualJdHours=${JSON.stringify(annualJdHours)} annualFallback=${JSON.stringify(annualFallback)} monthly=${JSON.stringify(monthly)} rangeSkipped=${JSON.stringify(rangeSkipped)} variableSkipped=${JSON.stringify(variableSkipped)} nullSkipped=${JSON.stringify(nullSkipped)} (#2280)`);
+    }
+  }
+
+  // 6. Signal-13 boundary check: signal 13 is the last numbered Block G
+  //    signal before "### Output format:", so slicing it for phrasing
+  //    checks elsewhere in this file must not accidentally swallow the
+  //    output-format section.
+  if (mwEnd > mwStart && mwStart >= 0) {
+    pass('signal-13 section boundary (start of signal 13 to "### Output format:") resolved correctly for slicing (#2280)');
+  } else {
+    fail('could not locate signal 13 ("**13. Minimum-Wage Lawyer Question**") or its end boundary in modes/oferta.md (#2280)');
+  }
+}
+
 // --- offer-prep mode: contract reading companion (describes, never judges) ---
 const offerPrepMode = fileExists('modes/offer-prep.md') ? readFile('modes/offer-prep.md') : '';
 if (
@@ -13452,7 +13591,7 @@ console.log('\n69. Jurisdiction-prohibited content signal (#2018)');
   // sentence, the new sections must not contain employer-lawbreaking language.
   const signal9 = ofertaMode.slice(
     ofertaMode.indexOf('**12. Jurisdiction-Prohibited Content**'),
-    ofertaMode.indexOf('### Output format:')
+    ofertaMode.indexOf('**13. Minimum-Wage Lawyer Question**')
   );
   const step5c = applyMode.slice(
     applyMode.indexOf('## Step 5c — Jurisdiction-prohibited content check'),
