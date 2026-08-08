@@ -9170,6 +9170,43 @@ try {
   } else {
     fail('merge-tracker left a newly merged row at ❌ despite a matching pdf-index.tsv entry');
   }
+
+  // A re-evaluation REPLACES the row's report link, and the PDF flag describes
+  // that report. Inheriting the old flag across the change carried the
+  // superseded report's ✅ onto a report with no PDF: the row then claimed a
+  // tailored CV exists, and the only PDF on disk belonged to the evaluation
+  // that had just been superseded (#2594).
+  const reevalRow = '| 3 | 2026-01-04 | Acme | Backend Engineer, Payments | 4.5/5 | Evaluated | ✅ | [1](../reports/001-acme-2026-01-04.md) | first |';
+  const reevalTsv = (n) => ({
+    name: `00${n}-acme.tsv`,
+    content: `${n}\t2026-02-01\tAcme\tBackend Engineer, Payments\tEvaluated\t3.9/5\t❌\t[${n}](reports/00${n}-acme-2026-02-01.md)\tre-eval\n`,
+  });
+
+  const staleFlag = runPdfSyncFixture(
+    'reeval-stale',
+    reevalRow,
+    '# report\tpdf\thtml\tformat\tdate\n1\toutput/acme-1.pdf\t\t\t2026-01-04\n',
+    [reevalTsv(2)],
+  );
+  const staleRow = staleFlag.merged.split('\n').find((l) => l.startsWith('| 3 ')) || '';
+  if (staleFlag.result !== null && /\[2\]/.test(staleRow) && staleRow.split('|')[7].trim() === '❌') {
+    pass('a re-eval that changes the report clears a ✅ the new report has no PDF for (#2594)');
+  } else {
+    fail(`stale PDF flag survived a report change: ${staleRow.trim()}`);
+  }
+
+  const keptFlag = runPdfSyncFixture(
+    'reeval-kept',
+    reevalRow,
+    '# report\tpdf\thtml\tformat\tdate\n1\toutput/acme-1.pdf\t\t\t2026-01-04\n2\toutput/acme-2.pdf\t\t\t2026-02-01\n',
+    [reevalTsv(2)],
+  );
+  const keptRow = keptFlag.merged.split('\n').find((l) => l.startsWith('| 3 ')) || '';
+  if (keptFlag.result !== null && /\[2\]/.test(keptRow) && keptRow.split('|')[7].trim() === '✅') {
+    pass('a re-eval keeps ✅ when the NEW report does have a generated PDF (#2594)');
+  } else {
+    fail(`re-eval wrongly cleared a valid PDF flag: ${keptRow.trim()}`);
+  }
 } catch (e) {
   fail(`merge-tracker PDF flag sync test crashed: ${e.message}`);
 }

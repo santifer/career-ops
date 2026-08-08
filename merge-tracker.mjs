@@ -890,7 +890,17 @@ for (const file of tsvFiles) {
       `${downgrade ? '🔽' : '🔄'} Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`
       + (downgrade ? ' — DOWNGRADE, re-eval scored lower' : ''),
     );
-    const pdf = reportNum && pdfIndex.has(String(reportNum)) ? '✅' : duplicate.pdf;
+    // The PDF flag describes THE ROW'S REPORT, and this branch replaces that
+    // report link. Inheriting duplicate.pdf across a report change carried the
+    // superseded report's ✅ onto the new one: the row then claimed a tailored
+    // PDF exists for a report that has none, and the only PDF on disk belonged
+    // to the evaluation that was just superseded. Fall back to the existing
+    // flag only when the report is unchanged; when it changes, the manifest is
+    // the sole authority (#2594).
+    const reportChanged = reportNum && oldReportNum && String(reportNum) !== String(oldReportNum);
+    const pdf = reportNum && pdfIndex.has(String(reportNum))
+      ? '✅'
+      : (reportChanged ? '❌' : duplicate.pdf);
     const updatedLine = buildRow({
       num: duplicate.num, date: addition.date, company: addition.company,
       role: reportNumMatched ? addition.role : duplicate.role,
