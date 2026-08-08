@@ -43,6 +43,7 @@ function check(label, actual, expected) {
 const TEMPLATES = [
   { file: 'templates/cv-template.html', format: 'html', after: 'SKILLS', hasCertifications: true, hasCompetencies: true },
   { file: 'templates/resume-template.html', format: 'html', after: 'SKILLS', hasCertifications: false, hasCompetencies: true },
+  { file: 'templates/cv-template.zh-minimal.html', format: 'html', after: 'SKILLS', hasCertifications: true, hasCompetencies: true },
   { file: 'templates/cv-template.tex', format: 'tex', after: 'Technical Skills', hasCertifications: false, hasCompetencies: false },
 ];
 
