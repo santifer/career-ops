@@ -1,15 +1,27 @@
-import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+// Both spawners are needed here, and the distinction matters: agent CLIs go
+// through spawnHeadlessCli (which closes stdin so `codex exec` can't hang
+// waiting on it, #2085), while the PDF render is a plain Node child process
+// with no CLI sandbox in the way (#2172) and so uses spawn directly.
+import { spawn } from "node:child_process";
 import { resolveCli } from "@/lib/clis";
 import { careerOpsRoot, readMemory, findReportFile } from "@/lib/career-ops";
 import { resolvePdfPaths, type PdfPaths } from "@/lib/pdf-paths.mjs";
 import { renderAndMarkPdf } from "@/lib/pdf-render.mjs";
 import { acquireTrackerWrite, releaseTrackerWrite } from "@/lib/core/run-registry";
+import { accumulateTokens, hasNewCompletedReport } from "@/lib/run-cli-support.mjs";
+import { spawnHeadlessCli } from "@/lib/spawn-cli.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 800; // a real oferta evaluation / pdf-mode CV tailoring + render is heavy and multi-step
+
+const MAX_ERROR_MSG_LEN = 200;
+// Fallback for any CLI without its own CliSpec.stderrIsFatal — widened so
+// auth/login/quota failures (the most common real error) aren't missed.
+const GENERIC_FATAL_STDERR_RE =
+  /error|denied|fatal|not found|unauthorized|forbidden|auth|login|credential|api[ -]?key|quota|rate limit|not authenticated/i;
 
 // The web ORCHESTRATES the real career-ops engine — it does NOT reimplement it.
 // kind "evaluate" runs the REAL modes/oferta.md and persists the canonical
@@ -177,20 +189,20 @@ export async function POST(req: Request) {
   // For write-needing kinds, snapshot reports/ so we can verify the worker
   // actually persisted (non-Claude CLIs lack Write auth and silently no-op).
   const reportsDir = path.join(careerOpsRoot(), "reports");
-  const countReports = () => {
+  const reportEntries = () => {
     try {
-      return fs.readdirSync(reportsDir).filter((f) => f.endsWith(".md")).length;
+      return fs.readdirSync(reportsDir);
     } catch {
-      return 0;
+      return [];
     }
   };
   const persists = kind === "evaluate";
-  const reportsBefore = persists ? countReports() : 0;
+  const reportsBefore = persists ? reportEntries() : [];
   // Tracker-mutating runs hold a write token so a row delete can't race their merge
   // (tracker.mjs delete doesn't yet share a lock with merge-tracker — see run-registry).
   const writeToken = kind === "evaluate" || kind === "pdf" ? acquireTrackerWrite() : null;
 
-  const child = spawn(binPath, args, { cwd: careerOpsRoot(), env: process.env });
+  const child = spawnHeadlessCli(binPath, args, { cwd: careerOpsRoot(), env: process.env });
   const enc = new TextEncoder();
 
   // `closed` + kill timer in the OUTER scope so cancel() (client disconnect) can
@@ -216,7 +228,7 @@ export async function POST(req: Request) {
       let buf = "";
       let emittedText = false; // any assistant text delta → the CLI actually ran
       let sawError = false;
-      let lastTokens = 0; // per-run token cost from the Claude result event (#6) — local only
+      let lastTokens = 0; // per-run token cost from the CLI's structured result/usage event — local only
       let lastCostUsd: number | null = null;
       // pdf-mode's agent only tailors content now (rendering moved to the
       // backend, #2172) — but its killMs still has to leave real headroom
@@ -244,9 +256,29 @@ export async function POST(req: Request) {
         }
       };
 
+      // Shared by the stdout loop below AND the close-time flush, so a final
+      // JSONL line the CLI never newline-terminates before exiting isn't
+      // silently dropped along with whatever result/usage event it carried.
+      const processParsedLine = (line: string) => {
+        if (!spec.parseEvent) return;
+        const ev = spec.parseEvent(line);
+        if (ev?.text) {
+          emittedText = true;
+          send({ type: "text", text: ev.text });
+        }
+        if (ev?.tool) send({ type: "tool", name: ev.tool });
+        if (ev?.status) send({ type: "status", label: ev.status });
+        lastTokens = accumulateTokens(lastTokens, ev);
+        if (typeof ev?.costUsd === "number") lastCostUsd = ev.costUsd;
+        if (ev?.error) {
+          sawError = true;
+          send({ type: "error", msg: ev.error.slice(0, MAX_ERROR_MSG_LEN) });
+        }
+      };
+
       child.stdout.on("data", (d: Buffer) => {
         if (closed) return;
-        if (!isClaude) {
+        if (!spec.parseEvent) {
           emittedText = true;
           send({ type: "text", text: d.toString() });
           return;
@@ -256,39 +288,15 @@ export async function POST(req: Request) {
         while ((nl = buf.indexOf("\n")) !== -1) {
           const line = buf.slice(0, nl).trim();
           buf = buf.slice(nl + 1);
-          if (!line) continue;
-          try {
-            const ev = JSON.parse(line);
-            if (ev.type === "stream_event") {
-              const e = ev.event;
-              if (e?.type === "content_block_start" && e.content_block?.type === "tool_use") {
-                send({ type: "tool", name: e.content_block.name });
-              } else if (e?.type === "content_block_delta" && e.delta?.text) {
-                emittedText = true;
-                send({ type: "text", text: e.delta.text });
-              }
-            } else if (ev.type === "system" && ev.subtype === "init") {
-              send({ type: "status", label: "Agent ready" });
-            } else if (ev.type === "result") {
-              // Capture the per-run cost; the authoritative "done" is sent on close
-              // (so the honesty gate decides done-vs-error first). Tokens = the same
-              // formula /api/usage uses: input + output + cache-creation.
-              const u = ev.usage || {};
-              lastTokens = (u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_creation_input_tokens || 0);
-              if (typeof ev.total_cost_usd === "number") lastCostUsd = ev.total_cost_usd;
-            }
-          } catch {
-            /* partial line */
-          }
+          if (line) processParsedLine(line);
         }
       });
       child.stderr.on("data", (d: Buffer) => {
         const s = d.toString();
-        // Widened: auth/login/quota failures are the most common real error and
-        // the old narrow regex missed them (silent false "success").
-        if (/error|denied|fatal|not found|unauthorized|forbidden|auth|login|credential|api[ -]?key|quota|rate limit|not authenticated/i.test(s)) {
+        const isFatal = spec.stderrIsFatal ? spec.stderrIsFatal(s) : GENERIC_FATAL_STDERR_RE.test(s);
+        if (isFatal) {
           sawError = true;
-          send({ type: "error", msg: s.trim().slice(0, 200) });
+          send({ type: "error", msg: s.trim().slice(0, MAX_ERROR_MSG_LEN) });
         }
       });
       // Render + mark-tracker-ready live in pdf-render.mjs (plain, dependency-
@@ -338,6 +346,13 @@ export async function POST(req: Request) {
         // run could still start a brand-new render (and re-touch the tracker)
         // after the stream — and its writeToken guard — is already gone.
         if (closed) return;
+        // A final JSONL line without a trailing newline stays in `buf` forever
+        // otherwise — flush it through the same parser so its usage/result
+        // event (often the last one, carrying the final token count) isn't lost.
+        // Ahead of the pdf branch, not just the evaluate gate: the pdf path
+        // reports lastTokens too, so a trailing usage event has to land first.
+        const trailing = buf.trim();
+        if (trailing) processParsedLine(trailing);
         const cleanExit = code === 0; // non-zero OR null (killed/signal) = NOT clean
         // Shared by both honesty gates below: a CLI that produced no output at
         // all is the same failure mode whether it was evaluating or tailoring
@@ -372,7 +387,7 @@ export async function POST(req: Request) {
           return close();
         }
 
-        const wroteReport = countReports() > reportsBefore;
+        const wroteReport = hasNewCompletedReport(reportsBefore, reportEntries());
         // Honesty gate (#9): a green "done" with a parsed score requires a CLEAN exit,
         // real output, AND (for evaluations) a report actually written. Anything else
         // is surfaced — an errored run must never be banked as a confident score.
