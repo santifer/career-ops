@@ -26,7 +26,10 @@
  *   node agent-inbox.mjs resolve 1 [--result "scored 4.3 — report 012"]
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import {
+  readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync,
+  openSync, fstatSync, readSync, closeSync,
+} from 'fs';
 import { dirname } from 'path';
 
 const PATH = process.env.CAREER_OPS_INBOX || 'data/agent-inbox.md';
@@ -70,7 +73,34 @@ function ensureFile() {
   if (existsSync(PATH)) return;
   ensureGitignored();
   mkdirSync(dirname(PATH), { recursive: true });
-  writeFileSync(PATH, HEADER);
+  // 'wx': atomic create-exclusive. Two concurrent first-time `add` calls can
+  // both pass the existsSync check above before either writes; without an
+  // exclusive flag, the second writeFileSync (default 'w', which truncates)
+  // lands after the first has already appended its item and wipes it back to
+  // just the header. 'wx' makes only one of them win the create — the loser
+  // gets EEXIST and does nothing, same as if it had seen existsSync === true.
+  try {
+    writeFileSync(PATH, HEADER, { flag: 'wx' });
+  } catch (err) {
+    if (err?.code !== 'EEXIST') throw err;
+  }
+}
+
+// Whether appending to `path` needs a leading newline first, i.e. the file is
+// non-empty and doesn't already end in one. Reads only the last byte instead
+// of the whole file — the full-file read this replaced was only ever used to
+// check one byte.
+function needsLeadingNewline(path) {
+  const fd = openSync(path, 'r');
+  try {
+    const size = fstatSync(fd).size;
+    if (size === 0) return false;
+    const buf = Buffer.alloc(1);
+    readSync(fd, buf, 0, 1, size - 1);
+    return buf[0] !== 0x0a; // '\n'
+  } finally {
+    closeSync(fd);
+  }
 }
 
 // Parse the checklist into items, in file order.
@@ -95,8 +125,18 @@ function add() {
   const text = oneLine(process.argv.slice(3).join(' '));
   if (!text) fail('add needs a request, e.g. node agent-inbox.mjs add "evaluate https://..."');
   ensureFile();
-  const body = readFileSync(PATH, 'utf8').replace(/\s+$/, '');
-  writeFileSync(PATH, `${body}\n- [ ] ${stamp()} — ${text}\n`);
+  // Append rather than rewrite. This is the queue's concurrent path — anything
+  // running in the background can drop an item in — and a read-whole-file /
+  // write-whole-file cycle loses every request that lands between the two. With
+  // 30 concurrent `add` calls, half the queue vanished silently.
+  //
+  // POSIX guarantees an O_APPEND write is atomic below PIPE_BUF, and one
+  // checklist line is far under it, so concurrent appends interleave instead of
+  // clobbering. Checking the last byte first only decides whether a separating
+  // newline is needed (for a file someone hand-edited without one); the write
+  // itself is still a single atomic append.
+  const separator = needsLeadingNewline(PATH) ? '\n' : '';
+  appendFileSync(PATH, `${separator}- [ ] ${stamp()} — ${text}\n`);
   process.stdout.write(`Queued: ${text}\n`);
 }
 
