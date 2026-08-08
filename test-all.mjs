@@ -2612,6 +2612,112 @@ if (
   fail('router skill missing offer-prep registration (or offer-prep leaked into the subagent-delegated section)');
 }
 
+// --- offer-prep sub-statutory-terms lawyer question (#2039, reworked per #2280) ---
+// santifer's direction on PR #2042 (2026-07-29, reasoning in #2280): a
+// jurisdiction table of category-regulation flags (floor_categories,
+// void_doctrine) is a live legal fact this system can never verify or
+// notice going stale, same as #2027's minimum-wage table — a stale flag
+// with a citation is worse than no flag at all. templates/statutory-
+// employment-minimums.yml is deleted entirely (no flags-only shape either).
+// modes/offer-prep.md now only restates the clause's own stated term (no
+// legal table needed) and routes the statutory-floor and voiding-doctrine
+// questions to the lawyer unconditionally, for every jurisdiction, never
+// gated on a table row. Tests below assert the table is gone and the
+// section fires the lawyer questions without any table-backed gating.
+{
+  // 1. The table is gone, not merely emptied.
+  const semPath = join(ROOT, 'templates', 'statutory-employment-minimums.yml');
+  if (!existsSync(semPath)) {
+    pass('templates/statutory-employment-minimums.yml deleted per maintainer direction (#2039, #2280)');
+  } else {
+    fail('templates/statutory-employment-minimums.yml should be deleted entirely per #2280 — a live legal fact this system cannot verify or notice going stale, same reasoning as #2027s minimum-wage table');
+  }
+
+  // templates/README.md carries no row for the deleted table.
+  const templatesReadme = readFile('templates/README.md');
+  if (!templatesReadme.includes('statutory-employment-minimums.yml')) {
+    pass('templates/README.md carries no row for the deleted statutory-employment-minimums.yml (#2280)');
+  } else {
+    fail('templates/README.md still references statutory-employment-minimums.yml, which was deleted per #2280');
+  }
+
+  // 2. offer-prep carries the sub-statutory-terms subsection, reworked to
+  //    route unconditionally to the lawyer list with no table lookup, no
+  //    floor_categories/void_doctrine gating, and no reintroduced ESA
+  //    figures or Waksdale narrative.
+  const semStart = offerPrepMode.indexOf('Sub-statutory-terms lawyer question');
+  const semEnd = offerPrepMode.indexOf('## Step 3', Math.max(semStart, 0));
+  const semSection = semStart >= 0 && semEnd > semStart ? offerPrepMode.slice(semStart, semEnd) : '';
+  if (
+    semSection.includes('Questions for your lawyer') &&
+    semSection.includes('#2280') &&
+    /gone and is not coming back in any shape/.test(semSection) &&
+    /Never assert a floor value, a regulation flag, a doctrine holding,\s+voidness, or violation\s+\(HARD RULE\)/.test(semSection) &&
+    semSection.includes('always a lawyer question') &&
+    semSection.includes('Render in {language.output}') &&
+    /no floor-figure statements,\s+no regulation-flag statements/.test(semSection) &&
+    /never computes, estimates, or\s+ranges a notice or severance amount/.test(semSection) &&
+    // must NOT reference the deleted table's path, or gate any behavior on
+    // its removed flag fields — `floor_categories`/`void_doctrine` may each
+    // appear at most once, in the single historical sentence explaining
+    // what the deleted table used to carry (not as active gating logic).
+    !semSection.includes('templates/statutory-employment-minimums.yml') &&
+    (semSection.match(/floor_categories/g) || []).length <= 1 &&
+    (semSection.match(/void_doctrine/g) || []).length <= 1 &&
+    !semSection.includes('Floors-absent silence') &&
+    !semSection.includes('floorMatch') &&
+    !semSection.includes('voidDoctrineMatch') &&
+    // must NOT reintroduce the removed floor value / doctrine narrative, and
+    // must NOT reintroduce a named case/doctrine (e.g. Bardal) as a factor
+    // list or asserted holding — a bare case citation belongs only in
+    // restrictive-covenants.yml's own `sources` field, never narrated here
+    !/2 weeks|3 weeks|8 weeks|26 weeks/.test(semSection) &&
+    !/Waksdale|ONCA 391|wilful.misconduct standard|Bardal/i.test(semSection)
+  ) {
+    pass('offer-prep sub-statutory-terms subsection documents the table deletion per #2280, routes unconditionally to lawyer questions with no table lookup or category/doctrine gating, never-assert hard rule, {language.output} rendering, no-calculations non-goal — and carries no reintroduced statutory figures or doctrine narrative (#2039, #2280)');
+  } else {
+    fail('offer-prep sub-statutory-terms subsection missing/incomplete, or still asserts a specific floor value / regulation flag / doctrine holding, or still gates on a table lookup — needs the #2280 table-deletion rationale, unconditional lawyer-question routing, the floor-value/flag/doctrine never-assert hard rule, {language.output} rendering, no-calculations non-goal, and must not restate the removed ESA figures or Waksdale narrative (#2039, #2280)');
+  }
+
+  // 3. Lawyer-question workflow: both the floor question and the
+  //    doctrine-directed question are present, fire unconditionally (no
+  //    table-flag gating), explicitly ask the lawyer for the current
+  //    figure/effect rather than the mode asserting one, and are routed
+  //    through {language.output} rendering at the presentation boundary.
+  const semLawyerBlock = semSection.slice(
+    Math.max(0, semSection.indexOf('Questions for your lawyer')),
+    semSection.indexOf('candidate-empowering angle') > 0
+      ? semSection.indexOf('candidate-empowering angle')
+      : undefined
+  );
+  if (
+    /at or above the statutory minimum/i.test(semLawyerBlock) &&
+    /does this clause meet it/i.test(semLawyerBlock) &&
+    /could void the whole clause/i.test(semLawyerBlock) &&
+    !/void_doctrine: true/.test(semLawyerBlock) &&
+    (semLawyerBlock.match(/Render in \{language\.output\}/g) || []).length >= 2
+  ) {
+    pass('sub-statutory-terms lawyer-question workflow generates both the statutory-floor question and the doctrine-directed question unconditionally (no table-flag gating), each asking the lawyer for the current figure/effect (never asserting one) and each rendered via [Render in {language.output}] at the presentation boundary (#2039, #2280)');
+  } else {
+    fail('sub-statutory-terms lawyer-question workflow incomplete — needs a statutory-floor question asking the lawyer for the current minimum, a doctrine-directed question about whether a defect could void the whole clause, both firing unconditionally with no void_doctrine table-flag gating, and both rendered via [Render in {language.output}] (#2039, #2280)');
+  }
+
+  // 4. Phrasing discipline holds in the report-facing text: no rendered
+  //    output template may assert a specific floor value, a regulation
+  //    flag, a doctrine holding, or a verdict about the candidate's own
+  //    clause. Only '>' lines (rendered output templates) are scanned.
+  const semQuoteLines = semSection.split('\n').filter((l) => l.trimStart().startsWith('>'));
+  const semAssertive = semQuoteLines.filter((l) =>
+    /(this|your|the candidate'?s?) (specific )?(clause|provision|term|contract) (is|would be|will be) (void|illegal|unenforceable|invalid|below the (statutory )?floor|in violation)/i.test(l)
+  );
+  const semFigureLeak = semQuoteLines.filter((l) => /Waksdale|ONCA 391|\b2 weeks\b|\b8 weeks\b|\b26 weeks\b/i.test(l));
+  if (semSection && semQuoteLines.length >= 1 && semAssertive.length === 0 && semFigureLeak.length === 0) {
+    pass('sub-statutory-terms rendered templates state only the clause\'s own term + the lawyer question — no void/illegal/unenforceable/below-the-floor assertions and no reintroduced statutory figures or doctrine names (#2039, #2280)');
+  } else {
+    fail(`sub-statutory-terms phrasing discipline broken: ${semAssertive.length ? `clause-directed verdict in blockquote: ${semAssertive[0].trim().slice(0, 80)}` : semFigureLeak.length ? `reintroduced statutory figure/doctrine name in blockquote: ${semFigureLeak[0].trim().slice(0, 80)}` : 'expected a blockquote output template in the section'} (#2039)`);
+  }
+}
+
 const claudeMdDoc = readFile('CLAUDE.md');
 const agentsMdDoc = readFile('AGENTS.md');
 if (
