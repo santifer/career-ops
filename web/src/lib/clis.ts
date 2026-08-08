@@ -28,6 +28,7 @@ function searchDirs(): string[] {
   const home = os.homedir();
   const extra = [
     path.join(home, ".local/bin"),
+    path.join(home, ".opencode", "bin"),
     path.join(home, ".npm-global/bin"),
     path.join(home, ".bun/bin"),
     path.join(home, ".deno/bin"),
