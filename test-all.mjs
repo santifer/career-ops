@@ -9981,9 +9981,13 @@ try {
   }
 
   // No project MCP config → doctor surfaces a (non-fatal) warning instead of
-  // letting SPA job boards fail silently.
+  // letting SPA job boards fail silently. Delete CAREER_OPS_CLI from the env:
+  // earlier in-process imports load the repo .env (which sets it), and the
+  // expected outcome here assumes doctor's default CLI (claude).
+  const doctorEnv = { ...process.env };
+  delete doctorEnv.CAREER_OPS_CLI;
   const noMcp = mkdtempSync(join(tmpdir(), 'co-nomcp-'));
-  const a = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', noMcp]) || '{}');
+  const a = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', noMcp], { env: doctorEnv }) || '{}');
   if (Array.isArray(a.warnings) && a.warnings.some((w) => /playwright mcp/i.test(w))) {
     pass('No Playwright MCP config → warning surfaced');
   } else {
@@ -9998,7 +10002,7 @@ try {
     join(withMcp, '.claude', 'settings.json'),
     JSON.stringify({ mcpServers: { playwright: { command: 'npx', args: ['@playwright/mcp', '--headless'] } } }),
   );
-  const b = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', withMcp]) || '{}');
+  const b = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', withMcp], { env: doctorEnv }) || '{}');
   if (Array.isArray(b.warnings) && !b.warnings.some((w) => /playwright mcp/i.test(w))) {
     pass('Playwright MCP configured → no warning');
   } else {
@@ -10013,7 +10017,7 @@ try {
     join(withLocalMcp, '.claude', 'settings.local.json'),
     JSON.stringify({ mcpServers: { browser: { command: 'npx', args: ['@playwright/mcp'] } } }),
   );
-  const c = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', withLocalMcp]) || '{}');
+  const c = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', withLocalMcp], { env: doctorEnv }) || '{}');
   if (Array.isArray(c.warnings) && !c.warnings.some((w) => /playwright mcp/i.test(w))) {
     pass('Playwright MCP configured via .claude/settings.local.json → no warning');
   } else {
