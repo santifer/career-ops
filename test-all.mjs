@@ -6176,7 +6176,7 @@ try {
 // ── 11b. TITLE FILTER — acronym word boundaries ──────────────────
 console.log('\n11b. Title filter — acronym word boundaries');
 try {
-  const { buildTitleFilter, compileKeyword } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const { buildTitleFilter, compileKeyword, matchedTitleKeywords } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
 
   // Short all-letter acronyms match on WORD BOUNDARIES, not as substrings.
   const cooFilter = buildTitleFilter({ positive: ['coo'] });
@@ -6202,6 +6202,74 @@ try {
     pass('compileKeyword("cfo") is word-boundary anchored');
   } else {
     fail('compileKeyword("cfo") boundary behavior wrong');
+  }
+
+  // ── AND-groups (#2544) ───────────────────────────────────────────
+  // A positive entry containing " + " requires EVERY term, in any order. The
+  // substring-only list could only express exact spellings, so every variant
+  // it did not literally contain was dropped with no warning.
+  const andFilter = buildTitleFilter({ positive: ['director + engineering', 'vp + engineering'] });
+  const shouldMatch = [
+    'Director - Software Engineering',        // hyphen, not comma
+    'Director Engineering (Mobile Platform)', // no separator at all
+    'Senior Director, Platform Engineering',  // domain word in between
+    'Director of Engineering',                // the literal spelling still works
+    'VP, Software Engineering',
+  ];
+  const missed = shouldMatch.filter((t) => andFilter(t) !== true);
+  if (missed.length === 0) pass('an AND-group matches every separator and word-order variant (#2544)');
+  else fail(`AND-group missed: ${JSON.stringify(missed)}`);
+  if (andFilter('Director of Sales') === false && andFilter('Software Engineer') === false) {
+    pass('an AND-group still requires ALL its terms — one term alone is not enough');
+  } else {
+    fail('AND-group matched a title carrying only one of its terms');
+  }
+
+  // The separator needs surrounding whitespace. A bare split on "+" would turn
+  // the ordinary keyword "C++" into "c", which matches nearly every title —
+  // trading a silent drop for a silent flood.
+  const plusFilter = buildTitleFilter({ positive: ['c++'] });
+  if (plusFilter('C++ Developer') === true && plusFilter('Marketing Manager') === false) {
+    pass('"C++" stays a literal keyword — " + " is the group separator, not "+"');
+  } else {
+    fail('"C++" must not be split into an AND-group');
+  }
+
+  // Short terms inside a group keep compileKeyword's word-boundary rule.
+  const vpGroup = buildTitleFilter({ positive: ['vp + engineering'] });
+  if (vpGroup('VP, Engineering') === true && vpGroup('Revamp Engineering Process') === false) {
+    pass('a short term inside a group is still word-boundary anchored');
+  } else {
+    fail('short term inside an AND-group lost its word boundary');
+  }
+
+  // Existing configs are untouched: no " + " means the old behaviour exactly.
+  const legacy = buildTitleFilter({ positive: ['engineering manager'], negative: ['intern'] });
+  if (legacy('Engineering Manager, Payments') === true
+      && legacy('Engineering Manager Intern') === false
+      && legacy('Manager, Engineering') === false) {
+    pass('an entry without " + " keeps exact substring behaviour (backward compatible)');
+  } else {
+    fail('a plain keyword changed behaviour — the change is not backward compatible');
+  }
+
+  // matchedTitleKeywords reports the group as written, so content_filter
+  // by_title_keyword overrides keep working against the same config strings.
+  const kw = matchedTitleKeywords('Senior Director, Platform Engineering', { positive: ['director + engineering'] });
+  if (JSON.stringify(kw) === JSON.stringify(['director + engineering'])) {
+    pass('matchedTitleKeywords reports an AND-group by its raw config string');
+  } else {
+    fail(`matchedTitleKeywords returned ${JSON.stringify(kw)}`);
+  }
+
+  // Groups are positive-side only: on the negative side an entry is a veto, and
+  // " + " must stay literal there rather than silently becoming "reject when
+  // both appear" — which would veto far more than the user wrote.
+  const negGroup = buildTitleFilter({ positive: [], negative: ['foo + bar'] });
+  if (negGroup('Foo Bar Engineer') === true && negGroup('Widget foo + bar Lead') === false) {
+    pass('" + " in a negative entry stays a literal keyword, not an AND-group');
+  } else {
+    fail('a negative entry containing " + " was parsed as a group');
   }
 
   // A malformed title_filter (null / numeric / empty entries) must not crash.
