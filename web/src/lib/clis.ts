@@ -18,22 +18,13 @@ export type CliSpec = {
    * raw stdout, which displays fine but reports no token usage.
    */
   streamArgs?: (prompt: string) => string[];
-  /**
-   * stderr lines that are noise, not failure. The route treats any stderr
-   * matching /error|denied|auth|.../ as a real error — deliberately broad,
-   * because a silent auth failure is the worst outcome. Codex logs a benign
-   * `ERROR codex_models_manager::cache: failed to load models cache` on every
-   * run, which that rule reads as a failed run.
-   */
-  benignStderr?: RegExp;
 };
 
 export const KNOWN: CliSpec[] = [
   { id: "claude", name: "Claude Code", bin: "claude", run: "claude -p", url: "https://claude.ai/code", args: (p) => ["-p", p],
     streamArgs: (p) => ["-p", p, "--output-format", "stream-json", "--verbose", "--include-partial-messages"] },
   { id: "codex", name: "Codex", bin: "codex", run: "codex exec", url: "https://github.com/openai/codex", args: (p) => ["exec", p],
-    streamArgs: (p) => ["exec", "--json", p],
-    benignStderr: /models cache|base_instructions/i },
+    streamArgs: (p) => ["exec", "--json", p] },
   { id: "gemini", name: "Gemini CLI", bin: "gemini", run: "gemini -p", url: "https://github.com/google-gemini/gemini-cli", args: (p) => ["-p", p] },
   { id: "opencode", name: "OpenCode", bin: "opencode", run: "opencode run", url: "https://opencode.ai", args: (p) => ["run", p] },
   { id: "copilot", name: "GitHub Copilot CLI", bin: "copilot", run: "copilot -p", url: "https://docs.github.com/en/copilot/github-copilot-in-the-cli", args: (p) => ["-p", p] },

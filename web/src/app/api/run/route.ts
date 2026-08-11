@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { resolveCli } from "@/lib/clis";
 import { parserFor } from "@/lib/cli-stream.mjs";
+import { isStderrFailure } from "@/lib/stderr-classify.mjs";
 import { careerOpsRoot, readMemory, findReportFile } from "@/lib/career-ops";
 import { resolvePdfPaths, type PdfPaths } from "@/lib/pdf-paths.mjs";
 import { renderAndMarkPdf, writeCvHtml, pdfRunOutcome } from "@/lib/pdf-render.mjs";
@@ -171,16 +172,11 @@ export async function POST(req: Request) {
       let emittedText = false; // any assistant text delta → the CLI actually ran
       let sawError = false;
       let stderrBuf = "";
-      // Widened over time: auth/login/quota failures are the most common real error
-      // and a narrow regex missed them (silent false "success").
-      const STDERR_FAILURE = /error|denied|fatal|not found|unauthorized|forbidden|auth|login|credential|api[ -]?key|quota|rate limit|not authenticated/i;
+      // The pattern, and the per-CLI housekeeping lines exempted from it, live
+      // in stderr-classify.mjs so both can be asserted on as values instead of
+      // by grepping this file. Takes one COMPLETE line.
       const flagStderrLine = (line: string) => {
-        // Some CLIs log benign diagnostics to stderr that STDERR_FAILURE reads as
-        // a failed run — codex emits a models-cache warning on every invocation.
-        // Filtered here rather than in the chunk handler so it sees the same
-        // complete lines the classifier does.
-        if (spec.benignStderr?.test(line)) return;
-        if (!line.trim() || !STDERR_FAILURE.test(line)) return;
+        if (!isStderrFailure(cliId, line)) return;
         sawError = true;
         send({ type: "error", msg: line.trim().slice(0, 200) });
       };
