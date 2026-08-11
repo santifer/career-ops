@@ -12,21 +12,35 @@ export type CliSpec = {
   url: string;
   /** headless invocation args for a single prompt */
   args: (prompt: string) => string[];
+  /**
+   * Args that ask for a structured event stream instead of plain text. Present
+   * only for CLIs cli-stream.mjs can parse; without it the route falls back to
+   * raw stdout, which displays fine but reports no token usage.
+   */
+  streamArgs?: (prompt: string) => string[];
+  /**
+   * stderr lines that are noise, not failure. The route treats any stderr
+   * matching /error|denied|auth|.../ as a real error — deliberately broad,
+   * because a silent auth failure is the worst outcome. Codex logs a benign
+   * `ERROR codex_models_manager::cache: failed to load models cache` on every
+   * run, which that rule reads as a failed run.
+   */
+  benignStderr?: RegExp;
 };
 
 export const KNOWN: CliSpec[] = [
-  { id: "claude", name: "Claude Code", bin: "claude", run: "claude -p", url: "https://claude.ai/code", args: (p) => ["-p", p] },
-  { id: "codex", name: "Codex", bin: "codex", run: "codex exec", url: "https://github.com/openai/codex", args: (p) => ["exec", p] },
+  { id: "claude", name: "Claude Code", bin: "claude", run: "claude -p", url: "https://claude.ai/code", args: (p) => ["-p", p],
+    streamArgs: (p) => ["-p", p, "--output-format", "stream-json", "--verbose", "--include-partial-messages"] },
+  { id: "codex", name: "Codex", bin: "codex", run: "codex exec", url: "https://github.com/openai/codex", args: (p) => ["exec", p],
+    streamArgs: (p) => ["exec", "--json", p],
+    benignStderr: /models cache|base_instructions/i },
   { id: "gemini", name: "Gemini CLI", bin: "gemini", run: "gemini -p", url: "https://github.com/google-gemini/gemini-cli", args: (p) => ["-p", p] },
   { id: "opencode", name: "OpenCode", bin: "opencode", run: "opencode run", url: "https://opencode.ai", args: (p) => ["run", p] },
   { id: "copilot", name: "GitHub Copilot CLI", bin: "copilot", run: "copilot -p", url: "https://docs.github.com/en/copilot/github-copilot-in-the-cli", args: (p) => ["-p", p] },
   { id: "qwen", name: "Qwen CLI", bin: "qwen", run: "qwen -p", url: "https://qwen.ai/qwencode", args: (p) => ["-p", p] },
   { id: "antigravity", name: "Antigravity CLI", bin: "agy", run: "agy -p", url: "https://antigravity.google", args: (p) => ["-p", p] },
-  // Grok Build also speaks `--output-format streaming-json`, but that is its own
-  // schema, not Claude's `stream-json` — and the run route only parses the
-  // latter. Plain `-p` streams text, which is what every other non-Claude entry
-  // here does.
-  { id: "grok", name: "Grok Build CLI", bin: "grok", run: "grok -p", url: "https://docs.x.ai/build/overview", args: (p) => ["-p", p] },
+  { id: "grok", name: "Grok Build CLI", bin: "grok", run: "grok -p", url: "https://docs.x.ai/build/overview", args: (p) => ["-p", p],
+    streamArgs: (p) => ["-p", p, "--output-format", "streaming-json"] },
 ];
 
 function searchDirs(): string[] {
