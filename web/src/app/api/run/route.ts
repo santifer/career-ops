@@ -2,6 +2,8 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { resolveCli } from "@/lib/clis";
+import { parserFor } from "@/lib/cli-stream.mjs";
+import { isStderrFailure } from "@/lib/stderr-classify.mjs";
 import { careerOpsRoot, readMemory, findReportFile } from "@/lib/career-ops";
 import { resolvePdfPaths, type PdfPaths } from "@/lib/pdf-paths.mjs";
 import { renderAndMarkPdf, writeCvHtml, pdfRunOutcome } from "@/lib/pdf-render.mjs";
@@ -9,6 +11,13 @@ import { createCvEnvelopeFilter, type CvEnvelope } from "@/lib/cv-envelope.mjs";
 import { buildPrompt, isShellSafeCompanyName } from "@/lib/run-prompts.mjs";
 import { claudeCliArgs } from "@/lib/claude-invocation.mjs";
 import { acquireTrackerWrite, releaseTrackerWrite } from "@/lib/core/run-registry";
+
+/** The normalized shape cli-stream.mjs parsers emit, whatever the CLI's dialect. */
+type StreamEvent =
+  | { type: "text"; text: string }
+  | { type: "tool"; name: string }
+  | { type: "status"; label: string }
+  | { type: "usage"; tokens: number; costUsd: number | null };
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -89,6 +98,7 @@ export async function POST(req: Request) {
   const prompt = buildPrompt({ kind, input, memory: readMemory(), today });
 
   const isClaude = cliId === "claude";
+  const parseEvent = parserFor(cliId);
   // Which tools each kind gets, and the whole claude argv, live in
   // claude-invocation.mjs — see its header for the policy and for why it is asserted on
   // built values rather than on this file's source. NEVER auto-submits; that
@@ -99,7 +109,9 @@ export async function POST(req: Request) {
   // as #2507 rather than half-fixed here. On those CLIs the backend is the only
   // INTENDED writer — the agent is not asked to write — but that is mitigation, not
   // enforcement: the capability is still there for an injected posting to reach.
-  const args = isClaude ? claudeCliArgs({ kind, prompt }) : spec.args(prompt);
+  // streamArgs only asks for structured output; it grants nothing, so it does not
+  // widen that gap. The route still spells no tool flag itself.
+  const args = isClaude ? claudeCliArgs({ kind, prompt }) : (spec.streamArgs?.(prompt) ?? spec.args(prompt));
 
   // For write-needing kinds, snapshot reports/ so we can verify the worker
   // actually persisted (non-Claude CLIs lack Write auth and silently no-op).
@@ -117,7 +129,14 @@ export async function POST(req: Request) {
   // (tracker.mjs delete doesn't yet share a lock with merge-tracker — see run-registry).
   const writeToken = kind === "evaluate" || kind === "pdf" ? acquireTrackerWrite() : null;
 
-  const child = spawn(binPath, args, { cwd: careerOpsRoot(), env: process.env });
+  // stdin is 'ignore', not the default pipe. The prompt goes in via argv, so the
+  // child never needs stdin — but with an open pipe nobody ever writes to or
+  // ends, a CLI that checks stdin blocks forever waiting for EOF. Codex prints
+  // "Reading additional input from stdin..." and hangs; it has never worked in
+  // the web UI for this reason. Claude masked it by not reading stdin at all.
+  // Nothing can answer a prompt in a headless run anyway, so refusing stdin is
+  // also the honest configuration.
+  const child = spawn(binPath, args, { cwd: careerOpsRoot(), env: process.env, stdio: ["ignore", "pipe", "pipe"] });
   // Decode once on the stream, not per chunk. Buffer#toString() decodes each chunk
   // independently, so a chunk boundary falling inside a multi-byte UTF-8 sequence
   // yields a replacement character and mis-decodes the bytes after it. Those bytes
@@ -153,11 +172,11 @@ export async function POST(req: Request) {
       let emittedText = false; // any assistant text delta → the CLI actually ran
       let sawError = false;
       let stderrBuf = "";
-      // Widened over time: auth/login/quota failures are the most common real error
-      // and a narrow regex missed them (silent false "success").
-      const STDERR_FAILURE = /error|denied|fatal|not found|unauthorized|forbidden|auth|login|credential|api[ -]?key|quota|rate limit|not authenticated/i;
+      // The pattern, and the per-CLI housekeeping lines exempted from it, live
+      // in stderr-classify.mjs so both can be asserted on as values instead of
+      // by grepping this file. Takes one COMPLETE line.
       const flagStderrLine = (line: string) => {
-        if (!line.trim() || !STDERR_FAILURE.test(line)) return;
+        if (!isStderrFailure(cliId, line)) return;
         sawError = true;
         send({ type: "error", msg: line.trim().slice(0, 200) });
       };
@@ -210,7 +229,9 @@ export async function POST(req: Request) {
 
       child.stdout.on("data", (chunk: string) => {
         if (closed) return;
-        if (!isClaude) {
+        // No parser → the CLI has no structured mode; show its stdout verbatim.
+        // Usage stays unknown for those, which is honest: there is nothing to read.
+        if (!parseEvent) {
           emittedText = true;
           // MERGE HAZARD (#2102): once that PR parses non-Claude stdout as JSONL,
           // this must move onto the PARSED text or the envelope silently stops
@@ -224,28 +245,34 @@ export async function POST(req: Request) {
           const line = buf.slice(0, nl).trim();
           buf = buf.slice(nl + 1);
           if (!line) continue;
+          let parsed: unknown;
           try {
-            const ev = JSON.parse(line);
-            if (ev.type === "stream_event") {
-              const e = ev.event;
-              if (e?.type === "content_block_start" && e.content_block?.type === "tool_use") {
-                send({ type: "tool", name: e.content_block.name });
-              } else if (e?.type === "content_block_delta" && e.delta?.text) {
-                emittedText = true;
-                sendAgentText(e.delta.text);
-              }
-            } else if (ev.type === "system" && ev.subtype === "init") {
-              send({ type: "status", label: "Agent ready" });
-            } else if (ev.type === "result") {
-              // Capture the per-run cost; the authoritative "done" is sent on close
-              // (so the honesty gate decides done-vs-error first). Tokens = the same
-              // formula /api/usage uses: input + output + cache-creation.
-              const u = ev.usage || {};
-              lastTokens = (u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_creation_input_tokens || 0);
-              if (typeof ev.total_cost_usd === "number") lastCostUsd = ev.total_cost_usd;
-            }
+            parsed = JSON.parse(line);
           } catch {
-            /* partial line */
+            continue; // partial or non-JSON line
+          }
+          for (const ev of parseEvent(parsed) as StreamEvent[]) {
+            if (ev.type === "text") {
+              emittedText = true;
+              // sendAgentText, not send: this is the hand-off the MERGE HAZARD
+              // note above marks. Now that non-Claude stdout is parsed as JSONL,
+              // its text reaches here instead of the raw-chunk branch — sending
+              // it directly would silently stop the pdf CV envelope being
+              // filtered and collected on codex and grok, with no test failing
+              // and no merge conflict to notice.
+              sendAgentText(ev.text);
+            } else if (ev.type === "tool") {
+              send({ type: "tool", name: ev.name });
+            } else if (ev.type === "status") {
+              send({ type: "status", label: ev.label });
+            } else if (ev.type === "usage") {
+              // Last-wins: every CLI's final total arrives last, and keeping the
+              // intermediate ones means a run killed mid-flight still records
+              // something. The authoritative "done" is still sent on close, so
+              // the honesty gate decides done-vs-error first.
+              lastTokens = ev.tokens;
+              if (typeof ev.costUsd === "number") lastCostUsd = ev.costUsd;
+            }
           }
         }
       });
