@@ -190,7 +190,7 @@
 8b. **PDF Professional Summary의 case study URL:** PDF가 case study나 demo를 언급하면 URL은 반드시 첫 문단(Professional Summary)에 들어갑니다. recruiter는 summary만 읽는 경우가 많습니다. HTML에서는 모든 URL에 `white-space: nowrap` 적용.
 9. **Tracker entry는 TSV로 작성** -- 새 항목을 위해 applications.md를 직접 수정하지 않습니다. `batch/tracker-additions/`에 TSV를 쓰고 `merge-tracker.mjs`가 병합합니다.
 10. **모든 report header에 `**URL:**` 포함** -- Score와 PDF 사이에 둡니다.
-11. **Locked Sections:** If `cv.locked_sections` is defined in `profile.yml`, NEVER remove, shorten, or paraphrase those sections during CV generation or tailoring. They must appear verbatim.
+11. **잠금 섹션:** `profile.yml`에 `cv.locked_sections`가 정의되어 있다면, 이력서 생성 및 맞춤 조정 중에 해당 섹션을 절대 삭제, 축소 또는 의역하지 마세요. 반드시 원문 그대로 나타나야 합니다.
 
 ### 도구
 

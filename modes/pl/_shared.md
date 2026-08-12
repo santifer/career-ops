@@ -190,7 +190,7 @@ W polskich ofertach i negocjacjach pojawiają się terminy, które nie istnieją
 8b. **URL-e case studies w Professional Summary PDF-a:** Jeśli PDF wspomina case studies lub dema, URL-e MUSZĄ pojawić się w pierwszym akapicie (Professional Summary). Rekruterzy często czytają tylko summary. Wszystkie URL-e w HTML z `white-space: nowrap`
 9. **Wpisy do trackera w TSV** -- NIGDY nie edytuj applications.md bezpośrednio dla nowych dodań. Zapisz TSV do `batch/tracker-additions/`, `merge-tracker.mjs` zarządza scalaniem
 10. **`**URL:**` w każdym nagłówku reportu** -- między Score a PDF
-11. **Locked Sections:** If `cv.locked_sections` is defined in `profile.yml`, NEVER remove, shorten, or paraphrase those sections during CV generation or tailoring. They must appear verbatim.
+11. **Zablokowane sekcje:** Jeśli `cv.locked_sections` jest zdefiniowane w `profile.yml`, NIGDY nie usuwaj, nie skracaj ani nie parafrazuj tych sekcji podczas generowania lub dostosowywania CV. Muszą one pojawić się dosłownie.
 
 ### Narzędzia
 

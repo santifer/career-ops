@@ -191,7 +191,7 @@ Dalam lowongan dan negosiasi di Indonesia, beberapa istilah tidak ada di pasar E
 8b. **URL case study di Professional Summary pada PDF:** Jika PDF menyebut case study atau demo, URL-nya WAJIB muncul di paragraf pertama (Professional Summary). Recruiter sering hanya membaca summary. Semua URL dalam HTML dengan `white-space: nowrap`
 9. **Entri tracker dalam TSV** -- JANGAN PERNAH mengedit applications.md langsung untuk penambahan baru. Tulis TSV di `batch/tracker-additions/`, `merge-tracker.mjs` menangani penggabungan
 10. **`**URL:**` di setiap header report** -- di antara Score dan PDF
-11. **Locked Sections:** If `cv.locked_sections` is defined in `profile.yml`, NEVER remove, shorten, or paraphrase those sections during CV generation or tailoring. They must appear verbatim.
+11. **Bagian yang Dikunci:** Jika `cv.locked_sections` didefinisikan dalam `profile.yml`, JANGAN PERNAH menghapus, mempersingkat, atau memparafrasekan bagian-bagian tersebut selama pembuatan atau penyesuaian CV. Bagian tersebut harus muncul sama persis (verbatim).
 
 ### Perkakas
 

@@ -147,7 +147,7 @@
 8. 生成中文技术文本（自荐信、LinkedIn 话术等）时：使用自然地道的中文技术交流习惯。多使用短句、主动语态，避免西式生硬的被动句式。常见的通用行业术语（如 stack, pipeline, deployment, embedding）无需强行生硬汉化，保留英文即可。
 9. **向 tracker 添加新记录时必须使用 TSV 格式** -- 严禁直接编辑 `applications.md`，将 TSV 文件写入 `batch/tracker-additions/` 目录，由 `merge-tracker.mjs` 统一合并。
 10. **在每份评估报告的头部，必须包含 `**URL:**` 字段。**
-11. **Locked Sections:** If `cv.locked_sections` is defined in `profile.yml`, NEVER remove, shorten, or paraphrase those sections during CV generation or tailoring. They must appear verbatim.
+11. **锁定区块:** 如果在 `profile.yml` 中定义了 `cv.locked_sections`，在生成或调整简历时，绝对不可移除、缩减或改写这些区块。它们必须一字不漏地呈现。
 
 ---
 

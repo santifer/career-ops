@@ -160,7 +160,7 @@
 8. 產生繁體中文技術文本（求職信、LinkedIn 話術等）時：使用自然道地的台灣科技業中文習慣。多用短句、主動語態，避免生硬的西式被動句。常見的通用產業術語（如 stack, pipeline, deployment, embedding）不需勉強中譯，保留英文即可。
 9. **向 tracker 新增紀錄時必須使用 TSV 格式** — 嚴禁直接編輯 `applications.md`，將 TSV 檔寫入 `batch/tracker-additions/` 目錄，由 `merge-tracker.mjs` 統一合併。
 10. **每一份評估報告的開頭，必須包含 `**URL:**` 欄位。**
-11. **Locked Sections:** If `cv.locked_sections` is defined in `profile.yml`, NEVER remove, shorten, or paraphrase those sections during CV generation or tailoring. They must appear verbatim.
+11. **鎖定區塊:** 如果在 `profile.yml` 中定義了 `cv.locked_sections`，在生成或調整履歷時，絕對不可移除、縮減或改寫這些區塊。它們必須一字不漏地呈現。
 
 ---
 
