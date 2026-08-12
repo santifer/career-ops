@@ -13,7 +13,8 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSy
 import { join, dirname, resolve } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
+import { flagValue, hasFlag } from './lib/cli-flags.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PROVIDERS_DIR = join(ROOT, 'providers');
@@ -88,13 +89,29 @@ function validateParser(parser, path, errors) {
 
 async function loadProviderIds() {
   const ids = new Set();
-  if (!existsSync(PROVIDERS_DIR)) return ids;
-  const files = readdirSync(PROVIDERS_DIR)
-    .filter(f => f.endsWith('.mjs') && !f.startsWith('_'))
-    .sort();
-  for (const file of files) {
-    const mod = await import(pathToFileURL(join(PROVIDERS_DIR, file)).href);
-    if (mod.default?.id) ids.add(mod.default.id);
+  if (existsSync(PROVIDERS_DIR)) {
+    const files = readdirSync(PROVIDERS_DIR)
+      .filter(f => f.endsWith('.mjs') && !f.startsWith('_'))
+      .sort();
+    for (const file of files) {
+      const mod = await import(pathToFileURL(join(PROVIDERS_DIR, file)).href);
+      if (mod.default?.id) ids.add(mod.default.id);
+    }
+  }
+
+  // scan.mjs accepts explicit provider-plugin ids even when a plugin is
+  // disabled or missing credentials (the runtime installs an actionable
+  // inactive-provider stub). Keep validation aligned with that contract.
+  try {
+    const { discoverPlugins, pluginRoots, resolveSuccessorIds } = await import('./plugins/_engine.mjs');
+    const manifests = discoverPlugins(pluginRoots(ROOT), resolveSuccessorIds(ROOT));
+    for (const manifest of manifests) {
+      if (manifest.hooks.includes('provider')) ids.add(manifest.id);
+    }
+  } catch (err) {
+    // A stripped-down checkout may not include plugin infrastructure. Core
+    // provider validation should continue to work in that environment.
+    if (err?.code !== 'ERR_MODULE_NOT_FOUND') throw err;
   }
   return ids;
 }
@@ -125,6 +142,53 @@ export async function validatePortalsConfig(config, { providerIds = new Set() } 
       validateKeywordList(config.location_filter.always_allow, 'location_filter.always_allow', errors);
       validateKeywordList(config.location_filter.allow, 'location_filter.allow', errors);
       validateKeywordList(config.location_filter.block, 'location_filter.block', errors);
+    }
+  }
+
+  if (config.content_filter !== undefined) {
+    if (!isObject(config.content_filter)) {
+      add(errors, 'content_filter', 'content_filter must be an object');
+    } else {
+      validateKeywordList(config.content_filter.positive, 'content_filter.positive', errors);
+      validateKeywordList(config.content_filter.negative, 'content_filter.negative', errors);
+      if (config.content_filter.by_title_keyword !== undefined) {
+        if (!isObject(config.content_filter.by_title_keyword)) {
+          add(errors, 'content_filter.by_title_keyword', 'by_title_keyword must be an object keyed by title_filter.positive keyword');
+        } else {
+          const titlePositive = new Set(
+            (Array.isArray(config.title_filter?.positive) ? config.title_filter.positive : [])
+              .filter(k => typeof k === 'string')
+              .map(k => k.trim().toLowerCase())
+          );
+          for (const [kw, rule] of Object.entries(config.content_filter.by_title_keyword)) {
+            const path = `content_filter.by_title_keyword.${kw}`;
+            if (!titlePositive.has(kw.trim().toLowerCase())) {
+              add(warnings, path, `"${kw}" does not match any title_filter.positive keyword and will never apply`);
+            }
+            if (!isObject(rule)) {
+              add(errors, path, 'must be an object with positive/negative keyword lists');
+              continue;
+            }
+            validateKeywordList(rule.positive, `${path}.positive`, errors);
+            validateKeywordList(rule.negative, `${path}.negative`, errors);
+          }
+        }
+      }
+    }
+  }
+
+  if (config.visa_filter !== undefined) {
+    if (!isObject(config.visa_filter)) {
+      add(errors, 'visa_filter', 'visa_filter must be an object');
+    } else {
+      if (config.visa_filter.enabled !== undefined && typeof config.visa_filter.enabled !== 'boolean') {
+        add(errors, 'visa_filter.enabled', 'must be a boolean when set');
+      }
+      if (config.visa_filter.require_mention !== undefined && typeof config.visa_filter.require_mention !== 'boolean') {
+        add(errors, 'visa_filter.require_mention', 'must be a boolean when set');
+      }
+      validateKeywordList(config.visa_filter.positive, 'visa_filter.positive', errors);
+      validateKeywordList(config.visa_filter.negative, 'visa_filter.negative', errors);
     }
   }
 
@@ -218,8 +282,11 @@ async function main() {
     return;
   }
 
-  const fileFlag = args.indexOf('--file');
-  const filePath = resolve(fileFlag === -1 ? DEFAULT_PORTALS_PATH : args[fileFlag + 1] || '');
+  // An explicit but empty `--file=` must reach the usage error below. Passing
+  // '' to resolve() would return the CURRENT DIRECTORY, and the script would
+  // then try to validate a directory and report a filesystem error instead.
+  const fileFlag = hasFlag(args, '--file') ? (flagValue(args, '--file') ?? '') : undefined;
+  const filePath = fileFlag === undefined ? resolve(DEFAULT_PORTALS_PATH) : (fileFlag ? resolve(fileFlag) : '');
   if (!filePath) {
     console.error('Usage: node validate-portals.mjs [--file portals.yml] [--self-test]');
     process.exit(1);

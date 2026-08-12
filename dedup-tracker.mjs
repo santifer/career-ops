@@ -2,27 +2,27 @@
 /**
  * dedup-tracker.mjs — Remove duplicate entries from applications.md
  *
- * Groups by normalized company + fuzzy role match.
- * Keeps entry with highest score. If discarded entry had more advanced status,
- * preserves that status. Merges notes.
+ * Groups by normalized company, then merges only rows whose full role title
+ * matches exactly (case- and whitespace-normalized). Keeps entry with highest
+ * score. If discarded entry had more advanced status, preserves that status.
+ * Merges notes.
  *
  * Run: node career-ops/dedup-tracker.mjs [--dry-run]
  */
 
-import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { roleFuzzyMatch } from './role-matcher.mjs';
+import {
+  openTrackerTransaction, rebuildRow, resolveTrackerPath, normalizeCompany,
+} from './tracker-utils.mjs';
+import { resolveColumns, parseTrackerRow, normalizeVia } from './tracker-parse.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md
 // (original). CAREER_OPS_TRACKER lets tests point the script at an isolated
 // fixture so the real user tracker is never touched.
-const APPS_FILE = process.env.CAREER_OPS_TRACKER
-  ? process.env.CAREER_OPS_TRACKER
-  : existsSync(join(CAREER_OPS, 'data/applications.md'))
-    ? join(CAREER_OPS, 'data/applications.md')
-    : join(CAREER_OPS, 'applications.md');
+const APPS_FILE = resolveTrackerPath(CAREER_OPS);
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // Ensure the target tracker directory exists in both normal and fixture mode.
@@ -40,6 +40,11 @@ const STATUS_RANK = {
   'responded': 4,
   'interview': 5,
   'offer': 6,
+  // Hired outranks everything: the accepted-job record must never lose a
+  // dedup contest to a repost row (aliases from templates/states.yml).
+  'hired': 7,
+  'accepted': 7,
+  'accept': 7,
   // Spanish aliases — kept for backwards compat with existing tracker data
   'no_aplicar': 0,
   'no aplicar': 0,
@@ -52,26 +57,9 @@ const STATUS_RANK = {
   'respondido': 4,
   'entrevista': 5,
   'oferta': 6,
+  'contratado': 7,
+  'contratada': 7,
 };
-
-/**
- * Normalize a company name into the grouping key used by deduplication.
- *
- * The tracker may contain punctuation, parenthetical branding, or spacing
- * differences for the same employer. This function removes those presentation
- * differences while keeping the alphanumeric company identity that determines
- * which rows are safe to compare for duplicate roles.
- *
- * @param {string} name - Company name from an applications.md row.
- * @returns {string} Lowercase company key used for same-company grouping.
- */
-function normalizeCompany(name) {
-  return name.toLowerCase()
-    .replace(/[()]/g, '')
-    .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 ]/g, '')
-    .trim();
-}
 
 /**
  * Normalize tracker status text before ranking or comparing it.
@@ -138,23 +126,26 @@ function extractReportNum(reportStr) {
 /**
  * Determine whether two tracker rows point to the same exact report identity.
  *
- * Exact identity is stronger than fuzzy role matching. If two rows share the
- * same tracker number or bracketed report number, dedup may treat them as the
- * same record even when an advanced status is present.
+ * Exact identity is stronger than fuzzy role matching: it may cluster rows
+ * even when an advanced status is present. Matching bracketed report numbers
+ * are that evidence. A shared tracker number alone is NOT — duplicate tracker
+ * numbers are a known artifact of the old merge bug (verify-pipeline Check 12
+ * exists because they never mean the same application), so a bare number match
+ * only counts when the rows also carry the same exact role title.
  *
  * @param {object} a - First parsed applications.md row.
  * @param {object} b - Second parsed applications.md row.
  * @returns {boolean} True when both rows represent the same report identity.
  */
 function sameReportIdentity(a, b) {
-  if (a.num === b.num) return true;
   const reportA = extractReportNum(a.report);
   const reportB = extractReportNum(b.report);
-  return reportA !== null && reportA === reportB;
+  if (reportA !== null && reportA === reportB) return true;
+  return a.num === b.num && normalizeRole(a.role) === normalizeRole(b.role);
 }
 
 /**
- * Build a stable key for logging one protected fuzzy pair only once.
+ * Build a stable key for logging one protected same-title pair only once.
  *
  * The nested dedup loop can encounter a protected pair during cluster building.
  * Sorting the row numbers produces the same key regardless of comparison order,
@@ -168,16 +159,42 @@ function pairKey(a, b) {
   return [a.num, b.num].sort((x, y) => x - y).join(':');
 }
 
-const protectedFuzzyPairs = new Set();
+const protectedTitlePairs = new Set();
+
+/**
+ * Normalize a role title into the key used for exact same-opening comparison.
+ *
+ * Deduplication must only collapse rows that describe the *same* opening, so
+ * the comparison is exact on the meaningful title text. Only presentation noise
+ * is removed — letter case and whitespace (leading, trailing, and repeated
+ * internal spaces). Distinguishing words such as seniority ("Senior") or the
+ * team suffix ("Data Infrastructure" vs "Agent Infrastructure") are preserved,
+ * so sibling roles at one company are never merged.
+ *
+ * @param {string} role - Role title from an applications.md row.
+ * @returns {string} Lowercase, whitespace-collapsed role key.
+ */
+function normalizeRole(role) {
+  return String(role ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
 
 /**
  * Decide whether two same-company tracker rows should be deduplicated.
  *
- * The function first accepts exact report identity, then applies the shared
- * fuzzy role matcher. If either row is already Applied or later, fuzzy matching
- * alone is not enough; dedup keeps both rows and warns because deleting one
- * would lose application status, report link, and notes for a potentially
- * distinct opening.
+ * Rows merge only when they describe the same opening: either the exact same
+ * report identity (same tracker number or bracketed report number), or an exact
+ * role-title match after normalizing case and whitespace. Fuzzy title matching
+ * is deliberately NOT used here — it collapsed distinct sibling roles at one
+ * company (e.g. "Software Engineer, Data Infrastructure" vs "Senior Software
+ * Engineer, Agent Infrastructure"), causing real data loss.
+ *
+ * When titles match exactly but either row is already Applied or later, dedup
+ * still keeps both and warns: deleting an in-flight application would lose its
+ * status, report link, and notes unless the rows are the exact same report
+ * identity.
  *
  * @param {object} a - First parsed applications.md row.
  * @param {object} b - Second parsed applications.md row.
@@ -185,18 +202,18 @@ const protectedFuzzyPairs = new Set();
  */
 function roleMatch(a, b) {
   if (sameReportIdentity(a, b)) return true;
-  if (!roleFuzzyMatch(a.role, b.role)) return false;
+  if (normalizeRole(a.role) !== normalizeRole(b.role)) return false;
 
-  // Fuzzy title matches are intentionally conservative once either row has
-  // entered the real application pipeline. A user may already have applied to
-  // one sibling role, so deleting that row because a higher-scored sibling has
-  // similar wording would lose status, report, and notes. Keep both unless the
-  // rows point to the exact same report identity.
+  // Exact-title duplicates that have entered the real application pipeline are
+  // kept separate. A user may already have applied to one row; deleting it
+  // because a higher-scored exact-title sibling exists would lose status,
+  // report, and notes. Keep both unless the rows point to the exact same
+  // report identity.
   if (isAdvancedStatus(a.status) || isAdvancedStatus(b.status)) {
     const key = pairKey(a, b);
-    if (!protectedFuzzyPairs.has(key)) {
-      protectedFuzzyPairs.add(key);
-      console.warn(`⚠️  Keep #${a.num} and #${b.num}: fuzzy role match but advanced status requires exact report identity`);
+    if (!protectedTitlePairs.has(key)) {
+      protectedTitlePairs.add(key);
+      console.warn(`⚠️  Keep #${a.num} and #${b.num}: exact-title match but advanced status requires exact report identity`);
     }
     return false;
   }
@@ -230,22 +247,7 @@ function parseScore(s) {
  * @returns {object|null} Parsed tracker row, or null for non-application lines.
  */
 function parseAppLine(line) {
-  const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
-  const num = parseInt(parts[1]);
-  if (isNaN(num)) return null;
-  return {
-    num,
-    date: parts[2],
-    company: parts[3],
-    role: parts[4],
-    score: parts[5],
-    status: parts[6],
-    pdf: parts[7],
-    report: parts[8],
-    notes: parts[9] || '',
-    raw: line,
-  };
+  return parseTrackerRow(line, COLMAP);
 }
 
 // Read
@@ -253,8 +255,25 @@ if (!existsSync(APPS_FILE)) {
   console.log('No applications.md found. Nothing to dedup.');
   process.exit(0);
 }
-const content = readFileSync(APPS_FILE, 'utf-8');
+
+let trackerTransaction = null;
+let COLMAP;
+if (!DRY_RUN) {
+  try {
+    trackerTransaction = await openTrackerTransaction(APPS_FILE);
+  } catch (err) {
+    console.error(`Cannot acquire tracker lock: ${err.message}`);
+    process.exit(1);
+  }
+  process.once('exit', () => {
+    try { trackerTransaction.close(); } catch {}
+  });
+}
+try {
+const content = trackerTransaction ? trackerTransaction.read() : readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
+// Header-aware column map (tolerates an inserted Location column, etc.).
+COLMAP = resolveColumns(lines);
 
 // Parse all entries
 const entries = [];
@@ -270,12 +289,47 @@ for (let i = 0; i < lines.length; i++) {
 
 console.log(`📊 ${entries.length} entries loaded`);
 
-// Group by company+role
+// Group by company+role. Unknown-employer rows (Company `?`, #1596) all
+// normalize to the same empty key, so they group by their Via channel instead:
+// the same agency re-blasting one listing IS a duplicate, while the same role
+// via two different agencies is two real submissions and must never merge.
+// The channel key is Unicode-aware (#1603/#2393): this file's own
+// normalizeCompany() used to strip everything outside [a-z0-9], so distinct
+// non-Latin agency names (リクルート, パーソル, …) all collapsed to the same empty
+// key and one of two genuinely separate submissions was DELETED. Both keys are
+// now Unicode-aware — normalizeCompany comes from tracker-utils.mjs (#2429), so
+// the ordinary company path cannot regress the way this channel path did.
+// normalizeVia() is the same key that
+// merge-tracker.mjs uses for its cross-channel guard, so the two scripts
+// cannot drift on agency identity. An absent Via (empty or `—`) still keys to
+// '' and groups with other via-less blind rows, matching merge-tracker, whose
+// guard does not reject a pair whose Via cells are both blank.
+// The NUL prefix makes this key uncollidable with any real company name.
+// It is written as the ESCAPE, never as a raw NUL byte in the source: a raw
+// one makes grep classify this file as binary and report NO MATCH for any
+// pattern in it, silently, with the same exit code as a genuine absence.
+// Identical value at runtime, and the file stays greppable.
+// Pinned by tests/source-no-nul-bytes.test.mjs.
+const BLIND_KEY = '\u0000blind-via:';
 const groups = new Map();
 for (const entry of entries) {
-  const key = normalizeCompany(entry.company);
+  const key = String(entry.company).trim() === '?'
+    ? BLIND_KEY + normalizeVia(entry.via || '')
+    : normalizeCompany(entry.company);
   if (!groups.has(key)) groups.set(key, []);
   groups.get(key).push(entry);
+}
+
+// Two blind rows only count as the same listing when their evaluation dates
+// sit within the re-post window (mirrors detect-reposts.mjs's 90 days).
+// Unparseable dates never cluster — deleting a real application is worse than
+// keeping a duplicate.
+const BLIND_WINDOW_DAYS = 90;
+function withinBlindWindow(a, b) {
+  const ta = Date.parse(a);
+  const tb = Date.parse(b);
+  if (Number.isNaN(ta) || Number.isNaN(tb)) return false;
+  return Math.abs(ta - tb) <= BLIND_WINDOW_DAYS * 86400000;
 }
 
 // Find duplicates
@@ -284,6 +338,7 @@ const linesToRemove = new Set();
 
 for (const [company, companyEntries] of groups) {
   if (companyEntries.length < 2) continue;
+  const isBlindGroup = company.startsWith(BLIND_KEY);
 
   // Within same company, find role matches
   const processed = new Set();
@@ -294,7 +349,8 @@ for (const [company, companyEntries] of groups) {
 
     for (let j = i + 1; j < companyEntries.length; j++) {
       if (processed.has(j)) continue;
-      if (roleMatch(companyEntries[i], companyEntries[j])) {
+      if (roleMatch(companyEntries[i], companyEntries[j])
+          && (!isBlindGroup || withinBlindWindow(companyEntries[i].date, companyEntries[j].date))) {
         cluster.push(companyEntries[j]);
         processed.add(j);
       }
@@ -322,9 +378,32 @@ for (const [company, companyEntries] of groups) {
       const lineIdx = keeper.lineIdx;
       if (lineIdx !== undefined) {
         const parts = lines[lineIdx].split('|').map(s => s.trim());
-        parts[6] = bestStatus;
-        lines[lineIdx] = '| ' + parts.slice(1, -1).join(' | ') + ' |';
+        parts[COLMAP.status] = bestStatus;
+        lines[lineIdx] = rebuildRow(parts);
         console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
+      }
+    }
+
+    // Merge notes from removed entries
+    let mergedNotes = String(keeper.notes || '').trim();
+    const originalNotes = mergedNotes;
+    for (let k = 1; k < cluster.length; k++) {
+      const dupNotes = String(cluster[k].notes || '').trim();
+      if (dupNotes && dupNotes !== 'N/A' && dupNotes !== '❌' && dupNotes !== 'pending' && dupNotes !== '-') {
+        if (!mergedNotes.includes(dupNotes)) {
+          mergedNotes = mergedNotes && mergedNotes !== 'N/A' && mergedNotes !== '-' ? `${mergedNotes}; ${dupNotes}` : dupNotes;
+        }
+      }
+    }
+
+    if (mergedNotes !== originalNotes) {
+      const lineIdx = keeper.lineIdx;
+      if (lineIdx !== undefined) {
+        const parts = lines[lineIdx].split('|').map(s => s.trim());
+        parts[COLMAP.notes] = mergedNotes;
+        lines[lineIdx] = rebuildRow(parts);
+        keeper.notes = mergedNotes;
+        console.log(`  📝 #${keeper.num}: notes merged`);
       }
     }
 
@@ -350,11 +429,15 @@ for (const idx of sortedRemoveIndices) {
 console.log(`\n📊 ${removed} duplicates removed`);
 
 if (!DRY_RUN && removed > 0) {
-  copyFileSync(APPS_FILE, APPS_FILE + '.bak');
-  writeFileSync(APPS_FILE, lines.join('\n'));
-  console.log('✅ Written to applications.md (backup: applications.md.bak)');
+  const backupPath = `${APPS_FILE}.bak`;
+  copyFileSync(APPS_FILE, backupPath);
+  trackerTransaction.replace(lines.join('\n'));
+  console.log(`✅ Written to ${APPS_FILE} (backup: ${backupPath})`);
 } else if (DRY_RUN) {
   console.log('(dry-run — no changes written)');
 } else {
   console.log('✅ No duplicates found');
+}
+} finally {
+  trackerTransaction?.close();
 }
