@@ -147,12 +147,11 @@ export function parseCodex(ev) {
   return [];
 }
 
-/** cliId → parser, for the CLIs that expose a structured stream. */
-export const PARSERS = {
-  claude: parseClaude,
-  grok: parseGrok,
-  codex: parseCodex,
-};
+/**
+ * The CLIs that expose a structured stream. Exported for enumeration (tests,
+ * capability checks) — NOT as the dispatch table; see parserFor.
+ */
+export const STREAM_CLIS = ['claude', 'grok', 'codex'];
 
 /**
  * The parser for a CLI, or null if it has no structured mode.
@@ -161,9 +160,27 @@ export const PARSERS = {
  * still displays fine — it just cannot report usage. Better than pretending
  * every CLI speaks JSON.
  *
+ * `cliId` arrives from the request body, so this is the boundary between
+ * caller-supplied text and a function that then gets invoked on every line of
+ * a subprocess's stdout. The switch is the security-relevant part: each arm
+ * names one parser as a literal, so the set of reachable functions is fixed in
+ * the source and no input can select anything outside it.
+ *
+ * It replaces `hasOwnProperty(PARSERS, cliId) ? PARSERS[cliId] : null`, which
+ * was safe in fact — the guard did stop `"constructor"` and `"__proto__"` —
+ * but expressed that safety as a property an analyzer has to infer. CodeQL did
+ * not, and flagged js/unvalidated-dynamic-method-call at high severity on
+ * PR #2689. Rather than suppress the alert, state the guarantee: a switch over
+ * literals is not a dynamic dispatch at all.
+ *
  * @param {string} cliId
  * @returns {((ev: unknown) => Array<Record<string, unknown>>)|null}
  */
 export function parserFor(cliId) {
-  return Object.prototype.hasOwnProperty.call(PARSERS, cliId) ? PARSERS[cliId] : null;
+  switch (cliId) {
+    case 'claude': return parseClaude;
+    case 'grok': return parseGrok;
+    case 'codex': return parseCodex;
+    default: return null;
+  }
 }

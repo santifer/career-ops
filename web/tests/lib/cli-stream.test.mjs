@@ -10,7 +10,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseClaude, parseGrok, parseCodex, parserFor } from "../../src/lib/cli-stream.mjs";
+import { parseClaude, parseGrok, parseCodex, parserFor, STREAM_CLIS } from "../../src/lib/cli-stream.mjs";
 
 /** All events of one type, for terser assertions. */
 const only = (events, type) => events.filter((e) => e.type === type);
@@ -155,6 +155,30 @@ test("parserFor returns null for text-only CLIs", () => {
 });
 
 test("parserFor is not fooled by inherited Object properties", () => {
-  assert.equal(parserFor("constructor"), null);
-  assert.equal(parserFor("toString"), null);
+  // parserFor dispatches on a value from the request body, so the names that
+  // are only reachable through Object.prototype are the ones that matter.
+  // Under the object-literal + hasOwnProperty form these were the guard's whole
+  // job; under the switch they cannot be reached at all — assert either way, so
+  // the property survives a future refactor back to a table.
+  for (const name of ["constructor", "toString", "__proto__", "valueOf", "hasOwnProperty"]) {
+    assert.equal(parserFor(name), null, `${name} must not resolve to a parser`);
+  }
+});
+
+test("parserFor returns null for junk rather than throwing", () => {
+  // It is a lookup on caller-supplied text; a bad request must 400 upstream,
+  // never crash the stream reader.
+  for (const junk of [undefined, null, "", 42, {}, [], Symbol.iterator]) {
+    assert.equal(parserFor(junk), null, `parserFor(${String(junk)}) should be null`);
+  }
+});
+
+test("STREAM_CLIS and parserFor do not drift", () => {
+  // The switch is the dispatch and STREAM_CLIS is only a listing, so nothing
+  // structurally keeps them in step. A CLI added to one and not the other is
+  // either an unreachable parser or a capability claimed and not delivered.
+  for (const id of STREAM_CLIS) {
+    assert.equal(typeof parserFor(id), "function", `${id} is listed but has no parser`);
+  }
+  assert.equal(STREAM_CLIS.length, 3, "a new streaming CLI needs a switch arm and a listing entry");
 });
