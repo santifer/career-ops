@@ -91,19 +91,49 @@ export function parseReportFilename(filename) {
 // --- Archive-section detection ---
 // Matches "## Job Description", with or without a parenthetical/suffix (the
 // canonical heading is "## Job Description (archived verbatim)"). Content is
-// read up to the next "## " heading or end of file; HTML comments are
-// stripped before the length check so a commented-out template stub doesn't
-// count as archived text.
+// read up to the next KNOWN report-section heading or end of file — not any
+// "## " line, because a JD pasted verbatim can itself contain markdown-style
+// sub-headings (e.g. "## Responsibilities"), which would otherwise truncate
+// the section and falsely report a real archive as missing (CodeRabbit,
+// PR #2791). The allowlist below is every section name modes/oferta.md's
+// report template actually uses; a real JD's own text is vanishingly
+// unlikely to collide with one verbatim. HTML comments are stripped before
+// the length check so a commented-out template stub doesn't count as
+// archived text.
 const JD_HEADING_RE = /^##\s+Job Description\b.*$/im;
+const NEXT_REPORT_SECTION_RE =
+  /^##\s+(?:Machine Summary|Keywords extracted|[A-Z]\)|Block\s[A-Z]\b|Risk Summary|Cover Letter Draft|Post-evaluation|Liveness gate|Blacklist gate|Bounded Research Budget|Step 0\b)/im;
+
+// The unfilled modes/oferta.md template placeholder ("(the posting's full
+// text, pasted verbatim — see requirement below)") is 66 characters — longer
+// than MIN_ARCHIVE_CHARS, so a report where the evaluator copied the
+// template heading but never filled it in would otherwise pass validation
+// (CodeRabbit, PR #2791). Reject it explicitly rather than relying on length
+// alone.
+const UNFILLED_TEMPLATE_PLACEHOLDER =
+  "(the posting's full text, pasted verbatim — see requirement below)";
 
 export function hasEmbeddedJdArchive(content) {
   const text = String(content ?? '');
   const m = JD_HEADING_RE.exec(text);
   if (!m) return false;
   const rest = text.slice(m.index + m[0].length);
-  const nextHeadingOffset = rest.search(/^##\s+/m);
+  const nextHeadingOffset = rest.search(NEXT_REPORT_SECTION_RE);
   const section = nextHeadingOffset === -1 ? rest : rest.slice(0, nextHeadingOffset);
-  const stripped = section.replace(/<!--[\s\S]*?-->/g, '').trim();
+  // Loop the comment-strip to a fixed point rather than a single pass: a
+  // single `.replace()` can leave a reconstructible `<!--...-->` behind when
+  // the input has overlapping/nested comment-marker fragments (removing an
+  // inner match splices the surrounding characters into a new valid match
+  // the single pass never re-scans) — CodeQL "incomplete multi-character
+  // sanitization" on PR #2791.
+  let stripped = section;
+  let prev;
+  do {
+    prev = stripped;
+    stripped = stripped.replace(/<!--[\s\S]*?-->/g, '');
+  } while (stripped !== prev);
+  stripped = stripped.trim();
+  if (stripped === UNFILLED_TEMPLATE_PLACEHOLDER) return false;
   return stripped.length >= MIN_ARCHIVE_CHARS;
 }
 
@@ -212,10 +242,18 @@ function runSelfTest() {
     'hasEmbeddedJdArchive recognizes a bare "## Job Description" heading (no parenthetical) with content');
   check(!hasEmbeddedJdArchive('## Job Description (archived verbatim)\n\n<!-- paste JD here -->\n\n## Machine Summary'),
     'hasEmbeddedJdArchive rejects a section containing only an HTML-comment placeholder');
+  check(!hasEmbeddedJdArchive('## Job Description (archived verbatim)\n\n<!--<!---->-->\n\n## Machine Summary'),
+    'hasEmbeddedJdArchive strips nested/overlapping comment markers to a fixed point rather than leaving a reconstructed <!-- --> behind after one pass (CodeQL incomplete-sanitization fix, PR #2791)');
   check(!hasEmbeddedJdArchive('## Job Description (archived verbatim)\n\nTBD\n\n## Machine Summary'),
     'hasEmbeddedJdArchive rejects a section too short to be real JD text');
   check(!hasEmbeddedJdArchive('# Evaluation: Acme — Engineer\n\n**URL:** https://example.com\n'),
     'hasEmbeddedJdArchive returns false when there is no Job Description section at all');
+  check(hasEmbeddedJdArchive(
+    '## Job Description (archived verbatim)\n\nWe are looking for a Senior Widget Engineer.\n\n## Responsibilities\n\nShip widgets and mentor the team.\n\n## Machine Summary\nfoo'),
+    'hasEmbeddedJdArchive keeps a JD-internal "## Responsibilities" sub-heading inside the section instead of truncating on it (CodeRabbit, PR #2791)');
+  check(!hasEmbeddedJdArchive(
+    "## Job Description (archived verbatim)\n(the posting's full text, pasted verbatim — see requirement below)\n\n## Machine Summary"),
+    'hasEmbeddedJdArchive rejects the unfilled modes/oferta.md template placeholder even though it exceeds MIN_ARCHIVE_CHARS by length alone (CodeRabbit, PR #2791)');
 
   // --- Fixture directory tree (mkdtempSync, mirrors the repo's own test convention) ---
   const tmpDir = mkdtempSync(join(tmpdir(), 'check-jd-archive-test-'));

@@ -15454,7 +15454,30 @@ try {
 
   // The self-test-only write APIs must never be called from checkJdArchive,
   // hasEmbeddedJdArchive, or parseReportFilename — only from runSelfTest.
-  const selfTestBody = (jdArchiveSrc.match(/function runSelfTest\(\)\s*\{([\s\S]*)\n\}/) || [, ''])[1];
+  // Extracting that function's body needs brace-counting, not a greedy
+  // regex: `[\s\S]*` backtracks to the LAST `\n}` in the whole file (e.g. the
+  // CLI-invocation block at the end), so `.replace(selfTestBody, '')` could
+  // strip out everything from runSelfTest onward — including real code after
+  // it — and a stray write call there would never get scanned, silently
+  // passing the very boundary check this is meant to enforce (CodeRabbit,
+  // PR #2791). Walk brace depth from the opening `{` instead, so nested
+  // blocks/arrow functions inside runSelfTest don't end the match early
+  // either.
+  const runSelfTestStart = jdArchiveSrc.indexOf('function runSelfTest()');
+  let selfTestBody = '';
+  if (runSelfTestStart !== -1) {
+    const openBrace = jdArchiveSrc.indexOf('{', runSelfTestStart);
+    let depth = 0;
+    let i = openBrace;
+    for (; i < jdArchiveSrc.length; i += 1) {
+      if (jdArchiveSrc[i] === '{') depth += 1;
+      else if (jdArchiveSrc[i] === '}') {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+    }
+    selfTestBody = jdArchiveSrc.slice(openBrace, i + 1);
+  }
   const outsideSelfTest = jdArchiveSrc
     .replace(selfTestBody, '')
     .split('\n')
