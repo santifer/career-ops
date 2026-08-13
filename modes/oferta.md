@@ -603,9 +603,14 @@ Save full evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ## Keywords extracted
 (list of 15-20 keywords from the JD for ATS optimization)
+
+## Job Description (archived verbatim)
+(the posting's full text, pasted verbatim — see requirement below)
 ```
 
 **Machine Summary (required):** every report carries a `## Machine Summary` YAML fence directly after the header — same schema, exact field names, and rules as the "Machine Summary" block in `batch/batch-prompt.md` (do not duplicate the schema here; that file is the source of truth). It includes `advertised_comp`: the JD's own salary figure **verbatim** (e.g. `"80-90k EUR"`), or `null` when the JD states nothing — never estimated, never replaced with researched market data. This key seeds the advertised salary observation read by `node salary-gap.mjs`. It also includes `risk_summary`: the Risk Summary block mirrored as a map (schema and enum values in `batch/batch-prompt.md`).
+
+**JD archival (required, #2789):** every report MUST carry a `## Job Description (archived verbatim)` section with the posting's full text pasted as-is — never summarized, never paraphrased. A `**URL:**` header alone is not an archive: it is a live pointer that rots once the posting closes or gets taken down, which reliably happens somewhere in the weeks between applying and a later interview round, and there is no way to recover the original requirements after that. This is the primary mechanism, not a fallback — the report is the one artifact guaranteed to get written and tracked, unlike a separate `jds/` file. If the JD is very long, or you are running `jd-skill-gap.mjs` in a standalone workflow outside a full evaluation, write it to `jds/{slug}.md` instead (or `archive-posting.mjs --report={num}` for a PDF capture) and note that path in this section in place of the text. `check-jd-archive.mjs` validates every `reports/*.md` has one form or the other and is wired into `test-all.mjs` — a report missing both is a test failure.
 
 ### 2. Record in tracker
 
