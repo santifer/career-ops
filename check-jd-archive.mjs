@@ -113,6 +113,26 @@ const NEXT_REPORT_SECTION_RE =
 const UNFILLED_TEMPLATE_PLACEHOLDER =
   "(the posting's full text, pasted verbatim — see requirement below)";
 
+// modes/oferta.md documents a second legitimate shape for this section: a
+// pointer to a jds/ capture in place of the verbatim text, for a JD too long
+// to paste inline. A pointer sentence like "See jds/042-acme-2026-01-15.md
+// (archive-posting.mjs --report=042) for the full archive." easily clears
+// MIN_ARCHIVE_CHARS on length alone, which would let a WRONG or NONEXISTENT
+// path pass validation without ever being resolved (CodeRabbit, PR #2791).
+// Any section referencing a jds/*.md path is treated as using the pointer
+// mechanism — not credited as embedded text on length alone — so
+// checkJdArchive() always falls through to its existing
+// findCaptureForReport() resolution for it, which actually verifies the
+// capture exists for that report. `jds/` is this project's own internal
+// directory name; it is not something a genuine external job posting's text
+// would ever contain, so there is no realistic case where real JD prose
+// gets misclassified by this check.
+const JDS_PATH_RE = /jds\/[^\s()]+\.md/;
+
+function isPathOnlyPointer(strippedSection) {
+  return JDS_PATH_RE.test(strippedSection);
+}
+
 export function hasEmbeddedJdArchive(content) {
   const text = String(content ?? '');
   const m = JD_HEADING_RE.exec(text);
@@ -134,6 +154,7 @@ export function hasEmbeddedJdArchive(content) {
   } while (stripped !== prev);
   stripped = stripped.trim();
   if (stripped === UNFILLED_TEMPLATE_PLACEHOLDER) return false;
+  if (isPathOnlyPointer(stripped)) return false;
   return stripped.length >= MIN_ARCHIVE_CHARS;
 }
 
@@ -254,6 +275,12 @@ function runSelfTest() {
   check(!hasEmbeddedJdArchive(
     "## Job Description (archived verbatim)\n(the posting's full text, pasted verbatim — see requirement below)\n\n## Machine Summary"),
     'hasEmbeddedJdArchive rejects the unfilled modes/oferta.md template placeholder even though it exceeds MIN_ARCHIVE_CHARS by length alone (CodeRabbit, PR #2791)');
+  check(!hasEmbeddedJdArchive(
+    '## Job Description (archived verbatim)\n\nSee jds/042-acme-corp-2026-01-15.md for the full archive (archive-posting.mjs --report=042).\n\n## Machine Summary'),
+    'hasEmbeddedJdArchive does not credit a path-only pointer sentence as embedded text, even though it clears MIN_ARCHIVE_CHARS by length alone — the pointer must resolve via findCaptureForReport instead (CodeRabbit, PR #2791)');
+  check(hasEmbeddedJdArchive(
+    '## Job Description (archived verbatim)\n\nThis role owns curriculum design end to end, including SCORM packaging and LMS rollout, across three regional teams and a portfolio of concurrent projects.\n\n## Machine Summary'),
+    'hasEmbeddedJdArchive still credits substantive real prose with no jds/ path reference at all');
 
   // --- Fixture directory tree (mkdtempSync, mirrors the repo's own test convention) ---
   const tmpDir = mkdtempSync(join(tmpdir(), 'check-jd-archive-test-'));
@@ -313,14 +340,48 @@ function runSelfTest() {
     // "no meta" detail branch rather than a crash.
     writeFileSync(join(reportsDir, 'hand-named-report.md'), '# Evaluation: Weyland — Analyst\n\n**URL:** https://example.com\n');
 
+    // Fixture 5: the archive section is a path-only pointer to a jds/ capture
+    // that does NOT exist -> flagged, not silently accepted on length alone
+    // (CodeRabbit, PR #2791).
+    writeFileSync(join(reportsDir, '005-umbrella-2026-01-20.md'), [
+      '# Evaluation: Umbrella Corp — Analyst',
+      '',
+      '**URL:** https://example.com/jobs/umbrella-analyst',
+      '',
+      '## Job Description (archived verbatim)',
+      'See jds/005-umbrella-2026-01-20.md for the full archive (archive-posting.mjs --report=005).',
+      '',
+      '## Machine Summary',
+      'score: 4.0',
+    ].join('\n'));
+    // Deliberately no matching file written under jdsDir for report 005.
+
+    // Fixture 6: the archive section is a path-only pointer to a jds/ capture
+    // that DOES exist -> not flagged, the pointer correctly resolves.
+    writeFileSync(join(reportsDir, '006-oscorp-2026-01-21.md'), [
+      '# Evaluation: Oscorp — Analyst',
+      '',
+      '**URL:** https://example.com/jobs/oscorp-analyst',
+      '',
+      '## Job Description (archived verbatim)',
+      'Posted: 2026-01-18',
+      'See jds/006-oscorp-2026-01-21.md for the full archive (archive-posting.mjs --report=006).',
+      '',
+      '## Machine Summary',
+      'score: 4.0',
+    ].join('\n'));
+    writeFileSync(join(jdsDir, '006-2026-01-21_oscorp_analyst.pdf'), 'fake-pdf-bytes');
+
     const result = checkJdArchive(reportsDir, jdsDir);
 
-    check(result.reportsScanned === 4, `all 4 fixture reports scanned (got ${result.reportsScanned})`);
+    check(result.reportsScanned === 6, `all 6 fixture reports scanned (got ${result.reportsScanned})`);
 
     const flaggedFiles = new Set(result.findings.map((f) => f.file));
     check(flaggedFiles.has('001-acme-2026-01-15.md'), 'report with neither archive form is flagged missing-jd-archive');
     check(!flaggedFiles.has('002-globex-2026-01-16.md'), 'report with an embedded archive section is not flagged');
     check(!flaggedFiles.has('003-initech-2026-01-17.md'), 'report with a matching jds/ capture (no embedded section) is not flagged');
+    check(flaggedFiles.has('005-umbrella-2026-01-20.md'), 'a path-only pointer to a NONEXISTENT jds/ capture is flagged, not accepted on length alone');
+    check(!flaggedFiles.has('006-oscorp-2026-01-21.md'), 'a path-only pointer to an EXISTING jds/ capture is not flagged — resolves via findCaptureForReport');
     check(flaggedFiles.has('hand-named-report.md'), 'report with a non-conforming filename and no archive section is flagged');
 
     const handNamedFinding = result.findings.find((f) => f.file === 'hand-named-report.md');
