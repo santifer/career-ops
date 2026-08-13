@@ -42,9 +42,20 @@
  * stays null rather than being invented from a token count and a guessed rate.
  */
 
-/** Non-negative integer, or 0. Guards against nulls in partial usage blocks. */
+/**
+ * A positive safe integer, or 0. Guards partial and malformed usage blocks.
+ *
+ * `Number.isSafeInteger`, not `isFinite`: a token count is a count, and a
+ * fractional or 2^53-scale value out of a malformed event has no business
+ * entering the total. It reaches /api/usage as money, so a plausible-but-wrong
+ * figure is worse than a zero — the same reason `costUsd` stays null rather
+ * than being derived from a guessed rate.
+ *
+ * Raised by CodeRabbit on this PR, and adopted on #2102 first (@nikolaysm) so
+ * the two implementations of this formula do not diverge the moment both land.
+ */
 function n(v) {
-  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0;
+  return typeof v === 'number' && Number.isSafeInteger(v) && v > 0 ? v : 0;
 }
 
 /** Claude / Grok convention: input excludes cache reads. */
@@ -183,4 +194,43 @@ export function parserFor(cliId) {
     case 'codex': return parseCodex;
     default: return null;
   }
+}
+
+/**
+ * Fold one `usage` event into the running total for a run.
+ *
+ * Two fields, two rules, and the asymmetry is the point:
+ *
+ *   tokens  — strict last-wins. Every CLI's final total supersedes its
+ *             intermediates, and keeping the intermediates means a run killed
+ *             mid-flight still records something rather than zero.
+ *   costUsd — last NUMERIC wins. A later null does not erase a cost already
+ *             reported.
+ *
+ * CodeRabbit asked for strict last-wins on both, on the grounds that keeping an
+ * earlier number violates the normalized event contract. Not adopted, and this
+ * function exists so the reason is assertable rather than argued: grok emits
+ * `costUsd: null` on every intermediate `usage` and the real figure only on
+ * `end`, so the sequence is null → null → number. Nothing guarantees `end` is
+ * the last frame the reader sees — a trailing usage frame, or a parser that
+ * later emits one, would zero a cost that was genuinely incurred. Between
+ * "possibly stale cost" and "silently free run", the second is the one that
+ * misleads: /api/usage exists to make spend visible.
+ *
+ * Pulled out of route.ts for the same reason as stderr-classify.mjs — a
+ * decision inlined in the route can only be tested by grepping the route, the
+ * arrangement claude-invocation.mjs's header records as having been defeated
+ * five times by rewriting the route around the guard.
+ *
+ * @param {{tokens: number, costUsd: number|null}} prev
+ * @param {{tokens?: number, costUsd?: number|null}} ev - a normalized usage event
+ * @returns {{tokens: number, costUsd: number|null}} a new total; `prev` is not mutated
+ */
+export function foldUsage(prev, ev) {
+  const base = prev ?? { tokens: 0, costUsd: null };
+  if (!ev || typeof ev !== 'object') return { ...base };
+  return {
+    tokens: n(ev.tokens),
+    costUsd: typeof ev.costUsd === 'number' ? ev.costUsd : base.costUsd,
+  };
 }

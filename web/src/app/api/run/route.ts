@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { resolveCli } from "@/lib/clis";
-import { parserFor } from "@/lib/cli-stream.mjs";
+import { parserFor, foldUsage } from "@/lib/cli-stream.mjs";
 import { isStderrFailure } from "@/lib/stderr-classify.mjs";
 import { careerOpsRoot, readMemory, findReportFile } from "@/lib/career-ops";
 import { resolvePdfPaths, type PdfPaths } from "@/lib/pdf-paths.mjs";
@@ -266,12 +266,14 @@ export async function POST(req: Request) {
             } else if (ev.type === "status") {
               send({ type: "status", label: ev.label });
             } else if (ev.type === "usage") {
-              // Last-wins: every CLI's final total arrives last, and keeping the
-              // intermediate ones means a run killed mid-flight still records
-              // something. The authoritative "done" is still sent on close, so
-              // the honesty gate decides done-vs-error first.
-              lastTokens = ev.tokens;
-              if (typeof ev.costUsd === "number") lastCostUsd = ev.costUsd;
+              // Folding rules — and why cost is not strict last-wins — live in
+              // foldUsage, where they can be asserted as a value. The
+              // authoritative "done" is still sent on close, so the honesty
+              // gate decides done-vs-error first.
+              ({ tokens: lastTokens, costUsd: lastCostUsd } = foldUsage(
+                { tokens: lastTokens, costUsd: lastCostUsd },
+                ev,
+              ));
             }
           }
         }

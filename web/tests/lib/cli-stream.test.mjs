@@ -10,7 +10,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseClaude, parseGrok, parseCodex, parserFor, STREAM_CLIS } from "../../src/lib/cli-stream.mjs";
+import { parseClaude, parseGrok, parseCodex, parserFor, foldUsage, STREAM_CLIS } from "../../src/lib/cli-stream.mjs";
 
 /** All events of one type, for terser assertions. */
 const only = (events, type) => events.filter((e) => e.type === type);
@@ -181,4 +181,71 @@ test("STREAM_CLIS and parserFor do not drift", () => {
     assert.equal(typeof parserFor(id), "function", `${id} is listed but has no parser`);
   }
   assert.equal(STREAM_CLIS.length, 3, "a new streaming CLI needs a switch arm and a listing entry");
+});
+
+// ── malformed usage blocks ───────────────────────────────────────────────────
+
+test("a fractional token count is rejected, not rounded", () => {
+  // CodeRabbit on this PR: `n` documented an integer and accepted 1.5, so a
+  // malformed event could put a fractional total into /api/usage — where it is
+  // read as money. Zero is the honest answer to an unparseable count.
+  const ev = { type: "result", usage: { input_tokens: 1.5, output_tokens: 2 } };
+  assert.deepEqual(parseClaude(ev), [{ type: "usage", tokens: 2, costUsd: null }]);
+});
+
+test("a value beyond the safe-integer range is rejected too", () => {
+  // 2^53 arithmetic silently loses precision, so a total built from one is not
+  // a number anyone should be billed against.
+  const ev = { type: "result", usage: { input_tokens: Number.MAX_SAFE_INTEGER + 2, output_tokens: 3 } };
+  assert.deepEqual(parseClaude(ev), [{ type: "usage", tokens: 3, costUsd: null }]);
+});
+
+test("negatives, NaN, Infinity and non-numbers all count as zero", () => {
+  for (const bad of [-5, NaN, Infinity, -Infinity, "100", null, undefined, {}]) {
+    const ev = { type: "result", usage: { input_tokens: bad, output_tokens: 7 } };
+    assert.equal(parseClaude(ev)[0].tokens, 7, `not ignored: ${String(bad)}`);
+  }
+});
+
+// ── folding usage across a run ───────────────────────────────────────────────
+
+test("tokens are strict last-wins", () => {
+  // The final total supersedes the intermediates — and keeping intermediates at
+  // all is what lets a run killed mid-flight record something rather than zero.
+  let acc = { tokens: 0, costUsd: null };
+  acc = foldUsage(acc, { tokens: 105, costUsd: null });
+  acc = foldUsage(acc, { tokens: 18607, costUsd: 0.0389548 });
+  assert.deepEqual(acc, { tokens: 18607, costUsd: 0.0389548 });
+});
+
+test("a later null does NOT erase a cost already reported", () => {
+  // The one CodeRabbit review point on this PR that was not adopted. Strict
+  // last-wins on costUsd would turn a run that cost money into a free one, and
+  // /api/usage exists to make spend visible. Grok's real sequence is
+  // null → null → number, so nothing is stale in practice; this guards the
+  // ordering nothing enforces.
+  let acc = foldUsage({ tokens: 0, costUsd: null }, { tokens: 100, costUsd: 0.05 });
+  acc = foldUsage(acc, { tokens: 120, costUsd: null });
+  assert.equal(acc.costUsd, 0.05, "a trailing null must not report the run as free");
+  assert.equal(acc.tokens, 120, "tokens still take the later value");
+});
+
+test("a zero cost is a cost, not a missing one", () => {
+  const acc = foldUsage({ tokens: 0, costUsd: 0.05 }, { tokens: 1, costUsd: 0 });
+  assert.equal(acc.costUsd, 0, "0 is a number and must win over an earlier 0.05");
+});
+
+test("foldUsage does not mutate its input and survives junk", () => {
+  const prev = { tokens: 5, costUsd: 0.01 };
+  foldUsage(prev, { tokens: 9, costUsd: 0.02 });
+  assert.deepEqual(prev, { tokens: 5, costUsd: 0.01 }, "prev was mutated");
+  for (const junk of [null, undefined, 42, "usage"]) {
+    assert.deepEqual(foldUsage(prev, junk), { tokens: 5, costUsd: 0.01 }, `junk changed the total: ${String(junk)}`);
+  }
+  assert.deepEqual(foldUsage(null, { tokens: 3, costUsd: null }), { tokens: 3, costUsd: null });
+});
+
+test("a malformed token count in a fold reports zero, not the previous total", () => {
+  const acc = foldUsage({ tokens: 500, costUsd: 0.1 }, { tokens: 1.5, costUsd: null });
+  assert.equal(acc.tokens, 0, "a fractional count must not be carried through as the old total either");
 });
