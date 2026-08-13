@@ -116,21 +116,28 @@ const UNFILLED_TEMPLATE_PLACEHOLDER =
 // modes/oferta.md documents a second legitimate shape for this section: a
 // pointer to a jds/ capture in place of the verbatim text, for a JD too long
 // to paste inline. A pointer sentence like "See jds/042-acme-2026-01-15.md
-// (archive-posting.mjs --report=042) for the full archive." easily clears
+// for the full archive (archive-posting.mjs --report=042)." easily clears
 // MIN_ARCHIVE_CHARS on length alone, which would let a WRONG or NONEXISTENT
-// path pass validation without ever being resolved (CodeRabbit, PR #2791).
-// Any section referencing a jds/*.md path is treated as using the pointer
-// mechanism — not credited as embedded text on length alone — so
-// checkJdArchive() always falls through to its existing
-// findCaptureForReport() resolution for it, which actually verifies the
-// capture exists for that report. `jds/` is this project's own internal
-// directory name; it is not something a genuine external job posting's text
-// would ever contain, so there is no realistic case where real JD prose
-// gets misclassified by this check.
+// path pass validation without ever being resolved (CodeRabbit, PR #2791
+// round 3).
+//
+// A section counts as a path-only pointer — and is NOT credited as embedded
+// text, forcing checkJdArchive()'s findCaptureForReport() resolution to
+// actually verify the capture — only when the ENTIRE section (after an
+// optional leading "Posted: ..." line) matches nothing but the canonical
+// pointer sentence below. Substantive JD prose that merely mentions a jds/
+// path in passing must still be credited directly (CodeRabbit, PR #2791
+// round 4) — an earlier version of this check treated ANY jds/*.md
+// reference anywhere in the section as pointer-only, which wrongly rejected
+// real archived text alongside an incidental path mention.
 const JDS_PATH_RE = /jds\/[^\s()]+\.md/;
+const POSTED_LINE_RE = /^Posted:.*$/im;
+const POINTER_SENTENCE_RE =
+  /^See\s+jds\/[^\s()]+\.md\s+for the full archive(?:\s*\(archive-posting\.mjs\s+--report=\d+\))?\.?$/i;
 
 function isPathOnlyPointer(strippedSection) {
-  return JDS_PATH_RE.test(strippedSection);
+  const withoutPostedLine = strippedSection.replace(POSTED_LINE_RE, '').trim();
+  return POINTER_SENTENCE_RE.test(withoutPostedLine);
 }
 
 export function hasEmbeddedJdArchive(content) {
@@ -281,6 +288,9 @@ function runSelfTest() {
   check(hasEmbeddedJdArchive(
     '## Job Description (archived verbatim)\n\nThis role owns curriculum design end to end, including SCORM packaging and LMS rollout, across three regional teams and a portfolio of concurrent projects.\n\n## Machine Summary'),
     'hasEmbeddedJdArchive still credits substantive real prose with no jds/ path reference at all');
+  check(hasEmbeddedJdArchive(
+    '## Job Description (archived verbatim)\n\nThis role owns curriculum design end to end, including SCORM packaging and LMS rollout. See jds/legacy-notes.md for historical context on the prior version of this posting.\n\n## Machine Summary'),
+    'hasEmbeddedJdArchive credits substantive JD prose even when it also mentions a jds/*.md path in passing — the section is not JUST the canonical pointer sentence, so it is read as archived text, not a pointer (CodeRabbit, PR #2791 round 4)');
 
   // --- Fixture directory tree (mkdtempSync, mirrors the repo's own test convention) ---
   const tmpDir = mkdtempSync(join(tmpdir(), 'check-jd-archive-test-'));
