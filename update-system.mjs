@@ -62,6 +62,7 @@ export const REEXEC_BUFFER_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
+  'dead-boards.mjs',
   // .gitattributes governs how every other path below is written to disk, and
   // `apply` checks paths out one at a time in this order: if it landed later,
   // everything before it would be written under the old core.autocrlf setting
