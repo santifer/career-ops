@@ -156,7 +156,10 @@ test('detect-reposts: --window reaches the report, and a bad value is refused', 
   assert.match(given.all, /window:\s*60 days/, '--window 60 did not reach the report');
 
   // The #2929 half: name accepted, value silently dropped, report built on 90.
-  for (const bad of [['--window', 'abc'], ['--window', '-5'], ['--window']]) {
+  // '9'x400 is all digits, so a shape-only check passed it, and parseInt then
+  // returned Infinity — which is > 0. The JSON came out as "windowDays": null
+  // at exit 0, Infinity not surviving JSON (CodeRabbit, reviewing #2983).
+  for (const bad of [['--window', 'abc'], ['--window', '-5'], ['--window'], ['--window', '9'.repeat(400)]]) {
     const r = runScript('detect-reposts.mjs', '--summary', ...bad);
     assert.equal(r.status, 2, `detect-reposts ${bad.join(' ')} exited ${r.status}, want 2`);
     assert.doesNotMatch(r.all, /window:\s*90 days/, `${bad.join(' ')} still produced a default-window report`);
