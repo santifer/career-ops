@@ -36,7 +36,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { flagValue, validateFlags } from './lib/cli-flags.mjs';
+import { validateFlags, requireFlagValue, isNonNegativeInt } from './lib/cli-flags.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_ACTIVE_INTERVIEWS_PATH = existsSync(join(CAREER_OPS, 'data/active-interviews.md'))
@@ -53,11 +53,19 @@ const selfTestMode = args.includes('--self-test');
 // --file convention. Primarily for test isolation: it lets tests point at a
 // controlled temp path instead of depending on whatever data/active-interviews.md
 // happens to exist (or not) in the caller's real workspace.
-const fileFlagValue = flagValue(args, '--file');
+// A trailing `--file` used to fall back to data/active-interviews.md and
+// report on it at exit 0 — the caller's path silently ignored (#2929).
+const fileFlagValue = requireFlagValue(args, '--file', { expects: 'a path' });
 const ACTIVE_INTERVIEWS_PATH = fileFlagValue !== undefined
   ? fileFlagValue
   : DEFAULT_ACTIVE_INTERVIEWS_PATH;
-const minThresholdValue = flagValue(args, '--min-threshold');
+// "abc" used to parse to NaN and silently become the default 1, so the report
+// was built on a threshold the caller never asked for (#2929). 0 is legal here
+// (report every company), which is why this is non-negative and not positive.
+const minThresholdValue = requireFlagValue(args, '--min-threshold', {
+  validate: isNonNegativeInt,
+  expects: 'a non-negative integer',
+});
 const rawMinThreshold = minThresholdValue !== undefined
   ? parseInt(minThresholdValue, 10)
   : 1;
@@ -343,6 +351,10 @@ function runSelfTest() {
 }
 
 // --- Run (CLI only; guarded so the module is safely importable for tests) ---
+// ADDING A FLAG? Add it here too, and to VALUE_FLAGS if it takes a value.
+// This allow-list is why a flag added in another in-flight PR merges without a
+// textual conflict and is then rejected by its own file at runtime (#2920
+// review). The USAGE block below is the third place.
 const KNOWN_FLAGS = ['--file', '--min-threshold', '--summary', '--self-test', '--help', '-h'];
 const VALUE_FLAGS = ['--file', '--min-threshold'];
 

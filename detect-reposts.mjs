@@ -28,7 +28,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 
 import { roleFuzzyMatch, roleTokens, BASELINE_TOKENS } from './role-matcher.mjs';
 import { normalizeCompanyName } from './invite-match.mjs';
-import { flagValue, validateFlags } from './lib/cli-flags.mjs';
+import { validateFlags, requireFlagValue, isPositiveInt } from './lib/cli-flags.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const SCAN_HISTORY_PATH = join(CAREER_OPS, 'data/scan-history.tsv');
@@ -36,6 +36,10 @@ const DEFAULT_WINDOW_DAYS = 90;
 
 // --- CLI args ---
 
+// ADDING A FLAG? Add it here too, and to VALUE_FLAGS if it takes a value.
+// This allow-list is why a flag added in another in-flight PR merges without a
+// textual conflict and is then rejected by its own file at runtime (#2920
+// review). The USAGE block below is the third place.
 const KNOWN_FLAGS = ['--window', '--summary', '--self-test', '--help', '-h'];
 const VALUE_FLAGS = ['--window'];
 
@@ -49,10 +53,15 @@ const USAGE = `Usage:
 const args = process.argv.slice(2);
 const summaryMode = args.includes('--summary');
 const selfTestMode = args.includes('--self-test');
-const windowValue = flagValue(args, '--window');
-const windowDays = windowValue !== undefined
-  ? (Number.isNaN(parseInt(windowValue, 10)) ? DEFAULT_WINDOW_DAYS : parseInt(windowValue, 10))
-  : DEFAULT_WINDOW_DAYS;
+// A present-but-unusable --window used to fall through to the default: no
+// value, `--summary` as the value, "abc", and even "-5" all reported on the
+// 90-day window at exit 0 (#2929). Rejecting the name but not the value left
+// half of #2919's defect in place.
+const windowValue = requireFlagValue(args, '--window', {
+  validate: isPositiveInt,
+  expects: 'a positive integer number of days',
+});
+const windowDays = windowValue !== undefined ? parseInt(windowValue, 10) : DEFAULT_WINDOW_DAYS;
 
 // --- Date helpers ---
 function parseDate(dateStr) {
