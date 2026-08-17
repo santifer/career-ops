@@ -21,8 +21,10 @@
  */
 
 import { execFile, execFileSync, execSync } from 'child_process';
-import { copyFileSync, readFileSync, writeFileSync, existsSync, unlinkSync, rmSync, renameSync } from 'fs';
-import { join, dirname, posix as pathPosix } from 'path';
+import { copyFileSync, readFileSync, writeFileSync, existsSync, unlinkSync, rmSync, mkdtempSync } from 'fs';
+import { join, dirname, basename, posix as pathPosix } from 'path';
+import { tmpdir } from 'os';
+import { randomBytes, timingSafeEqual } from 'crypto';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 // NOTE: this file must stay *self-loading* — no static (top-level) relative
@@ -37,6 +39,33 @@ import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
+
+function createReexecMarker() {
+  const directory = mkdtempSync(join(tmpdir(), 'career-ops-reexec-'));
+  const path = join(directory, 'marker');
+  const token = randomBytes(32).toString('hex');
+  writeFileSync(path, token, { encoding: 'utf8', mode: 0o600 });
+  return { path, token };
+}
+
+function consumeReexecMarker() {
+  const path = process.env.CAREER_OPS_UPDATE_REEXEC_MARKER;
+  const token = process.env.CAREER_OPS_UPDATE_REEXEC_TOKEN;
+  if (!path || !token || !path.startsWith(join(tmpdir(), 'career-ops-reexec-')) || basename(path) !== 'marker') {
+    return false;
+  }
+  try {
+    const expected = readFileSync(path, 'utf8');
+    const expectedBuffer = Buffer.from(expected);
+    const tokenBuffer = Buffer.from(token);
+    const valid = expectedBuffer.length === tokenBuffer.length && timingSafeEqual(expectedBuffer, tokenBuffer);
+    unlinkSync(path);
+    rmSync(dirname(path), { recursive: true, force: true });
+    return valid;
+  } catch {
+    return false;
+  }
+}
 
 const CANONICAL_REPO = 'https://github.com/santifer/career-ops.git';
 const RAW_VERSION_URL = 'https://raw.githubusercontent.com/santifer/career-ops/main/VERSION';
@@ -1437,7 +1466,7 @@ async function apply() {
   const local = localVersion();
   // Environment variables are a private one-use channel for the self-reexec;
   // they must not authorize the initial invocation (#2866).
-  const isReexec = process.env.CAREER_OPS_UPDATE_REEXEC === '1';
+  const isReexec = consumeReexecMarker();
   const updateForce = process.argv.includes('--force') ||
     (isReexec && process.env.CAREER_OPS_UPDATE_FORCE === '1');
   const updateConfirmed = process.argv.includes('--confirm') ||
@@ -1498,13 +1527,15 @@ async function apply() {
         // new top-level import can't reintroduce the self-reexec crash (#1245).
         const reexecFiles = resolveReexecCheckout('FETCH_HEAD', 'update-system.mjs');
         git('checkout', 'FETCH_HEAD', '--', ...reexecFiles);
+        const marker = createReexecMarker();
         execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
           cwd: ROOT,
           stdio: 'inherit',
           timeout,
           env: {
             ...process.env,
-            CAREER_OPS_UPDATE_REEXEC: '1',
+            CAREER_OPS_UPDATE_REEXEC_MARKER: marker.path,
+            CAREER_OPS_UPDATE_REEXEC_TOKEN: marker.token,
             CAREER_OPS_UPDATE_BACKUP_BRANCH: backupBranch,
             ...(updateForce ? { CAREER_OPS_UPDATE_FORCE: '1' } : {}),
             CAREER_OPS_UPDATE_CONFIRM: '1',
@@ -1958,7 +1989,7 @@ async function apply() {
       console.error(`${unmaterialized.length} path(s) from the target manifest were not checked out:`);
       for (const path of unmaterialized) console.error(`  ${path}`);
       console.error('\nThis happens when the installed updater predates the paths the target adds.');
-      console.error('Run `node update-system.mjs apply` again — the updater itself is now current,');
+      console.error('Run `node update-system.mjs apply --confirm` again — the updater itself is now current,');
       console.error('so the second pass uses the target manifest and picks up what this one missed.');
       process.exit(1);
     }
