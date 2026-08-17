@@ -137,6 +137,64 @@ test('archive-posting still accepts its real flags in both forms', () => {
   }
 });
 
+
+// --- a supplied value must reach the report, and a bad one must be refused --
+//
+// Previously only rejection-latency asserted on OUTPUT; the other three rested
+// on --help and an exit code (Scott-Emberson, reviewing #2920). An exit code
+// alone cannot tell "the value was honoured" from "the value was dropped and
+// the default happened to produce the same exit status" — which is the entire
+// defect class here. Each case below reads a value back out of the report.
+
+test('detect-reposts: --window reaches the report, and a bad value is refused', () => {
+  const dflt = runScript('detect-reposts.mjs', '--summary');
+  assert.equal(dflt.status, 0);
+  assert.match(dflt.all, /window:\s*90 days/, 'default window is no longer 90 — update this test');
+
+  const given = runScript('detect-reposts.mjs', '--summary', '--window', '60');
+  assert.equal(given.status, 0);
+  assert.match(given.all, /window:\s*60 days/, '--window 60 did not reach the report');
+
+  // The #2929 half: name accepted, value silently dropped, report built on 90.
+  for (const bad of [['--window', 'abc'], ['--window', '-5'], ['--window']]) {
+    const r = runScript('detect-reposts.mjs', '--summary', ...bad);
+    assert.equal(r.status, 2, `detect-reposts ${bad.join(' ')} exited ${r.status}, want 2`);
+    assert.doesNotMatch(r.all, /window:\s*90 days/, `${bad.join(' ')} still produced a default-window report`);
+  }
+});
+
+test('process-quality: --min-threshold reaches the report, and a bad value is refused', () => {
+  const dflt = runScript('process-quality.mjs', '--summary');
+  assert.equal(dflt.status, 0);
+  assert.match(dflt.all, /min threshold:\s*1 /, 'default threshold is no longer 1 — update this test');
+
+  const given = runScript('process-quality.mjs', '--summary', '--min-threshold', '7');
+  assert.equal(given.status, 0);
+  assert.match(given.all, /min threshold:\s*7 /, '--min-threshold 7 did not reach the report');
+
+  // 0 is legal and meaningful (report every company), so it must NOT be
+  // refused by the positive-integer rule the other numeric flags use.
+  const zero = runScript('process-quality.mjs', '--summary', '--min-threshold', '0');
+  assert.equal(zero.status, 0, '--min-threshold 0 was refused, but 0 is a legal threshold');
+  assert.match(zero.all, /min threshold:\s*0 /);
+
+  for (const bad of [['--min-threshold', 'abc'], ['--min-threshold']]) {
+    const r = runScript('process-quality.mjs', '--summary', ...bad);
+    assert.equal(r.status, 2, `process-quality ${bad.join(' ')} exited ${r.status}, want 2`);
+  }
+});
+
+test('weekly-digest: --from/--to reach the report, and a bad --dir is refused', () => {
+  const given = runScript('weekly-digest.mjs', '--from=2026-08-10', '--to=2026-08-16');
+  assert.equal(given.status, 0);
+  const parsed = JSON.parse(given.stdout);
+  assert.equal(parsed.metadata.range.from, '2026-08-10', 'the --from bound did not reach the digest');
+  assert.equal(parsed.metadata.range.to, '2026-08-16', 'the --to bound did not reach the digest');
+
+  const r = runScript('weekly-digest.mjs', '--dir');
+  assert.equal(r.status, 2, `weekly-digest --dir with no value exited ${r.status}, want 2`);
+});
+
 // --- rejection-latency: the false all-clear, and the `=` form (#2401) -------
 
 function withFixture(fn) {
