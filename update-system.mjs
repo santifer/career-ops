@@ -1528,7 +1528,12 @@ async function apply() {
         const reexecFiles = resolveReexecCheckout('FETCH_HEAD', 'update-system.mjs');
         git('checkout', 'FETCH_HEAD', '--', ...reexecFiles);
         const marker = createReexecMarker();
-        execFileSync(process.execPath, ['update-system.mjs', 'apply'], {
+        execFileSync(process.execPath, [
+          'update-system.mjs',
+          'apply',
+          '--confirm',
+          ...(updateForce ? ['--force'] : []),
+        ], {
           cwd: ROOT,
           stdio: 'inherit',
           timeout,
@@ -1536,8 +1541,13 @@ async function apply() {
             ...process.env,
             CAREER_OPS_UPDATE_REEXEC_MARKER: marker.path,
             CAREER_OPS_UPDATE_REEXEC_TOKEN: marker.token,
+            // Compatibility for target updaters before the authenticated
+            // marker was introduced; only the authenticated child receives it.
+            CAREER_OPS_UPDATE_REEXEC: '1',
             CAREER_OPS_UPDATE_BACKUP_BRANCH: backupBranch,
             ...(updateForce ? { CAREER_OPS_UPDATE_FORCE: '1' } : {}),
+            // Keep the legacy confirmation channel for older target updaters;
+            // this process still requires the authenticated marker above.
             CAREER_OPS_UPDATE_CONFIRM: '1',
           },
         });
