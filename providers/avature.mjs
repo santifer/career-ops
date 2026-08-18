@@ -89,8 +89,10 @@ function parseLocation(block) {
 export function parseArticles(htmlText, origin) {
   const out = [];
   // Tenants vary the result class: Synopsys uses `article--result`, Siemens
-  // appends a position index (`article--result 1`). Accept any suffix.
-  const re = /<article class="article article--result[^"]*"[\s\S]*?<\/article>/g;
+  // appends a position index (`article--result 1`), Deloitte USI drops the
+  // parent `article` class entirely (`<article class="article--result ">`).
+  // Accept any suffix and any prefix, anchored on `article--result`.
+  const re = /<article class="article--result[^"]*"[\s\S]*?<\/article>/g;
   let a;
   while ((a = re.exec(htmlText)) !== null) {
     const block = a[0];
