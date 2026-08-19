@@ -77,6 +77,24 @@ function consumeReexecMarker() {
   }
 }
 
+function isLegacyReexec() {
+  if (process.env.CAREER_OPS_UPDATE_REEXEC !== '1') {
+    return false;
+  }
+  const backupBranch = process.env.CAREER_OPS_UPDATE_BACKUP_BRANCH || '';
+  if (!/^backup-pre-update-\d+\.\d+\.\d+-\d{8}T\d{6}Z$/.test(backupBranch)) {
+    return false;
+  }
+  try {
+    execFileSync('git', [
+      'show-ref', '--verify', '--quiet', `refs/heads/${backupBranch}`,
+    ], { cwd: ROOT, stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const CANONICAL_REPO = 'https://github.com/santifer/career-ops.git';
 const RAW_VERSION_URL = 'https://raw.githubusercontent.com/santifer/career-ops/main/VERSION';
 const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/latest';
@@ -1476,12 +1494,13 @@ async function apply() {
   const local = localVersion();
   // Environment variables are a private one-use channel for the self-reexec;
   // they must not authorize the initial invocation (#2866).
-  const isReexec = consumeReexecMarker() ||
+  const legacyReexec = isLegacyReexec();
+  const isReexec = consumeReexecMarker() || legacyReexec ||
     (process.argv.includes('--confirm') && process.env.CAREER_OPS_UPDATE_REEXEC === '1');
   const updateForce = process.argv.includes('--force') ||
     (isReexec && process.env.CAREER_OPS_UPDATE_FORCE === '1');
   const updateConfirmed = process.argv.includes('--confirm') ||
-    (isReexec && process.env.CAREER_OPS_UPDATE_CONFIRM === '1');
+    (isReexec && (process.env.CAREER_OPS_UPDATE_CONFIRM === '1' || legacyReexec));
   const initialStatusPaths = new Set(gitStatusEntries().map(entry => entry.path));
 
   if (!updateConfirmed) {
