@@ -55,6 +55,7 @@ const PATHS = {
   shared:  join(ROOT, 'modes', '_shared.md'),
   oferta:  join(ROOT, 'modes', 'oferta.md'),
   cv:        join(ROOT, 'cv.md'),
+  profile:   join(ROOT, 'modes', '_profile.md'),
   profileYml: join(ROOT, 'config', 'profile.yml'),
   reports:    join(ROOT, 'reports'),
 };
@@ -217,6 +218,7 @@ console.log('\n📂  Loading context files...');
 const sharedContext = readFile(PATHS.shared,     'modes/_shared.md');
 const ofertaLogic   = readFile(PATHS.oferta,     'modes/oferta.md');
 const cvContent     = readFile(PATHS.cv,         'cv.md');
+const profileContent= readFile(PATHS.profile,    'modes/_profile.md');
 const profileYml    = readFile(PATHS.profileYml, 'config/profile.yml');
 const languageInstruction = outputLanguageInstruction(parseOutputLanguage(profileYml));
 
@@ -228,6 +230,7 @@ const { contextBody, budgetReport } = buildBudgetedPrompt({
   ofertaContent: ofertaLogic,
   cvContent,
   profileYml,
+  profileContent,
   jdText,
   noCompress,
   maxTokens: 128_000, // gpt-4o-mini context window
@@ -262,7 +265,13 @@ IMPORTANT OPERATING RULES FOR THIS SESSION
    - Post-evaluation file saving is handled by the script, not by you.
 2. ${languageInstruction}
 3. Generate Blocks A through G in full.
-4. At the very end, output this exact machine-readable block:
+4. Strict Scoring Mandate — modes/_shared.md Scoring System MUST be applied literally:
+   a) North Star alignment is scored against the user's target archetypes in _profile.md. If the role's archetype is NOT one of the user's target archetypes, score North Star ≤ 3.0 — a strong CV match cannot compensate for archetype misfit.
+   b) Culture signals: if culture_screen.require criteria are contradicted by the JD, cap this dimension at 2/5 and surface it in Block A. Do not let a strong CV-match silently compensate.
+   c) Red flags are NEGATIVE adjustments. Every documented blocker (domain gap, IC-vs-leader mismatch, seniority gap) must pull the global score down from the technical-match starting point.
+   d) Do NOT inflate scores via "transferable skills" or "adjacent experience." A requirement with no direct evidence in cv.md is a gap for scoring purposes. Mitigations belong in the report text, not in the score.
+   e) Enforce the score bands exactly: 4.5+ strong/apply immediately; 4.0-4.4 good/worth applying; 3.5-3.9 decent/apply only with a reason; below 3.5 recommend against applying.
+5. At the very end, output this exact machine-readable block:
 
 ---SCORE_SUMMARY---
 COMPANY: <company name or "Unknown">
