@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { CadenceSettings } from "@/components/followups/cadence-settings";
+import { SignedInBrowser } from "@/components/apply/signed-in-browser";
 
 type Cli = {
   id: string;
@@ -291,6 +292,8 @@ export function ConfigForm() {
           />
         </span>
       </button>
+
+      <SignedInBrowser />
 
       <CadenceSettings />
 
