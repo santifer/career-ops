@@ -14,16 +14,20 @@
  *      the personal queue isn't accidentally tracked.
  *   7. Concurrent `add` calls all survive — the queue is appended to, never
  *      rewritten, so simultaneous writers cannot clobber each other.
+ *   8. The queue file is SEEDED under the lock too, not merely appended to under
+ *      it. Creating it is open() then write(), and a writer that observed the
+ *      gap appended into a zero-byte file and lost its item to the header.
  *
  * Provisions a throwaway queue via CAREER_OPS_INBOX and a temp CWD; never
  * touches real user data.
  */
 
 import { execFileSync, spawn } from 'child_process';
-import { readFileSync, writeFileSync, mkdtempSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
+import { acquirePipelineLock } from './pipeline-lock.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const NODE = process.execPath;
@@ -138,16 +142,46 @@ console.log('7. concurrent adds do not lose items (append, not rewrite)');
   const N = 30;
   // spawn(), not spawnSync() — a synchronous loop would serialize the adds and
   // pass even against the buggy rewrite, proving nothing.
-  const exits = await Promise.all(
+  // Capture each child's stderr, and PRINT the losers' when the case fails.
+  // Without this the only evidence a failure leaves is `kept=29 of 30`, which
+  // names the symptom and hides the mechanism: a lock-acquisition timeout, a
+  // Windows EPERM/EBUSY on the lock directory and a crash in the append all
+  // look identical from out here. This case has failed on windows-latest
+  // repeatedly, including after #2825 raised the acquisition budget to 30s,
+  // and every one of those failures cost a round trip because the log said
+  // what was lost and never why. A sub-millisecond append that cannot get the
+  // lock inside 30 SECONDS is not simply a crowded queue, so the distinction
+  // is the whole diagnosis.
+  const results = await Promise.all(
     Array.from({ length: N }, (_, i) => new Promise((res) => {
       const p = spawn(NODE, [CLI, 'add', `item-${i}`], {
         cwd: dir, env: { ...process.env, CAREER_OPS_INBOX: inbox }, stdio: ['pipe', 'pipe', 'pipe'],
       });
-      p.on('exit', (code) => res(code));
+      let err = '';
+      p.stderr.on('data', (chunk) => { err += chunk; });
+      p.on('exit', (code) => res({ item: `item-${i}`, code, err }));
     })),
   );
-  const failedSpawn = exits.filter((c) => c !== 0).length;
+  const exits = results.map((r) => r.code);
+  const losers = results.filter((r) => r.code !== 0);
+  const failedSpawn = losers.length;
   check('every concurrent add exited cleanly', failedSpawn === 0, `${failedSpawn} non-zero exits`);
+  for (const l of losers) {
+    // Node prints the offending SOURCE LINE before the error itself, so taking
+    // the first lines verbatim buries the one fact worth having. Pull out the
+    // `SomeError: message` line, which is what separates the hypotheses, and
+    // keep a truncated tail as a fallback when nothing matches.
+    const lines = l.err.trim().split('\n').map((s) => s.trim()).filter(Boolean);
+    const cause = lines.find((s) => /^[A-Za-z_$][\w$]*(Error|Exception):/.test(s))
+      || lines.find((s) => /\b(EPERM|EBUSY|EACCES|ENOENT|EEXIST)\b/.test(s))
+      || lines.slice(-1)[0]
+      || '(no stderr)';
+    // Generous, because the owner record pipeline-lock.mjs appends to a
+    // LockTimeoutError is the diagnostic payload; truncating it away would
+    // leave the same symptom-without-mechanism this instrumentation exists
+    // to end.
+    console.log(`      ↳ ${l.item} exited ${l.code}: ${cause.slice(0, 500)}`);
+  }
   const body = readFileSync(inbox, 'utf8');
   const pending = body.split('\n').filter((l) => l.startsWith('- [ ]'));
   const kept = pending.length;
@@ -156,6 +190,62 @@ console.log('7. concurrent adds do not lose items (append, not rewrite)');
   const expected = new Set(Array.from({ length: N }, (_, i) => `item-${i}`));
   const complete = actual.size === expected.size && [...expected].every((item) => actual.has(item));
   check('no item is duplicated or truncated', complete, `actual=${[...actual].join(', ')}`);
+}
+
+// ---------------------------------------------------------------------------
+console.log('8. the queue file is seeded under the lock, not before it');
+{
+  // §7 asserts the concurrent adds all survive. This asserts the reason they
+  // can: the file is created AND its header written while the lock is held, so
+  // no other writer can ever observe it mid-initialisation.
+  //
+  // The distinction is not academic. `wx` makes the CREATE atomic but not the
+  // INITIALISATION — writeFileSync is open() then write(), and between them the
+  // file exists at zero bytes. Measured on Windows, a second process polling
+  // existsSync saw it empty in 303 of 400 rounds. A writer that looked in that
+  // window skipped creation, appended into the empty file, and had its line
+  // overwritten when the 479-byte header landed at offset 0: every process
+  // exited 0 and the queue came out well-formed and one item short — §7's
+  // `kept=29 of 30` with nothing to show for it. Seeding OUTSIDE the lock is
+  // what made that window reachable.
+  //
+  // Asserted deterministically rather than by racing for it: the test holds the
+  // lock itself, so a seed that happens before acquisition shows up as a file
+  // existing at a moment when no writer can possibly be in the critical
+  // section. Racing would reproduce it only on a loaded multi-core runner,
+  // which is precisely the flake this replaces.
+  const dir = tmp('inbox-seed-');
+  const inbox = join(dir, 'agent-inbox.md');
+  const held = await acquirePipelineLock(inbox, { timeoutMs: 10_000 });
+
+  const child = spawn(NODE, [CLI, 'add', 'seeded under the lock'], {
+    cwd: ROOT, env: { ...process.env, CAREER_OPS_INBOX: inbox }, stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  let childErr = '';
+  child.stderr.on('data', (c) => { childErr += c; });
+  const finished = new Promise((res) => child.on('exit', res));
+
+  // Generous, because a false green here is the one outcome worth avoiding: the
+  // pre-fix ensureFile() ran before the first lock attempt, so the file
+  // appeared as soon as the process finished booting.
+  const appearedWhileLocked = await new Promise((res) => {
+    const deadline = Date.now() + 2_000;
+    const poll = () => {
+      if (existsSync(inbox)) return res(true);
+      if (Date.now() > deadline) return res(false);
+      setTimeout(poll, 25);
+    };
+    poll();
+  });
+  check('queue file is NOT created while another process holds the lock', appearedWhileLocked === false);
+
+  held.release();
+  const code = await finished;
+  check('the blocked add still completes once the lock frees', code === 0,
+    childErr.trim().split('\n').slice(-2).join(' | '));
+  const md = existsSync(inbox) ? readFileSync(inbox, 'utf8') : '';
+  check('header was seeded', /^# Agent Inbox/.test(md) && /Agent protocol:/.test(md), md.slice(0, 60));
+  check('the item landed after the header', /^- \[ \] .*seeded under the lock/m.test(md), md);
 }
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);

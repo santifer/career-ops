@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { validateFlags } from './lib/cli-flags.mjs';
 /**
  * stats.mjs — Lifetime pipeline stats aggregator (zero-token). #1604
  *
@@ -387,7 +388,18 @@ export function computeRunStats(content) {
     });
   }
   if (rows.length === 0) return null;
-  const completed = rows.filter((r) => r.status !== 'failed');
+  // Inclusion by 'completed', not exclusion by known failure names: any
+  // status a future scan.mjs writes is excluded from trend averages until
+  // this aggregator learns what it means. Rows from pre-status files default
+  // to 'completed' above, so old data keeps counting.
+  //
+  // No-op on today's data: scan.mjs only ever writes 'completed' or 'failed',
+  // and both predicates ('!== failed' vs '=== completed') agree on those two.
+  // The switch is a guard for a future third status (e.g. 'aborted'), not a
+  // behavior change now. One edge is reachable only by hand-editing the TSV:
+  // an explicitly empty status flips from counted to failedRuns, since
+  // appendScanRunSummary always writes a non-empty status.
+  const completed = rows.filter((r) => r.status === 'completed');
   const sum = (arr, k) => arr.reduce((a, r) => a + r[k], 0);
   return {
     totalRuns: rows.length,
@@ -536,11 +548,9 @@ const USAGE = `Usage:
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
 
-  if (args.includes('--help') || args.includes('-h')) {
-    console.log(USAGE);
-  } else {
-    const stats = computeAllStats();
-    if (args.includes('--summary')) printSummary(stats);
-    else console.log(JSON.stringify(stats, null, 2));
-  }
+  validateFlags(args, KNOWN_FLAGS, USAGE);
+
+  const stats = computeAllStats();
+  if (args.includes('--summary')) printSummary(stats);
+  else console.log(JSON.stringify(stats, null, 2));
 }
