@@ -225,6 +225,7 @@ const SYSTEM_PATHS = [
   'discover-ats.mjs',
   'discover-ats.test.mjs',
   'check-table-freshness.mjs',
+  'check-jd-archive.mjs',
   'fingerprint-core.mjs',
   'process-quality.mjs',
   'process-quality.test.mjs',
