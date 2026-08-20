@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { CadenceSettings } from "@/components/followups/cadence-settings";
+import { CONFIG_KEY, readConfig, readCliId, saveCliId, pickDefaultCli } from "@/lib/cli-config.mjs";
 
 type Cli = {
   id: string;
@@ -31,7 +32,7 @@ const PROVIDERS = [
   { id: "openrouter", label: "OpenRouter" },
 ] as const;
 
-const STORAGE_KEY = "career-ops:config";
+const STORAGE_KEY = CONFIG_KEY;
 
 export function ConfigForm() {
   const [mode, setMode] = useState<Mode>("cli");
@@ -44,20 +45,13 @@ export function ConfigForm() {
 
   // Load saved prefs
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const v = JSON.parse(raw);
-        // key/manual are not wired yet (nothing reads them) → never restore into
-        // those dead panels; only the Installed-CLI path is functional.
-        if (v.mode === "cli") setMode("cli");
-        if (v.cliId) setCliId(v.cliId);
-        if (v.provider) setProvider(v.provider);
-        if (typeof v.logos === "boolean") setLogos(v.logos);
-      }
-    } catch {
-      /* ignore */
-    }
+    const v = readConfig();
+    // key/manual are not wired yet (nothing reads them) → never restore into
+    // those dead panels; only the Installed-CLI path is functional.
+    if (v.mode === "cli") setMode("cli");
+    if (typeof v.cliId === "string" && v.cliId) setCliId(v.cliId);
+    if (typeof v.provider === "string" && v.provider) setProvider(v.provider);
+    if (typeof v.logos === "boolean") setLogos(v.logos);
   }, []);
 
   // Detect installed CLIs
@@ -67,8 +61,17 @@ export function ConfigForm() {
       .then((d) => {
         const list: Cli[] = d.clis ?? [];
         setClis(list);
-        // auto-select first installed if nothing chosen yet
-        setCliId((prev) => prev || list.find((c) => c.installed)?.id || "");
+        // Auto-select the first installed CLI, and PERSIST it. Selecting only in
+        // React state used to paint a checked, selected engine on top of an empty
+        // localStorage, so every run launched afterwards failed with "No CLI
+        // configured" until the user happened to press Save. Storage is the test
+        // here (not the `cliId` state) so this stays a pure effect and a saved
+        // choice is never overwritten by detection.
+        if (readCliId()) return;
+        const detected = pickDefaultCli(list);
+        if (!detected) return;
+        saveCliId(detected);
+        setCliId(detected);
       })
       .catch(() => setClis([]));
   }, []);

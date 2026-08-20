@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { resolveCliId } from "@/lib/cli-config.mjs";
 import { CoMark } from "@/components/co-mark";
 import { AssistantConsole } from "@/components/assistant-console";
 import { MobileNav } from "@/components/mobile-nav";
@@ -20,6 +22,16 @@ import { NAV_ITEMS, isActivePath } from "@/lib/nav-items";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
+  // Settle the engine choice once per session, on any page. Several surfaces
+  // (Explore, Apply, CV ingest, the onboarding banner) gate themselves on a
+  // synchronous read of the saved cliId, so without this a user who never opened
+  // Config saw them all blocked even with Claude Code installed. Resolving here
+  // writes the detected default through, so those reads find it.
+  useEffect(() => {
+    resolveCliId();
+  }, []);
+
   return (
     <JobsProvider>
       <PipelineProvider>
