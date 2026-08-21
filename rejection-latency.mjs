@@ -53,7 +53,7 @@ import * as yaml from 'js-yaml';
 import { parseActiveInterviews } from './process-quality.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
-import { flagValue, hasFlag, validateFlags } from './lib/cli-flags.mjs';
+import { validateFlags, requireFlagValue, isPositiveInt } from './lib/cli-flags.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_ACTIVE_INTERVIEWS_PATH = existsSync(join(CAREER_OPS, 'data/active-interviews.md'))
@@ -73,6 +73,10 @@ export const DISCLAIMER =
 // --- CLI args ---
 const args = process.argv.slice(2);
 
+// ADDING A FLAG? Add it here too, and to VALUE_FLAGS if it takes a value.
+// This allow-list is why a flag added in another in-flight PR merges without a
+// textual conflict and is then rejected by its own file at runtime (#2920
+// review). The USAGE block below is the third place.
 const KNOWN_FLAGS = [
   '--file', '--tracker', '--courtesy-days', '--today',
   '--summary', '--self-test', '--help', '-h',
@@ -101,30 +105,16 @@ validateFlags(args, KNOWN_FLAGS, USAGE, { valueFlags: VALUE_FLAGS });
 
 const summaryMode = args.includes('--summary');
 const selfTestMode = args.includes('--self-test');
-// Shared flagValue so `--tracker=path` is honoured too: the previous
-// indexOf-only lookup returned -1 for the `=` form and silently discarded the
-// value, the defect lib/cli-flags.mjs documents as #2401/#2402.
-//
-// The "value must not itself look like another flag" check is kept — it is
-// stricter than the shared helper, and it is what stops `--today --summary`
-// from setting cliToday to '--summary'.
-const argValue = (flag) => {
-  // hasFlag before flagValue: flagValue returns undefined for BOTH an absent
-  // flag and one supplied with no value, so testing it alone would turn a
-  // trailing `--tracker` from a usage error into a silent fall back to the
-  // default path. lib/cli-flags.mjs documents pairing the two for exactly this.
-  if (!hasFlag(args, flag)) return null;
-  const value = flagValue(args, flag);
-  if (value === undefined || value === '' || value.startsWith('--')) {
-    console.error(`${flag} requires a value.`);
-    process.exit(2);
-  }
-  return value;
-};
-const ACTIVE_INTERVIEWS_PATH = argValue('--file') || DEFAULT_ACTIVE_INTERVIEWS_PATH;
-const TRACKER_PATH = argValue('--tracker') || DEFAULT_TRACKER_PATH;
-const cliCourtesyDays = argValue('--courtesy-days');
-const cliToday = argValue('--today');
+// requireFlagValue is this file's own argValue, moved to lib/cli-flags.mjs so
+// the other three CLIs stop each inventing it (#2929). Same semantics: absent
+// flag -> undefined, present-but-unusable -> usage error exit 2. It is what
+// stops `--today --summary` from setting the evaluation date to '--summary'.
+const ACTIVE_INTERVIEWS_PATH = requireFlagValue(args, '--file', { expects: 'a path' }) || DEFAULT_ACTIVE_INTERVIEWS_PATH;
+const TRACKER_PATH = requireFlagValue(args, '--tracker', { expects: 'a path' }) || DEFAULT_TRACKER_PATH;
+// "abc" previously reached parseInt, became NaN, and silently fell back to the
+// 30-day default — the threshold deciding what gets reported (#2929).
+const cliCourtesyDays = requireFlagValue(args, '--courtesy-days', { validate: isPositiveInt, expects: 'a positive integer number of days' });
+const cliToday = requireFlagValue(args, '--today', { expects: 'YYYY-MM-DD' });
 
 // --- Date helpers (same conventions as detect-reposts.mjs) ---
 export function parseDate(dateStr) {

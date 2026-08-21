@@ -1179,21 +1179,24 @@ ok('default has metadata', 'metadata' in defaultJson);
 ok('default has clusters array', 'clusters' in defaultJson && Array.isArray(defaultJson.clusters));
 eq('default windowDays = 90', defaultJson.metadata.windowDays, 90);
 
-// Test --window with non-numeric value (falls back to default)
-const badWindowOut = execFileSync('node', [scriptPath, '--window', 'abc'], {
-  encoding: 'utf-8', timeout: 10000,
-  cwd: dirname(scriptPath),
-});
-const badWindowJson = JSON.parse(badWindowOut);
-eq('--window abc falls back to 90', badWindowJson.metadata.windowDays, 90);
-
-// Test --window with no value (falls back to default)
-const noWindowOut = execFileSync('node', [scriptPath, '--window'], {
-  encoding: 'utf-8', timeout: 10000,
-  cwd: dirname(scriptPath),
-});
-const noWindowJson = JSON.parse(noWindowOut);
-eq('--window without value falls back to 90', noWindowJson.metadata.windowDays, 90);
+// BEHAVIOUR CHANGE (#2929): an unusable --window is now REFUSED, where these
+// two assertions previously pinned the opposite — that it silently fell back
+// to 90 and produced a report for a window nobody asked for. That fallback is
+// the same defect #2920 removed on the flag NAME side ("--windo" was ignored),
+// arriving through the value instead; rejection-latency in this same family
+// already exited 2 rather than defaulting. Exit 2 = usage error.
+for (const bad of [['--window', 'abc'], ['--window', '-5'], ['--window']]) {
+  let code = 0;
+  let stderr = '';
+  try {
+    execFileSync('node', [scriptPath, ...bad], { encoding: 'utf-8', timeout: 10000, cwd: dirname(scriptPath) });
+  } catch (e) {
+    code = e.status;
+    stderr = e.stderr || '';
+  }
+  eq(`${bad.join(' ')} is refused, not defaulted`, code, 2);
+  ok(`${bad.join(' ')} says which flag is wrong`, stderr.includes('--window'));
+}
 
 // Test --help flag
 const helpOut = execFileSync('node', [scriptPath, '--help'], {

@@ -44,7 +44,7 @@ import * as yaml from 'js-yaml';
 
 // Only validateFlags: this module keeps its own flagValue (see below), so
 // importing the shared one too would shadow it.
-import { validateFlags } from './lib/cli-flags.mjs';
+import { validateFlags, requireFlagValue } from './lib/cli-flags.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_SESSIONS_DIR = join(CAREER_OPS, 'interview-prep', 'sessions');
@@ -654,6 +654,10 @@ async function runSelfTest() {
 
 // ── CLI ──────────────────────────────────────────────────────────────
 
+// ADDING A FLAG? Add it here too, and to VALUE_FLAGS if it takes a value.
+// This allow-list is why a flag added in another in-flight PR merges without a
+// textual conflict and is then rejected by its own file at runtime (#2920
+// review). The USAGE block below is the third place.
 const KNOWN_FLAGS = ['--from', '--to', '--dir', '--summary', '--self-test', '--help', '-h'];
 const VALUE_FLAGS = ['--from', '--to', '--dir'];
 
@@ -686,7 +690,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const summaryMode = args.includes('--summary');
   const from = flagValue(args, '--from');
   const to = flagValue(args, '--to');
-  const dirValue = flagValue(args, '--dir');
+  // A trailing `--dir` used to fall back to interview-prep/sessions and digest
+  // it at exit 0, silently ignoring the directory that was asked for (#2929).
+  // --from/--to need no such guard: isValidDateStr below already rejects an
+  // empty or malformed bound rather than widening the window.
+  const dirValue = requireFlagValue(args, '--dir', { expects: 'a directory path' });
   const sessionsDir = dirValue ? dirValue : DEFAULT_SESSIONS_DIR;
 
   // `!== undefined`, not truthiness: an explicitly EMPTY bound (`--from=`) is a

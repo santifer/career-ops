@@ -343,12 +343,29 @@ const thresholdOut = execFileSync('node', [scriptPath, '--min-threshold', '3'], 
 const thresholdJson = JSON.parse(thresholdOut);
 eq('--min-threshold sets minThreshold in metadata', thresholdJson.metadata.minThreshold, 3);
 
-const badThresholdOut = execFileSync('node', [scriptPath, '--min-threshold', 'abc'], {
+// BEHAVIOUR CHANGE (#2929): a non-numeric --min-threshold is now REFUSED,
+// where this previously pinned the silent fallback to 1 — a report built on a
+// threshold the caller never asked for. Exit 2 = usage error.
+{
+  let code = 0;
+  let stderr = '';
+  try {
+    execFileSync('node', [scriptPath, '--min-threshold', 'abc'], { encoding: 'utf-8', timeout: 10000, cwd: dirname(scriptPath) });
+  } catch (e) {
+    code = e.status;
+    stderr = e.stderr || '';
+  }
+  eq('--min-threshold abc is refused, not defaulted', code, 2);
+  ok('--min-threshold abc says which flag is wrong', stderr.includes('--min-threshold'));
+}
+
+// 0 stays legal — "report every company" is a meaningful threshold, so the
+// numeric rule here is non-negative rather than positive.
+const zeroThresholdOut = execFileSync('node', [scriptPath, '--min-threshold', '0'], {
   encoding: 'utf-8', timeout: 10000,
   cwd: dirname(scriptPath),
 });
-const badThresholdJson = JSON.parse(badThresholdOut);
-eq('--min-threshold abc falls back to 1', badThresholdJson.metadata.minThreshold, 1);
+eq('--min-threshold 0 is honoured', JSON.parse(zeroThresholdOut).metadata.minThreshold, 0);
 
 const summaryOut = execFileSync('node', [scriptPath, '--summary'], {
   encoding: 'utf-8', timeout: 10000,
