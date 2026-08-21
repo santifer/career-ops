@@ -2068,7 +2068,7 @@ try {
   // Not locked
   let threwNotLocked = false;
   try {
-    validateLockedSections(changedHtml, cvMarkdown, ['skills']);
+    validateLockedSections(changedHtml, cvMarkdown, []);
   } catch (e) {
     threwNotLocked = true;
   }
@@ -2076,6 +2076,23 @@ try {
     pass('validateLockedSections ignores modifications to unlocked sections');
   } else {
     fail('validateLockedSections threw for an unlocked section');
+  }
+
+  // Missing locked section in source
+  let threwMissing = false;
+  try {
+    validateLockedSections(matchingHtml, cvMarkdown, ['skills']);
+  } catch (e) {
+    if (e.message.includes("Available sections: 'education', 'work-experience'")) {
+      threwMissing = true;
+    } else {
+      fail(`validateLockedSections threw wrong error for missing locked section: ${e.message}`);
+    }
+  }
+  if (threwMissing) {
+    pass('validateLockedSections throws when a locked section is missing from the source');
+  } else {
+    fail('validateLockedSections must throw when a locked section does not exist in the source');
   }
 
 } catch (e) {

@@ -382,7 +382,10 @@ export function validateLockedSections(html, cvMarkdown, lockedKeys) {
   if (currentKey) sourceMap.set(currentKey, currentText);
 
   for (const key of lockedKeys) {
-    if (!sourceMap.has(key)) continue; // Locked section doesn't exist in source, skip
+    if (!sourceMap.has(key)) {
+      const availableKeys = Array.from(sourceMap.keys()).map(k => `'${k}'`).join(', ');
+      throw new Error(`Configured locked_section '${key}' not found in cv.md. Available sections: ${availableKeys}`);
+    }
     const sourceNorm = normalizeForComparison(sourceMap.get(key));
     const renderedRaw = renderedMap.get(key) || '';
     const renderedNorm = normalizeForComparison(renderedRaw);
