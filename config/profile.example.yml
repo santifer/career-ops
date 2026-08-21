@@ -179,7 +179,7 @@ cv:
 # latex:
 #   source: resume.tex
 
-  # Sections that the AI must never remove, shorten, or paraphrase during tailoring.
+  # Sections that the AI must never remove, shorten, or paraphrase during CV generation or tailoring.
   # locked_sections:
   #   - "Open Source Contributions"
   #   - "GitHub Projects"

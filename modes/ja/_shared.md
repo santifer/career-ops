@@ -141,7 +141,6 @@ Archetype を検出した後、`modes/_profile.md` を読み、該当 archetype 
 8b. PDF Professional Summary に case study URLs を含める（recruiter はそこだけ読む可能性がある）
 9. **Tracker additions as TSV** -- `applications.md` を新規追加のために直接編集しない。`batch/tracker-additions/` に TSV を書く
 10. **すべての report header に `**URL:**` を含める**
-11. **ロックされたセクション:** `profile.yml` で `cv.locked_sections` が定義されている場合、履歴書の作成や調整時にこれらのセクションを削除、短縮、または言い換えることは絶対にしないでください。原文のまま維持する必要があります。
 
 ### Tools
 

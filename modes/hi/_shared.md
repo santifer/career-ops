@@ -194,7 +194,6 @@ Profile को **"Demonstrable practice वाले Technical Builder"** के
 8b. **PDF में case study URLs:** यदि PDF में case studies या demos mention हों, URLs Professional Summary के पहले paragraph में होने चाहिए। Recruiters अक्सर सिर्फ summary पढ़ते हैं। सभी URLs HTML में `white-space: nowrap` के साथ
 9. **Tracker entries TSV में** — applications.md सीधे edit कभी नहीं करें (नई entries के लिए)। TSV `batch/tracker-additions/` में लिखें, `merge-tracker.mjs` merge करेगा
 10. **हर report header में `**URL:**`** — Score और PDF के बीच
-11. **लॉक किए गए अनुभाग (Locked Sections):** यदि `profile.yml` में `cv.locked_sections` परिभाषित है, तो CV बनाने या अनुकूलित करते समय इन अनुभागों को कभी भी हटाएं, छोटा न करें या अपने शब्दों में न लिखें। वे शब्दशः (verbatim) मौजूद होने चाहिए。
 
 ### Tools
 

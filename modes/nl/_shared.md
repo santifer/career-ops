@@ -198,7 +198,6 @@ Nederland en België gebruiken deels dezelfde taal, maar hebben verschillende ar
 8b. **Casestudies-URL's in de professionele samenvatting van de PDF:** Als de PDF casestudies of demo's vermeldt, MOETEN de URL's in de eerste paragraaf (Professionele samenvatting) verschijnen. Recruiters lezen vaak alleen de samenvatting. Alle URL's in HTML met `white-space: nowrap`
 9. **TSV-trackergegevens** -- Bewerk applications.md NOOIT rechtstreeks voor nieuwe toevoegingen. Schrijf de TSV in `batch/tracker-additions/`, `merge-tracker.mjs` beheert de samenvoeging
 10. **`**URL:**` in elke rapportkop** -- tussen Score en PDF
-11. **Vergrendelde secties:** Als `cv.locked_sections` is gedefinieerd in `profile.yml`, mag je deze secties NOOIT verwijderen, inkorten of parafraseren tijdens het genereren of aanpassen van het CV. Ze moeten letterlijk worden overgenomen.
 
 ### Hulpmiddelen
 

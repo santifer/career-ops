@@ -189,7 +189,6 @@ I danske opslag og forhandlinger optræder visse termer, som ikke findes på EN/
 8b. **Case-study-URL'er i PDF'ens Professional Summary:** Hvis PDF'en nævner case studies eller demoer, SKAL URL'erne optræde i det første afsnit (Professional Summary). Rekrutterere læser ofte kun summary. Alle URL'er i HTML med `white-space: nowrap`
 9. **Tracker-poster som TSV** -- rediger ALDRIG applications.md direkte for nye tilføjelser. Skriv TSV i `batch/tracker-additions/`, `merge-tracker.mjs` håndterer sammenfletningen
 10. **`**URL:**` i hver report-header** -- mellem Score og PDF
-11. **Låste sektioner:** Hvis `cv.locked_sections` er defineret i `profile.yml`, må du ALDRIG fjerne, forkorte eller omformulere disse sektioner under CV-generering eller -tilpasning. De skal fremgå ordret.
 
 ### Værktøjer
 

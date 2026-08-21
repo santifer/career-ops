@@ -193,7 +193,6 @@ Dans les offres et negociations francophones, certains termes n'existent pas sur
 8b. **URLs de case studies dans le Professional Summary du PDF :** Si le PDF mentionne des case studies ou demos, les URLs DOIVENT apparaitre dans le premier paragraphe (Professional Summary). Les recruteurs ne lisent souvent que le summary. Toutes les URLs en HTML avec `white-space: nowrap`
 9. **Entrees tracker en TSV** -- NE JAMAIS editer applications.md directement pour de nouveaux ajouts. Ecrire le TSV dans `batch/tracker-additions/`, `merge-tracker.mjs` gere la fusion
 10. **`**URL:**` dans chaque en-tete de report** -- entre Score et PDF
-11. **Sections verrouillées:** Si `cv.locked_sections` est défini dans `profile.yml`, ne JAMAIS supprimer, raccourcir ou reformuler ces sections lors de la génération ou de l'adaptation du CV. Elles doivent apparaître textuellement.
 
 ### Outils
 
