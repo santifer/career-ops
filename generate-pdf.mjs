@@ -40,11 +40,16 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFile
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
 import { readStyleTokens, injectThemeStyle, readCvSectionOrder } from './theme-style.mjs';
-import { resolvePdfIndexPath, resolveTrackerPath, resolveWorkspaceRoot } from './tracker-utils.mjs';
+import { resolvePdfIndexPath, resolveTrackerPath, resolveWorkspaceRootFor } from './tracker-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const trackerPath = resolveTrackerPath(__dirname);
-const workspaceRoot = resolveWorkspaceRoot(trackerPath);
+// Derive from the uncanonicalized tracker path so a symlinked data/ (#524) does
+// not realpath the workspace out of the repo, which silently disabled the CV
+// section-order guard (#2533) and dynamic theming (#1837) by reading cv.md and
+// config/profile.yml from the wrong root (#3169). An external CAREER_OPS_TRACKER
+// workspace still moves the whole set together (#2471).
+const workspaceRoot = resolveWorkspaceRootFor(__dirname);
 const PDF_PAGE_MARGIN = '0.6in';
 
 // Canonical tracker workspace: realpath so a symlinked ancestor (e.g. macOS
