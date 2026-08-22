@@ -2092,6 +2092,7 @@ try {
   try {
     await renderHtmlToPdf('<html><body>PII_MARKER@example.com</body></html>', join(fixtureRoot, 'cv.pdf'), {
       baseDir: fixtureRoot,
+      workspaceRoot: fixtureRoot,
       launchBrowser: async () => { throw launchError; },
     });
   } catch (error) {
@@ -2118,6 +2119,7 @@ try {
   try {
     await renderHtmlToPdf('<html><body>PRIVATE_CV_MARKER</body></html>', join(fixtureRoot, 'cv.pdf'), {
       baseDir: fixtureRoot,
+      workspaceRoot: fixtureRoot,
       launchBrowser: async () => ({
         newPage: async () => { throw pageError; },
         close: async () => { closeCalls += 1; },
