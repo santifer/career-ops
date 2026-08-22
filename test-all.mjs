@@ -2755,6 +2755,8 @@ try {
   const {
     formatApplicationAnswersSection,
     upsertApplicationAnswersSection,
+    parseApplicationAnswersSection,
+    parseDraftAnswersBlockH,
   } = await import(pathToFileURL(join(ROOT, 'application-answers.mjs')).href);
 
   const snapshot = {
@@ -2839,6 +2841,96 @@ try {
     pass('application answers upsert refreshes only the existing Application Answers section');
   } else {
     fail(`application answers upsert did not replace only its own section:\n${refreshed}`);
+  }
+  // Round trip. The writer had no reader until #8: the CLI apply mode re-reads
+  // this section as prose, but a UI has to render each question in its own
+  // editable box, so the format needs to survive a machine round trip.
+  const roundTripSource = {
+    date: '2026-08-13',
+    state: 'filled',
+    freeText: [
+      { question: 'Describe a workflow you changed with AI. Under 150 words.', answer: 'Before, triage was manual.\nNow it is scripted.' },
+      { question: 'Why us?', answer: 'Because of the design systems work.' },
+    ],
+    selections: [{ question: 'Work authorization', selection: 'Yes' }],
+  };
+  const rt = parseApplicationAnswersSection(upsertApplicationAnswersSection(report, roundTripSource));
+  const rtOk =
+    rt.present === true &&
+    rt.date === '2026-08-13' &&
+    rt.state === 'filled' &&
+    rt.freeText.length === 2 &&
+    rt.freeText[0].question === 'Describe a workflow you changed with AI. Under 150 words.' &&
+    // A multi-line answer must keep its newlines, not collapse to one line.
+    rt.freeText[0].answer === 'Before, triage was manual.\nNow it is scripted.' &&
+    // A question must not absorb the `### Selections made` block that follows it.
+    rt.freeText[1].answer === 'Because of the design systems work.';
+  if (rtOk) {
+    pass('application answers round-trip: written section parses back to its source');
+  } else {
+    fail(`application answers round-trip lost data: ${JSON.stringify(rt)}`);
+  }
+
+  const noSection = parseApplicationAnswersSection('# Evaluation: Acme\n\n**Date:** 2026-08-13\n');
+  if (noSection.present === false && noSection.freeText.length === 0) {
+    pass('application answers parser reports absence rather than inventing entries');
+  } else {
+    fail('application answers parser hallucinated a section');
+  }
+
+  // Block H is a DIFFERENT format from a different producer: the evaluation mode
+  // drafts it before any form is seen, using a bold question and a plain
+  // paragraph. modes/apply.md treats it as a legitimate base for a real
+  // application, so it has to be readable too (#8).
+  const blockH = [
+    '## G) Posting Legitimacy',
+    'Fine.',
+    '',
+    '## H) Draft Application Answers',
+    '',
+    '*(Score is 4.6/5, drafting the generic question set.)*',
+    '',
+    '**Why are you interested in this role?**',
+    'Because the mandate matches what I have been building toward.',
+    '',
+    '**Tell us about a relevant project.**',
+    'I tech-led a design system, including its **token** layer.',
+    '',
+    '---',
+    '',
+    '## Keywords extracted',
+    'design systems',
+  ].join('\n');
+  const h = parseDraftAnswersBlockH(blockH);
+  const hOk =
+    h.present === true &&
+    h.freeText.length === 2 &&
+    h.freeText[0].question === 'Why are you interested in this role?' &&
+    // The italic parenthetical is a note to the reader, not a question.
+    !h.freeText.some((q) => q.question.startsWith('(')) &&
+    // Bold used mid-sentence inside an answer must not start a new question.
+    h.freeText[1].answer === 'I tech-led a design system, including its **token** layer.' &&
+    // The block must stop at the next `## ` heading.
+    !JSON.stringify(h).includes('Keywords extracted');
+  if (hOk) {
+    pass('block H draft answers parse into question/answer pairs');
+  } else {
+    fail(`block H parser mishandled the evaluation draft: ${JSON.stringify(h)}`);
+  }
+
+  if (parseDraftAnswersBlockH('# Evaluation: Acme\n\n## A) Role\nBody.\n').present === false) {
+    pass('block H parser reports absence when the evaluation drafted nothing');
+  } else {
+    fail('block H parser invented a section');
+  }
+
+  const unrecorded = parseApplicationAnswersSection(
+    upsertApplicationAnswersSection(report, { state: 'filled', freeText: [{ question: 'Unanswered?', answer: '' }] }),
+  );
+  if (unrecorded.freeText.length === 1 && unrecorded.freeText[0].answer === '') {
+    pass('application answers parser maps the "Not recorded." placeholder back to empty');
+  } else {
+    fail(`application answers parser mishandled an empty answer: ${JSON.stringify(unrecorded)}`);
   }
 } catch (e) {
   fail(`application answers helper crashed: ${e.message}`);

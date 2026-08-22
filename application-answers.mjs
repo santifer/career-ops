@@ -335,6 +335,112 @@ export function upsertApplicationAnswersSection(reportText, snapshot = {}) {
   return [before, section, after].filter(Boolean).join('\n\n') + '\n';
 }
 
+/**
+ * Read a report's `## Application Answers` back into structured form.
+ *
+ * The writer above is one half of a round trip that previously had no other half:
+ * the CLI `apply` mode re-reads this section as prose and lets a model adapt it,
+ * which is fine for a model and useless for a UI that has to render each question
+ * in its own editable box. This parses the shape `formatApplicationAnswersSection`
+ * emits, so both directions live with the format they describe.
+ *
+ * Deliberately narrow. It reads the `### Free-text answers` subsection (the
+ * question-and-answer pairs) plus the Date/State header, and ignores the compact
+ * subsections, which are one-liners a UI can show as prose. Anything it cannot
+ * recognize yields an empty list rather than a guess: a wrong question/answer
+ * pairing here would be silently re-submitted to an employer later.
+ *
+ * @param {string} reportText
+ * @returns {{present: boolean, date: string, state: string, freeText: Array<{question: string, answer: string}>}}
+ */
+export function parseApplicationAnswersSection(reportText) {
+  const report = String(reportText ?? '').replace(/\r\n/g, '\n');
+  const empty = { present: false, date: '', state: '', freeText: [] };
+  const heading = /^## Application Answers\s*$/m.exec(report);
+  if (!heading) return empty;
+
+  const afterHeading = heading.index + heading[0].length;
+  const next = /^## .+$/m.exec(report.slice(afterHeading));
+  const body = report.slice(afterHeading, next ? afterHeading + next.index : report.length);
+
+  const date = (body.match(/^\*\*Date:\*\*\s*(.+)$/m) || [])[1]?.trim() ?? '';
+  const state = (body.match(/^\*\*State:\*\*\s*(.+)$/m) || [])[1]?.trim() ?? '';
+
+  // Only the free-text block. Bounded by the next `### ` subsection so a question
+  // can never absorb the selections that follow it.
+  const start = body.search(/^### Free-text answers\s*$/m);
+  let freeText = [];
+  if (start !== -1) {
+    const rest = body.slice(start).replace(/^### Free-text answers\s*$/m, '');
+    const nextSub = rest.search(/^### /m);
+    const block = nextSub === -1 ? rest : rest.slice(0, nextSub);
+
+    // "1. **Question**" then a blockquote answer. The numbered label and the
+    // quote markers are exactly what the writer emits.
+    const re = /^\d+\.\s+\*\*(.+?)\*\*\s*$/gm;
+    const marks = [...block.matchAll(re)];
+    freeText = marks.map((m, i) => {
+      const from = m.index + m[0].length;
+      const to = i + 1 < marks.length ? marks[i + 1].index : block.length;
+      const answer = block
+        .slice(from, to)
+        .split('\n')
+        .filter((l) => /^\s*>/.test(l))
+        .map((l) => l.replace(/^\s*>\s?/, ''))
+        .join('\n')
+        .trim();
+      return { question: m[1].trim(), answer: answer === 'Not recorded.' ? '' : answer };
+    });
+  }
+
+  return { present: true, date, state, freeText };
+}
+
+/**
+ * Read the evaluation mode's `## H) Draft Application Answers` block.
+ *
+ * A DIFFERENT format from the section above, written by a different producer:
+ * Block H is drafted during evaluation (before any form is seen) and uses a bold
+ * question followed by a plain paragraph, where `## Application Answers` is the
+ * post-apply snapshot and uses numbered questions with blockquoted answers.
+ *
+ * Worth reading because `modes/apply.md` already treats Block H as a legitimate
+ * base for a real application ("If there is a Section H or `## Application
+ * Answers` → load previous answers as a base"). Surfacing it means a job page
+ * that has been evaluated is not blank on first visit.
+ *
+ * The italic parenthetical the mode emits under the heading is skipped: it is a
+ * note to the reader, not a question.
+ *
+ * @param {string} reportText
+ * @returns {{present: boolean, freeText: Array<{question: string, answer: string}>}}
+ */
+export function parseDraftAnswersBlockH(reportText) {
+  const report = String(reportText ?? '').replace(/\r\n/g, '\n');
+  const heading = /^##\s+H\)\s*Draft Application Answers\s*$/m.exec(report);
+  if (!heading) return { present: false, freeText: [] };
+
+  const afterHeading = heading.index + heading[0].length;
+  const next = /^## .+$/m.exec(report.slice(afterHeading));
+  const body = report.slice(afterHeading, next ? afterHeading + next.index : report.length);
+
+  // A question is a line that is ENTIRELY bold. Bold used mid-sentence inside an
+  // answer therefore cannot be mistaken for the next question.
+  const re = /^\*\*(.+?)\*\*\s*$/gm;
+  const marks = [...body.matchAll(re)];
+  const freeText = marks.map((m, i) => {
+    const from = m.index + m[0].length;
+    const to = i + 1 < marks.length ? marks[i + 1].index : body.length;
+    const answer = body
+      .slice(from, to)
+      // A trailing horizontal rule belongs to the report, not to the answer.
+      .replace(/^\s*-{3,}\s*$/gm, '')
+      .trim();
+    return { question: m[1].trim(), answer };
+  });
+  return { present: true, freeText: freeText.filter((q) => q.question) };
+}
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
