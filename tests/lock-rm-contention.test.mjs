@@ -94,27 +94,46 @@ const mkErr = (code) => Object.assign(new Error(code), { code });
       `${file} does not treat a non-EEXIST mkdir answer as fatal (Windows says EPERM under contention)`,
     );
     ok(
-      /return err\?\.code === 'ENOENT';/.test(src),
-      `${file} answers "recoverable" only on ENOENT, never on "could not look"`,
+      /import\s*\{[^}]*lockRecoveryVerdict[^}]*\}\s*from\s*'\.\/pipeline-lock\.mjs'/.test(src),
+      `${file} imports the recovery judgment from pipeline-lock`,
+    );
+    ok(
+      !/function lockCanRecover/.test(src) && !/function lockRecoveryVerdict/.test(src),
+      `${file} defines no second copy of the recovery judgment`,
     );
   }
 }
 
 // ── 3b. "Could not look" is never "recoverable" ──────────────────────
-// The third face of #2777: lockCanRecover's stat catch answered `true`
+// The third face of #2777: the recovery judgment's stat catch answered `true`
 // (recoverable) to EVERY stat failure, so a Windows EPERM on a mid-flight
 // directory let a caller delete a live lock created microseconds ago — its
 // winner then died with ENOENT writing owner.json. Only ENOENT (genuinely
 // vanished) may answer "nothing to recover"; both locks must carry the guard.
+//
+// There is now exactly ONE place to assert this, which is the point: section 3
+// requires every other implementor to import the judgment rather than carry a
+// copy, so the rule is checked where it is decided instead of four times over.
+// Four correct copies were never the goal — #2984 asked for one definition, and
+// a repo that merely keeps its copies in agreement is one patch away from the
+// drift that produced all three faces of #2777.
+//
+// The verdict is tri-state because "vanished" and "stale" are different answers
+// and only one of them licenses a delete: acting on "it was gone when I looked"
+// destroys a lock a rival acquirer created in the interim.
 {
+  const src = readFileSync(join(ROOT, 'pipeline-lock.mjs'), 'utf-8');
+  ok(
+    /return err\?\.code === 'ENOENT' \? RECOVER_VANISHED : RECOVER_LIVE;/.test(src),
+    'pipeline-lock.mjs: the stat catch answers VANISHED only on ENOENT, never on "could not look"',
+  );
+  ok(
+    !/return err\?\.code === 'ENOENT';/.test(src),
+    'pipeline-lock.mjs: the judgment is a verdict, not a boolean that conflates vanished with stale',
+  );
   for (const file of protocolImplementors()) {
-    const src = readFileSync(join(ROOT, file), 'utf-8');
     ok(
-      /return err\?\.code === 'ENOENT';/.test(src),
-      `${file}: lockCanRecover's stat catch answers recoverable ONLY on ENOENT`,
-    );
-    ok(
-      !/catch\s*\{\s*\n\s*return true;/.test(src),
+      !/catch\s*\{\s*\n\s*return true;/.test(readFileSync(join(ROOT, file), 'utf-8')),
       `${file}: no bare catch{return true} remains in a recovery judgment`,
     );
   }

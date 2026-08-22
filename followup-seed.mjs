@@ -64,9 +64,13 @@ import { createHash, randomUUID } from 'crypto';
 // pipeline-lock.mjs and tracker-utils.mjs, and this file was carrying all three
 // faces of #2777 the whole time. The classifiers come from pipeline-lock now,
 // so the next Windows-contention finding lands in one place instead of three.
-import { isMkdirContention, isRmContention, rmLockArtifactSync } from './pipeline-lock.mjs';
+import {
+  isMkdirContention, isRmContention, rmLockArtifactSync, createLockWaitPolicy,
+  sameLockDirectory, lockRecoveryVerdict, RECOVER_STALE,
+} from './pipeline-lock.mjs';
 import { tmpdir } from 'os';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { localToday } from './lib/local-today.mjs';
 import {
   resolveCadenceConfig,
   normalizeStatus,
@@ -90,9 +94,12 @@ const FOLLOWUPS_LOCK_PREFIX = 'career-ops-followups-';
 
 /**
  * Minimum age before directory age alone may condemn an ownerless lock.
- * See `lockCanRecover` for why the age check needs a floor.
+ * See `lockRecoveryVerdict` for why the age check needs a floor.
+ *
+ * Re-exported rather than redeclared: the floor is applied inside that function
+ * now, so a local copy would be a constant this file no longer enforces.
  */
-export const OWNERLESS_GRACE_MS = 1_000;
+export { OWNERLESS_GRACE_MS } from './pipeline-lock.mjs';
 
 /** Structured error carrying an exit-code-mapping `code`. */
 export class SeedError extends Error {
@@ -104,21 +111,7 @@ export class SeedError extends Error {
 }
 
 function todayStr() {
-  // LOCAL date, never UTC. `toISOString()` returns the UTC day, so anywhere
-  // west of Greenwich an evening run answers "today" with tomorrow: at 20:00
-  // US Eastern this returned the next calendar day. That lands in two places
-  // that both matter — the fallback applied date when a row carries no
-  // "Applied YYYY-MM-DD" note, and the `(set …)` stamp on the pin — so an
-  // application seeded on a US evening got a follow-up schedule built off a
-  // day that had not happened yet.
-  //
-  // Only "what day is it here" changes. Date ARITHMETIC elsewhere in this file
-  // and in followup-cadence.mjs stays on UTC-midnight parsing, which is
-  // internally consistent and unaffected: `parseDate('2026-06-20')` and
-  // `isValidCalendarDate()` round-trip through UTC on purpose.
-  const d = new Date();
-  const p = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  return localToday();
 }
 
 /**
@@ -294,16 +287,6 @@ function sleep(ms) {
   return new Promise(res => setTimeout(res, ms));
 }
 
-function processIsAlive(pid) {
-  if (!Number.isInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err?.code === 'EPERM';
-  }
-}
-
 function readLockOwner(lockDir) {
   try {
     return JSON.parse(readFileSync(join(lockDir, 'owner.json'), 'utf-8'));
@@ -312,36 +295,12 @@ function readLockOwner(lockDir) {
   }
 }
 
-/**
- * Decide whether an existing lock can be safely recovered. Owner-PID liveness
- * wins; directory age is only consulted when the metadata is missing.
- *
- * That age fallback needs a floor. A lock is ownerless by construction — not
- * by accident — for the instant between its `mkdirSync` and its `owner.json`
- * write. Judging it on `age > staleMs` alone lets a caller with an aggressive
- * staleMs delete a lock created microseconds ago, stealing it from a winner
- * still inside its acquisition window and putting two writers into the
- * read-check-append critical section. OWNERLESS_GRACE_MS is a lower bound on
- * that patience, never a cap: a larger caller staleMs still wins, and a
- * genuinely abandoned lock still ages out.
- *
- * @param {string} lockDir - Directory that represents the active lock.
- * @param {number} staleMs - Age threshold for metadata-free lock recovery, floored at OWNERLESS_GRACE_MS.
- * @returns {boolean} True when the caller may remove and recreate the lock.
- */
-function lockCanRecover(lockDir, staleMs) {
-  const owner = readLockOwner(lockDir);
-  if (owner?.pid) return !processIsAlive(owner.pid);
-  try {
-    return Date.now() - statSync(lockDir).mtimeMs > Math.max(staleMs, OWNERLESS_GRACE_MS);
-  } catch (err) {
-    // Only a genuinely vanished directory means "nothing to recover". Any other
-    // stat failure — a Windows EPERM/EBUSY while the directory is mid-flight —
-    // is "could not look", and answering "recoverable" to that hands the caller
-    // an rmSync of a LIVE lock created microseconds ago (#2777, third face).
-    return err?.code === 'ENOENT';
-  }
-}
+// The recovery judgment comes from pipeline-lock rather than a fourth copy of
+// it, for the reason stated at the import: a finding lands once. This file's
+// copy had drifted twice over — it still answered a bare boolean, so "the
+// directory was gone when I looked" reached the caller as a licence to DELETE
+// whatever is at that path now, and it predated #2984, so an unreadable owner
+// stamp fell through to the age rule and could condemn a live lock.
 
 /**
  * Acquire an exclusive filesystem lock covering the read-check-append
@@ -360,9 +319,20 @@ async function acquireFollowupsLock(lockDir, followupsPath, options = {}) {
   const staleMs = options.staleMs ?? 10 * 60_000;
   const recoverGuardDir = `${lockDir}.recover`;
   const token = randomUUID();
-  const startedAt = Date.now();
 
-  while (Date.now() - startedAt < timeoutMs) {
+  // Jitter and the progress rule come from pipeline-lock rather than a fourth
+  // hand-rolled wait loop. This file slept a FIXED retryMs and bounded the loop
+  // on plain elapsed time, so it carried both defects #2506 and #2835 removed
+  // from the definition: waiters woke in lockstep and re-raced, and a caller
+  // waiting on a healthy lock being handed round briskly was killed anyway.
+  //
+  // There is no separate maxWaitMs knob here, so the ceiling is the same
+  // multiple of timeoutMs the definition defaults to.
+  const { backoffMs, holderStillWedged, noteWaiting, ceilingReached } = createLockWaitPolicy(lockDir, {
+    timeoutMs, retryMs, deadline: Date.now() + timeoutMs, hardDeadline: Date.now() + timeoutMs * 10,
+  });
+  for (;;) {
+    if (holderStillWedged() || ceilingReached()) break;
     try {
       mkdirSync(lockDir);
       writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
@@ -377,13 +347,32 @@ async function acquireFollowupsLock(lockDir, followupsPath, options = {}) {
         release() {
           if (released) return;
           released = true;
-          const owner = readLockOwner(lockDir);
-          if (owner?.token === token) {
-            // Best-effort: ownership is verified, so a contended rm (Windows
-            // EPERM/EBUSY while another process stats it) must not kill a caller
-            // whose work already succeeded. The orphan ages out via lockCanRecover.
-            rmLockArtifactSync(lockDir);
+          // The token says the stamp is ours. It does NOT say the directory
+          // still is: between reading the stamp and the rm, a reclaimer can
+          // delete this lock and a new holder can create one at the same path,
+          // and the rm then lands on theirs. pipeline-lock, portal-health-lock
+          // and tracker-utils all bracket the rm with a stat either side and
+          // compare identity; this file was the one that did not, so it is the
+          // one that could free someone else's critical section.
+          let before;
+          try {
+            before = statSync(lockDir);
+          } catch {
+            return; // already gone
           }
+          const owner = readLockOwner(lockDir);
+          if (owner?.token !== token) return; // reclaimed by someone else
+          let after;
+          try {
+            after = statSync(lockDir);
+          } catch {
+            return;
+          }
+          if (!sameLockDirectory(before, after)) return; // swapped underneath us
+          // Best-effort: ownership is verified, so a contended rm (Windows
+          // EPERM/EBUSY while another process stats it) must not kill a caller
+          // whose work already succeeded. The orphan ages out via lockRecoveryVerdict.
+          rmLockArtifactSync(lockDir);
         },
       };
     } catch (err) {
@@ -392,6 +381,7 @@ async function acquireFollowupsLock(lockDir, followupsPath, options = {}) {
       // failure — treating it as fatal kills a concurrent writer and loses its
       // write (#2777, measured on windows-latest).
       if (!isMkdirContention(err)) throw err;
+      noteWaiting();
 
       let hasRecoverGuard = false;
       try {
@@ -403,7 +393,7 @@ async function acquireFollowupsLock(lockDir, followupsPath, options = {}) {
         // the guard is mid-flight right now, and reasoning about the age of a
         // directory we cannot stat reliably would evict a live guard.
         if (guardErr.code !== 'EEXIST') {
-          await sleep(retryMs);
+          await sleep(backoffMs());
           continue;
         }
         // A process killed between creating the guard and its cleanup leaves
@@ -414,14 +404,20 @@ async function acquireFollowupsLock(lockDir, followupsPath, options = {}) {
         // take the guard and run recovery. Removing it unconditionally would
         // instead let two writers recover the same lock at once, which is
         // exactly what the guard exists to prevent.
-        if (lockCanRecover(recoverGuardDir, staleMs)) {
+        // STALE only: a guard already gone needs no eviction, and evicting on
+        // that answer deletes the guard another caller has just taken.
+        if (lockRecoveryVerdict(recoverGuardDir, staleMs) === RECOVER_STALE) {
           rmLockArtifactSync(recoverGuardDir);
         }
       }
 
       if (hasRecoverGuard) {
         try {
-          if (lockCanRecover(lockDir, staleMs)) {
+          // STALE only. VANISHED means the lock was absent when we looked, and
+          // by the time this line runs another acquirer may have won the mkdir
+          // and be partway through writing owner.json — deleting on that answer
+          // destroys a live lock and kills its winner with ENOENT.
+          if (lockRecoveryVerdict(lockDir, staleMs) === RECOVER_STALE) {
             if (rmLockArtifactSync(lockDir)) continue;
             // rm hit contention: another process is touching the stale lock at
             // this instant — back off instead of treating the collision as fatal.
@@ -431,7 +427,7 @@ async function acquireFollowupsLock(lockDir, followupsPath, options = {}) {
         }
       }
 
-      await sleep(retryMs);
+      await sleep(backoffMs());
     }
   }
 
