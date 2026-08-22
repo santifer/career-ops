@@ -53,6 +53,7 @@ import { buildTitleFilter, buildLocationFilter, buildContentFilter, matchedTitle
 import { SEED_SOURCES, toPortalEntry } from './seeds/vc-portfolios.mjs';
 import { normalizeCompany } from './tracker-utils.mjs';
 import { validateFlags } from './lib/cli-flags.mjs';
+import { boardKey, loadDeadBoards, recordBoardResult, saveDeadBoards, shouldSkipDeadBoard } from './dead-boards.mjs';
 
 // ── Config ──────────────────────────────────────────────────────────
 
@@ -93,6 +94,7 @@ const RESOLVER_FAILURE_LIMIT = 50;
 // dead run (with its ORIGINAL date window) instead of restarting from zero.
 const CHECKPOINT_PATH = 'data/cache/ats-full-checkpoint.json';
 const CHECKPOINT_EVERY = 500;
+const DEAD_BOARDS_PATH = 'data/dead-boards.tsv';
 
 export function loadCheckpoint(file = CHECKPOINT_PATH) {
   if (!existsSync(file)) return null;
@@ -698,6 +700,7 @@ async function main() {
   let totalCompaniesScanned = cc.totalCompaniesScanned || 0;
   let totalCompaniesAvailable = 0;
   let totalErrors = cc.totalErrors || 0;
+  let totalRetiredBoardsSkipped = cc.totalRetiredBoardsSkipped || 0;
   let droppedNoDate = cc.droppedNoDate || 0;
   let droppedContent = cc.droppedContent || 0;
   let capHit = false;
@@ -715,7 +718,8 @@ async function main() {
   const datasetStatus = {};
 
   const snapshotCounters = () => ({
-    totalCompaniesScanned, totalErrors, droppedNoDate, droppedContent,
+    totalCompaniesScanned, totalErrors, totalRetiredBoardsSkipped,
+    droppedNoDate, droppedContent,
     noDateSkipCompanies, noDateSkipJobs, cappedBoards,
   });
   const checkpointBase = () => ({
@@ -810,6 +814,8 @@ async function main() {
     log(`\n⚙  ${name} — ${entriesAll.length} companies${status !== 'ok' ? ` (dataset: ${status})` : ''}${startAt ? ` — resuming at ${startAt}` : ''}`);
 
     let errors = 0;
+    let deadBoardsSkipped = 0;
+    const deadBoards = loadDeadBoards(DEAD_BOARDS_PATH);
     let consecutiveResolverFailures = 0;
     let resolverOutage = false;
     // The board whose failure tripped the breaker. `name` is only the ATS
@@ -822,13 +828,19 @@ async function main() {
     let lastDone = 0;
     let lastResumeAt = 0;
     const truncated = [];
-    await parallelEach(entries, source.concurrency ?? CONCURRENCY, async (entry) => {
+  await parallelEach(entries, source.concurrency ?? CONCURRENCY, async (entry) => {
+      const deadBoard = boardKey(entry);
+      if (shouldSkipDeadBoard(deadBoards, name, deadBoard)) {
+        deadBoardsSkipped++;
+        return;
+      }
       try {
         // The whole per-company unit — fetch AND processJobs (which may issue
         // per-job detail-page requests via provider.enrichDate) — runs inside
         // one watchdog, so enrichment latency can't blow past COMPANY_TIMEOUT_MS.
         await withTimeout((async () => {
           const jobs = await source.provider.fetch(entry, ctx);
+          recordBoardResult(deadBoards, name, deadBoard, 200);
           consecutiveResolverFailures = 0;
           if (jobs.workdayTruncated) truncated.push(entry);
           if (jobs.icimsTruncated) {
@@ -842,6 +854,7 @@ async function main() {
         // Mostly defunct boards in the public dataset — expected noise, so the
         // default stays quiet; --verbose surfaces per-board failures.
         errors++;
+        recordBoardResult(deadBoards, name, deadBoard, err?.status);
         // A dead board and a dead resolver look identical one at a time; only
         // the *consecutive* run tells them apart, so any non-resolver outcome
         // resets the count (#2229).
@@ -865,11 +878,13 @@ async function main() {
         progress(`  ${done}/${entries.length} scanned, ${newOffers.length} total matches\r`);
       }
       if (done % CHECKPOINT_EVERY === 0 && !opts.dryRun) {
+        saveDeadBoards(DEAD_BOARDS_PATH, deadBoards);
         writeCheckpoint({
           ...checkpointBase(),
           current: { name, resumeAt: startAt + resumeAt, datasetLen: list.length, datasetHash },
           counters: {
             ...snapshotCounters(),
+            totalRetiredBoardsSkipped: totalRetiredBoardsSkipped + deadBoardsSkipped,
             // totalCompaniesScanned was bumped by the FULL entries.length up
             // front; a checkpoint must store only work actually attempted, or
             // a resumed run (which re-adds its own slice) double-counts the
@@ -891,6 +906,7 @@ async function main() {
         try {
           await withTimeout((async () => {
             const jobs = await source.provider.fetch(entry, ctx);
+            recordBoardResult(deadBoards, name, boardKey(entry), 200);
             await processJobs(jobs, name, source.provider);
             if (jobs.workdayTruncated) {
               errors++; // still truncated on a quiet line — genuine board problem, move on
@@ -899,11 +915,14 @@ async function main() {
           })(), COMPANY_TIMEOUT_MS, `${name}/${entry.name} (retry)`);
         } catch (err) {
           errors++;
+          recordBoardResult(deadBoards, name, boardKey(entry), err?.status);
           if (opts.verbose) console.error(`  ✗ ${name}/${entry.name} (retry): ${err.message}`);
         }
       }
     }
     totalErrors += errors;
+    totalRetiredBoardsSkipped += deadBoardsSkipped;
+    if (!opts.dryRun) saveDeadBoards(DEAD_BOARDS_PATH, deadBoards);
     if (resolverOutage) {
       // Deliberately before completedSources/checkpoint: this source did NOT
       // finish, and marking it done would make --resume skip the rest of it.
@@ -943,7 +962,7 @@ async function main() {
     if (!opts.dryRun) {
       writeCheckpoint({ ...checkpointBase(), current: null, counters: snapshotCounters() });
     }
-    log(`\n  done (${errors} unreachable boards skipped)`);
+    log(`\n  done (${errors} unreachable boards, ${deadBoardsSkipped} retired boards skipped)`);
   }
 
   // ── VC portfolio seed sources (--seeds flag) ───────────────────────
@@ -1068,6 +1087,7 @@ async function main() {
       postingsAnnotatedBlacklisted: blacklistResult.annotatedBlacklisted,
       postingsDroppedContent: droppedContent,
       unreachableBoards: totalErrors,
+      retiredBoardsSkipped: totalRetiredBoardsSkipped,
       cappedBoards,
       dnsPacing: { delayed: pacing.delayed, waitedMs: Math.round(pacing.waitedMs) },
       saved,
