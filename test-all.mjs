@@ -2016,6 +2016,88 @@ try {
 } catch (e) {
   fail(`validateCvSectionOrder allowReorder tests crashed: ${e.message}`);
 }
+
+try {
+  const { validateLockedSections } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
+  const cvMarkdown = '# Education\n* Bachelor of Science\n* Foo University\n\n# Work Experience\n* Software Engineer\n';
+  
+  // Identical content, just different formatting
+  const matchingHtml = `
+    <h2 class="section-title">Education</h2>
+    <ul>
+      <li>Bachelor of Science</li>
+      <li>Foo University</li>
+    </ul>
+    <h2 class="section-title">Work Experience</h2>
+    <p>Software Engineer</p>
+  `;
+  
+  // Paraphrased content
+  const changedHtml = `
+    <h2 class="section-title">Education</h2>
+    <ul>
+      <li>B.S.</li>
+      <li>Foo Univ</li>
+    </ul>
+  `;
+
+  let threwMatch = false;
+  try {
+    validateLockedSections(matchingHtml, cvMarkdown, ['education']);
+  } catch (e) {
+    threwMatch = true;
+  }
+  if (!threwMatch) {
+    pass('validateLockedSections permits a locked section when content matches ignoring formatting');
+  } else {
+    fail('validateLockedSections should not throw when a locked section content is equivalent');
+  }
+
+  let threwChanged = false;
+  try {
+    validateLockedSections(changedHtml, cvMarkdown, ['education']);
+  } catch (e) {
+    threwChanged = true;
+  }
+  if (threwChanged) {
+    pass('validateLockedSections throws loudly when a locked section is modified');
+  } else {
+    fail('validateLockedSections must throw when locked section content differs');
+  }
+
+  // Not locked
+  let threwNotLocked = false;
+  try {
+    validateLockedSections(changedHtml, cvMarkdown, []);
+  } catch (e) {
+    threwNotLocked = true;
+  }
+  if (!threwNotLocked) {
+    pass('validateLockedSections ignores modifications to unlocked sections');
+  } else {
+    fail('validateLockedSections threw for an unlocked section');
+  }
+
+  // Missing locked section in source
+  let threwMissing = false;
+  try {
+    validateLockedSections(matchingHtml, cvMarkdown, ['skills']);
+  } catch (e) {
+    if (e.message.includes("Available sections: 'education', 'work-experience'")) {
+      threwMissing = true;
+    } else {
+      fail(`validateLockedSections threw wrong error for missing locked section: ${e.message}`);
+    }
+  }
+  if (threwMissing) {
+    pass('validateLockedSections throws when a locked section is missing from the source');
+  } else {
+    fail('validateLockedSections must throw when a locked section does not exist in the source');
+  }
+
+} catch (e) {
+  fail(`validateLockedSections tests crashed: ${e.message}`);
+}
 try {
   const { repoRelativeManifestPath, injectPrintPageCss } = await import(pathToFileURL(join(ROOT, 'generate-pdf.mjs')).href);
   const insideHtmlPath = join(ROOT, 'templates', 'cv-template.html');

@@ -20,6 +20,8 @@ import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 import * as yaml from 'js-yaml';
+import { validateLockedSections, sectionKey } from './generate-pdf.mjs';
+import { readLockedSections } from './theme-style.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -332,6 +334,10 @@ try {
 
   const filename = `cv-${candidateName}-${companySlug}.html`;
   const htmlPath = join(PATHS.output, filename);
+
+  const lockedKeys = readLockedSections(PATHS.profile, sectionKey);
+  const cvMarkdown = readFileSync(PATHS.cv, 'utf-8');
+  validateLockedSections(tailoredHtml, cvMarkdown, lockedKeys);
 
   writeFileSync(htmlPath, tailoredHtml, 'utf-8');
   console.log(`\n✅  Tailored HTML saved: ${htmlPath}`);
