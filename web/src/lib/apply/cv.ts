@@ -1,18 +1,53 @@
 import fs from "node:fs";
 import path from "node:path";
-import { careerOpsRoot } from "@/lib/career-ops";
+import { careerOpsRoot, readApplications } from "@/lib/career-ops";
+import { pdfPathForReport, reportNumberFromCell } from "./cv-selection.mjs";
+
+function containedRealpath(file: string, root: string): boolean {
+  try {
+    return fs.realpathSync(file).startsWith(fs.realpathSync(root) + path.sep);
+  } catch {
+    return false;
+  }
+}
+
+function isRegularContainedFile(file: string, root: string): boolean {
+  try {
+    return fs.statSync(file).isFile() && containedRealpath(file, root);
+  } catch {
+    return false;
+  }
+}
 
 /**
- * Locate the tailored CV PDF the real `pdf` mode wrote to output/ for a given
- * company (newest match wins). STRICT company match — never returns a CV tailored
- * for a different company (we'd rather attach nothing than the wrong CV). Mirrors
- * the matching in /api/cv-pdf so the "View tailored CV" link and the apply
- * file-upload always resolve to the SAME file. Returns an absolute path or null.
+ * Locate the tailored CV PDF for an application. When the tracker application
+ * number is known, the report -> PDF manifest is authoritative, so an older
+ * role cannot accidentally receive the company's newest CV. Company matching
+ * remains as a fallback for manually pasted URLs.
  */
-export function resolveTailoredCv(company?: string): string | null {
+export function resolveTailoredCv(company?: string, applicationNumber?: string): string | null {
+  const root = careerOpsRoot();
+  if (applicationNumber?.trim()) {
+    const app = readApplications().find((candidate) => candidate.n === applicationNumber.trim());
+    const reportNumber = reportNumberFromCell(app?.report);
+    if (!reportNumber) return null;
+    let indexText: string;
+    try {
+      indexText = fs.readFileSync(path.join(root, "data", "pdf-index.tsv"), "utf8");
+    } catch {
+      return null;
+    }
+    const relativePdf = pdfPathForReport(indexText, reportNumber);
+    if (!relativePdf) return null;
+    const file = path.resolve(root, relativePdf);
+    const outputDir = path.resolve(root, "output");
+    if (!file.startsWith(outputDir + path.sep) || !isRegularContainedFile(file, outputDir)) return null;
+    return file;
+  }
+
   const c = (company ?? "").trim();
   if (!c) return null;
-  const dir = path.join(careerOpsRoot(), "output");
+  const dir = path.join(root, "output");
   let files: string[];
   try {
     files = fs.readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".pdf"));
@@ -25,7 +60,8 @@ export function resolveTailoredCv(company?: string): string | null {
   const first = slug.split("-")[0];
   const matches = files.filter((f) => {
     const l = f.toLowerCase();
-    return l.includes(slug) || (first.length > 2 && l.includes(first));
+    if (!(l.includes(slug) || (first.length > 2 && l.includes(first)))) return false;
+    return isRegularContainedFile(path.join(dir, f), dir);
   });
   if (!matches.length) return null;
   matches.sort((a, b) => fs.statSync(path.join(dir, b)).mtimeMs - fs.statSync(path.join(dir, a)).mtimeMs);
