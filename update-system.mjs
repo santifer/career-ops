@@ -280,6 +280,7 @@ const SYSTEM_PATHS = [
   'batch/README.md',
   'utils/token-tracker.mjs',
   'batch-tailor.mjs',
+  'sync-pdf-flags.mjs',
   'dashboard/',
   'templates/',
   'config/cv-facts.example.json',
