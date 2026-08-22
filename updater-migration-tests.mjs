@@ -8,6 +8,7 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
+import { spawnSync } from 'child_process';
 
 let passed = 0;
 let failed = 0;
@@ -44,6 +45,83 @@ function extractArray(name) {
 const systemPaths = extractArray('SYSTEM_PATHS');
 const userPaths = extractArray('USER_PATHS');
 const bootstrapPaths = extractArray('BOOTSTRAP_PATHS');
+
+if (/const updateConfirmed = process\.argv\.includes\('--confirm'\)[\s\S]{0,160}isReexec/.test(source) &&
+    /Installation requires explicit confirmation/.test(source) &&
+    /'apply',\s*'--confirm'/.test(source) &&
+    /CAREER_OPS_UPDATE_REEXEC_MARKER/.test(source) &&
+    /function isLegacyReexec/.test(source)) {
+  pass('apply requires explicit confirmation and carries it through authenticated and legacy self-reexec');
+} else {
+  fail('apply does not require explicit confirmation or propagate it safely through self-reexec');
+}
+
+function runApplyWithEnv(env, args = ['apply']) {
+  return spawnSync(process.execPath, ['update-system.mjs', ...args], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    env: { ...process.env, ...env },
+  });
+}
+
+const envOnlyConfirmation = runApplyWithEnv({
+  CAREER_OPS_UPDATE_CONFIRM: '1',
+  CAREER_OPS_UPDATE_REEXEC: '',
+});
+if (envOnlyConfirmation.status !== 0 &&
+    /Installation requires explicit confirmation/.test(envOnlyConfirmation.stderr) &&
+    !existsSync('.update-lock')) {
+  pass('environment-only confirmation cannot authorize initial apply');
+} else {
+  fail('environment-only confirmation can authorize initial apply');
+}
+
+const envOnlyForce = runApplyWithEnv({
+  CAREER_OPS_UPDATE_FORCE: '1',
+  CAREER_OPS_UPDATE_REEXEC: '',
+});
+if (envOnlyForce.status !== 0 &&
+    /Installation requires explicit confirmation/.test(envOnlyForce.stderr) &&
+    !existsSync('.update-lock')) {
+  pass('environment-only force cannot authorize initial apply');
+} else {
+  fail('environment-only force can authorize initial apply');
+}
+
+const forceWithoutConfirmation = runApplyWithEnv({}, ['apply', '--force']);
+if (forceWithoutConfirmation.status !== 0 &&
+    /Installation requires explicit confirmation/.test(forceWithoutConfirmation.stderr) &&
+    !existsSync('.update-lock')) {
+  pass('force without confirmation cannot authorize initial apply');
+} else {
+  fail('force without confirmation can authorize initial apply');
+}
+
+const forgedReexec = runApplyWithEnv({
+  CAREER_OPS_UPDATE_REEXEC_MARKER: '/tmp/career-ops-reexec-forged/marker',
+  CAREER_OPS_UPDATE_REEXEC_TOKEN: 'forged',
+  CAREER_OPS_UPDATE_CONFIRM: '1',
+});
+if (forgedReexec.status !== 0 &&
+    /Installation requires explicit confirmation/.test(forgedReexec.stderr) &&
+    !existsSync('.update-lock')) {
+  pass('forged reexec marker cannot authorize initial apply');
+} else {
+  fail('forged reexec marker can authorize initial apply');
+}
+
+const forgedLegacyReexec = runApplyWithEnv({
+  CAREER_OPS_UPDATE_REEXEC: '1',
+  CAREER_OPS_UPDATE_BACKUP_BRANCH: 'backup-pre-update-1.26.0-20260818T120000Z',
+  CAREER_OPS_UPDATE_CONFIRM: '1',
+});
+if (forgedLegacyReexec.status !== 0 &&
+    /Installation requires explicit confirmation/.test(forgedLegacyReexec.stderr) &&
+    !existsSync('.update-lock')) {
+  pass('legacy reexec without an existing backup branch cannot authorize initial apply');
+} else {
+  fail('legacy reexec without an existing backup branch can authorize initial apply');
+}
 
 // Every concrete (non-directory) manifest entry (SYSTEM_PATHS or
 // BOOTSTRAP_PATHS) must exist in the working tree. A path deleted upstream
@@ -144,7 +222,7 @@ const twoPassManifestChecks = [
   },
   {
     name: 'apply re-execs through the current Node binary',
-    pattern: /execFileSync\(process\.execPath,\s*\[\s*'update-system\.mjs',\s*'apply'\s*\]/,
+    pattern: /execFileSync\(process\.execPath,\s*\[[\s\S]*?'update-system\.mjs',\s*'apply',\s*'--confirm'/,
   },
   {
     name: 'apply carries the original backup branch across re-exec',
