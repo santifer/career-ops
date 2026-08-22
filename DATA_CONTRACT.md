@@ -33,6 +33,8 @@ These files contain your personal data, customizations, and work product. Update
 | `data/pipeline.md` | Your URL inbox |
 | `data/scan-history.tsv` | Your scan history (tab-separated, append-only trailing columns; col 8: local SimHash JD fingerprint for cross-listing detection, col 9: posting date, cols 10-11: trust score/flags, col 12: normalized company key for repost/name matching). Older rows may have fewer columns — readers index by position and tolerate the absence. |
 | `data/scan-runs.tsv` | Your per-run scan counters (appended by `scan.mjs`, read by `stats.mjs`) |
+| `data/scheduled-jobs.json` | Your local scheduled-scan definitions, queue, and bounded run history (written by the web UI and `scripts/scheduled-jobs-runner.mjs`) |
+| `data/scheduled-job-notifications.json` | Local failure notifications emitted by the scheduled-jobs runner |
 | `data/portal-health.tsv` | Consecutive reachability status for scanned portals (appended by `scan.mjs`; statuses: `reachable`, `empty`, `slug_gone`, `network`, `auth`, `server`, `unknown` — the last three joined the vocabulary later, so older files carry only the first four) |
 | `data/follow-ups.md` | Your follow-up history |
 | `data/active-interviews.md` | Your active interview processes, incl. inline `[process-friction]` notes (read by `process-quality.mjs`) |
