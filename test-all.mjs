@@ -14493,6 +14493,70 @@ try {
   else fail('plugin SYSTEM paths not fully registered in update-system.mjs');
   if (["'config/plugins.yml'", "'plugins.local/'"].every(s => upd.includes(s))) pass('config/plugins.yml + plugins.local/ registered as USER paths (never auto-updated)');
   else fail('plugin USER paths not registered in update-system.mjs');
+  // #2354 — cmdRun must only collect results from the requested plugin id.
+  // If a second plugin of the same hook kind is enabled it must NOT bleed in.
+  {
+    const { filterResultsForId } = await import(pathToFileURL(join(ROOT, 'plugins/_engine.mjs')).href);
+    const fakeResults = [
+      { id: 'linkedin-alerts', ok: true, result: [{ title: 'Correct', url: 'https://a.test/1' }] },
+      { id: 'gmail',           ok: true, result: [{ title: 'Wrong',   url: 'https://b.test/2' }] },
+    ];
+    // The fix: filterResultsForId restricts the output to only the requested plugin.
+    const id = 'linkedin-alerts';
+    const found = filterResultsForId(fakeResults, id).filter(r => r.ok && Array.isArray(r.result)).flatMap(r => r.result);
+    if (found.length === 1 && found[0].url === 'https://a.test/1') {
+      pass('cmdRun result isolation: only the requested plugin id\'s results are collected (#2354)');
+    } else {
+      fail(`cmdRun result isolation broken: got ${JSON.stringify(found)}`);
+    }
+  }
+
+  // #2354 — gmail plugin must NOT persist the processed-id cursor under --dry-run.
+  {
+    const gmailMod = await import(pathToFileURL(join(ROOT, 'plugins/gmail/index.mjs')).href);
+    const mockCtx = {
+      dryRun: true,
+      env: { GMAIL_CLIENT_ID: 'x', GMAIL_CLIENT_SECRET: 'y', GMAIL_REFRESH_TOKEN: 'z' },
+      settings: {},
+      fetch: async (url) => {
+        if (url.includes('oauth2')) return { ok: true, json: async () => ({ access_token: 'fake' }) };
+        if (url.includes('messages?')) return { ok: true, json: async () => ({ messages: [{ id: 'mock-123' }] }) };
+        if (url.includes('messages/mock-123')) return {
+          ok: true,
+          json: async () => ({ payload: { headers: [] } })
+        };
+        return { ok: true, json: async () => ({}) };
+      },
+      log: () => {},
+    };
+    
+    // Create a known state file with a non-empty cursor
+    const statePath = join(ROOT, 'data', 'gmail-state.json');
+    const oldState = existsSync(statePath) ? readFileSync(statePath) : null;
+    mkdirSync(join(ROOT, 'data'), { recursive: true });
+    const preTestContent = JSON.stringify(['existing-123']);
+    writeFileSync(statePath, preTestContent);
+    
+    const origWarn = console.warn;
+    try {
+      // Run the ingest logic (suppress expected spoof warning)
+      console.warn = () => {};
+      await gmailMod.default.ingest(mockCtx);
+      
+      const newState = readFileSync(statePath, 'utf8');
+      if (newState === preTestContent) {
+        pass('gmail plugin gates saveProcessedIds behind !ctx.dryRun — dry-run stays dry (#2354)');
+      } else {
+        fail('gmail plugin calls saveProcessedIds unconditionally — dry-run mutates cursor state (#2354)');
+      }
+    } finally {
+      // Always restore console and file state
+      console.warn = origWarn;
+      if (oldState !== null) writeFileSync(statePath, oldState);
+      else rmSync(statePath, { force: true });
+    }
+  }
+
 } catch (e) {
   console.warn = __origWarn;
   fail(`plugin engine tests crashed: ${e.message}`);
