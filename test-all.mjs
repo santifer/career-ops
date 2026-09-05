@@ -1804,21 +1804,29 @@ for (const f of skillEntrypoints) {
   }
 }
 
-// The plugin manifest ships in two locations: .claude-plugin/plugin.json is
-// canonical (Claude Code + Copilot CLI both read it), and .github/plugin/
+// The plugin manifest ships in three locations: .claude-plugin/plugin.json is
+// canonical (Claude Code + Copilot CLI both read it); .github/plugin/
 // plugin.json exists only because the awesome-copilot marketplace validator
-// accepts just three paths and the Claude-compat one is not among them. Both
-// are bumped by release-please; this assert makes any other divergence fail CI
-// loudly instead of shipping two drifting manifests.
+// accepts just three paths and the Claude-compat one is not among them; and
+// .codex-plugin/plugin.json is the path the awesome-ai-plugins catalogue
+// resolves a Codex plugin's install_url to. All are bumped by release-please;
+// this assert makes any other divergence fail CI loudly instead of shipping
+// drifting manifests.
 {
   const canonManifest = readFile('.claude-plugin/plugin.json');
-  const copilotManifest = fileExists('.github/plugin/plugin.json') ? readFile('.github/plugin/plugin.json') : null;
-  if (copilotManifest === null) {
-    fail('.github/plugin/plugin.json missing — awesome-copilot validator needs it (mirror of .claude-plugin/plugin.json)');
-  } else if (canonManifest === copilotManifest) {
-    pass('plugin.json mirror (.github/plugin/) is byte-identical to the canonical manifest');
-  } else {
-    fail('plugin.json mirror (.github/plugin/) DIVERGED from .claude-plugin/plugin.json — edit the canonical one and copy it verbatim');
+  const mirrors = [
+    ['.github/plugin/plugin.json', 'awesome-copilot validator needs it'],
+    ['.codex-plugin/plugin.json', 'awesome-ai-plugins resolves the Codex install_url to it'],
+  ];
+  for (const [mirrorPath, why] of mirrors) {
+    const mirror = fileExists(mirrorPath) ? readFile(mirrorPath) : null;
+    if (mirror === null) {
+      fail(`${mirrorPath} missing — ${why} (mirror of .claude-plugin/plugin.json)`);
+    } else if (canonManifest === mirror) {
+      pass(`plugin.json mirror (${mirrorPath}) is byte-identical to the canonical manifest`);
+    } else {
+      fail(`plugin.json mirror (${mirrorPath}) DIVERGED from .claude-plugin/plugin.json — edit the canonical one and copy it verbatim`);
+    }
   }
 }
 
@@ -9783,6 +9791,40 @@ try {
     pass('all headless evaluators use the shared atomic report allocator');
   } else {
     fail(`headless evaluators still carry private max+1 allocators: ${unmigratedEvaluators.join(', ')}`);
+  }
+
+  // Same family, second contract (#3795): every headless evaluator writes
+  // `**URL:**` into its report header, per AGENTS.md Pipeline Integrity rule 3.
+  // The report is where the posting URL survives the posting, and it is the only
+  // place merge-tracker.mjs's resolveReportUrl() looks -- a report without the
+  // line yields `no-url`, so the row can never be backfilled and stays outside
+  // the deterministic URL dedup key, the tier merge-tracker tries FIRST and the
+  // one that can prove two same-title rows are different openings.
+  //
+  // Two halves, because the line is worthless without a value to put in it:
+  // the header must be written, AND the evaluator must have somewhere to
+  // receive a posting URL from. Absent one, `(pasted)` is the honest value and
+  // keeps the field present; normalizeUrl derives no key from it, so it cannot
+  // hand every pasted row the same key.
+  const urlHeaderRe  = /\*\*URL:\*\*/;
+  const urlSourceRe  = /--posting-url|\bpostingUrl\b|\$\{input \|\| '\(pasted\)'\}/;
+  // openai-eval.mjs and ollama-eval.mjs gain the same header in #3797, which
+  // owns those two files. Named rather than skipped, and the list is asserted
+  // to be EXACTLY the files still missing the header: once #3797 lands this
+  // fails until the names are removed, so the exemption cannot outlive its
+  // reason and quietly become permanent coverage loss.
+  const pendingUrlHeader = ['openai-eval.mjs', 'ollama-eval.mjs'];
+  const missingUrlHeader = evaluatorSources
+    .filter(([, source]) => !urlHeaderRe.test(source) || !urlSourceRe.test(source))
+    .map(([name]) => name);
+  const staleExemptions = pendingUrlHeader.filter(name => !missingUrlHeader.includes(name));
+  const unexemptedGaps  = missingUrlHeader.filter(name => !pendingUrlHeader.includes(name));
+  if (unexemptedGaps.length > 0) {
+    fail(`headless evaluators write a report with no **URL:** header, so their rows can never reach the URL dedup key: ${unexemptedGaps.join(', ')}`);
+  } else if (staleExemptions.length > 0) {
+    fail(`stale #3797 exemption — these now carry the **URL:** header, remove them from pendingUrlHeader: ${staleExemptions.join(', ')}`);
+  } else {
+    pass('every headless evaluator outside the #3797 exemption writes **URL:** and takes a posting URL');
   }
 
   // --count N: contiguous range from an empty dir.
