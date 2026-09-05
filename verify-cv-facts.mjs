@@ -358,7 +358,18 @@ export function factClaims(text, sourceNormalized = null) {
     // passed the gate (CodeRabbit review). The connector list is closed and
     // each one must be followed by another Capitalised word, so the capture
     // cannot wander into ordinary prose.
-    ['title', /\b(?:[Ss]erved [Aa]s|[Ww]orked [Aa]s|[Tt]itle\s*:\s*|[Rr]ole\s*:\s*)\s*(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+(?:of|for|and|the)\s+[A-Z][\w/-]*|\s+[A-Z][\w/-]*){0,4})|\b(?:[Ww]orked [Aa]t|[Jj]oined)\s+[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+[Aa]s\s+(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+(?:of|for|and|the)\s+[A-Z][\w/-]*|\s+[A-Z][\w/-]*){0,4})/g],
+    //
+    // #3907 — the first captured token used `[A-Z][\w/-]*`, whose `*` allows
+    // a bare single capital letter to satisfy it. Ordinary prose like "...to
+    // this role: I do not have..." then read the pronoun "I" as a one-letter
+    // job title. The fix requires at least one more character after the
+    // leading capital (`+` instead of `*`), which a real title always has —
+    // even a 2-letter acronym like "VP" or "PM" still matches — while a bare
+    // "I" or "A" no longer can. Only the FIRST token of each alternative is
+    // tightened; the subsequent tokens in the `{0,4}` repetition keep `*`
+    // because a later short word in a real multi-word title (e.g. the "AI"
+    // in "Head of AI") must still be allowed.
+    ['title', /\b(?:[Ss]erved [Aa]s|[Ww]orked [Aa]s|[Tt]itle\s*:\s*|[Rr]ole\s*:\s*)\s*(?:an?\s+|the\s+)?([A-Z][\w/-]+(?:\s+(?:of|for|and|the)\s+[A-Z][\w/-]*|\s+[A-Z][\w/-]*){0,4})|\b(?:[Ww]orked [Aa]t|[Jj]oined)\s+[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+[Aa]s\s+(?:an?\s+|the\s+)?([A-Z][\w/-]+(?:\s+(?:of|for|and|the)\s+[A-Z][\w/-]*|\s+[A-Z][\w/-]*){0,4})/g],
     ['tool', /\b(?:using|built with|worked with|technologies?\s*:\s*|tech stack\s*:\s*)([^.;\n]+?)(?=\s+\bfor\b|[.;\n]|$)/gi],
   ];
   for (const [kind, pattern] of patterns) {
