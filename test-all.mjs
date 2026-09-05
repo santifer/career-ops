@@ -9827,6 +9827,39 @@ try {
     pass('every headless evaluator outside the #3797 exemption writes **URL:** and takes a posting URL');
   }
 
+  // Same family, third contract (#3796): the tracker-addition helpers are
+  // imported, never redefined. Four evaluators carried private copies of
+  // `tsvSafe` / `normalizedTrackerScore` and they drifted -- gemini-eval.mjs's
+  // concatenated instead of parsing, so `SCORE: 4.2 (strong fit)` produced
+  // `4.2 (strong fit)/5`, which is neither a score nor a sentinel and is the
+  // undecidable cell merge-tracker.mjs refuses outright. The evaluation was
+  // skipped wholly while the sibling copy had been immune all along.
+  //
+  // tests/evaluator-score-cell.test.mjs asserts the helpers exist exactly once;
+  // this asserts the family reaches that one definition, which is the half a
+  // fifth evaluator can fail without redefining anything -- by hand-rolling a
+  // score cell inline instead, which is exactly what openrouter-runner.mjs did:
+  // it never held a copy, so a copy-scan never saw it, while it wrote
+  // `${value.toFixed(1)}/5` from a numeric prefix that discarded the
+  // denominator, and the empty string when nothing parsed.
+  const ADDITION_HELPERS = './lib/tracker-addition.mjs';
+  const helperImportRe = /from\s+'\.\/lib\/tracker-addition\.mjs'/;
+  // openai-eval.mjs and ollama-eval.mjs gain the import when #3797 lands and
+  // their copies are consolidated with the rest.
+  const pendingHelperImport = ['openai-eval.mjs', 'ollama-eval.mjs'];
+  const missingHelperImport = evaluatorSources
+    .filter(([, source]) => !helperImportRe.test(source))
+    .map(([name]) => name);
+  const staleHelperExemptions = pendingHelperImport.filter(name => !missingHelperImport.includes(name));
+  const unexemptedHelperGaps  = missingHelperImport.filter(name => !pendingHelperImport.includes(name));
+  if (unexemptedHelperGaps.length > 0) {
+    fail(`headless evaluators build their tracker-addition cells without ${ADDITION_HELPERS}, the drift #3796 consolidated: ${unexemptedHelperGaps.join(', ')}`);
+  } else if (staleHelperExemptions.length > 0) {
+    fail(`stale #3796 exemption — these now import ${ADDITION_HELPERS}, remove them from pendingHelperImport: ${staleHelperExemptions.join(', ')}`);
+  } else {
+    pass(`every headless evaluator outside the #3796 exemption imports the shared tracker-addition helpers`);
+  }
+
   // --count N: contiguous range from an empty dir.
   const rangeTmp = mkdtempSync(join(tmpdir(), 'career-ops-reserve-range-'));
   const range = reserveRun(['--count', '3'], rangeTmp);
