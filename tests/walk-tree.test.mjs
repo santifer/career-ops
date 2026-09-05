@@ -186,6 +186,32 @@ test('symlink policy: skip by default, follow on request, reject when a hash dep
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('links: follow survives a link onto an ancestor, and still follows sibling aliases', (t) => {
+  // A link pointing back up its own tree (docs/current -> docs/) passes statSync
+  // as an ordinary directory, so without a cycle guard the walk re-enters it
+  // until the path length or the stack gives out. Both callers that follow
+  // links walk trees a user can shape: test-all.mjs's repo copy and
+  // seed-fixture.mjs's fixture manifest.
+  const dir = tree({ 'docs/a.txt': 'x', 'docs/deep/b.txt': 'y' });
+  try {
+    try {
+      symlinkSync(join(dir, 'docs'), join(dir, 'docs', 'loop'), 'dir');
+      symlinkSync(join(dir, 'docs'), join(dir, 'alias'), 'dir');
+    } catch {
+      t.skip('this machine cannot create directory symlinks (Windows without Developer Mode)');
+      return;
+    }
+    const found = rel(dir, walkTree(dir, { links: 'follow' }));
+    // The cycle terminates...
+    assert.ok(found.length > 0 && found.length < 20, `walk did not terminate cleanly: ${found.length} paths`);
+    assert.ok(found.includes('docs/a.txt') && found.includes('docs/deep/b.txt'));
+    // ...and the guard is the ANCESTOR CHAIN, not a global visited set: `alias`
+    // is a second route to a directory already walked, but it is not a cycle,
+    // and a tree copy that dropped it would not mirror what is there.
+    assert.ok(found.includes('alias/a.txt'), `a sibling alias must still be followed: ${found.join(', ')}`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('the repo collectors inherit the guard without asking for it', () => {
   // The end-to-end shape: a worktree parked anywhere under the repo must not
   // put a second checkout's files into the syntax gate's list.
@@ -268,9 +294,17 @@ const NOT_A_FUNCTION = new Set([
   'if', 'for', 'while', 'switch', 'catch', 'return', 'function', 'typeof',
   'await', 'new', 'do', 'else', 'with', 'super', 'this',
 ]);
-// Every shape a walker has actually been written in here. Round ten of #3792
-// was spent adding these one at a time to a detector that had assumed the first
-// of them, so they are enumerated once, in one place, and tested below.
+// Every shape a walker has actually been written in here, plus the ones review
+// pointed out it could be written in next. Round ten of #3792 was spent adding
+// these one at a time to a detector that had assumed the first of them, so they
+// are enumerated once, in one place, and tested below.
+//
+// A private method's `#` sits OUTSIDE the capture group, so `#walk` is recorded
+// under `walk` — which is the name `this.#walk(...)` presents to the call scan
+// too (`#` is a non-word character, so `\b` matches between it and the name).
+// Property forms require a visible `=>` or `function` rather than just a `(`,
+// so an ordinary parenthesized value (`total: (a + b)`) is not read as a
+// function definition.
 // Each pattern stops just BEFORE the parameter list (or, for the one shape that
 // has none, just after its `=>`), so `bodyAt` always resumes from the same
 // place whatever matched.
@@ -278,7 +312,13 @@ const DEFS = [
   new RegExp(`\\bfunction\\s*\\*?\\s*(${NAME})\\s*(?=\\()`, 'g'),                                       // function walk(dir)
   new RegExp(`\\b(?:const|let|var)\\s+(${NAME})\\s*=\\s*(?:async\\s*)?(?:function\\s*\\*?\\s*(?:${NAME})?\\s*)?(?=\\()`, 'g'), // const walk = (dir) =>
   new RegExp(`\\b(?:const|let|var)\\s+(${NAME})\\s*=\\s*(?:async\\s+)?${NAME}\\s*=>`, 'g'),             // const walk = dir => …  (no parens)
-  new RegExp(`(?:^|[;{}\\s,])(${NAME})\\s*(?=\\([^()]*\\)\\s*\\{)`, 'gm'),                              // walk(dir) { …  (method / shorthand)
+  new RegExp(`(?:^|[;{}\\s,])#?(${NAME})\\s*(?=\\([^()]*\\)\\s*\\{)`, 'gm'),                             // walk(dir) { … / #walk(dir) { …
+  // obj.walk = (dir) => … / walk: (dir) => …  (property-assigned, object literal)
+  new RegExp(`(?:^|[;{},\\s])(?:[\\w$]+\\s*\\.\\s*)?(${NAME})\\s*[:=]\\s*(?:async\\s*)?\\([^()]*\\)\\s*=>`, 'gm'),
+  // obj.walk = dir => … / walk: dir => …
+  new RegExp(`(?:^|[;{},\\s])(?:[\\w$]+\\s*\\.\\s*)?(${NAME})\\s*[:=]\\s*(?:async\\s+)?${NAME}\\s*=>`, 'gm'),
+  // obj.walk = function (dir) { … } / walk: function (dir) { … }
+  new RegExp(`(?:^|[;{},\\s])(?:[\\w$]+\\s*\\.\\s*)?(${NAME})\\s*[:=]\\s*(?:async\\s*)?function\\s*\\*?\\s*(?:${NAME})?\\s*(?=\\()`, 'gm'),
 ];
 
 /** The body of the definition whose match ended at `idx`, brace-matched. */
@@ -317,6 +357,40 @@ function bodyAt(code, idx) {
     i++;
   }
   return code.slice(start, i);
+}
+
+/**
+ * The argument text of every call to `name` in `code`, parens balanced.
+ *
+ * A flat `[^)]*` cannot do this: it stops at the FIRST `)`, so a nested call in
+ * the first argument hides everything after it —
+ * `readdirSync(join(d, 'x'), { recursive: true })` reads as clean. Matching the
+ * two halves independently across the whole file is worse in the other
+ * direction: `mkdirSync(dest, { recursive: true })` appears dozens of times in
+ * this repo, and every file holding one alongside any `readdirSync` would be
+ * flagged. Balance the parens instead.
+ *
+ * @param {string} code - Source with comments, strings and regex literals blanked.
+ * @param {string} name - Callee identifier.
+ * @returns {string[]} Each call's argument list, without the enclosing parens.
+ */
+export function callArgs(code, name) {
+  const out = [];
+  const re = new RegExp(`\\b${name}\\s*\\(`, 'g');
+  let m;
+  while ((m = re.exec(code)) !== null) {
+    let i = m.index + m[0].length;
+    const start = i;
+    let depth = 1;
+    while (i < code.length && depth > 0) {
+      const c = code[i];
+      if (c === '(' || c === '[' || c === '{') depth++;
+      else if (c === ')' || c === ']' || c === '}') depth--;
+      i++;
+    }
+    out.push(code.slice(start, depth === 0 ? i - 1 : i));
+  }
+  return out;
 }
 
 /**
@@ -454,7 +528,9 @@ test('nothing outside lib/walk-tree.mjs recurses via globSync or readdirSync({re
     if (relPath === 'lib/walk-tree.mjs' || relPath === 'tests/walk-tree.test.mjs') continue;
     const code = stripNonCode(readFileSync(abs, 'utf-8'));
     if (/\bglobSync\s*\(/.test(code)) offenders.push(`${relPath}: globSync`);
-    if (/\breaddirSync\s*\([^)]*\brecursive\s*:\s*true/.test(code)) offenders.push(`${relPath}: readdirSync({recursive:true})`);
+    if (callArgs(code, 'readdirSync').some((args) => /\brecursive\s*:\s*true\b/.test(args))) {
+      offenders.push(`${relPath}: readdirSync({recursive:true})`);
+    }
   }
   assert.deepEqual(offenders, [], 'use listTree() from lib/walk-tree.mjs, which applies the nested-checkout guard (#3818)');
 });
@@ -478,6 +554,11 @@ test('the detector sees a recursive directory walker in every shape one has been
     'globSync instead of readdirSync': 'function walk(d) { for (const e of globSync(d + "/*")) walk(e); }',
     'declared twice, only one of them recursive':
       'const walk = (d) => readdirSync(d);\nfunction walk(d) { walk(d); }',
+    'object-literal property': 'const fs2 = { walk: (d) => { for (const e of readdirSync(d)) fs2.walk(e); } };',
+    'object-literal property, unparenthesized param': 'const fs2 = { walk: d => { readdirSync(d).forEach((e) => fs2.walk(e)); } };',
+    'object-literal property, function expression': 'const fs2 = { walk: function (d) { for (const e of readdirSync(d)) fs2.walk(e); } };',
+    'assigned to a property': 'const o = {};\no.walk = (d) => { for (const e of readdirSync(d)) o.walk(e); };',
+    'class private method': 'class W { #walk(d) { for (const e of readdirSync(d)) this.#walk(e); } }',
   };
   for (const [label, src] of Object.entries(shapes)) {
     assert.ok(
@@ -496,10 +577,36 @@ test('the detector does not flag what is not a recursive directory walk', () => 
     'the word in a string': 'const help = "walk(dir) calls readdirSync(dir) then walk(child)";\nfunction walk(d) { return walkTree(d); }',
     'a regex literal holding braces and quotes':
       'const RE = /["{}]readdirSync\\(/;\nfunction walk(d) { return walkTree(d).filter(f => RE.test(f)); }',
+    // The property patterns require a visible `=>` or `function`, so an
+    // ordinary parenthesized value is not mistaken for a definition.
+    'a parenthesized object value next to a flat read':
+      'const cfg = { total: (1 + 2) };\nfunction list(d) { return readdirSync(d).length + cfg.total; }',
   };
   for (const [label, src] of Object.entries(clean)) {
     assert.deepEqual(recursiveDirWalkers(src), [], `false positive on: ${label}`);
   }
+});
+
+test('the recursive-readdir ban is call-scoped, so a nested call cannot hide the option', () => {
+  // `readdirSync(...)` matched with a flat `[^)]*` stops at the FIRST `)`, so
+  // the inner join() hid the option entirely.
+  assert.deepEqual(
+    callArgs(stripNonCode("readdirSync(join(d, 'x'), { recursive: true })"), 'readdirSync'),
+    ["join(d,  ), { recursive: true }"],
+  );
+  const hasRecursive = (src) =>
+    callArgs(stripNonCode(src), 'readdirSync').some((a) => /\brecursive\s*:\s*true\b/.test(a));
+
+  assert.equal(hasRecursive("readdirSync(join(d, 'x'), { recursive: true })"), true, 'nested call must not hide it');
+  assert.equal(hasRecursive('readdirSync(d, { recursive: true })'), true);
+  // ...and the other direction, which is why this is not two file-wide regexes
+  // ANDed together: `mkdirSync(x, { recursive: true })` appears dozens of times
+  // in this repo, usually within a line or two of a legitimate flat readdir.
+  assert.equal(
+    hasRecursive("mkdirSync(dest, { recursive: true });\nconst names = readdirSync(dest);"),
+    false,
+    'an unrelated recursive:true elsewhere in the file must not be attributed to readdirSync',
+  );
 });
 
 test('stripNonCode survives a regex literal without unbalancing the file after it', () => {
