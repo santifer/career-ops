@@ -718,15 +718,32 @@ export function auditClaims(targetText, sourceText, config = {}) {
   return { invented, forbidden };
 }
 
-/** Load and validate the optional fact-gate configuration file. */
-function loadConfig(path) {
-  if (!existsSync(path)) return { allow_metrics: [], allow_facts: [], forbidden_phrases: [], warn_phrases: [] };
+/**
+ * Load and validate the optional fact-gate configuration file.
+ *
+ * The empty config is a fine default and a terrible silent one: forbidden_phrases
+ * and warn_phrases are the only phrase-level guard this module has, so with no
+ * file loaded the phrase check cannot fail — and a gate that is DISABLED then
+ * reads exactly like a gate that RAN AND FOUND NOTHING. `missing` is the one bit
+ * that tells them apart; callers surface it (#3894).
+ *
+ * Nothing here turns a missing config into an error. A user who has never
+ * written a cv-facts.json is in a normal state; they just should not be left
+ * believing a gate is protecting them when none is loaded.
+ *
+ * @param {string} path absolute path to the configuration file
+ * @returns {{missing: boolean, config: {allow_metrics: string[], allow_facts: string[], forbidden_phrases: string[], warn_phrases: string[]}}}
+ * @throws when the file exists but is unparseable or has a non-array key
+ */
+export function loadFactConfig(path) {
+  const keys = ['allow_metrics', 'allow_facts', 'forbidden_phrases', 'warn_phrases'];
+  if (!existsSync(path)) return { missing: true, config: Object.fromEntries(keys.map(key => [key, []])) };
   const config = JSON.parse(readFileSync(path, 'utf-8'));
-  for (const key of ['allow_metrics', 'allow_facts', 'forbidden_phrases', 'warn_phrases']) {
+  for (const key of keys) {
     if (config[key] == null) config[key] = [];
     else if (!Array.isArray(config[key])) throw new Error(`${key} must be an array in ${path}`);
   }
-  return config;
+  return { missing: false, config };
 }
 
 /** Resolve a CLI or configuration path relative to the selected working directory. */
@@ -754,7 +771,7 @@ export function verifyFacts(targetText, {
   cwd = process.cwd(),
 } = {}) {
   const sourceText = sourcePaths.map(path => readIfExists(resolveInputPath(path, cwd))).join('\n');
-  const config = loadConfig(resolveInputPath(configPath, cwd));
+  const { missing: configMissing, config } = loadFactConfig(resolveInputPath(configPath, cwd));
   const allowed = allowedMetricSet(sourceText, config.allow_metrics);
   const targetClaims = metricClaims(targetText);
   const invented = [...targetClaims].filter(claim => !allowed.has(claim));
@@ -781,6 +798,10 @@ export function verifyFacts(targetText, {
     forbidden,
     warnings,
     coverage,
+    // Deliberately outside the verdict: no config is a normal state, not a
+    // finding. It rides along so a caller can say the phrase lists were never
+    // loaded instead of printing a clean result the reader takes for "checked".
+    configMissing,
   };
 }
 
@@ -1188,6 +1209,12 @@ export function runCli(args = process.argv.slice(2)) {
       sourcePaths: parsed.sourcePaths.length ? parsed.sourcePaths : DEFAULT_SOURCES,
       configPath: parsed.configPath,
     });
+    // On stderr, before any verdict line and regardless of it: with no config
+    // the phrase lists are empty, so "passed" below means the phrase check never
+    // ran. stdout stays clean so --json remains parseable.
+    if (result.configMissing) {
+      console.error(`⚠️  fact-gate config not found: ${parsed.configPath} — forbidden/advisory phrase checks did not run.`);
+    }
     if (parsed.json) {
       console.log(JSON.stringify(result));
       return result.verdict === 'block' ? 1 : 0;
