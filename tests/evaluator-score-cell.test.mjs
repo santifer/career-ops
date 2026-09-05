@@ -82,7 +82,15 @@ if (problems.length === 0) {
 // root and lib/ covers where an evaluator or a helper module would put one.
 const HOME = 'lib/tracker-addition.mjs';
 const SHARED = ['tsvSafe', 'slugifyCompany', 'isPostingUrl', 'normalizedTrackerScore'];
-const defRe = (name) => new RegExp(`^(?:export\\s+)?function\\s+${name}\\s*\\(`, 'm');
+// Declarations AND function-valued bindings. Matching only `function NAME(`
+// missed the shape a re-added copy is most likely to take today --
+// `const normalizedTrackerScore = (value) => ...` -- which would sail past a
+// guard whose whole job is to notice a second definition.
+const defRe = (name) => new RegExp(
+  `^(?:export\\s+)?(?:function\\s+${name}\\s*\\(`
+  + `|(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s+)?(?:function\\b|\\(|[A-Za-z_$][\\w$]*\\s*=>))`,
+  'm',
+);
 
 const scanned = [
   ...readdirSync(ROOT).filter(n => n.endsWith('.mjs')),

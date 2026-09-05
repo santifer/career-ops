@@ -722,7 +722,16 @@ async function cmdEvaluate(input, ctx) {
     // satisfies SCORE_CELL_RE, so it merged as a genuine score and fed
     // stats.mjs's averages. normalizedTrackerScore refuses a denominator that
     // is not 5, but only if it is handed one (#3796).
-    const scoreMatch  = result.match(/(?:score|puntuaci[oó]n)[^\d]*(\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?)/i);
+    //
+    // The capture runs to END OF LINE rather than stopping at a denominator
+    // adjacent to the number. Requiring adjacency read `Score: 4.2 (strong
+    // fit)/10` -- a ten-point score with an annotation -- as a bare 4.2 and
+    // wrote `4.2/5`, the same wrong number the numeric prefix used to produce.
+    // The cost is that an unrelated fraction later in the line (`Score: 4.2 --
+    // matched 3/4 axes`) is refused as N/A rather than guessed at. That is the
+    // trade the shared helper already documents and the gemini path already
+    // pins: N/A is recoverable, a wrong score is not.
+    const scoreMatch  = result.match(/(?:score|puntuaci[oó]n)[^\d]*(\d+(?:\.\d+)?[^\r\n]*)/i);
     // An unparseable score used to become the EMPTY string, and merge-tracker
     // refuses a blank required cell ("use the documented sentinel rather than a
     // blank cell") -- so the evaluation was skipped whole, the same loss #3796

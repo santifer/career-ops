@@ -9842,22 +9842,29 @@ try {
   // it never held a copy, so a copy-scan never saw it, while it wrote
   // `${value.toFixed(1)}/5` from a numeric prefix that discarded the
   // denominator, and the empty string when nothing parsed.
+  //
+  // USE, not merely import: an evaluator can import an unrelated helper from the
+  // module and still build its score cell by hand, which would pass an
+  // import-only check while the behaviour this contract exists to protect had
+  // drifted again. Both halves are required -- the import proves it reaches the
+  // shared definition, the call proves it is the definition actually used.
   const ADDITION_HELPERS = './lib/tracker-addition.mjs';
   const helperImportRe = /from\s+'\.\/lib\/tracker-addition\.mjs'/;
+  const helperUseRe    = /\bnormalizedTrackerScore\s*\(/;
   // openai-eval.mjs and ollama-eval.mjs gain the import when #3797 lands and
   // their copies are consolidated with the rest.
   const pendingHelperImport = ['openai-eval.mjs', 'ollama-eval.mjs'];
   const missingHelperImport = evaluatorSources
-    .filter(([, source]) => !helperImportRe.test(source))
+    .filter(([, source]) => !helperImportRe.test(source) || !helperUseRe.test(source))
     .map(([name]) => name);
   const staleHelperExemptions = pendingHelperImport.filter(name => !missingHelperImport.includes(name));
   const unexemptedHelperGaps  = missingHelperImport.filter(name => !pendingHelperImport.includes(name));
   if (unexemptedHelperGaps.length > 0) {
-    fail(`headless evaluators build their tracker-addition cells without ${ADDITION_HELPERS}, the drift #3796 consolidated: ${unexemptedHelperGaps.join(', ')}`);
+    fail(`headless evaluators build their tracker-addition cells without importing AND calling ${ADDITION_HELPERS}'s normalizedTrackerScore, the drift #3796 consolidated: ${unexemptedHelperGaps.join(', ')}`);
   } else if (staleHelperExemptions.length > 0) {
     fail(`stale #3796 exemption — these now import ${ADDITION_HELPERS}, remove them from pendingHelperImport: ${staleHelperExemptions.join(', ')}`);
   } else {
-    pass(`every headless evaluator outside the #3796 exemption imports the shared tracker-addition helpers`);
+    pass(`every headless evaluator outside the #3796 exemption imports AND calls the shared tracker-addition helpers`);
   }
 
   // --count N: contiguous range from an empty dir.

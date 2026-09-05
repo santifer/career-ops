@@ -178,6 +178,14 @@ try {
       // The two defects this block exists for.
       ['**Score:** 8/10',             'N/A'],
       ['Score: 4.2 / 10',             'N/A'],
+      // A denominator separated from the number by an annotation. Stopping the
+      // capture at an ADJACENT denominator read this as a bare 4.2 and wrote
+      // `4.2/5` -- a ten-point score recorded as a five-point one.
+      ['**Score:** 4.2 (strong fit)/10', 'N/A'],
+      // The documented cost of running the capture to end of line: an unrelated
+      // fraction later in the line is refused rather than guessed at. Pinned so
+      // nobody quietly relaxes it back into producing a wrong score.
+      ['Score: 4.2 — matched 3/4 axes',  'N/A'],
       ['Score: 7',                    'N/A'],
       ['Puntuación: 8/10',            'N/A'],
       ['no score anywhere in here',   'N/A'],
@@ -205,12 +213,23 @@ try {
 
   // And the inline formatter is gone for good: the cell must come from the
   // shared helper, not from a local toFixed with a hardcoded `/5`.
+  //
+  // The argument is pinned too, not just the call. The block above lifts the
+  // regex and composes it with the helper ITSELF, which proves the pattern and
+  // the helper agree -- but not that the runner hands the helper that same
+  // capture. A runner that stripped the denominator before calling
+  // (`scoreMatch[1].split('/')[0]`) would keep every case above green while
+  // writing the wrong score, so the call site must pass the capture unmodified.
+  // Running the runner itself against a fixture would prove more, but it needs
+  // an API key and a network round trip; pinning the expression is the bounded
+  // check that closes this specific gap.
   const usesHelper = /const\s+scoreStr\s*=\s*normalizedTrackerScore\(/.test(src);
+  const passesRawCapture = /normalizedTrackerScore\(\s*scoreMatch\s*\?\s*scoreMatch\[1\]\s*:\s*''\s*\)/.test(src);
   const inlineFormat = /toFixed\(1\)\}\/5`\s*:\s*''/.test(src);
-  if (usesHelper && !inlineFormat) {
-    pass('openrouter-runner.mjs builds its score cell with normalizedTrackerScore, with no blank-string fallback');
+  if (usesHelper && passesRawCapture && !inlineFormat) {
+    pass('openrouter-runner.mjs passes the unmodified capture to normalizedTrackerScore, with no blank-string fallback');
   } else {
-    fail(`openrouter-runner.mjs must build the score cell from the shared helper (usesHelper=${usesHelper}, inlineFormat still present=${inlineFormat})`);
+    fail(`openrouter-runner.mjs must hand the shared helper its raw capture (usesHelper=${usesHelper}, passesRawCapture=${passesRawCapture}, inlineFormat still present=${inlineFormat})`);
   }
 } finally {
   try { rmSync(work, { recursive: true, force: true }); } catch { /* best effort */ }
