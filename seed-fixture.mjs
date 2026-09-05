@@ -16,27 +16,33 @@ import { tmpdir } from 'os';
 import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { isMainModule } from './lib/is-main-module.mjs';
+import { walkTree, isNestedCheckout } from './lib/walk-tree.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(ROOT, 'test-fixtures', 'upgrade');
 export const DEFAULT_STATE = 'state-v1.18';
 
-function walk(dir, base = dir, out = []) {
-  // Sort so files[] and the manifest key order are deterministic across
-  // platforms (readdirSync returns filesystem order, which varies).
-  for (const name of readdirSync(dir).sort()) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, base, out);
-    else out.push(relative(base, p).split(sep).join('/'));
-  }
-  return out;
+function walk(dir, base = dir) {
+  // walkTree sorts every level, so files[] and the manifest key order are
+  // deterministic across platforms (readdir returns filesystem order, which
+  // varies). `links: 'follow'` keeps the statSync semantics this had.
+  return walkTree(dir, { links: 'follow' })
+    .map((p) => relative(base, p).split(sep).join('/'));
 }
 
 export function listStates() {
   if (!existsSync(FIXTURES)) return [];
   // Sort for deterministic state ordering across platforms (readdirSync
   // returns filesystem order, which varies).
-  return readdirSync(FIXTURES).sort().filter((n) => statSync(join(FIXTURES, n)).isDirectory());
+  //
+  // A nested checkout is filtered here rather than by walkTree, because these
+  // entries are not walked — each becomes a walk ROOT, which walkTree
+  // deliberately never tests (a gate run from inside a worktree must check that
+  // worktree). A stray clone or worktree parked among the fixture states would
+  // otherwise become an allowlisted `--state` value pointing at a whole second
+  // repository (#3762).
+  return readdirSync(FIXTURES).sort()
+    .filter((n) => statSync(join(FIXTURES, n)).isDirectory() && !isNestedCheckout(join(FIXTURES, n)));
 }
 
 // Strict allowlist: a state must be one of the real fixture subdirectories.

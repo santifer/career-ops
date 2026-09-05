@@ -26,7 +26,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { collectMjsFiles, isNestedCheckout, SKIP_DIRS } from '../lib/mjs-files.mjs';
+import { collectMjsFiles, SKIP_DIRS } from '../lib/mjs-files.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -145,47 +145,14 @@ test('the walk root is exempt, so running from inside a worktree still checks it
   }
 });
 
-test('isNestedCheckout detects the marker, of either type, and nothing else', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'co-mjs-files-'));
-  try {
-    mkdirSync(join(dir, 'worktree'));
-    writeFileSync(join(dir, 'worktree', '.git'), 'gitdir: /elsewhere\n');
-    mkdirSync(join(dir, 'clone', '.git'), { recursive: true });
-    mkdirSync(join(dir, 'plain'));
-
-    assert.equal(isNestedCheckout(join(dir, 'worktree')), true, 'a .git file is a linked worktree or submodule');
-    assert.equal(isNestedCheckout(join(dir, 'clone')), true, 'a .git directory is an independent clone');
-    assert.equal(isNestedCheckout(join(dir, 'plain')), false, 'an ordinary subdirectory is source');
-    assert.equal(isNestedCheckout(join(dir, 'does-not-exist')), false, 'a missing directory is not a checkout');
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
-test('the private repo walkers consult the shared predicate, not their own rule', () => {
-  // lib/mjs-files.mjs exists so two walkers cannot drift about what "every
-  // file" means; the same reasoning applies to what "not our source" means.
-  // These three suites keep private walkers because each filters differently
-  // (.test.mjs, dot-dirs, SKIP_DIRS sets), so they import the predicate rather
-  // than the collector — but a fourth hand-rolled `.git` rule is the drift.
-  for (const caller of ['tests/local-today-gates.test.mjs', 'tests/main-guard-convention.test.mjs', 'test-all.mjs']) {
-    const src = readFileSync(join(ROOT, caller), 'utf-8');
-
-    // The IMPORT is the assertion, not the call. Matching `isNestedCheckout(`
-    // anywhere in the file is satisfied by a local `const isNestedCheckout =
-    // () => false` — a hand-rolled re-implementation wearing the shared name,
-    // which is precisely the drift this test exists to catch, passing as proof
-    // against itself. Pinning the import binds the name to the one definition.
-    assert.match(
-      src,
-      /import\s*\{[^}]*\bisNestedCheckout\b[^}]*\}\s*from\s*'\.{1,2}\/lib\/mjs-files\.mjs'/,
-      `${caller} must import isNestedCheckout FROM lib/mjs-files.mjs, not re-implement it (#3499)`,
-    );
-    // ...and still use it: an unused import satisfies the check above while the
-    // walk descends into every nested checkout exactly as before.
-    assert.match(src, /isNestedCheckout\(/, `${caller} must actually call isNestedCheckout (#3499)`);
-  }
-});
+// The predicate itself, and the rule that no other walker may re-implement it,
+// moved to tests/walk-tree.test.mjs together with the walk that consults it.
+// This file used to assert that three named suites imported `isNestedCheckout`
+// and called it somewhere — which proved neither that they called it on the
+// path they were about to descend into, nor that a fourth walker existed to be
+// checked at all. Both of those are now properties of the one walker in
+// lib/walk-tree.mjs: one behavioural test proves the guard, and a ban keeps the
+// count at one (#3818).
 
 test('both syntax checkers derive their file list from the shared collector', () => {
   for (const caller of ['test-all.mjs', 'scripts/check-syntax.mjs']) {

@@ -24,11 +24,12 @@
  * Exit 0 = clean. Exit 1 = coverage gap listed.
  */
 
-import { readFileSync, existsSync, globSync } from 'fs';
-import { dirname, join, sep } from 'path';
+import { readFileSync, existsSync, readdirSync } from 'fs';
+import { dirname, join, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { USER_PATHS } from './update-system.mjs';
 import { isMainModule } from './lib/is-main-module.mjs';
+import { listTree } from './lib/walk-tree.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 
@@ -242,8 +243,16 @@ if (isMainModule(import.meta.url)) {
   }
 
   const candidates = [
-    ...globSync('modes/**/*.md', { cwd: ROOT }),
-    ...globSync('batch/*.md', { cwd: ROOT }),
+    // listTree, not globSync: glob has no idea what a nested checkout is, so a
+    // worktree parked under modes/ would put a second repository's mode files
+    // under this gate (#3818).
+    ...listTree(join(ROOT, 'modes'), { match: /\.md$/ }).map((f) => relative(ROOT, f)),
+    // batch/ is flat and gitignored apart from its scripts and prompt, so a
+    // plain read is right here — and existsSync keeps a checkout without it
+    // from turning a coverage report into an ENOENT.
+    ...(existsSync(join(ROOT, 'batch'))
+      ? readdirSync(join(ROOT, 'batch')).filter((f) => f.endsWith('.md')).map((f) => `batch/${f}`)
+      : []),
   ].map((p) => p.split(sep).join('/'));
 
   const required = deriveIngestingModes(candidates, (rel) => readFileSync(join(ROOT, rel), 'utf-8'));
