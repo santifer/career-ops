@@ -25,6 +25,7 @@ import readline from 'node:readline';
 import * as yaml from 'js-yaml';
 import { outputLanguageInstruction, parseOutputLanguage } from './profile-language.mjs';
 import { TSV_ADDITION_HEADER } from './tracker-parse.mjs';
+import { normalizedTrackerScore } from './lib/tracker-addition.mjs';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
@@ -715,9 +716,19 @@ async function cmdEvaluate(input, ctx) {
     const legitLine  = legitMatch ? `**Legitimacy:** ${legitMatch[1].trim()}` : '**Legitimacy:** unconfirmed';
     writeFile(relPath, `**URL:** ${input || '(pasted)'}\n${legitLine}\n\n${result}`);
 
-    const scoreMatch  = result.match(/(?:score|puntuaci[oó]n)[^\d]*(\d+\.?\d*)/i);
-    const scoreValue  = scoreMatch ? parseFloat(scoreMatch[1]) : NaN;
-    const scoreStr    = isFinite(scoreValue) ? `${scoreValue.toFixed(1)}/5` : '';
+    // Capture the DENOMINATOR when the model writes one. The old pattern took
+    // only the numeric prefix, so `Score: 8/10` yielded `8` and the cell became
+    // `8.0/5` -- a ten-point score reinterpreted as a five-point one. That
+    // satisfies SCORE_CELL_RE, so it merged as a genuine score and fed
+    // stats.mjs's averages. normalizedTrackerScore refuses a denominator that
+    // is not 5, but only if it is handed one (#3796).
+    const scoreMatch  = result.match(/(?:score|puntuaci[oó]n)[^\d]*(\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?)/i);
+    // An unparseable score used to become the EMPTY string, and merge-tracker
+    // refuses a blank required cell ("use the documented sentinel rather than a
+    // blank cell") -- so the evaluation was skipped whole, the same loss #3796
+    // documents for the drifted copies. The shared helper returns the `N/A`
+    // sentinel (#1799), which merges as an unscored row instead of as nothing.
+    const scoreStr    = normalizedTrackerScore(scoreMatch ? scoreMatch[1] : '');
     const companyName = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     const reportLink  = `[${numStr}](reports/${numStr}-${slug}-${today}.md)`;
     const tsvLine     = `${num}\t${today}\t${companyName}\t(see report)\tEvaluated\t${scoreStr}\t❌\t${reportLink}\t\n`;
